@@ -1,7 +1,11 @@
 {
   "recommendations": [
-    "nrwl.angular-console",
+    "bradlc.vscode-tailwindcss",
+    "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
-    "dbaeumer.vscode-eslint"
+    "expo.vscode-expo-tools",
+    "nrwl.angular-console",
+    "yoavbls.pretty-ts-errors",
+    "ms-playwright.playwright"
   ]
 }

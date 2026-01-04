@@ -23,15 +23,12 @@ node_modules
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+!.vscode/tailwind.json
 
 # misc
 /.sass-cache
 /connect.lock
 /coverage
-/libpeerconnection.log
-npm-debug.log
-yarn-error.log
-testem.log
 /typings
 
 # System Files
@@ -40,3 +37,21 @@ Thumbs.db
 
 .nx/cache
 .nx/workspace-data
+
+out
+vite.config.*.timestamp*
+vitest.config.*.timestamp*
+
+# Logs
+logs
+*.log
+
+# Env
+.env
+.env.local
+
+# Fumadocs
+.source
+
+# Tanstack
+.tanstack
