@@ -1,1 +1,2 @@
-export * from './lib/pg-dao'
+export * from './generated/prisma/client'
+export * from './prisma'
