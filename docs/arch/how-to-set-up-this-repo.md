@@ -35,4 +35,47 @@ sed -i '' 's/"tags":[[:space:]]*\[\]/"tags": ["scope:backend", "type:app"]/g' se
 ```shell
 pnpm add -D @commitlint/{config-conventional,cli} cz-customizable
 pnpm add -D lefthook
+npx lefthook install
+```
+
+- 安装lint和format工具依赖
+
+```shell
+pnpm add -D @ianvs/prettier-plugin-sort-imports prettier-plugin-tailwindcss
+```
+
+- 创建service等核心依赖core和共享模块shared
+
+```shell
+nx g @nx/nest:lib libs/srv-core --linter=eslint --tags=scope:backend,type:lib --skipTsConfig
+nx g @nx/nest:lib libs/srv-shared --linter=eslint --tags=scope:backend,type:lib --skipTsConfig
+```
+
+- 创建pg-dao，用prisma作为orm
+
+```shell
+nx g @nx/js:lib libs/pg-dao --minimal --bundler=none --tags=scope:backend,type:lib --skipTsConfig
+pnpm add @prisma/client @prisma/adapter-pg pg
+pnpm add -D prisma @types/pg
+```
+
+- 创建mongo-dao，用mongoose作为orm
+
+```shell
+nx g @nx/js:lib libs/mongo-dao --minimal --bundler=none --tags=scope:backend,type:lib --skipTsConfig
+pnpm add @nestjs/mongoose @nestjs/config mongoose
+```
+
+- 创建apps共用的ui组件库以及spa应用核心组件库studio
+
+```shell
+nx g @nx/react:library libs/shared-ui --unitTestRunner=vitest --linter=eslint --tags=scope:frontend,type:lib --skipTsConfig
+nx g @nx/react:library libs/studio --unitTestRunner=vitest --linter=eslint --tags=scope:frontend,type:lib --skipTsConfig
+
+# 因为该lib不会打包输出，所以不需要babel，所以删除该目录下的.babelrc
+rm libs/shared-ui/.babelrc
+rm libs/studio/.babelrc
+
+# 移除对应依赖
+pnpm remove @babel/core @babel/preset-react
 ```
