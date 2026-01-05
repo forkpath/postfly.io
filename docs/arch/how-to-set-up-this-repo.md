@@ -15,10 +15,10 @@ nx g @nx/react:app apps/web --bundler=vite --style=css --globalCss --linter esli
 
 计划将scope和type进行固定分类，方便后续根据tag来运行对应工作流
 
-| Tag   | 分类                          |
-| ----- | ----------------------------- |
-| Scope | `frontend` `backend` `client` |
-| Type  | `app` `lib`                   |
+| Tag   | 分类                                   |
+| ----- | -------------------------------------- |
+| Scope | `frontend` `backend` `client` `shared` |
+| Type  | `app` `lib`                            |
 
 - 将engine移动到services中
 
@@ -78,4 +78,13 @@ rm libs/studio/.babelrc
 
 # 移除对应依赖
 pnpm remove @babel/core @babel/preset-react
+```
+
+- 集成better-auth实现认证授权
+
+```shell
+pnpm add better-auth
+
+# 生成一个better-auth 密钥
+npx @better-auth/cli@latest secret
 ```
