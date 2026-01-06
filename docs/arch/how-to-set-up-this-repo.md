@@ -66,6 +66,12 @@ nx g @nx/js:lib libs/mongo-dao --minimal --bundler=none --tags=scope:backend,typ
 pnpm add @nestjs/mongoose @nestjs/config mongoose
 ```
 
+- 创建前后端公用的通讯载荷定义
+
+```shell
+nx g @nx/js:lib libs/payload --minimal --bundler=none --tags=scope:shared,type:lib
+```
+
 - 创建apps共用的ui组件库以及spa应用核心组件库studio
 
 ```shell

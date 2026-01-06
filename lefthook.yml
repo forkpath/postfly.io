@@ -1,27 +1,27 @@
-# # EXAMPLE USAGE:
-# #
-# #   Refer for explanation to following link:
-# #   https://lefthook.dev/configuration/
+# EXAMPLE USAGE:
+#
+#   Refer for explanation to following link:
+#   https://lefthook.dev/configuration/
 
-# # --no-errors-on-unmatched: 在没有匹配文件时，静默即可，不输出错误
-# pre-commit:
-#   parallel: true
-#   commands:
-#     format:
-#       glob: '*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,md,mdx}'
-#       run: pnpm run format:write
-#       stage_fixed: true
-#     lint:
-#       glob: '*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,md,mdx}'
-#       run: pnpm run lint
+# --no-errors-on-unmatched: 在没有匹配文件时，静默即可，不输出错误
+pre-commit:
+  parallel: true
+  commands:
+    format:
+      glob: '*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,md,mdx}'
+      run: pnpm run format:write
+      stage_fixed: true
+    lint:
+      glob: '*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,md,mdx}'
+      run: pnpm run lint
 
-# commit-msg:
-#   commands:
-#     lint-commit-msg:
-#       run: npx commitlint --edit {1}
+commit-msg:
+  commands:
+    lint-commit-msg:
+      run: npx commitlint --edit {1}
 
-# pre-push:
-#   parallel: true
-#   commands:
-#     packages-audit:
-#       run: pnpm audit
+pre-push:
+  parallel: true
+  commands:
+    packages-audit:
+      run: pnpm audit

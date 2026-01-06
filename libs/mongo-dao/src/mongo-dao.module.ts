@@ -11,10 +11,10 @@ import { InfographicDoc, InfographicSchema } from './schemas/infographic.schema'
 import { NotificationDoc, NotificationSchema } from './schemas/notification.schema'
 
 @Module({})
-export class MongooseDaoModule {
+export class MongoDaoModule {
   static register(): DynamicModule {
     return {
-      module: MongooseDaoModule,
+      module: MongoDaoModule,
       imports: [
         MongooseModule.forRootAsync({
           inject: [ConfigService],
