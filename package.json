@@ -130,6 +130,11 @@
       "path": "./node_modules/cz-customizable"
     }
   },
+  "pnpm": {
+    "overrides": {
+      "tmp": ">=0.2.4"
+    }
+  },
   "engines": {
     "node": ">=22.21.1",
     "package-manager": "pnpm >=10.25.0"

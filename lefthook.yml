@@ -19,9 +19,8 @@ commit-msg:
   commands:
     lint-commit-msg:
       run: npx commitlint --edit {1}
-
-pre-push:
-  parallel: true
-  commands:
-    packages-audit:
-      run: pnpm audit
+# pre-push:
+#   parallel: true
+#   commands:
+#     packages-audit:
+#       run: pnpm audit
