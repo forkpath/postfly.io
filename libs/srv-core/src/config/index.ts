@@ -4,14 +4,14 @@ import { MongoConfig } from '@libs/mongo-dao'
 import {
   CacheConfig,
   ElasticsearchConfig,
+  EmailConfig,
   I18nConfig,
   LoggerConfig,
   LogLevel,
-  //   MailConfig,
-  //   OssConfig,
   RabbitmqConfig,
   RedisConfig,
   SmsConfig,
+  StorageConfig,
   ThrottlerConfig
 } from '@libs/srv-shared'
 
@@ -39,8 +39,8 @@ interface Config {
   i18n: I18nConfig
   throttler: ThrottlerConfig
   // 第三方服务
-  //   mail: MailConfig
-  //   oss: OssConfig
+  email: EmailConfig
+  storage: StorageConfig
   sms: SmsConfig
   // 其他
   rabbitmq: RabbitmqConfig
@@ -102,23 +102,18 @@ const config: Config = {
       }
     }
   },
-  //   mail: {
-  //     host: process.env['MAIL_SMTP_HOST'] || '',
-  //     port: parseInt(process.env['MAIL_SMTP_PORT'] as string, 10) || 465,
-  //     secure: (process.env['MAIL_SMTP_SECURE'] as string).toLocaleLowerCase() === 'true',
-  //     auth: {
-  //       account: process.env['MAIL_SMTP_ACCOUNT'] || '',
-  //       password: process.env['MAIL_SMTP_PASSWORD'] || ''
-  //     },
-  //     from: process.env['MAIL_SMTP_FROM'] || ''
-  //   },
-  //   oss: {
-  //     accessKeyId: process.env['OSS_ACCESS_KEY_ID'] || 'oss_access_key_id',
-  //     accessKeySecret: process.env['OSS_ACCESS_KEY_SECRET'] || 'oss_access_key_secret',
-  //     bucket: process.env['OSS_BUCKET'] || 'neo',
-  //     region: process.env['OSS_REGION'] || 'us-east-1',
-  //     endPoint: process.env['OSS_END_POINT'] || 'localhost'
-  //   },
+  email: {
+    from: process.env['RESEND_EMAIL_FROM'] || 'noreply@domain.com',
+    apiKey: process.env['RESEND_EMAIL_API_KEY'] || '',
+    endpoint: process.env['RESEND_EMAIL_ENDPOINT'] || ''
+  },
+  storage: {
+    accessKeyId: process.env['STORAGE_ACCESS_KEY_ID'] || 'storage_access_key_id',
+    accessKeySecret: process.env['STORAGE_ACCESS_KEY_SECRET'] || 'storage_access_key_secret',
+    bucket: process.env['STORAGE_BUCKET'] || 'ray',
+    region: process.env['STORAGE_REGION'] || 'us-east-1',
+    endpoint: process.env['STORAGE_ENDPOINT'] || 'localhost'
+  },
   sms: {
     accessKeyId: process.env['SMS_ACCESS_KEY_ID'] || 'sms_access_key_id',
     accessKeySecret: process.env['SMS_ACCESS_KEY_SECRET'] || 'sms_access_key_secret',

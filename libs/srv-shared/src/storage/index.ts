@@ -1,0 +1,4 @@
+export * from './storage.config'
+export * from './storage.module'
+export * from './storage.service'
+export * from './providers/types'
