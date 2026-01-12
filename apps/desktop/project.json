@@ -1,0 +1,38 @@
+{
+  "name": "desktop",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/desktop/src",
+  "projectType": "application",
+  "tags": ["scope:frontend", "type:app"],
+  "// targets": "to see all targets run: nx show project desktop --web",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "electron-forge start",
+        "cwd": "apps/desktop"
+      }
+    },
+    "package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "electron-forge package",
+        "cwd": "apps/desktop"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "electron-forge make",
+        "cwd": "apps/desktop"
+      }
+    },
+    "cloud-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "electron-forge publish",
+        "cwd": "apps/desktop"
+      }
+    }
+  }
+}

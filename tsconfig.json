@@ -1,0 +1,37 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/web"
+    },
+    {
+      "path": "./apps/web-e2e"
+    },
+    {
+      "path": "./services/engine"
+    },
+    {
+      "path": "./libs/pg-dao"
+    },
+    {
+      "path": "./libs/srv-core"
+    },
+    {
+      "path": "./libs/srv-shared"
+    },
+    {
+      "path": "./libs/studio"
+    },
+    {
+      "path": "./libs/ui-shared"
+    },
+    {
+      "path": "./libs/mongo-dao"
+    },
+    {
+      "path": "./libs/payload"
+    }
+  ]
+}

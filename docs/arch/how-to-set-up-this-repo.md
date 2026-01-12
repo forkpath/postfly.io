@@ -75,11 +75,11 @@ nx g @nx/js:lib libs/payload --minimal --bundler=none --tags=scope:shared,type:l
 - 创建apps共用的ui组件库以及spa应用核心组件库studio
 
 ```shell
-nx g @nx/react:library libs/shared-ui --unitTestRunner=vitest --linter=eslint --tags=scope:frontend,type:lib --skipTsConfig
+nx g @nx/react:library libs/ui-shared --unitTestRunner=vitest --linter=eslint --tags=scope:frontend,type:lib --skipTsConfig
 nx g @nx/react:library libs/studio --unitTestRunner=vitest --linter=eslint --tags=scope:frontend,type:lib --skipTsConfig
 
 # 因为该lib不会打包输出，所以不需要babel，所以删除该目录下的.babelrc
-rm libs/shared-ui/.babelrc
+rm libs/ui-shared/.babelrc
 rm libs/studio/.babelrc
 
 # 移除对应依赖
@@ -93,4 +93,60 @@ pnpm add better-auth
 
 # 生成一个better-auth 密钥
 npx @better-auth/cli@latest secret
+```
+
+- 利用shacdn构建ui-shared
+
+```shell
+# 安装必须的依赖
+pnpm add class-variance-authority clsx tailwind-merge lucide-react tw-animate-css tailwindcss
+pnpm add -D @tailwindcss/postcss @tailwindcss/vite
+
+# 在根目录下创建components.json，并修改路径为ui-shared
+{
+    "$schema": "https://ui.shadcn.com/schema.json",
+    "style": "new-york",
+    "rsc": false,
+    "tsx": true,
+    "tailwind": {
+        "config": "",
+        "css": "unused.css",
+        "baseColor": "neutral",
+        "cssVariables": true,
+        "prefix": ""
+    },
+    "aliases": {
+        "components": "libs/ui-shared/src/web/components",
+        "utils": "libs/ui-shared/src/common/lib/utils",
+        "lib": "libs/ui-shared/src/common/lib",
+        "hooks": "libs/ui-shared/src/common/hooks"
+    },
+    "iconLibrary": "lucide"
+}
+
+其中unused.css只是一个占位符，并不存在，因为tailwindcss的样式是通过具体应用引入的globals.css来实现的。
+另外aliases只需要这四个即可
+
+# 在package.json中绑定脚本，我这里的思路是将其分科，通过路径的方式来实现样式添加
+"add:web-ui": "pnpx shadcn@latest add -p libs/ui-shared/src/web/components",
+"add:mobile-ui": "pnpx shadcn@latest add -p libs/ui-shared/src/mobile/components",
+```
+
+- 构建desktop应用
+
+```shell
+pnpm add -D @electron-forge/cli @electron-forge/maker-dmg @electron-forge/maker-squirrel @electron-forge/plugin-fuses @electron-forge/plugin-vite @electron-forge/publisher-github @electron-forge/shared-types @electron/fuses
+
+ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ pnpm add -D electron
+
+nx g @nx/react:app apps/desktop --bundler=vite --style=css --globalCss --linter eslint --port 4200 --unitTestRunner vitest --tags=scope:frontend,type:app
+```
+
+注意针对desktop应用需要自行编写project.json中的目标，其中
+
+```shell
+start: 会自行用vite启动renderer，并用electron打开
+package: 会先将renderer打包，然后用electron打开
+make: 本地将renderer进行打包，并完成electron打包，输出.deb/.dmg/.exe等可执行程序
+publish: 利用github实现云端发包
 ```

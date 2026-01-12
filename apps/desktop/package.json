@@ -1,0 +1,32 @@
+{
+  "name": "@ray/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ray Desktop Application",
+  "main": ".vite/build/main.js",
+  "author": {
+    "name": "forkpath",
+    "email": "forkpath@gmail.com",
+    "url": "https://forkpath.com"
+  },
+  "license": "UNLICENSED",
+  "config": {
+    "forge": "./forge.config.ts"
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "workspace:^"
+  },
+  "devDependencies": {
+    "electron": "workspace:^",
+    "@electron-forge/cli": "workspace:^",
+    "@electron-forge/maker-dmg": "workspace:^",
+    "@electron-forge/maker-squirrel": "workspace:^",
+    "@electron-forge/plugin-fuses": "workspace:^",
+    "@electron-forge/plugin-auto-unpack-natives": "workspace:^",
+    "@electron-forge/plugin-vite": "workspace:^",
+    "@electron-forge/publisher-github": "workspace:^",
+    "@electron-forge/shared-types": "workspace:^",
+    "@electron/fuses": "workspace:^",
+    "@types/electron-squirrel-startup": "workspace:^"
+  }
+}
