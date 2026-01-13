@@ -5,7 +5,13 @@
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
     "strict": true,
-    "types": ["vite/client", "vitest"]
+    "types": ["vite/client", "vitest"],
+    "paths": {
+      "~/*": ["apps/web/src/*"],
+      "@libs/payload": ["libs/payload/src/index.ts"],
+      "@libs/ui-shared": ["libs/ui-shared/src/web/index.ts"],
+      "@libs/studio": ["libs/studio/src/index.ts"]
+    }
   },
   "files": [],
   "include": [],

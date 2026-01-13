@@ -1,1 +1,1 @@
-export * from './lib/studio'
+export * from './common/toast'

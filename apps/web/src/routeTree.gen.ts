@@ -8,6 +8,9 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
+import type { createStart } from '@tanstack/react-start'
+import type { getRouter } from './router.tsx'
+
 import { Route as rootRouteImport } from './app/__root'
 import { Route as IndexRouteImport } from './app/index'
 
@@ -55,3 +58,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute
 }
 export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addFileTypes<FileRouteTypes>()
+
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

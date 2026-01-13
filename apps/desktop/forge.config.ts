@@ -8,8 +8,8 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses'
 
 const config: ForgeConfig = {
   packagerConfig: {
-    name: 'Postfly',
-    executableName: process.platform === 'linux' ? 'postfly' : 'Postfly',
+    name: 'Ray',
+    executableName: process.platform === 'linux' ? 'ray' : 'Ray',
     appBundleId: 'com.forkpath.desktop',
     asar: true,
     icon: 'assets/logo',

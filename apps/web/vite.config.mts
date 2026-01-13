@@ -1,6 +1,6 @@
 /// <reference types='vitest' />
 import { devtools } from '@tanstack/devtools-vite'
-import { tanstackRouter } from '@tanstack/router-plugin/vite'
+import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
@@ -12,7 +12,7 @@ export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/apps/web',
   server: {
-    port: 4200,
+    port: 3000,
     host: 'localhost',
     proxy: {
       '/api': {
@@ -27,17 +27,19 @@ export default defineConfig(() => ({
     host: 'localhost'
   },
   plugins: [
+    // 保证这个插件在最前面
+    nxViteTsPaths(),
+    nxCopyAssetsPlugin(['*.md']),
     devtools(),
     tailwindcss(),
-    tanstackRouter({
-      target: 'react',
-      autoCodeSplitting: true,
-      routesDirectory: './src/app',
-      quoteStyle: 'single'
+    tanstackStart({
+      srcDirectory: './src',
+      router: {
+        routesDirectory: 'app',
+        quoteStyle: 'single'
+      }
     }),
-    viteReact(),
-    nxViteTsPaths(),
-    nxCopyAssetsPlugin(['*.md'])
+    viteReact()
   ],
   // Uncomment this if you are using workers.
   // worker: {

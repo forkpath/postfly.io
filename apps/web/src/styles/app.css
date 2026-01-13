@@ -1,6 +1,8 @@
 /* You can add global styles to this file, and also import other style files */
-@import '../../../libs/ui-shared/src/web/styles/globals.css';
-@source '../../../libs/ui-shared/src/web/**/*.{ts,tsx,js,jsx}';
+@import '../../../../libs/ui-shared/src/common/styles/globals.css';
+@import '../../../../libs/ui-shared/src/web/styles/globals.css';
+
+@source '../../../../libs/ui-shared/src/web/**/*.{ts,tsx,js,jsx}';
 
 /* styles.css */
 .CollapsibleContent {

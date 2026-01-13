@@ -5,15 +5,14 @@
 
 # --no-errors-on-unmatched: 在没有匹配文件时，静默即可，不输出错误
 pre-commit:
-  parallel: true
   commands:
     format:
       glob: '*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,md,mdx}'
       run: pnpm run format:write
       stage_fixed: true
-    # lint:
-    #   glob: '*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,md,mdx}'
-    #   run: pnpm run lint
+    lint:
+      glob: '*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,md,mdx}'
+      run: pnpm run lint
 
 commit-msg:
   commands:

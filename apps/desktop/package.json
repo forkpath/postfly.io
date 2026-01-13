@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "description": "Ray Desktop Application",
-  "main": ".vite/build/main.js",
+  "type": "module",
+  "main": ".vite/main/main.cjs",
   "author": {
     "name": "forkpath",
     "email": "forkpath@gmail.com",
