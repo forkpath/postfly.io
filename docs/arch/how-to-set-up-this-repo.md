@@ -72,6 +72,12 @@ pnpm add @nestjs/mongoose @nestjs/config mongoose
 nx g @nx/js:lib libs/payload --minimal --bundler=none --tags=scope:shared,type:lib
 ```
 
+- 创建前后端共用的一些工具函数
+
+```shell
+ nx g @nx/js:lib libs/common --minimal --bundler=none --tags=scope:shared,type:lib --skipTsConfig
+```
+
 - 创建apps共用的ui组件库以及spa应用核心组件库studio
 
 ```shell

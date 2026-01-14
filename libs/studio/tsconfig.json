@@ -7,7 +7,7 @@
     "strict": true,
     "paths": {
       "@libs/payload": ["libs/payload/src/index.ts"],
-      "@libs/ui-shared": ["libs/ui-shared/src/web/index.ts"]
+      "@libs/ui-shared/*": ["libs/ui-shared/src/*"]
     }
   },
   "files": [],

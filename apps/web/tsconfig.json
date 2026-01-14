@@ -9,7 +9,7 @@
     "paths": {
       "~/*": ["apps/web/src/*"],
       "@libs/payload": ["libs/payload/src/index.ts"],
-      "@libs/ui-shared": ["libs/ui-shared/src/web/index.ts"],
+      "@libs/ui-shared/*": ["libs/ui-shared/src/*"],
       "@libs/studio": ["libs/studio/src/index.ts"]
     }
   },

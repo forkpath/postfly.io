@@ -12,7 +12,7 @@ import { NotFound } from '~/components/not-found'
 import { seo } from '~/utils/seo'
 
 import { Toaster } from '@libs/studio'
-import { cn } from '@libs/ui-shared'
+import { cn } from '@libs/ui-shared/common'
 
 import appCss from '../styles/app.css?url' // 注意因为试用了?url，所以需要使用相对路径
 

@@ -1,7 +1,7 @@
 import { useTheme } from 'next-themes'
 import { Toaster as Sonner } from 'sonner'
 
-import { ThemeMode } from '@libs/ui-shared'
+import { ThemeMode } from '@libs/ui-shared/common'
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
