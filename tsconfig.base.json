@@ -21,7 +21,12 @@
       "@libs/pg-dao": ["libs/pg-dao/src/index.ts"],
       "@libs/payload": ["libs/payload/src/index.ts"],
       "@libs/ui-shared/*": ["libs/ui-shared/src/*"],
-      "@libs/common": ["libs/common/src/index.ts"]
+      "@libs/common": ["libs/common/src/index.ts"],
+      "@libs/email": ["libs/email/src/index.ts"],
+      "@libs/i18n": ["libs/i18n/src/index.ts"],
+      "@libs/i18n/*": ["libs/i18n/src/*"],
+      "@libs/auth": ["libs/auth/src/index.ts"],
+      "@libs/auth/*": ["libs/auth/src/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

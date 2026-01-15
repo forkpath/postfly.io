@@ -92,13 +92,30 @@ rm libs/studio/.babelrc
 pnpm remove @babel/core @babel/preset-react
 ```
 
-- 集成better-auth实现认证授权
+- 集成i18next，构建一个i18n模块
+
+```shell
+pnpm add i18next i18next-browser-languagedetector react-i18next nextjs-i18n
+
+nx g @nx/js:lib libs/i18n --minimal --bundler=none --tags=scope:shared,type:lib --skipTsConfig
+```
+
+- 集成resend以及nodemailer，构建一个邮件发送模块
+
+```shell
+nx g @nx/js:lib libs/email --minimal --bundler=none --tags=scope:shared,type:lib --skipTsConfig
+```
+
+- 集成better-auth实现认证授权，构建auth模块
 
 ```shell
 pnpm add better-auth
 
 # 生成一个better-auth 密钥
 npx @better-auth/cli@latest secret
+
+# 构建一个前后端共用的auth模块
+nx g @nx/js:lib libs/auth --minimal --bundler=none --tags=scope:shared,type:lib --skipTsConfig
 ```
 
 - 利用shacdn构建ui-shared

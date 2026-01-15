@@ -1,0 +1,26 @@
+{
+  "user": {
+    "home": {
+      "title": "仪表盘",
+      "description": "概览你个人账号在各项目中的活动情况。"
+    }
+  },
+  "organization": {
+    "home": {
+      "title": "组织仪表盘",
+      "description": "概览组织在各项目中的活动与表现。"
+    }
+  },
+  "chart": {
+    "showing": "展示上一周期的总访客数",
+    "trending": "本月最高上升 5.2%",
+    "period": "2024 年 1 月 - 6 月",
+    "bar": "柱状图",
+    "pie": "饼图",
+    "area": "面积图",
+    "line": "折线图",
+    "shape": "形状图",
+    "radial": "径向图",
+    "radar": "雷达图"
+  }
+}

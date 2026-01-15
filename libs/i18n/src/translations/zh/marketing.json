@@ -1,0 +1,242 @@
+{
+  "product": {
+    "title": "这可能就是你的首个百万美元创业项目",
+    "description": "完全可定制的 TurboStarter 应用。替换内容即可更快发布你的产品。",
+    "mobile": {
+      "ios": {
+        "title": "iOS 应用",
+        "description": "在 iPhone 和 iPad 上的原生体验"
+      },
+      "android": {
+        "title": "Android 应用",
+        "description": "为安卓手机优化"
+      }
+    },
+    "extension": {
+      "chrome": {
+        "title": "Chrome 扩展",
+        "description": "与 Chrome 浏览器集成"
+      },
+      "firefox": {
+        "title": "Firefox 插件",
+        "description": "为 Firefox 用户增强浏览体验"
+      },
+      "edge": {
+        "title": "Edge 插件",
+        "description": "为 Microsoft Edge 提供强大工具"
+      }
+    }
+  },
+  "announcement": "你的功能公告在这里",
+  "shippedWith": "内置可用于生产的工具",
+  "cta": {
+    "question": "准备开始了吗？",
+    "button": "免费开始",
+    "buy": {
+      "question": "准备开始了吗？",
+      "description": "购买以解锁完整代码库访问权限，立即发布你的产品。支持所有平台。",
+      "button": "获取访问权限",
+      "join": {
+        "description": "加入其他创始人一起定制 TurboStarter，分享发布策略，并第一时间获取更新。",
+        "button": "加入社区"
+      }
+    }
+  },
+  "editToReload": "编辑 <code>{{file}}</code> 并保存以重新加载。",
+  "workInProgress": {
+    "title": "我们正在开发中！",
+    "description": "{{feature}} 目前不可用。我们正在开发，它很快就会上线。"
+  },
+  "features": {
+    "label": "功能",
+    "title": "把访客转化为客户",
+    "description": "构建、部署并自信扩展应用所需的一切。",
+    "feature": {
+      "core": {
+        "title": "核心基础",
+        "description": "认证、数据库和 API 已就绪，让你专注于客户价值。"
+      },
+      "ai": {
+        "title": "AI 驱动能力",
+        "description": "由 AI 支持的智能推荐与自动化流程。"
+      },
+      "mobile": {
+        "title": "原生移动体验",
+        "description": "功能完整的移动应用，跨设备无缝同步。"
+      },
+      "extension": {
+        "title": "浏览器扩展",
+        "description": "通过可定制快捷方式让用户在浏览器中持续使用你的产品。"
+      }
+    }
+  },
+  "testimonials": {
+    "label": "用户评价",
+    "title": "团队用我们更快交付",
+    "description": "听听创始人和开发者如何通过定制模板更快上线并提高转化。",
+    "rating": "{{rating}} 分，来自 {{count}}+ 条评价",
+    "reviews": {
+      "jack": {
+        "name": "Jack",
+        "position": "全栈开发者",
+        "body": "这个模板让团队摆脱了样板代码，我们周末替换文案后就能专注做客户真正需要的功能。"
+      },
+      "jill": {
+        "name": "Jill",
+        "position": "创业者",
+        "body": "我们两周内就上线了 MVP。营销页到认证流程都准备好了，只需要为受众改写文案。"
+      },
+      "john": {
+        "name": "John",
+        "position": "高级开发者",
+        "body": "开发体验无可匹敌。技术栈开箱即用，同时足够灵活以匹配产品叙事。"
+      },
+      "sarah": {
+        "name": "Sarah",
+        "position": "产品经理",
+        "body": "我们从原型扩展到数千用户都很顺畅。分析、计费、营销流程都可直接定制。"
+      },
+      "mike": {
+        "name": "Mike",
+        "position": "工程负责人",
+        "body": "社区很棒。快速解答、发布建议、持续改进让我们保持节奏。"
+      }
+    }
+  },
+  "faq": {
+    "label": "常见问题",
+    "title": "有问题？我们有答案",
+    "description": "了解功能、定价、实现方式以及快速上手的常见问题。",
+    "cta": "联系我们",
+    "question": {
+      "whatDoesOurPlatformDo": {
+        "question": "你们的平台能做什么？",
+        "answer": "TurboStarter 提供全栈 SaaS 基础——营销站点、Web 应用、移动端应用和扩展——让你专注于独特的客户体验。"
+      },
+      "howWillThisBenefitMyBusiness": {
+        "question": "这对我的业务有什么帮助？",
+        "answer": "你能更快上线、更早交付功能、并提升转化，因为核心产品、分析与计费流程已就绪。"
+      },
+      "isMyDataSafe": {
+        "question": "我的数据安全吗？",
+        "answer": "是的。我们遵循企业级安全实践，并提供可适配行业要求的安全防护。"
+      },
+      "whatKindOfIntegrationsAreAvailable": {
+        "question": "有哪些可用的集成？",
+        "answer": "TurboStarter 内置常见 SaaS 集成，模块化架构也让你轻松接入自己的技术栈。"
+      },
+      "howEasyIsItToOnboardMyTeam": {
+        "question": "团队上手容易吗？",
+        "answer": "清晰的文档、TypeScript 优先的模式，以及明确的定制示例，让团队快速开始。"
+      },
+      "whatTypesOfBusinessesCanUseThis": {
+        "question": "适合哪些类型的业务？",
+        "answer": "从个人创业者到企业创新团队，TurboStarter 都能适配各种需要快速启动的 SaaS 场景。"
+      },
+      "canICustomizeThisToFitMyBusinessNeeds": {
+        "question": "可以根据业务需求定制吗？",
+        "answer": "当然。每个模块都为快速定制而设计——修改文案、替换组件、扩展逻辑无需和框架对抗。"
+      }
+    }
+  },
+  "contact": {
+    "label": "联系",
+    "title": "联系我们以获取支持",
+    "cta": "联系销售",
+    "description": "如需支持或反馈，请联系我们",
+    "form": {
+      "name": {
+        "placeholder": "张三"
+      },
+      "email": {
+        "placeholder": "your@email.com"
+      },
+      "message": {
+        "placeholder": "我们能帮你什么？"
+      },
+      "submit": "发送消息",
+      "success": {
+        "title": "消息已发送！",
+        "description": "感谢你的留言，我们会尽快回复。"
+      }
+    },
+    "email": {
+      "subject": "你收到了一条新的联系表单",
+      "body": "新的联系表单提交"
+    }
+  },
+  "blog": {
+    "label": "博客",
+    "title": "平台新闻与更新",
+    "description": "了解最新新闻、洞察与更新，发现新功能、最佳实践与行业趋势。",
+    "timeToRead": "阅读 {{time}} 分钟",
+    "tag": {
+      "learning": "学习",
+      "skills": "技能",
+      "progress": "进展",
+      "product": "产品",
+      "development": "开发",
+      "prototype": "原型",
+      "launch": "发布"
+    }
+  },
+  "api": {
+    "title": "API 参考",
+    "description": "使用我们的 API 构建集成"
+  },
+  "roadmap": {
+    "title": "路线图",
+    "description": "看看接下来会发生什么"
+  },
+  "docs": {
+    "title": "文档",
+    "description": "学习如何使用 TurboStarter"
+  },
+  "ai": {
+    "description": "通过 TurboStarter 的 AI 助手解锁生产力与创新。获取即时答案、自动化任务并提升工作流——安全、可靠，面向现代团队。",
+    "prompt": {
+      "history": "讲讲互联网的发展历史",
+      "capitals": "考考我世界各国首都",
+      "quantum": "解释量子计算",
+      "realWorld": "描述一个真实世界的 AI 案例"
+    },
+    "placeholder": "提个问题...",
+    "cta": "提交"
+  },
+  "setup": {
+    "steps": {
+      "step": {
+        "start": {
+          "title": "这是一个简单步骤",
+          "description": "你需要点击继续按钮进入下一步"
+        },
+        "required": {
+          "title": "这是一个必填步骤",
+          "description": "你必须完成所有必填项才能进入下一步",
+          "fields": {
+            "data": "我理解我的数据是私密且已加密的",
+            "privacy": "我已阅读并同意 <a>隐私政策</a>"
+          }
+        },
+        "skip": {
+          "title": "这是一个可跳过步骤",
+          "description": "你可以跳过此步骤并进入下一步"
+        },
+        "final": {
+          "title": "这是最后一步",
+          "description": "你已完成所有步骤，享受你的新应用吧！"
+        }
+      }
+    }
+  },
+  "update": {
+    "available": {
+      "title": "发现新更新！",
+      "description": "有新更新可安装。点击下方安装或稍后再说。"
+    },
+    "installing": {
+      "title": "正在安装更新...",
+      "description": "更新正在安装中，请稍候。"
+    }
+  }
+}

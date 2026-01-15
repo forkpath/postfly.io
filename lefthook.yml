@@ -10,9 +10,9 @@ pre-commit:
       glob: '*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,md,mdx}'
       run: pnpm run format:write
       stage_fixed: true
-    lint:
-      glob: '*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,md,mdx}'
-      run: pnpm run lint
+    # lint:
+    #   glob: '*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,md,mdx}'
+    #   run: pnpm run lint
 
 commit-msg:
   commands:

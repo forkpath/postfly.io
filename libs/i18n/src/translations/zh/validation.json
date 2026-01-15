@@ -1,0 +1,146 @@
+{
+  "error": {
+    "default": "无效的输入值",
+    "type": "期望 {{expected}}，但收到 {{received}}",
+    "type_with_path": "{{path}} 应为 {{expected}}，但收到 {{received}}",
+    "undefined": "{{path}} 为必填项",
+    "date": "无效的日期格式",
+    "custom": "无效的输入值",
+    "notMultipleOf": "数字必须是 {{multipleOf}} 的倍数",
+    "invalidKey": "无效的键",
+    "invalidElement": "无效的元素：{{- origin}}",
+    "invalidValue_one": "无效的值：{{- values}}，期望 {{expected}}",
+    "invalidValue_other": "无效的值：{{- values}}，期望 {{expected}}",
+    "string": {
+      "generic": "格式无效 - {{format}}",
+      "email": "请输入有效的邮箱地址",
+      "url": "请输入有效的 URL",
+      "uuid": "请输入有效的 UUID",
+      "cuid": "请输入有效的 CUID",
+      "regex": "格式无效 - {{validation}}",
+      "datetime": "格式无效 - {{validation}}",
+      "startsWith": "必须以 {{startsWith}} 开头",
+      "endsWith": "必须以 {{endsWith}} 结尾"
+    },
+    "file": {
+      "type": "仅接受 {{type}} 文件。",
+      "maxCount_one": "最多只能上传 {{count}} 个文件。",
+      "maxCount_other": "最多只能上传 {{count}} 个文件。"
+    },
+
+    "tooSmall": {
+      "array": {
+        "inclusive": "至少包含 {{minimum}} 个元素",
+        "inclusive_one": "至少包含 {{minimum}} 个元素",
+        "inclusive_other": "至少包含 {{minimum}} 个元素",
+        "notInclusive": "必须多于 {{minimum}} 个元素",
+        "notInclusive_one": "必须多于 {{minimum}} 个元素",
+        "notInclusive_other": "必须多于 {{minimum}} 个元素"
+      },
+      "string": {
+        "inclusive": "至少包含 {{minimum}} 个字符",
+        "inclusive_one": "至少包含 {{minimum}} 个字符",
+        "inclusive_other": "至少包含 {{minimum}} 个字符",
+        "inclusive_with_path": "{{path}} 至少包含 {{minimum}} 个字符",
+        "inclusive_with_path_one": "{{path}} 至少包含 {{minimum}} 个字符",
+        "inclusive_with_path_other": "{{path}} 至少包含 {{minimum}} 个字符",
+        "notInclusive": "必须多于 {{minimum}} 个字符",
+        "notInclusive_one": "必须多于 {{minimum}} 个字符",
+        "notInclusive_other": "必须多于 {{minimum}} 个字符",
+        "notInclusive_with_path": "{{path}} 必须多于 {{minimum}} 个字符",
+        "notInclusive_with_path_one": "{{path}} 必须多于 {{minimum}} 个字符",
+        "notInclusive_with_path_other": "{{path}} 必须多于 {{minimum}} 个字符"
+      },
+      "number": {
+        "inclusive": "必须大于或等于 {{minimum}}",
+        "inclusive_with_path": "{{path}} 必须大于或等于 {{minimum}}",
+        "notInclusive": "必须大于 {{minimum}}",
+        "notInclusive_with_path": "{{path}} 必须大于 {{minimum}}"
+      },
+      "set": {
+        "inclusive": "无效的输入值",
+        "notInclusive": "无效的输入值"
+      },
+      "date": {
+        "inclusive": "日期必须不早于 {{- minimum, datetime}}",
+        "notInclusive": "日期必须晚于 {{- minimum, datetime}}"
+      },
+      "file": {
+        "inclusive": "文件大小必须大于或等于 {{minimum}}MB",
+        "notInclusive": "文件大小必须大于 {{minimum}}MB"
+      }
+    },
+    "tooBig": {
+      "array": {
+        "inclusive": "最多包含 {{maximum}} 个元素",
+        "inclusive_one": "最多包含 {{maximum}} 个元素",
+        "inclusive_other": "最多包含 {{maximum}} 个元素",
+        "notInclusive": "必须少于 {{maximum}} 个元素",
+        "notInclusive_one": "必须少于 {{maximum}} 个元素",
+        "notInclusive_other": "必须少于 {{maximum}} 个元素"
+      },
+      "string": {
+        "inclusive": "最多包含 {{maximum}} 个字符",
+        "inclusive_one": "最多包含 {{maximum}} 个字符",
+        "inclusive_other": "最多包含 {{maximum}} 个字符",
+        "inclusive_with_path": "{{path}} 不得超过 {{maximum}} 个字符",
+        "inclusive_with_path_one": "{{path}} 不得超过 {{maximum}} 个字符",
+        "inclusive_with_path_other": "{{path}} 不得超过 {{maximum}} 个字符",
+        "notInclusive": "必须少于 {{maximum}} 个字符",
+        "notInclusive_one": "必须少于 {{maximum}} 个字符",
+        "notInclusive_other": "必须少于 {{maximum}} 个字符",
+        "notInclusive_with_path": "{{path}} 必须少于 {{maximum}} 个字符",
+        "notInclusive_with_path_one": "{{path}} 必须少于 {{maximum}} 个字符",
+        "notInclusive_with_path_other": "{{path}} 必须少于 {{maximum}} 个字符"
+      },
+      "number": {
+        "inclusive": "必须小于或等于 {{maximum}}",
+        "inclusive_with_path": "{{path}} 必须小于或等于 {{maximum}}",
+        "notInclusive": "必须小于 {{maximum}}",
+        "notInclusive_with_path": "{{path}} 必须小于 {{maximum}}"
+      },
+      "set": {
+        "inclusive": "无效的输入值",
+        "notInclusive": "无效的输入值"
+      },
+      "date": {
+        "inclusive": "日期必须不晚于 {{- maximum, datetime}}",
+        "notInclusive": "日期必须早于 {{- maximum, datetime}}"
+      },
+      "file": {
+        "inclusive": "文件大小必须小于或等于 {{maximum}}MB",
+        "notInclusive": "文件大小必须小于 {{maximum}}MB"
+      }
+    }
+  },
+  "validation": {
+    "email": "email",
+    "url": "url",
+    "uuid": "uuid",
+    "cuid": "cuid",
+    "regex": "regex",
+    "datetime": "datetime"
+  },
+  "type": {
+    "function": "函数",
+    "number": "数字",
+    "string": "字符串",
+    "nan": "NaN",
+    "integer": "整数",
+    "float": "浮点数",
+    "boolean": "布尔值",
+    "date": "日期",
+    "bigint": "bigint",
+    "undefined": "未定义",
+    "symbol": "symbol",
+    "null": "null",
+    "array": "数组",
+    "object": "对象",
+    "unknown": "未知",
+    "promise": "promise",
+    "void": "void",
+    "never": "never",
+    "map": "map",
+    "set": "set"
+  }
+}

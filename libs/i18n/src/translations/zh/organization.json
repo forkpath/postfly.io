@@ -1,0 +1,198 @@
+{
+  "create": {
+    "title": "创建组织",
+    "description": "创建一个新组织来管理你的团队和项目。",
+    "cta": "创建组织",
+    "info": "组织名称应独特且具有描述性。"
+  },
+  "join": {
+    "title": "加入组织",
+    "description": "加入组织以与团队协作、高效管理项目并访问共享资源。"
+  },
+  "settings": {
+    "title": "设置",
+    "header": {
+      "title": "组织设置",
+      "description": "管理组织设置与偏好。"
+    }
+  },
+  "invitations": {
+    "title": "邀请",
+    "disclaimer": {
+      "title": "你已被邀请加入某个组织",
+      "description": "登录或创建账号以接受邀请并加入组织。"
+    },
+    "resend": {
+      "success": "邀请已重新发送！"
+    },
+    "cancel": {
+      "success": "邀请已取消！"
+    },
+    "accept": {
+      "success": "你已成为 {{organization}} 的成员！"
+    },
+    "reject": {
+      "success": "你已拒绝加入 {{organization}}。"
+    },
+    "expired": {
+      "title": "邀请不存在或已过期",
+      "description": "你查找的邀请已过期或不存在。请联系组织拥有者重新发送邀请。",
+      "cta": "返回仪表盘"
+    },
+    "emailMismatch": {
+      "title": "你当前登录的是另一个账号",
+      "description": "你使用的邮箱与邀请邮箱不匹配。请以 <bold>{{email}}</bold> 登录或联系组织拥有者更新邀请。",
+      "cta": "以 {{email}} 登录",
+      "skip": "跳转到仪表盘"
+    },
+    "invitation": {
+      "title": "加入 {{organizationName}}",
+      "description": "<bold>{{inviterEmail}}</bold> 邀请你加入 <bold>{{organizationName}}</bold>（TurboStarter）。",
+      "skip": "跳转到仪表盘"
+    },
+    "user": {
+      "banner": {
+        "title_one": "你有 1 条待处理邀请",
+        "title_other": "你有 {{count}} 条待处理邀请",
+        "description": "点击查看详情并接受或拒绝邀请。"
+      },
+      "list": {
+        "title": "待处理邀请",
+        "description": "查看并管理待处理邀请。"
+      }
+    }
+  },
+  "members": {
+    "title": "成员",
+    "header": {
+      "title": "组织成员",
+      "description": "管理组织成员、邀请与角色。"
+    },
+    "invite": {
+      "title": "邀请成员",
+      "description": "要添加新成员，请向其发送邀请。",
+      "info": "你可以一次邀请多个成员。",
+      "missingPermission": "你需要更多权限才能邀请成员。",
+      "success_one": "成员邀请成功！",
+      "success_other": "成员邀请成功！",
+      "email": {
+        "subject": "你被邀请加入一个组织",
+        "preview": "加入 {{inviter}} 的 TurboStarter",
+        "body": "<bold>{{inviter}}</bold> 邀请你加入 <bold>{{organization}}</bold>（TurboStarter）。",
+        "or": "或将此链接复制到浏览器：",
+        "cta": "加入 {{organization}}",
+        "disclaimer": "如果你并不期待这封邀请邮件，可忽略即可。"
+      }
+    },
+    "update": {
+      "role": {
+        "title": "更新 {{name}} 的角色",
+        "description": "从下拉菜单中选择角色以更新该成员。",
+        "info": "角色决定成员的权限。",
+        "success": "成员角色更新成功！"
+      }
+    },
+    "remove": {
+      "success": "成员移除成功！"
+    }
+  },
+  "name": {
+    "edit": {
+      "description": "请输入组织名称，或你希望显示的名称。",
+      "success": "组织名称更新成功！",
+      "info": "请最多使用 32 个字符。",
+      "missingPermission": "你需要更多权限才能管理组织名称。"
+    }
+  },
+  "logo": {
+    "description": "这是你的组织标志。\n点击标志可上传自定义图片。",
+    "info": "虽然不是必需，但强烈建议添加标志。",
+    "missingPermission": "你需要更多权限才能管理组织标志。",
+    "update": {
+      "success": "组织标志更新成功！"
+    },
+    "remove": {
+      "success": "组织标志移除成功！"
+    }
+  },
+  "leave": {
+    "title": "离开组织",
+    "description": "撤销你对该组织的访问权限。你在组织中的资源将被保留。",
+    "cta": "离开组织",
+    "disclaimer": "确定要离开该组织吗？\n\n你将无法再访问其资源，并需要重新被邀请才能加入。\n\n是否继续？",
+    "success": "你已成功离开该组织！",
+    "cannotLeaveAsOnlyOwner": "若要离开，请确保至少还有一名成员为 Owner 角色。"
+  },
+  "delete": {
+    "title": "删除组织",
+    "description": "永久删除该组织及其内容。此操作不可逆，请谨慎继续。",
+    "cta": "删除组织",
+    "disclaimer": "你即将删除该组织。\n\n删除后，所有组织数据（包括成员与团队）将被永久删除且无法恢复。\n\n是否继续？",
+    "success": "组织删除成功！",
+    "missingPermission": "你需要更多权限才能删除该组织。"
+  },
+  "error": {
+    "slugAlreadyTaken": "该标识已被占用。",
+    "cannotCreateNew": "无法创建新组织。",
+    "maximumNumberOfOrganizations": "已达到组织数量上限。",
+    "alreadyExists": "已存在同名组织。",
+    "notFound": "未找到该组织。",
+    "userNotMember": "你不是该组织成员。",
+    "cannotUpdate": "无法更新该组织。",
+    "cannotDelete": "无法删除该组织。",
+    "noActive": "未找到激活的组织。",
+    "userAlreadyMember": "你已是该组织成员。",
+    "memberNotFound": "未找到该成员。",
+    "roleNotFound": "未找到该角色。",
+    "cannotLeaveAsOnlyOwner": "你不能作为唯一 Owner 离开组织。",
+    "cannotLeaveWithoutOwner": "没有 Owner 时无法离开组织。",
+    "cannotDeleteMember": "无法删除该成员。",
+    "cannotUpdateMember": "无法更新该成员。",
+    "membershipLimitReached": "已达到组织成员数量上限。",
+    "cannotAccess": "无法访问该组织。",
+    "slugNotAvailable": "该标识不可用。",
+    "team": {
+      "cannotCreateNew": "无法创建新团队。",
+      "alreadyExists": "已存在同名团队。",
+      "notFound": "未找到该团队。",
+      "maximumNumberOfTeams": "已达到团队数量上限。",
+      "unableToRemoveLastTeam": "无法移除最后一个团队。",
+      "cannotCreate": "无法在该组织中创建团队。",
+      "cannotDelete": "无法删除该组织中的团队。",
+      "cannotUpdate": "无法更新该组织中的团队。",
+      "cannotAccessMembers": "无法访问该团队成员。",
+      "memberLimitReached": "已达到团队成员数量上限。",
+      "userNotMember": "你不是该团队成员。",
+      "noActive": "未找到激活的团队。",
+      "cannotCreateNewMember": "无法创建新成员。",
+      "cannotRemoveMember": "无法移除该成员。",
+      "cannotAccess": "无法访问该组织。"
+    },
+    "invitation": {
+      "cannotInviteUsers": "无法邀请用户加入该组织。",
+      "userAlreadyInvited": "该用户已被邀请。",
+      "notFound": "未找到该邀请。",
+      "notRecipient": "你不是该邀请的接收者。",
+      "cannotCancel": "无法取消该邀请。",
+      "inviterNoLongerMember": "邀请人已不再是该组织成员。",
+      "cannotInviteUserWithRole": "无法以该角色邀请用户。",
+      "emailVerificationRequired": "接受或拒绝邀请前需完成邮箱验证。",
+      "failedToRetrieve": "无法获取邀请信息。",
+      "limitReached": "已达到组织邀请数量上限。"
+    },
+    "ac": {
+      "missingAcInstance": "缺少 AC 实例。",
+      "mustBeInOrganizationToCreateRole": "必须在组织内才能创建角色。",
+      "cannotCreateRole": "无法创建角色。",
+      "cannotUpdateRole": "无法更新角色。",
+      "cannotDeleteRole": "无法删除角色。",
+      "cannotReadRole": "无法读取角色。",
+      "cannotListRole": "无法列出角色。",
+      "cannotGetRole": "无法获取角色。",
+      "tooManyRoles": "已达到角色数量上限。",
+      "invalidResource": "资源无效。",
+      "cannotDeletePreDefinedRole": "无法删除预定义角色。",
+      "roleNameAlreadyTaken": "角色名称已被占用。"
+    }
+  }
+}

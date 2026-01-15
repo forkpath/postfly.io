@@ -5,7 +5,6 @@ import { PgConfig } from '@libs/pg-dao'
 import {
   CacheConfig,
   ElasticsearchConfig,
-  EmailConfig,
   I18nConfig,
   LoggerConfig,
   LogLevel,
@@ -41,7 +40,6 @@ interface Config {
   i18n: I18nConfig
   throttler: ThrottlerConfig
   // 第三方服务
-  email: EmailConfig
   storage: StorageConfig
   sms: SmsConfig
   // 其他
@@ -106,11 +104,6 @@ const config: Config = {
         db: parseInt(process.env['THROTTLER_DB_INDEX'] as string, 10) || 2
       }
     }
-  },
-  email: {
-    from: process.env['RESEND_EMAIL_FROM'] || 'noreply@domain.com',
-    apiKey: process.env['RESEND_EMAIL_API_KEY'] || '',
-    endpoint: process.env['RESEND_EMAIL_ENDPOINT'] || ''
   },
   storage: {
     accessKeyId: process.env['STORAGE_ACCESS_KEY_ID'] || 'storage_access_key_id',

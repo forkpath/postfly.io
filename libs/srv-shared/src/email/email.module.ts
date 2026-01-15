@@ -1,8 +1,8 @@
 import { DynamicModule, Module } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
+
+import { sendEmail } from '@libs/email'
 
 import { EMAIL_SENDER, EmailService } from './email.service'
-import { createEmailSender, EmailConfig } from './providers'
 
 @Module({})
 export class EmailModule {
@@ -12,14 +12,7 @@ export class EmailModule {
       providers: [
         {
           provide: EMAIL_SENDER,
-          inject: [ConfigService],
-          useFactory: (configService: ConfigService) => {
-            const config = configService.get<EmailConfig>('email') as EmailConfig
-            if (!config) {
-              throw new Error('Email config is missing')
-            }
-            return createEmailSender(config)
-          }
+          useValue: sendEmail
         },
         EmailService
       ],

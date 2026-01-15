@@ -1,0 +1,108 @@
+{
+  "currency": "usd",
+  "pricing": {
+    "label": "定价",
+    "title": "面向所有人的简洁方案",
+    "description": "选择适合你的方案，开启成功之旅。"
+  },
+  "manage": {
+    "plan": {
+      "title": "管理方案",
+      "description": "查看当前方案详情。你可以随时更改方案或取消订阅。"
+    },
+    "billing": {
+      "title": "管理账单",
+      "description": "访问计费门户管理订阅与账单。你可以更新支付方式、取消订阅、下载发票等。",
+      "visitPortal": "前往计费门户"
+    },
+    "description": "管理你的账单与订阅。"
+  },
+  "subscribe": "立即订阅",
+  "updatePlan": "更新方案",
+  "getLifetimeAccess": "获取永久访问",
+  "interval": {
+    "day": "天",
+    "week": "周",
+    "month": "月",
+    "year": "年",
+    "lifetime": "永久"
+  },
+  "trial": {
+    "cta": "免费开始",
+    "period": "试用 {{period}} 天"
+  },
+  "discount": {
+    "specialOffer": "特别优惠：<bold>立减 {{discount}}</bold>"
+  },
+  "plan": {
+    "starter": {
+      "name": "入门版",
+      "description": "适合刚起步的小型项目",
+      "features": {
+        "sync": "无缝同步",
+        "basicSupport": "基础支持",
+        "limitedStorage": "有限存储",
+        "emailNotifications": "邮件通知",
+        "basicReports": "基础报表"
+      }
+    },
+    "premium": {
+      "name": "高级版",
+      "description": "适合成长型团队的进阶功能",
+      "badge": "畅销",
+      "features": {
+        "advancedSync": "高级同步",
+        "prioritySupport": "优先支持",
+        "moreStorage": "更多存储",
+        "teamCollaboration": "团队协作",
+        "smsNotifications": "短信通知",
+        "advancedReports": "高级报表"
+      }
+    },
+    "enterprise": {
+      "name": "企业版",
+      "description": "面向组织与大型团队",
+      "features": {
+        "unlimitedStorage": "无限存储",
+        "customBranding": "自定义品牌",
+        "dedicatedSupport": "专属支持",
+        "apiAccess": "API 访问",
+        "userRoles": "用户角色管理",
+        "auditLogs": "审计日志",
+        "singleSignOn": "单点登录",
+        "advancedAnalytics": "高级分析"
+      }
+    }
+  },
+  "error": {
+    "checkout": "结账时发生错误。",
+    "checkoutRetrieve": "获取结账会话时发生错误。",
+    "portal": "获取门户 URL 时发生错误。",
+    "invalidProvider": "无效的计费提供商！",
+    "lemonSqueezy": "Lemon Squeezy API 内部错误！",
+    "priceNotFound": "未找到价格！",
+    "customerNotFound": "未找到客户！",
+    "orderNotFound": "未找到订单！",
+    "subscriptionNotFound": "未找到订阅！",
+    "webhook": {
+      "signatureNotFound": "未找到 Webhook 签名！",
+      "signatureInvalid": "Webhook 签名无效。",
+      "metaInvalid": "Webhook 元数据无效。",
+      "dataInvalid": "Webhook 数据无效。",
+      "unsupportedEvent": "不支持的 Webhook 事件。",
+      "unhandledEvent": "未处理的 Webhook 事件。"
+    },
+    "customerCreation": "客户创建失败。",
+    "promotionCodeRetrieve": "无法获取优惠码。"
+  },
+  "status": {
+    "active": "有效",
+    "canceled": "已取消",
+    "incomplete": "未完成",
+    "incompleteExpired": "未完成且已过期",
+    "pastDue": "逾期",
+    "paused": "已暂停",
+    "trialing": "试用中",
+    "unpaid": "未支付"
+  }
+}

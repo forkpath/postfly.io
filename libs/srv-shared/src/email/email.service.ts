@@ -1,6 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common'
+import type { EmailSender } from '@libs/email'
 
-import { EmailSender } from './providers/types'
+import { Inject, Injectable } from '@nestjs/common'
 
 export type SendEmailArgs = {
   to: string

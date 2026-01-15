@@ -1,0 +1,111 @@
+{
+  "home": {
+    "header": {
+      "title": "超级管理员",
+      "description": "一目了然查看你的 SaaS，并在一个地方管理所有资源。"
+    },
+    "summary": {
+      "users": "已创建的个人账号数量。",
+      "organizations": "已创建的组织数量。",
+      "customers": "你的 SaaS 客户数量。"
+    }
+  },
+  "users": {
+    "header": {
+      "title": "用户",
+      "description": "管理用户及其角色。"
+    },
+    "user": {
+      "details": {
+        "role": {
+          "update": { "success": "用户角色更新成功！" }
+        },
+        "name": {
+          "update": { "success": "用户名更新成功！" }
+        }
+      },
+      "ban": {
+        "description": "将此用户从平台封禁。你可以指定原因以及可选的到期时间。",
+        "success": "用户封禁成功！",
+        "form": {
+          "reason": { "info": "请输入封禁该用户的原因。" },
+          "expiresIn": {
+            "info": "请输入封禁到期时间，或留空表示永久封禁。"
+          }
+        }
+      },
+      "unban": { "success": "用户解封成功！" },
+      "delete": {
+        "title": "删除 {{name}}",
+        "disclaimer": "你即将删除该用户。\n\n删除后，所有用户数据（包括会话与权限）将被永久删除且无法恢复。\n\n是否继续？",
+        "success": "用户删除成功！"
+      },
+      "accounts": {
+        "delete": { "success": "账号删除成功！" },
+        "password": {
+          "update": {
+            "title": "更新 {{name}} 的密码",
+            "description": "请确保选择符合安全要求的强密码。此操作会立即更新用户的登录凭据。",
+            "success": "账号密码更新成功！",
+            "info": "请输入该账号的新密码。"
+          }
+        }
+      },
+      "sessions": {
+        "revokeAll": { "success": "所有会话已成功撤销！" }
+      }
+    }
+  },
+  "organizations": {
+    "header": {
+      "title": "组织",
+      "description": "管理组织及其成员。"
+    },
+    "organization": {
+      "delete": {
+        "title": "删除 {{name}}",
+        "disclaimer": "你即将删除该组织。\n\n删除后，所有组织数据（包括成员与团队）将被永久删除且无法恢复。\n\n是否继续？",
+        "success": "组织删除成功！"
+      },
+      "details": {
+        "name": {
+          "update": { "success": "组织名称更新成功！" }
+        },
+        "slug": {
+          "update": { "success": "组织标识更新成功！" }
+        }
+      }
+    }
+  },
+  "customers": {
+    "header": {
+      "title": "客户",
+      "description": "管理客户及其订阅。"
+    },
+    "customer": {
+      "delete": { "success": "客户删除成功！" },
+      "updatePlan": {
+        "title": "更新 {{name}} 的方案",
+        "description": "为客户选择方案和状态。此操作会立即更新客户的方案和状态。`",
+        "plan": {
+          "info": "方案决定客户可用功能与定价。"
+        },
+        "status": {
+          "info": "状态决定订阅状态。"
+        },
+        "success": "客户方案更新成功！"
+      }
+    }
+  },
+  "error": {
+    "cannotCreateUsers": "无法创建用户。",
+    "cannotListUsers": "无法获取用户列表。",
+    "cannotUpdateUsers": "无法更新用户。",
+    "cannotDeleteUsers": "无法删除用户。",
+    "cannotListUsersSessions": "无法获取用户会话。",
+    "cannotBanUsers": "无法封禁用户。",
+    "cannotImpersonateUsers": "无法冒充用户。",
+    "cannotRevokeUsersSessions": "无法撤销用户会话。",
+    "cannotSetUsersPassword": "无法设置用户密码。"
+  }
+}

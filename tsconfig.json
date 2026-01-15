@@ -35,6 +35,15 @@
     },
     {
       "path": "./libs/payload"
+    },
+    {
+      "path": "./libs/i18n"
+    },
+    {
+      "path": "./libs/email"
+    },
+    {
+      "path": "./libs/auth"
     }
   ]
 }
