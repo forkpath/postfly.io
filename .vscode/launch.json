@@ -5,7 +5,7 @@
       "type": "node",
       "request": "launch",
       "name": "Debug engine with Nx",
-      "runtimeExecutable": "pnpm exec",
+      "runtimeExecutable": "pnpm",
       "runtimeArgs": ["nx", "serve", "engine"],
       "env": {
         "NODE_OPTIONS": "--inspect=9229"
@@ -14,10 +14,7 @@
       "internalConsoleOptions": "neverOpen",
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true,
-      "outFiles": [
-        "${workspaceFolder}/apps/engine/dist/**/*.(m|c|)js",
-        "!**/node_modules/**"
-      ]
+      "outFiles": ["${workspaceFolder}/dist/services/engine/**/*.js", "!**/node_modules/**"]
     }
   ]
 }

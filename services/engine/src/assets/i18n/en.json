@@ -1,0 +1,56 @@
+{
+  "dto": {
+    "validataion": {
+      "failed": "Validation failed"
+    },
+    "passwordFormat": "Invalid password format"
+  },
+  "exp": {
+    "base": {
+      "forbidden": {
+        "access": "Forbidden",
+        "action": "Action is not allowed"
+      },
+      "invalid": {
+        "verificationCode": "Invalid verification code",
+        "userId": "Invalid user id",
+        "token": "Invalid token",
+        "permission": "Invalid permission",
+        "resource": "Invalid resource",
+        "action": "Invalid action"
+      },
+      "forbiddenAction": {
+        "access": "Forbidden",
+        "action": "Action is not allowed"
+      }
+    },
+    "auth": {
+      "failed": "Authentication failed"
+    },
+    "emailVerification": {
+      "sendFailed": "Failed to send verification code",
+      "expired": "Verification code expired",
+      "invalid": "Invalid verification code"
+    },
+    "passwordReset": {
+      "tokenNotFound": "Reset token not found",
+      "tokenExpired": "Reset token expired",
+      "tokenUsed": "Reset token already used"
+    },
+    "user": {
+      "alreadyExist": "User already exists",
+      "notExist": "User not found",
+      "emailInvalid": "Invalid email",
+      "passwordInvalid": "Invalid password"
+    },
+    "role": {
+      "alreadyExist": "Role already exists",
+      "notExist": "Role not found",
+      "defaultCannotDelete": "Default role cannot be deleted"
+    },
+    "permission": {
+      "alreadyExist": "Permission already exists",
+      "notExist": "Permission not found"
+    }
+  }
+}
