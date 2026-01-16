@@ -7,3 +7,4 @@ export * from './types'
 export * from './utils'
 
 export { Trans } from 'react-i18next/TransWithoutContext'
+export type { TranslationKey } from './client'

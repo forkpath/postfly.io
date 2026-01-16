@@ -1,74 +1,22 @@
 import { expo } from '@better-auth/expo'
 import { passkey } from '@better-auth/passkey'
-import { render } from '@react-email/render'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { betterAuth } from 'better-auth/minimal'
 import { nextCookies } from 'better-auth/next-js'
 import { admin, anonymous, lastLoginMethod, magicLink, organization, twoFactor } from 'better-auth/plugins'
 
-import {
-  ChangeEmail,
-  ConfirmEmail,
-  ContactForm,
-  DeleteAccount,
-  EmailTemplate,
-  MagicLink,
-  OrganizationInvitation,
-  ResetPassword,
-  sendEmail as sendRawEmail
-} from '@libs/email'
+import { NodeEnv } from '@libs/common'
+import { EmailTemplate } from '@libs/email'
+import { sendEmail } from '@libs/email/server'
 import { getLocaleFromRequest } from '@libs/i18n'
-import { PrismaClient } from '@libs/pg-dao'
+import { prisma } from '@libs/pg-dao'
 
 import { env } from './env'
 import { getUrl } from './lib/utils'
 import { AuthProvider, SocialProvider, VerificationType } from './types'
 
-const prisma = new PrismaClient()
-
-const templates = {
-  [EmailTemplate.CHANGE_EMAIL]: ChangeEmail,
-  [EmailTemplate.CONFIRM_EMAIL]: ConfirmEmail,
-  [EmailTemplate.DELETE_ACCOUNT]: DeleteAccount,
-  [EmailTemplate.MAGIC_LINK]: MagicLink,
-  [EmailTemplate.ORGANIZATION_INVITATION]: OrganizationInvitation,
-  [EmailTemplate.RESET_PASSWORD]: ResetPassword,
-  [EmailTemplate.CONTACT_FORM]: ContactForm
-} as const
-
-const sendTemplateEmail = async <T extends EmailTemplate>({
-  to,
-  template,
-  locale,
-  variables
-}: {
-  to: string
-  template: T
-  locale?: string
-  variables: Parameters<(typeof templates)[T]>[0]
-}) => {
-  const Template = templates[template]
-  const element = await Template({
-    ...(variables as Parameters<(typeof templates)[T]>[0]),
-    locale
-  } as Parameters<typeof Template>[0])
-  const subject = Template.subject
-    ? await (Template.subject as (args?: unknown) => Promise<string>)({
-        ...(variables as Record<string, unknown>),
-        locale
-      })
-    : undefined
-
-  if (!subject) {
-    throw new Error(`Missing email subject for template: ${template}`)
-  }
-
-  const html = render(element)
-  return sendRawEmail({ to, subject, html })
-}
-
 export const auth = betterAuth({
-  appName: 'TurboStarter',
+  appName: 'Ray',
   session: {
     cookieCache: {
       enabled: true,
@@ -79,7 +27,7 @@ export const auth = betterAuth({
     deleteUser: {
       enabled: true,
       sendDeleteAccountVerification: async ({ user, url }, request) =>
-        sendTemplateEmail({
+        sendEmail({
           to: user.email,
           template: EmailTemplate.DELETE_ACCOUNT,
           locale: getLocaleFromRequest(request),
@@ -96,7 +44,7 @@ export const auth = betterAuth({
       enabled: true,
       updateEmailWithoutVerification: true,
       sendChangeEmailConfirmation: async ({ user, newEmail, url }, request) =>
-        sendTemplateEmail({
+        sendEmail({
           to: user.email,
           template: EmailTemplate.CHANGE_EMAIL,
           locale: getLocaleFromRequest(request),
@@ -113,16 +61,16 @@ export const auth = betterAuth({
   },
   trustedOrigins: [
     'chrome-extension://',
-    'turbostarter://',
+    'ray://',
     /* Needed only for Apple ID authentication */
     'https://appleid.apple.com',
-    ...(process.env.NODE_ENV === 'development' ? ['http://localhost*', 'https://localhost*'] : [])
+    ...(env.NODE_ENV === NodeEnv.DEVELOPMENT ? ['http://localhost*', 'https://localhost*'] : [])
   ],
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url }, request) =>
-      sendTemplateEmail({
+      sendEmail({
         to: user.email,
         template: EmailTemplate.RESET_PASSWORD,
         locale: getLocaleFromRequest(request),
@@ -135,7 +83,7 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }, request) =>
-      sendTemplateEmail({
+      sendEmail({
         to: user.email,
         template: EmailTemplate.CONFIRM_EMAIL,
         locale: getLocaleFromRequest(request),
@@ -148,11 +96,11 @@ export const auth = betterAuth({
         }
       })
   },
-  database: prismaAdapter(prisma),
+  database: prismaAdapter(prisma, { provider: 'postgresql' }),
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }, ctx) =>
-        sendTemplateEmail({
+        sendEmail({
           to: email,
           template: EmailTemplate.MAGIC_LINK,
           locale: getLocaleFromRequest(ctx?.request),
@@ -177,7 +125,7 @@ export const auth = betterAuth({
         url.searchParams.set('invitationId', invitation.id)
         url.searchParams.set('email', invitation.email)
 
-        return sendTemplateEmail({
+        return sendEmail({
           to: invitation.email,
           template: EmailTemplate.ORGANIZATION_INVITATION,
           locale: getLocaleFromRequest(request),
@@ -233,10 +181,10 @@ export const auth = betterAuth({
   logger: {
     log: (level, ...args) => {
       const fn =
-        level === 'fatal'
+        level === 'error'
           ? console.error
           : level in console
-            ? console[level as 'debug' | 'info' | 'warn' | 'error' | 'log']
+            ? console[level as 'debug' | 'info' | 'warn' | 'log']
             : console.log
       fn(...args)
     }

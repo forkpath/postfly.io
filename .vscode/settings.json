@@ -6,18 +6,9 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "eslint.rules.customizations": [{ "rule": "*", "severity": "warn" }],
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ],
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
   "eslint.useFlatConfig": true,
-  "eslint.workingDirectories": [
-    { "pattern": "apps/*/" },
-    { "pattern": "services/*/" },
-    { "pattern": "libs/*/" }
-  ],
+  "eslint.workingDirectories": [{ "pattern": "apps/*/" }, { "pattern": "services/*/" }, { "pattern": "libs/*/" }],
   "prettier.ignorePath": ".gitignore",
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.tsdk": "node_modules/typescript/lib",
@@ -70,5 +61,6 @@
     "ListFooterComponentClassName",
     "ListHeaderComponentClassName"
   ],
-  "tailwindCSS.classFunctions": ["useResolveClassNames"]
+  "tailwindCSS.classFunctions": ["useResolveClassNames"],
+  "i18n-ally.localesPaths": ["libs/i18n", "libs/srv-shared/src/i18n"]
 }

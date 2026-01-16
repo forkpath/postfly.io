@@ -29,7 +29,7 @@ export const isKey = <T extends Namespace = DefaultNamespace>(
 }
 
 export const isLocaleSupported = (locale: string): locale is (typeof config.locales)[number] =>
-  config.locales.includes(locale)
+  config.locales.includes(locale as (typeof config.locales)[number])
 
 export const getPathname = ({
   locale,

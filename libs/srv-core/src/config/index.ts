@@ -1,7 +1,6 @@
 import { FileSize, Interval } from 'rotating-file-stream'
 
 import { MongoConfig } from '@libs/mongo-dao'
-import { PgConfig } from '@libs/pg-dao'
 import {
   CacheConfig,
   ElasticsearchConfig,
@@ -31,7 +30,6 @@ interface Config {
   server: ServerConfig
   security: SecurityConfig
   // 数据库
-  pg: PgConfig
   redis: RedisConfig
   mongo: MongoConfig
   // 中间件
@@ -57,9 +55,6 @@ const config: Config = {
     accessTokenSecret: process.env['SECURITY_ACCESS_TOKEN_SECRET'] || 'access_secret',
     accessTokenExpiredIn: process.env['SECURITY_ACCESS_TOKEN_EXPIRED'] || '5m',
     refreshTokenExpiredIn: process.env['SECURITY_REFRESH_TOKEN_EXPIRED'] || '7d'
-  },
-  pg: {
-    databaseUrl: process.env['DATABASE_URL'] || ''
   },
   redis: {
     host: process.env['REDIS_HOST'] || 'localhost',

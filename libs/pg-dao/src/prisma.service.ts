@@ -1,21 +1,7 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-
-import { PrismaPg } from '@prisma/adapter-pg'
+import { Injectable } from '@nestjs/common'
 
 import { PrismaClient } from './generated/prisma/client'
 
+// 仅作为 Nest DI 的注入标识与类型提示，实际实例由 prisma.ts 提供单例
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
-  constructor(databaseUrl: string) {
-    const adapter = new PrismaPg({ connectionString: databaseUrl })
-    super({ adapter })
-  }
-
-  async onModuleInit() {
-    await this.$connect()
-  }
-
-  async onModuleDestroy() {
-    await this.$disconnect()
-  }
-}
+export class PrismaService extends PrismaClient {}

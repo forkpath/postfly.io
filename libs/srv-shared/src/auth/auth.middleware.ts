@@ -3,20 +3,18 @@ import type { NextFunction, Request, Response } from 'express'
 import { json, urlencoded } from 'express'
 
 /**
- * Factory that returns a Nest middleware which skips body parsing for the
- * configured basePath.
+ * 创建一个 Nest 中间件：对指定 basePath 路由跳过 body 解析。
  */
 export function SkipBodyParsingMiddleware(basePath = '/api/auth') {
-  // Return a middleware function compatible with Nest's consumer.apply()
-  // NestJS consumer.apply() accepts plain functions directly
+  // Nest 的 consumer.apply() 可直接接收普通函数
   return (req: Request, res: Response, next: NextFunction): void => {
-    // skip body parsing for better-auth routes
+    // better-auth 路由跳过 body 解析
     if (req.baseUrl.startsWith(basePath)) {
       next()
       return
     }
 
-    // Parse the body as usual
+    // 其他路由正常解析 body
     json()(req, res, err => {
       if (err) {
         next(err)

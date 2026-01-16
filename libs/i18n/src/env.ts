@@ -1,4 +1,3 @@
-/* eslint-disable turbo/no-undeclared-env-vars */
 import type { Preset } from 'envin/types'
 
 import { defineEnv } from 'envin'
@@ -20,7 +19,7 @@ export const preset = {
 export const env = defineEnv({
   ...preset,
   env: {
-    DEFAULT_LOCALE: process.env.DEFAULT_LOCALE,
-    VITE_DEFAULT_LOCALE: process.env.VITE_DEFAULT_LOCALE
+    DEFAULT_LOCALE: process.env['DEFAULT_LOCALE'],
+    VITE_DEFAULT_LOCALE: process.env['VITE_DEFAULT_LOCALE']
   }
 })

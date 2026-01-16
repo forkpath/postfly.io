@@ -1,6 +1,6 @@
 import { DynamicModule, Module } from '@nestjs/common'
 
-import { sendEmail } from '@libs/email'
+import { sendEmail } from '@libs/email/server'
 
 import { EMAIL_SENDER, EmailService } from './email.service'
 

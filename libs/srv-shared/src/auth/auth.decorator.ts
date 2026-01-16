@@ -7,40 +7,37 @@ import { AFTER_HOOK_KEY, BEFORE_HOOK_KEY, HOOK_KEY } from './auth-module-definit
 import { getRequestFromContext } from './utils'
 
 /**
- * Allows unauthenticated (anonymous) access to a route or controller.
- * When applied, the AuthGuard will not perform authentication checks.
+ * 允许匿名访问路由或控制器。
+ * 标记后 AuthGuard 不会进行鉴权。
  */
 export const AllowAnonymous = (): CustomDecorator<string> => SetMetadata('PUBLIC', true)
 
 /**
- * Marks a route or controller as having optional authentication.
- * When applied, the AuthGuard allows the request to proceed
- * even if no session is present.
+ * 标记为可选鉴权。
+ * 即使没有 session 也允许请求通过。
  */
 export const OptionalAuth = (): CustomDecorator<string> => SetMetadata('OPTIONAL', true)
 
 /**
- * Specifies the roles required to access a route or controller.
- * The AuthGuard will check if the authenticated user's roles
- * include at least one of the specified roles.
- * @param roles - The roles required for access
+ * 指定访问路由/控制器所需的角色。
+ * AuthGuard 会校验用户角色是否满足要求。
+ * @param roles - 所需角色列表
  */
 export const Roles = (roles: string[]): CustomDecorator => SetMetadata('ROLES', roles)
 
 /**
- * @deprecated Use AllowAnonymous() instead.
+ * @deprecated 请使用 AllowAnonymous()
  */
 export const Public = AllowAnonymous
 
 /**
- * @deprecated Use OptionalAuth() instead.
+ * @deprecated 请使用 OptionalAuth()
  */
 export const Optional = OptionalAuth
 
 /**
- * Parameter decorator that extracts the user session from the request.
- * Provides easy access to the authenticated user's session data in controller methods.
- * Works with both HTTP and GraphQL execution contexts.
+ * 参数装饰器：从请求中获取 session。
+ * 用于控制器方法中快速访问当前用户会话信息。
  */
 export const Session: ReturnType<typeof createParamDecorator> = createParamDecorator(
   (_data: unknown, context: ExecutionContext): unknown => {
@@ -49,25 +46,24 @@ export const Session: ReturnType<typeof createParamDecorator> = createParamDecor
   }
 )
 /**
- * Represents the context object passed to hooks.
- * This type is derived from the parameters of the createAuthMiddleware function.
+ * Hook 上下文类型（来自 createAuthMiddleware 的参数）。
  */
 export type AuthHookContext = Parameters<Parameters<typeof createAuthMiddleware>[0]>[0]
 
 /**
- * Registers a method to be executed before a specific auth route is processed.
- * @param path - The auth route path that triggers this hook (must start with '/')
+ * 注册路由前置 Hook。
+ * @param path - 触发 Hook 的 auth 路径（必须以 '/' 开头）
  */
 export const BeforeHook = (path?: `/${string}`): CustomDecorator<symbol> => SetMetadata(BEFORE_HOOK_KEY, path)
 
 /**
- * Registers a method to be executed after a specific auth route is processed.
- * @param path - The auth route path that triggers this hook (must start with '/')
+ * 注册路由后置 Hook。
+ * @param path - 触发 Hook 的 auth 路径（必须以 '/' 开头）
  */
 export const AfterHook = (path?: `/${string}`): CustomDecorator<symbol> => SetMetadata(AFTER_HOOK_KEY, path)
 
 /**
- * Class decorator that marks a provider as containing hook methods.
- * Must be applied to classes that use BeforeHook or AfterHook decorators.
+ * 标记类中包含 Hook 方法。
+ * 使用 BeforeHook / AfterHook 的类必须加上该装饰器。
  */
 export const Hook = (): ClassDecorator => SetMetadata(HOOK_KEY, true)

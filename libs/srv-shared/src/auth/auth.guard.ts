@@ -11,8 +11,7 @@ import { MODULE_OPTIONS_TOKEN } from './auth-module-definition'
 import { getRequestFromContext } from './utils'
 
 /**
- * Type representing a valid user session after authentication
- * Excludes null and undefined values from the session return type
+ * 认证后有效的 Session 类型（排除 null/undefined）。
  */
 export type BaseUserSession = NonNullable<Awaited<ReturnType<ReturnType<typeof getSession>>>>
 
@@ -23,7 +22,7 @@ export type UserSession = BaseUserSession & {
 }
 
 /**
- * Lazy-load WsException to make @nestjs/websockets an optional dependency
+ * 懒加载 WsException，避免强制依赖 @nestjs/websockets。
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let WsException: any
@@ -75,8 +74,8 @@ const AuthContextErrorMap: Record<ContextType, Record<'UNAUTHORIZED' | 'FORBIDDE
 }
 
 /**
- * NestJS guard that handles authentication for protected routes
- * Can be configured with @AllowAnonymous() or @OptionalAuth() decorators to modify authentication behavior
+ * 负责鉴权的 Guard。
+ * 可通过 @AllowAnonymous() / @OptionalAuth() 调整鉴权行为。
  */
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -88,11 +87,8 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   /**
-   * Validates if the current request is authenticated
-   * Attaches session and user information to the request object
-   * Supports HTTP, GraphQL and WebSocket execution contexts
-   * @param context - The execution context of the current request
-   * @returns True if the request is authorized to proceed, throws an error otherwise
+   * 验证当前请求是否有权限访问。
+   * 会把 session 与 user 挂到 request 上，方便后续使用。
    */
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = getRequestFromContext(context)
@@ -101,7 +97,8 @@ export class AuthGuard implements CanActivate {
     })
 
     request.session = session
-    request.user = session?.user ?? null // useful for observability tools like Sentry
+    // 便于观测工具（如 Sentry）读取用户信息
+    request.user = session?.user ?? null
 
     const isPublic = this.reflector.getAllAndOverride<boolean>('PUBLIC', [context.getHandler(), context.getClass()])
 
@@ -109,6 +106,7 @@ export class AuthGuard implements CanActivate {
 
     const isOptional = this.reflector.getAllAndOverride<boolean>('OPTIONAL', [context.getHandler(), context.getClass()])
 
+    // 可选鉴权且无 session 时直接放行
     if (!session && isOptional) return true
 
     const ctxType = context.getType()
@@ -119,6 +117,7 @@ export class AuthGuard implements CanActivate {
       context.getClass()
     ])
 
+    // 需要角色校验时，判断是否匹配任意角色
     if (requiredRoles && requiredRoles.length > 0) {
       const userRole = session.user.role
       let hasRole = false

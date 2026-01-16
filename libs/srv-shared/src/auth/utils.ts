@@ -1,9 +1,8 @@
 import type { ExecutionContext } from '@nestjs/common'
 
 /**
- * Extracts the request object from either HTTP or WebSocket execution context
- * @param context - The execution context
- * @returns The request object
+ * 从 ExecutionContext 中提取 Request 对象（HTTP / WS）。
+ * @param context - 当前执行上下文
  */
 export function getRequestFromContext(context: ExecutionContext) {
   const contextType = context.getType()

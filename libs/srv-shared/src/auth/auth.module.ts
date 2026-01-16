@@ -26,8 +26,8 @@ const HOOKS = [
 ]
 
 /**
- * NestJS module that integrates the Auth library with NestJS applications.
- * Provides authentication middleware, hooks, and exception handling.
+ * NestJS 模块：用于接入 Better Auth。
+ * 提供认证中间件、Hook 支持与异常处理。
  */
 @Module({
   imports: [DiscoveryModule],
@@ -57,13 +57,16 @@ export class AuthModule extends ConfigurableModuleClass implements NestModule, O
     const hasHookProviders = providers.length > 0
     const hooksConfigured = typeof this.options.auth?.options?.hooks === 'object'
 
+    // 如果有 @Hook provider，但 auth.options.hooks 未配置，则直接报错
     if (hasHookProviders && !hooksConfigured)
       throw new Error(
         "Detected @Hook providers but Better Auth 'hooks' are not configured. Add 'hooks: {}' to your betterAuth(...) options."
       )
 
+    // 未配置 hooks 时，无需扫描/绑定
     if (!hooksConfigured) return
 
+    // 扫描所有 Hook provider 方法，并按元数据注册
     for (const provider of providers) {
       const providerPrototype = Object.getPrototypeOf(provider.instance)
       const methods = this.metadataScanner.getAllMethodNames(providerPrototype)
@@ -76,11 +79,11 @@ export class AuthModule extends ConfigurableModuleClass implements NestModule, O
   }
 
   configure(consumer: MiddlewareConsumer): void {
+    // 禁用 controllers 时不挂载路由
     if (this.options?.disableControllers) return
 
     const trustedOrigins = this.options.auth.options.trustedOrigins
-    // function-based trustedOrigins requires a Request (from web-apis) object to evaluate, which is not available in NestJS (we only have a express Request object)
-    // if we ever need this, take a look at better-call which show an implementation for this
+    // function 形式的 trustedOrigins 需要 Web Request，不适配 Nest 的 Express Request
     const isNotFunctionBased = trustedOrigins && Array.isArray(trustedOrigins)
 
     if (!this.options.disableTrustedOriginsCors && isNotFunctionBased) {
@@ -94,15 +97,15 @@ export class AuthModule extends ConfigurableModuleClass implements NestModule, O
         'Function-based trustedOrigins not supported in NestJS. Use string array or disable CORS with disableTrustedOriginsCors: true.'
       )
 
-    // Get basePath from options or use default
+    // 从配置获取 basePath，未配置则使用默认值
     let basePath = this.options.auth.options.basePath ?? '/api/auth'
 
-    // Ensure basePath starts with /
+    // 确保 basePath 以 / 开头
     if (!basePath.startsWith('/')) {
       basePath = `/${basePath}`
     }
 
-    // Ensure basePath doesn't end with /
+    // 确保 basePath 不以 / 结尾
     if (basePath.endsWith('/')) {
       basePath = basePath.slice(0, -1)
     }
@@ -111,6 +114,7 @@ export class AuthModule extends ConfigurableModuleClass implements NestModule, O
       consumer.apply(SkipBodyParsingMiddleware(basePath)).forRoutes('*')
     }
 
+    // 将 better-auth 路由挂载到 Nest 的 HTTP 适配器
     const handler = toNodeHandler(this.options.auth)
     this.adapter.httpAdapter.getInstance().use(basePath, (req: Request, res: Response) => {
       if (this.options.middleware) {
@@ -127,6 +131,7 @@ export class AuthModule extends ConfigurableModuleClass implements NestModule, O
   ) {
     if (!this.options.auth.options.hooks) return
 
+    // 根据 @BeforeHook / @AfterHook 元数据注册对应钩子
     for (const { metadataKey, hookType } of HOOKS) {
       const hasHook = Reflect.hasMetadata(metadataKey, providerMethod)
       if (!hasHook) continue
@@ -167,7 +172,7 @@ export class AuthModule extends ConfigurableModuleClass implements NestModule, O
 
   static forRoot(options: typeof OPTIONS_TYPE): DynamicModule
   /**
-   * @deprecated Use the object-based signature: AuthModule.forRoot({ auth, ...options })
+   * @deprecated 请使用对象签名：AuthModule.forRoot({ auth, ...options })
    */
   static forRoot(auth: AuthType, options?: Omit<typeof OPTIONS_TYPE, 'auth'>): DynamicModule
   static forRoot(arg1: AuthType | typeof OPTIONS_TYPE, arg2?: Omit<typeof OPTIONS_TYPE, 'auth'>): DynamicModule {

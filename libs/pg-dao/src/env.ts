@@ -1,0 +1,20 @@
+import type { Preset } from 'envin/types'
+
+import { defineEnv } from 'envin'
+import * as z from 'zod'
+
+import { NodeEnv } from '@libs/common'
+
+export const preset = {
+  id: 'pg',
+  server: {
+    DATABASE_URL: z.url()
+  }
+} as const satisfies Preset
+
+export const env = defineEnv({
+  ...preset,
+  shared: {
+    NODE_ENV: z.enum(NodeEnv).default(NodeEnv.DEVELOPMENT)
+  }
+})
