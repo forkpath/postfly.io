@@ -5,10 +5,25 @@
   },
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
-  "eslint.rules.customizations": [{ "rule": "*", "severity": "warn" }],
+  "eslint.rules.customizations": [
+    {
+      "rule": "*",
+      "severity": "warn"
+    }
+  ],
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
   "eslint.useFlatConfig": true,
-  "eslint.workingDirectories": [{ "pattern": "apps/*/" }, { "pattern": "services/*/" }, { "pattern": "libs/*/" }],
+  "eslint.workingDirectories": [
+    {
+      "pattern": "apps/*/"
+    },
+    {
+      "pattern": "services/*/"
+    },
+    {
+      "pattern": "libs/*/"
+    }
+  ],
   "prettier.ignorePath": ".gitignore",
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.tsdk": "node_modules/typescript/lib",

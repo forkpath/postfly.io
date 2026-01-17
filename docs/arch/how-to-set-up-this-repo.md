@@ -118,6 +118,12 @@ npx @better-auth/cli@latest secret
 nx g @nx/js:lib libs/auth --minimal --bundler=none --tags=scope:shared,type:lib --skipTsConfig
 ```
 
+- 继承stripe和lemon-squeezy作为支付依赖
+
+```shell
+nx g @nx/js:lib libs/billing --minimal --bundler=none --tags=scope:shared,type:lib --skipTsConfig
+```
+
 - 利用shacdn构建ui-shared
 
 ```shell

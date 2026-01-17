@@ -21,6 +21,7 @@
       "@libs/pg-dao": ["libs/pg-dao/src/index.ts"],
       "@libs/payload": ["libs/payload/src/index.ts"],
       "@libs/ui-shared/*": ["libs/ui-shared/src/*"],
+      "@libs/billing/*": ["libs/billing/src/*"],
       "@libs/common": ["libs/common/src/index.ts"],
       "@libs/email": ["libs/email/src/index.ts"],
       "@libs/email/*": ["libs/email/src/*"],
