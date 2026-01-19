@@ -31,7 +31,8 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "files.associations": {
-    "*.css": "tailwindcss"
+    "*.css": "tailwindcss",
+    "*.prisma": "prisma"
   },
   "files.watcherExclude": {
     "**/routeTree.gen.ts": true
@@ -77,5 +78,8 @@
     "ListHeaderComponentClassName"
   ],
   "tailwindCSS.classFunctions": ["useResolveClassNames"],
-  "i18n-ally.localesPaths": ["libs/i18n", "libs/srv-shared/src/i18n"]
+  "i18n-ally.localesPaths": ["libs/i18n", "libs/srv-shared/src/i18n"],
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  }
 }

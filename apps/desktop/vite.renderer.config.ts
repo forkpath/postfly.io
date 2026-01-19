@@ -11,6 +11,18 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   root: path.resolve(__dirname, 'src/renderer'),
   base: './',
+  server: {
+    port: parseInt(process.env.DESKTOP_PORT as string, 10) || 4200,
+    strictPort: true,
+    host: 'localhost',
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/api/, '/api')
+      }
+    }
+  },
   plugins: [
     devtools(),
     nxViteTsPaths(),
@@ -23,10 +35,6 @@ export default defineConfig({
     }),
     viteReact()
   ],
-  server: {
-    port: 3000,
-    strictPort: true
-  },
   build: {
     outDir: path.resolve(__dirname, '.vite/renderer'),
     emptyOutDir: true

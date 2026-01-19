@@ -12,7 +12,7 @@ export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/apps/web',
   server: {
-    port: 3000,
+    port: parseInt(process.env.WEB_PORT as string, 10) || 3000,
     host: 'localhost',
     proxy: {
       '/api': {

@@ -8,9 +8,11 @@ import { I18nService } from 'nestjs-i18n'
 import { createZodValidationPipe } from 'nestjs-zod'
 import { ZodError } from 'zod'
 
+import { auth } from '@libs/auth/server'
 import { MongoDaoModule } from '@libs/mongo-dao'
+import { PgDaoModule } from '@libs/pg-dao'
 import { AllExceptionsFilter, AppConfig, WrapResInterceptor } from '@libs/srv-core'
-import { CacheModule, I18nModule, LoggerModule, RedisModule, ThrottlerModule } from '@libs/srv-shared'
+import { AuthModule, CacheModule, I18nModule, LoggerModule, RedisModule, ThrottlerModule } from '@libs/srv-shared'
 
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
@@ -24,10 +26,12 @@ import { AppService } from './app.service'
     }),
 
     /** 认证鉴权模块
-     * https://github.com/ThallesP/nestjs-better-auth
      * 默认该模块中使用AuthGuard来进行全局认证鉴权
      * 可以手动关掉disableGlobalAuthGuard: true,
      */
+    AuthModule.forRoot({
+      auth: auth
+    }),
 
     // 日志模块
     LoggerModule.register('portal'),
@@ -55,13 +59,7 @@ import { AppService } from './app.service'
      */
 
     // ORM模块
-    // CustomPrismaModule.forRootAsync({
-    //   isGlobal: true,
-    //   name: 'PrismaService',
-    //   useFactory: () => {
-    //     return prisma
-    //   }
-    // }),
+    PgDaoModule.register(),
 
     // 限流模块
     ThrottlerModule.register(),

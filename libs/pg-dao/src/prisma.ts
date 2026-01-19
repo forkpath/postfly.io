@@ -5,7 +5,7 @@ import { NodeEnv } from '@libs/common'
 import { env } from './env'
 import { PrismaClient } from './generated/prisma/client'
 
-const databaseUrl = env.DATABASE_URL
+const databaseUrl = env.POSGTRES_DATABASE_URL
 const adapter = new PrismaPg({ connectionString: databaseUrl })
 
 const globalForPrisma = global as unknown as {

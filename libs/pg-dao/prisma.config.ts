@@ -9,6 +9,6 @@ export default defineConfig({
     seed: 'tsx ./src/seed.ts'
   },
   datasource: {
-    url: env('DATABASE_URL')
+    url: env('POSGTRES_DATABASE_URL')
   }
 })

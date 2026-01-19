@@ -20,7 +20,7 @@ const config: runtime.GetPrismaClientConfig = {
   engineVersion: '0c8ef2ce45c83248ab3df073180d5eda9e8be7a3',
   activeProvider: 'postgresql',
   inlineSchema:
-    '// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// PostgreSQL: https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields\n\n// -------------------Data Attributes---------------------\n//        Native database type\t      Native database type attribute\tNotes\n// String\n//        text\t                      @db.Text\n//        char(x) \t                  @db.Char(x)\n//        varchar(x)\t                @db.VarChar(x)\n//        bit(x)\t                    @db.Bit(x)\n//        varbit\t                    @db.VarBit\n//        uuid\t                      @db.Uuid\n//        xml\t                        @db.Xml\n//        inet\t                      @db.Inet\n//        citext\t                    @db.Citext\n//\n// Boolean\n//        boolean                     @db.Boolean\n//\n// Int\n//        integer | int, int4\t        @db.Integer\n//        smallint | int2\t            @db.SmallInt\n//        smallserial | serial2\t      @db.SmallInt @default(autoincrement())\n//        serial | serial4\t          @db.Int @default(autoincrement())\n//        oid\t                        @db.Oid\n//\n// BigInt\n//        bigint | int8\t              @db.BigInt\n//        bigserial | serial8\t        @db.BigInt @default(autoincrement())\n//\n// Float\n//\n//        double precision\t          @db.DoublePrecision\n//        real\t                      @db.Real\n//\n// Decimal\n//        decimal | numeric\t          @db.Decimal(p, s)†\n//        money\t                      @db.Money\n//\n// DateTime\n//        timestamp(x)\t              @db.Timestamp(x)\n//        timestamptz(x)\t            @db.Timestamptz(x)\n//        date\t                      @db.Date\n//        time(x)\t                    @db.Time(x)\n//        timetz(x)\t                  @db.Timetz(x)\n//\n// JSON\n//        json\t                      @db.Json\n//        jsonb                     \t@db.JsonB\n//\n// Bytes\n//        bytea\t                      @db.ByteA\n\n// -------------------Data Attributes---------------------\n// link: https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference\n\ngenerator client {\n  provider     = "prisma-client"\n  output       = "./generated/prisma"\n  engineType   = "client"\n  moduleFormat = "cjs"\n  // output into a separate subdirectory so multiple schemas can be used in a monorepo\n  // this make the import path `@prisma/client/one` instead of `@prisma/client`\n  // Customize to make the most sense for your project\n}\n\ndatasource db {\n  provider = "postgresql"\n}\n',
+    'model User {\n  id               String       @id\n  name             String\n  email            String\n  emailVerified    Boolean      @default(false) @map("email_verified")\n  image            String?\n  createdAt        DateTime     @default(now()) @map("created_at")\n  updatedAt        DateTime     @updatedAt @map("updated_at")\n  twoFactorEnabled Boolean?     @default(false) @map("two_factor_enabled")\n  isAnonymous      Boolean?     @default(false) @map("is_anonymous")\n  role             String?\n  banned           Boolean?     @default(false)\n  banReason        String?      @map("ban_reason")\n  banExpires       DateTime?    @map("ban_expires")\n  sessions         Session[]\n  accounts         Account[]\n  passkeys         Passkey[]\n  twofactors       TwoFactor[]\n  members          Member[]\n  invitations      Invitation[]\n\n  @@unique([email])\n  @@map("user")\n}\n\nmodel Session {\n  id                   String   @id\n  expiresAt            DateTime @map("expires_at")\n  token                String\n  createdAt            DateTime @default(now()) @map("created_at")\n  updatedAt            DateTime @updatedAt @map("updated_at")\n  ipAddress            String?  @map("ip_address")\n  userAgent            String?  @map("user_agent")\n  userId               String   @map("user_id")\n  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n  impersonatedBy       String?  @map("impersonated_by")\n  activeOrganizationId String?  @map("active_organization_id")\n\n  @@unique([token])\n  @@index([userId])\n  @@map("session")\n}\n\nmodel Account {\n  id                    String    @id\n  accountId             String    @map("account_id")\n  providerId            String    @map("provider_id")\n  userId                String    @map("user_id")\n  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)\n  accessToken           String?   @map("access_token")\n  refreshToken          String?   @map("refresh_token")\n  idToken               String?   @map("id_token")\n  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")\n  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")\n  scope                 String?\n  password              String?\n  createdAt             DateTime  @default(now()) @map("created_at")\n  updatedAt             DateTime  @updatedAt @map("updated_at")\n\n  @@index([userId])\n  @@map("account")\n}\n\nmodel Verification {\n  id         String   @id\n  identifier String\n  value      String\n  expiresAt  DateTime @map("expires_at")\n  createdAt  DateTime @default(now()) @map("created_at")\n  updatedAt  DateTime @updatedAt @map("updated_at")\n\n  @@index([identifier])\n  @@map("verification")\n}\n\nmodel Passkey {\n  id           String    @id\n  name         String?\n  publicKey    String    @map("public_key")\n  userId       String    @map("user_id")\n  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)\n  credentialID String    @map("credential_id")\n  counter      Int\n  deviceType   String    @map("device_type")\n  backedUp     Boolean   @map("backed_up")\n  transports   String?\n  createdAt    DateTime? @map("created_at")\n  aaguid       String?\n\n  @@index([userId])\n  @@index([credentialID])\n  @@map("passkey")\n}\n\nmodel TwoFactor {\n  id          String @id\n  secret      String\n  backupCodes String @map("backup_codes")\n  userId      String @map("user_id")\n  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@index([secret])\n  @@index([userId])\n  @@map("twoFactor")\n}\n\nmodel Organization {\n  id          String       @id\n  name        String\n  slug        String\n  logo        String?\n  createdAt   DateTime     @map("created_at")\n  metadata    String?\n  members     Member[]\n  invitations Invitation[]\n\n  @@unique([slug])\n  @@map("organization")\n}\n\nmodel Member {\n  id             String       @id\n  organizationId String       @map("organization_id")\n  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)\n  userId         String       @map("user_id")\n  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)\n  role           String       @default("member")\n  createdAt      DateTime     @map("created_at")\n\n  @@index([organizationId])\n  @@index([userId])\n  @@map("member")\n}\n\nmodel Invitation {\n  id             String       @id\n  organizationId String       @map("organization_id")\n  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)\n  email          String\n  role           String?\n  status         String       @default("pending")\n  expiresAt      DateTime     @map("expires_at")\n  createdAt      DateTime     @default(now()) @map("created_at")\n  inviterId      String       @map("inviter_id")\n  user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)\n\n  @@index([organizationId])\n  @@index([email])\n  @@map("invitation")\n}\n\n// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// PostgreSQL: https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields\n\n// -------------------Data Attributes---------------------\n//        Native database type\t      Native database type attribute\tNotes\n// String\n//        text\t                      @db.Text\n//        char(x) \t                  @db.Char(x)\n//        varchar(x)\t                @db.VarChar(x)\n//        bit(x)\t                    @db.Bit(x)\n//        varbit\t                    @db.VarBit\n//        uuid\t                      @db.Uuid\n//        xml\t                        @db.Xml\n//        inet\t                      @db.Inet\n//        citext\t                    @db.Citext\n//\n// Boolean\n//        boolean                     @db.Boolean\n//\n// Int\n//        integer | int, int4\t        @db.Integer\n//        smallint | int2\t            @db.SmallInt\n//        smallserial | serial2\t      @db.SmallInt @default(autoincrement())\n//        serial | serial4\t          @db.Int @default(autoincrement())\n//        oid\t                        @db.Oid\n//\n// BigInt\n//        bigint | int8\t              @db.BigInt\n//        bigserial | serial8\t        @db.BigInt @default(autoincrement())\n//\n// Float\n//\n//        double precision\t          @db.DoublePrecision\n//        real\t                      @db.Real\n//\n// Decimal\n//        decimal | numeric\t          @db.Decimal(p, s)†\n//        money\t                      @db.Money\n//\n// DateTime\n//        timestamp(x)\t              @db.Timestamp(x)\n//        timestamptz(x)\t            @db.Timestamptz(x)\n//        date\t                      @db.Date\n//        time(x)\t                    @db.Time(x)\n//        timetz(x)\t                  @db.Timetz(x)\n//\n// JSON\n//        json\t                      @db.Json\n//        jsonb                     \t@db.JsonB\n//\n// Bytes\n//        bytea\t                      @db.ByteA\n\n// -------------------Data Attributes---------------------\n// link: https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference\n\ngenerator client {\n  provider     = "prisma-client"\n  output       = "./generated/prisma"\n  engineType   = "client"\n  moduleFormat = "cjs"\n  // output into a separate subdirectory so multiple schemas can be used in a monorepo\n  // this make the import path `@prisma/client/one` instead of `@prisma/client`\n  // Customize to make the most sense for your project\n}\n\ndatasource db {\n  provider = "postgresql"\n}\n',
   runtimeDataModel: {
     models: {},
     enums: {},
@@ -28,7 +28,9 @@ const config: runtime.GetPrismaClientConfig = {
   }
 }
 
-config.runtimeDataModel = JSON.parse('{"models":{},"enums":{},"types":{}}')
+config.runtimeDataModel = JSON.parse(
+  '{"models":{"User":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"email","kind":"scalar","type":"String"},{"name":"emailVerified","kind":"scalar","type":"Boolean","dbName":"email_verified"},{"name":"image","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime","dbName":"created_at"},{"name":"updatedAt","kind":"scalar","type":"DateTime","dbName":"updated_at"},{"name":"twoFactorEnabled","kind":"scalar","type":"Boolean","dbName":"two_factor_enabled"},{"name":"isAnonymous","kind":"scalar","type":"Boolean","dbName":"is_anonymous"},{"name":"role","kind":"scalar","type":"String"},{"name":"banned","kind":"scalar","type":"Boolean"},{"name":"banReason","kind":"scalar","type":"String","dbName":"ban_reason"},{"name":"banExpires","kind":"scalar","type":"DateTime","dbName":"ban_expires"},{"name":"sessions","kind":"object","type":"Session","relationName":"SessionToUser"},{"name":"accounts","kind":"object","type":"Account","relationName":"AccountToUser"},{"name":"passkeys","kind":"object","type":"Passkey","relationName":"PasskeyToUser"},{"name":"twofactors","kind":"object","type":"TwoFactor","relationName":"TwoFactorToUser"},{"name":"members","kind":"object","type":"Member","relationName":"MemberToUser"},{"name":"invitations","kind":"object","type":"Invitation","relationName":"InvitationToUser"}],"dbName":"user"},"Session":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"expiresAt","kind":"scalar","type":"DateTime","dbName":"expires_at"},{"name":"token","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime","dbName":"created_at"},{"name":"updatedAt","kind":"scalar","type":"DateTime","dbName":"updated_at"},{"name":"ipAddress","kind":"scalar","type":"String","dbName":"ip_address"},{"name":"userAgent","kind":"scalar","type":"String","dbName":"user_agent"},{"name":"userId","kind":"scalar","type":"String","dbName":"user_id"},{"name":"user","kind":"object","type":"User","relationName":"SessionToUser"},{"name":"impersonatedBy","kind":"scalar","type":"String","dbName":"impersonated_by"},{"name":"activeOrganizationId","kind":"scalar","type":"String","dbName":"active_organization_id"}],"dbName":"session"},"Account":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"accountId","kind":"scalar","type":"String","dbName":"account_id"},{"name":"providerId","kind":"scalar","type":"String","dbName":"provider_id"},{"name":"userId","kind":"scalar","type":"String","dbName":"user_id"},{"name":"user","kind":"object","type":"User","relationName":"AccountToUser"},{"name":"accessToken","kind":"scalar","type":"String","dbName":"access_token"},{"name":"refreshToken","kind":"scalar","type":"String","dbName":"refresh_token"},{"name":"idToken","kind":"scalar","type":"String","dbName":"id_token"},{"name":"accessTokenExpiresAt","kind":"scalar","type":"DateTime","dbName":"access_token_expires_at"},{"name":"refreshTokenExpiresAt","kind":"scalar","type":"DateTime","dbName":"refresh_token_expires_at"},{"name":"scope","kind":"scalar","type":"String"},{"name":"password","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime","dbName":"created_at"},{"name":"updatedAt","kind":"scalar","type":"DateTime","dbName":"updated_at"}],"dbName":"account"},"Verification":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"identifier","kind":"scalar","type":"String"},{"name":"value","kind":"scalar","type":"String"},{"name":"expiresAt","kind":"scalar","type":"DateTime","dbName":"expires_at"},{"name":"createdAt","kind":"scalar","type":"DateTime","dbName":"created_at"},{"name":"updatedAt","kind":"scalar","type":"DateTime","dbName":"updated_at"}],"dbName":"verification"},"Passkey":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"publicKey","kind":"scalar","type":"String","dbName":"public_key"},{"name":"userId","kind":"scalar","type":"String","dbName":"user_id"},{"name":"user","kind":"object","type":"User","relationName":"PasskeyToUser"},{"name":"credentialID","kind":"scalar","type":"String","dbName":"credential_id"},{"name":"counter","kind":"scalar","type":"Int"},{"name":"deviceType","kind":"scalar","type":"String","dbName":"device_type"},{"name":"backedUp","kind":"scalar","type":"Boolean","dbName":"backed_up"},{"name":"transports","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime","dbName":"created_at"},{"name":"aaguid","kind":"scalar","type":"String"}],"dbName":"passkey"},"TwoFactor":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"secret","kind":"scalar","type":"String"},{"name":"backupCodes","kind":"scalar","type":"String","dbName":"backup_codes"},{"name":"userId","kind":"scalar","type":"String","dbName":"user_id"},{"name":"user","kind":"object","type":"User","relationName":"TwoFactorToUser"}],"dbName":"twoFactor"},"Organization":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"slug","kind":"scalar","type":"String"},{"name":"logo","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime","dbName":"created_at"},{"name":"metadata","kind":"scalar","type":"String"},{"name":"members","kind":"object","type":"Member","relationName":"MemberToOrganization"},{"name":"invitations","kind":"object","type":"Invitation","relationName":"InvitationToOrganization"}],"dbName":"organization"},"Member":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"organizationId","kind":"scalar","type":"String","dbName":"organization_id"},{"name":"organization","kind":"object","type":"Organization","relationName":"MemberToOrganization"},{"name":"userId","kind":"scalar","type":"String","dbName":"user_id"},{"name":"user","kind":"object","type":"User","relationName":"MemberToUser"},{"name":"role","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime","dbName":"created_at"}],"dbName":"member"},"Invitation":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"organizationId","kind":"scalar","type":"String","dbName":"organization_id"},{"name":"organization","kind":"object","type":"Organization","relationName":"InvitationToOrganization"},{"name":"email","kind":"scalar","type":"String"},{"name":"role","kind":"scalar","type":"String"},{"name":"status","kind":"scalar","type":"String"},{"name":"expiresAt","kind":"scalar","type":"DateTime","dbName":"expires_at"},{"name":"createdAt","kind":"scalar","type":"DateTime","dbName":"created_at"},{"name":"inviterId","kind":"scalar","type":"String","dbName":"inviter_id"},{"name":"user","kind":"object","type":"User","relationName":"InvitationToUser"}],"dbName":"invitation"}},"enums":{},"types":{}}'
+)
 
 async function decodeBase64AsWasm(wasmBase64: string): Promise<WebAssembly.Module> {
   const { Buffer } = await import('node:buffer')
@@ -194,6 +196,96 @@ export interface PrismaClient<
       }
     >
   >
+
+  /**
+   * `prisma.user`: Exposes CRUD operations for the **User** model.
+   * Example usage:
+   * ```ts
+   * // Fetch zero or more Users
+   * const users = await prisma.user.findMany()
+   * ```
+   */
+  get user(): Prisma.UserDelegate<ExtArgs, { omit: OmitOpts }>
+
+  /**
+   * `prisma.session`: Exposes CRUD operations for the **Session** model.
+   * Example usage:
+   * ```ts
+   * // Fetch zero or more Sessions
+   * const sessions = await prisma.session.findMany()
+   * ```
+   */
+  get session(): Prisma.SessionDelegate<ExtArgs, { omit: OmitOpts }>
+
+  /**
+   * `prisma.account`: Exposes CRUD operations for the **Account** model.
+   * Example usage:
+   * ```ts
+   * // Fetch zero or more Accounts
+   * const accounts = await prisma.account.findMany()
+   * ```
+   */
+  get account(): Prisma.AccountDelegate<ExtArgs, { omit: OmitOpts }>
+
+  /**
+   * `prisma.verification`: Exposes CRUD operations for the **Verification** model.
+   * Example usage:
+   * ```ts
+   * // Fetch zero or more Verifications
+   * const verifications = await prisma.verification.findMany()
+   * ```
+   */
+  get verification(): Prisma.VerificationDelegate<ExtArgs, { omit: OmitOpts }>
+
+  /**
+   * `prisma.passkey`: Exposes CRUD operations for the **Passkey** model.
+   * Example usage:
+   * ```ts
+   * // Fetch zero or more Passkeys
+   * const passkeys = await prisma.passkey.findMany()
+   * ```
+   */
+  get passkey(): Prisma.PasskeyDelegate<ExtArgs, { omit: OmitOpts }>
+
+  /**
+   * `prisma.twoFactor`: Exposes CRUD operations for the **TwoFactor** model.
+   * Example usage:
+   * ```ts
+   * // Fetch zero or more TwoFactors
+   * const twoFactors = await prisma.twoFactor.findMany()
+   * ```
+   */
+  get twoFactor(): Prisma.TwoFactorDelegate<ExtArgs, { omit: OmitOpts }>
+
+  /**
+   * `prisma.organization`: Exposes CRUD operations for the **Organization** model.
+   * Example usage:
+   * ```ts
+   * // Fetch zero or more Organizations
+   * const organizations = await prisma.organization.findMany()
+   * ```
+   */
+  get organization(): Prisma.OrganizationDelegate<ExtArgs, { omit: OmitOpts }>
+
+  /**
+   * `prisma.member`: Exposes CRUD operations for the **Member** model.
+   * Example usage:
+   * ```ts
+   * // Fetch zero or more Members
+   * const members = await prisma.member.findMany()
+   * ```
+   */
+  get member(): Prisma.MemberDelegate<ExtArgs, { omit: OmitOpts }>
+
+  /**
+   * `prisma.invitation`: Exposes CRUD operations for the **Invitation** model.
+   * Example usage:
+   * ```ts
+   * // Fetch zero or more Invitations
+   * const invitations = await prisma.invitation.findMany()
+   * ```
+   */
+  get invitation(): Prisma.InvitationDelegate<ExtArgs, { omit: OmitOpts }>
 }
 
 export function getPrismaClientClass(): PrismaClientConstructor {

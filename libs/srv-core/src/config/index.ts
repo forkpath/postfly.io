@@ -15,20 +15,12 @@ import {
 } from '@libs/srv-shared'
 
 export interface ServerConfig {
-  portalPort: number
+  enginePort: number
   corsOrigins: string // 如果有多个，请使用逗号分隔
-}
-
-export interface SecurityConfig {
-  bcryptSaltOrRound: number
-  accessTokenSecret: string
-  accessTokenExpiredIn: string
-  refreshTokenExpiredIn: string
 }
 
 interface Config {
   server: ServerConfig
-  security: SecurityConfig
   // 数据库
   redis: RedisConfig
   mongo: MongoConfig
@@ -47,14 +39,8 @@ interface Config {
 
 const config: Config = {
   server: {
-    portalPort: parseInt(process.env['PORTAL_PORT'] as string, 10) || 6006,
+    enginePort: parseInt(process.env['ENGINE_PORT'] as string, 10) || 6006,
     corsOrigins: process.env['CORS_ORIGINS'] || '*'
-  },
-  security: {
-    bcryptSaltOrRound: parseInt(process.env['SECURITY_SALT_ROUND'] as string, 10) || 10,
-    accessTokenSecret: process.env['SECURITY_ACCESS_TOKEN_SECRET'] || 'access_secret',
-    accessTokenExpiredIn: process.env['SECURITY_ACCESS_TOKEN_EXPIRED'] || '5m',
-    refreshTokenExpiredIn: process.env['SECURITY_REFRESH_TOKEN_EXPIRED'] || '7d'
   },
   redis: {
     host: process.env['REDIS_HOST'] || 'localhost',
@@ -84,8 +70,8 @@ const config: Config = {
     compress: (process.env['LOGGER_FILE_COMPRESS'] as string).toLowerCase() === 'true'
   },
   i18n: {
-    fallbackLng: process.env['I18N_FALLBACK_LANGUAGE'] || 'zh',
-    localePath: process.env['I18N_LOCALE_PATH'] || '/backends/portal/assets/i18n'
+    fallbackLng: process.env['DEFAULT_LOCALE'] || 'en',
+    localePath: process.env['LOCALE_PATH'] || '/libs/i18n/src/translations'
   },
   throttler: {
     ttl: parseInt(process.env['THROTTLER_TTL'] as string, 10) || 60000, // 60秒

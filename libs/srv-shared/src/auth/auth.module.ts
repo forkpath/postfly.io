@@ -79,9 +79,6 @@ export class AuthModule extends ConfigurableModuleClass implements NestModule, O
   }
 
   configure(consumer: MiddlewareConsumer): void {
-    // 禁用 controllers 时不挂载路由
-    if (this.options?.disableControllers) return
-
     const trustedOrigins = this.options.auth.options.trustedOrigins
     // function 形式的 trustedOrigins 需要 Web Request，不适配 Nest 的 Express Request
     const isNotFunctionBased = trustedOrigins && Array.isArray(trustedOrigins)
@@ -153,8 +150,10 @@ export class AuthModule extends ConfigurableModuleClass implements NestModule, O
 
   static forRootAsync(options: typeof ASYNC_OPTIONS_TYPE): DynamicModule {
     const forRootAsyncResult = super.forRootAsync(options)
+    const { module } = forRootAsyncResult
     return {
       ...forRootAsyncResult,
+      module: options.disableControllers ? AuthModuleWithoutCcontrollers : module,
       controllers: options.disableControllers ? [] : forRootAsyncResult.controllers,
       providers: [
         ...(forRootAsyncResult.providers ?? []),
@@ -182,9 +181,11 @@ export class AuthModule extends ConfigurableModuleClass implements NestModule, O
         : ({ ...(arg2 ?? {}), auth: arg1 as AuthType } as typeof OPTIONS_TYPE)
 
     const forRootResult = super.forRoot(normalizedOptions)
+    const { module } = forRootResult
 
     return {
       ...forRootResult,
+      module: normalizedOptions.disableControllers ? AuthModuleWithoutCcontrollers : module,
       controllers: normalizedOptions.disableControllers ? [] : forRootResult.controllers,
       providers: [
         ...(forRootResult.providers ?? []),
@@ -198,5 +199,11 @@ export class AuthModule extends ConfigurableModuleClass implements NestModule, O
           : [])
       ]
     }
+  }
+}
+
+class AuthModuleWithoutCcontrollers extends AuthModule {
+  override configure(): void {
+    return
   }
 }
