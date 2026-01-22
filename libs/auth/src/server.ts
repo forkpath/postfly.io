@@ -16,6 +16,7 @@ import { AuthProvider, SocialProvider, VerificationType } from './types'
 
 export const auth = betterAuth({
   appName: 'Ray',
+  basePath: '/api/v1/auth',
   session: {
     cookieCache: {
       enabled: true,

@@ -24,7 +24,7 @@ export class I18nModule {
                 path: path.join(process.cwd(), localePath),
                 watch: true
               },
-              typesOutputPath: path.join(process.cwd(), 'libs/api-shared/src/i18n/i18n.generated.ts')
+              typesOutputPath: path.join(process.cwd(), 'libs/srv-shared/src/i18n/i18n.generated.ts')
             }
           },
           resolvers: [AcceptLanguageResolver]
