@@ -10,9 +10,12 @@ pre-commit:
       glob: '*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,md,mdx}'
       run: pnpm run format:write
       stage_fixed: true
-    # lint:
-    #   glob: '*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,md,mdx}'
-    #   run: pnpm run lint
+    lint:
+      glob: '*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,md,mdx}'
+      # 禁用 Nx native terminal，避免在 git hooks 环境下崩溃
+      env:
+        NX_NATIVE_COMMAND_RUNNER: 'false'
+      run: pnpm run lint
 
 commit-msg:
   commands:

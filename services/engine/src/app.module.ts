@@ -29,9 +29,8 @@ import { AppService } from './app.service'
      * 默认该模块中使用AuthGuard来进行全局认证鉴权
      * 可以手动关掉disableGlobalAuthGuard: true,
      */
-    AuthModule.forRoot({
-      auth: auth
-    }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    AuthModule.forRoot({ auth: auth as any }),
 
     // 日志模块
     LoggerModule.register('portal'),
@@ -95,9 +94,10 @@ import { AppService } from './app.service'
       useFactory: (i18n: I18nService) =>
         createZodValidationPipe({
           // 将ZodError -> Nest异常 + i18n的翻译
-          createValidationException: (error: ZodError) => {
+          createValidationException: (error: unknown) => {
+            const zodError = error as ZodError
             // 1. 把每条issue映射成特定的返回格式
-            const translatedIssues = error.issues.map(issue => ({
+            const translatedIssues = zodError.issues.map(issue => ({
               path: issue.path.join('.'),
               code: issue.code,
               message: i18n.t(issue.message, {

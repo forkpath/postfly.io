@@ -2,12 +2,13 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "module": "commonjs",
-    "types": ["node"],
+    "module": "ESNext",
+    "types": ["node", "react"],
+    "jsx": "react-jsx",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "target": "es2021",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "paths": {
       "#/*": ["services/engine/src/*"],
       "@libs/srv-core": ["libs/srv-core/src/index.ts"],
@@ -15,11 +16,14 @@
       "@libs/mongo-dao": ["libs/mongo-dao/src/index.ts"],
       "@libs/pg-dao": ["libs/pg-dao/src/index.ts"],
       "@libs/payload": ["libs/payload/src/index.ts"],
+      "@libs/ui-shared/*": ["libs/ui-shared/src/*"],
       "@libs/auth/*": ["libs/auth/src/*"],
       "@libs/email": ["libs/email/src/index.ts"],
       "@libs/email/*": ["libs/email/src/*"],
-      "@libs/common/*": ["libs/common/src/*"]
+      "@libs/email/server": ["libs/email/src/server.ts"],
+      "@libs/common": ["libs/common/src/index.ts"],
+      "@libs/i18n": ["libs/i18n/src/index.ts"]
     }
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "../../libs/i18n/src/typings/**/*.d.ts"]
 }

@@ -1,4 +1,4 @@
-import { FileSize, Interval } from 'rotating-file-stream'
+import type { FileSize, Interval } from 'rotating-file-stream'
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'
 

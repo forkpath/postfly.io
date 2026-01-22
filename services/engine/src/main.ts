@@ -33,7 +33,7 @@ async function bootstrap() {
   app.setGlobalPrefix(globalPrefix)
 
   const configService = app.get(ConfigService)
-  const { portalPort, corsOrigins } = configService.get('server') as ServerConfig
+  const { enginePort, corsOrigins } = configService.get('server') as ServerConfig
 
   /**
    * 当 credentials: true 时，不能设置 origin: '*'
@@ -77,9 +77,9 @@ async function bootstrap() {
   app.enableShutdownHooks()
 
   app
-    .listen(portalPort)
+    .listen(enginePort)
     .then(() => {
-      logger.log(`🚀 Engine is running on: http://localhost:${portalPort}/${globalPrefix}`)
+      logger.log(`🚀 Engine is running on: http://localhost:${enginePort}/${globalPrefix}`)
     })
     .catch(err => {
       logger.error(`🪰 Engine start failed: ${err}`)

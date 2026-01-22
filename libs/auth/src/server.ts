@@ -2,7 +2,6 @@ import { expo } from '@better-auth/expo'
 import { passkey } from '@better-auth/passkey'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { betterAuth } from 'better-auth/minimal'
-import { nextCookies } from 'better-auth/next-js'
 import { admin, anonymous, lastLoginMethod, magicLink, organization, twoFactor } from 'better-auth/plugins'
 
 import { NodeEnv } from '@libs/common'
@@ -149,8 +148,7 @@ export const auth = betterAuth({
         }
       }
     }),
-    expo(),
-    nextCookies()
+    expo()
   ],
   socialProviders: {
     [SocialProvider.APPLE]: {

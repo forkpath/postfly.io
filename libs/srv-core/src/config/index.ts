@@ -71,7 +71,7 @@ const config: Config = {
   },
   i18n: {
     fallbackLng: process.env['DEFAULT_LOCALE'] || 'en',
-    localePath: process.env['LOCALE_PATH'] || '/libs/i18n/src/translations'
+    localePath: process.env['LOCALE_PATH'] || 'libs/i18n/src/translations'
   },
   throttler: {
     ttl: parseInt(process.env['THROTTLER_TTL'] as string, 10) || 60000, // 60秒

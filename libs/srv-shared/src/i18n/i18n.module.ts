@@ -20,7 +20,8 @@ export class I18nModule {
             return {
               fallbackLanguage: fallbackLng,
               loaderOptions: {
-                path: path.join(__dirname, localePath),
+                // 使用项目根目录作为基础路径，支持前后端共用翻译文件
+                path: path.join(process.cwd(), localePath),
                 watch: true
               },
               typesOutputPath: path.join(process.cwd(), 'libs/api-shared/src/i18n/i18n.generated.ts')
