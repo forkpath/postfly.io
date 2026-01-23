@@ -12,12 +12,12 @@ export { createKeys } from './create-keys'
 export type { KeyFactory } from './create-keys'
 
 // Domain: Users
-export { userKeys } from './users'
-export type { UserKeys } from './users'
+export { userKeys } from '../../domains/users'
+export type { UserKeys } from '../../domains/users'
 
 // Domain: Organizations
-export { orgKeys } from './organizations'
-export type { OrgKeys } from './organizations'
+export { orgKeys } from '../../domains/organizations'
+export type { OrgKeys } from '../../domains/organizations'
 
 // 向后兼容：聚合导出（deprecated，建议直接使用各 domain 的 keys）
 /** @deprecated 请使用 userKeys, orgKeys 等具体的 domain keys */

@@ -5,8 +5,12 @@
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
     "strict": true,
+    "moduleResolution": "bundler",
     "paths": {
+      "@libs/common": ["libs/common/src/index.ts"],
       "@libs/payload": ["libs/payload/src/index.ts"],
+      "@libs/auth/*": ["libs/auth/src/*"],
+      "@libs/api-client/*": ["libs/api-client/src/*"],
       "@libs/ui-shared/*": ["libs/ui-shared/src/*"]
     }
   },

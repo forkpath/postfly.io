@@ -19,6 +19,12 @@
       "path": "./libs/pg-dao"
     },
     {
+      "path": "./libs/api-client"
+    },
+    {
+      "path": "./libs/api-core"
+    },
+    {
       "path": "./libs/srv-core"
     },
     {
