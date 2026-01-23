@@ -1,1 +1,3 @@
-export * from './lib/api-core'
+export * from './lib/client'
+export * from './lib/errors'
+export * from './lib/types'

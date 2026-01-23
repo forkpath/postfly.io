@@ -78,6 +78,13 @@ nx g @nx/js:lib libs/payload --minimal --bundler=none --tags=scope:shared,type:l
  nx g @nx/js:lib libs/common --minimal --bundler=none --tags=scope:shared,type:lib --skipTsConfig
 ```
 
+- 创建前端的接口调用方式与接口hooks集合
+
+```shell
+nx g @nx/js:lib libs/api-core --minimal --bundler=none --tags=scope:shared,type:lib --skipTsConfig
+nx g @nx/js:lib libs/api-client --minimal --bundler=none --tags=scope:shared,type:lib --skipTsConfig
+```
+
 - 创建apps共用的ui组件库以及spa应用核心组件库studio
 
 ```shell

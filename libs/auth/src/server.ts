@@ -167,7 +167,7 @@ export const auth = betterAuth({
     }
   },
   advanced: {
-    cookiePrefix: 'turbostarter',
+    cookiePrefix: 'ray',
     cookies: {
       state: {
         attributes: {
