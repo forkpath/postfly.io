@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "license": "UNLICENSED",
   "scripts": {
-    "clean": "git clean -xdf .tankstack .nx .vite .cache .log node_modules dist",
+    "clean": "node scripts/clean.mjs",
+    "clean:dry-run": "node scripts/clean.mjs --dry-run",
     "db:seed": "nx run pg-dao:seed",
     "db:studio": "nx run pg-dao:studio",
     "db:format": "nx run pg-dao:format",
