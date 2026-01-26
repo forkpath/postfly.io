@@ -29,7 +29,7 @@ async function bootstrap() {
   const logger = app.get(LoggerService)
   app.useLogger(logger)
 
-  const globalPrefix = 'api/v1'
+  const globalPrefix = 'api'
   app.setGlobalPrefix(globalPrefix)
 
   const configService = app.get(ConfigService)

@@ -4,13 +4,14 @@ import type { QueryClient } from '@tanstack/react-query'
 import * as React from 'react'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
-import { createRootRouteWithContext, HeadContent, Scripts } from '@tanstack/react-router'
+import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 
 import { DefaultCatchBoundary } from '~/components/default-catch-boundary'
 import { NotFound } from '~/components/not-found'
 import { seo } from '~/utils/seo'
 
+import { config, I18nProvider } from '@libs/i18n'
 import { Toaster } from '@libs/studio'
 import { cn } from '@libs/ui-shared/common'
 
@@ -72,11 +73,19 @@ export const Route = createRootRouteWithContext<{
     return <DefaultCatchBoundary {...props} />
   },
   notFoundComponent: () => <NotFound />,
-  shellComponent: RootDocument
+  shellComponent: RootShell,
+  component: RootComponent
 })
 
-function RootDocument({ children }: { children: React.ReactNode }) {
-  // const { locale } = Route.useLoaderData()
+function RootComponent() {
+  return (
+    <I18nProvider locale={config.defaultLocale} defaultLocale={config.defaultLocale}>
+      <Outlet />
+    </I18nProvider>
+  )
+}
+
+function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
