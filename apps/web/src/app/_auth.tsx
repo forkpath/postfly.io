@@ -4,7 +4,7 @@ import { useTranslation } from '@libs/i18n'
 import { pathsConfig, TurboLink } from '@libs/studio'
 import { Icons } from '@libs/ui-shared/web'
 
-export const Route = createFileRoute('/auth')({
+export const Route = createFileRoute('/_auth')({
   component: AuthLayout
 })
 

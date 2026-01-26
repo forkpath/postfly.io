@@ -7,8 +7,8 @@ import { useTranslation } from '@libs/i18n'
 import { Badge, Tabs, TabsContent, TabsList, TabsTrigger } from '@libs/ui-shared/web'
 
 import { TurboLink } from '../../../common/turbo-link'
+import { pathsConfig } from '../../../config/paths'
 import { authClient } from '../../../lib/auth/client'
-import { pathsConfig } from '../../config/paths'
 import { MagicLinkLoginForm } from './magic-link'
 import { PasswordLoginForm } from './password'
 

@@ -21,7 +21,7 @@ import {
 } from '@libs/ui-shared/web'
 
 import { TurboLink } from '../../common/turbo-link'
-import { pathsConfig } from '../config/paths'
+import { pathsConfig } from '../../config/paths'
 import { auth } from '../lib/api'
 import { useAuthFormStore } from './store'
 

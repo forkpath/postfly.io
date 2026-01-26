@@ -22,7 +22,7 @@ import {
   Input
 } from '@libs/ui-shared/web'
 
-import { pathsConfig } from '../../config/paths'
+import { pathsConfig } from '../../../config/paths'
 import { auth } from '../../lib/api'
 
 const BackupCodeForm = memo<FormProps>(({ redirectTo = pathsConfig.dashboard.user.index }) => {

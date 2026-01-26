@@ -12,7 +12,7 @@ import { NotFound } from '~/components/not-found'
 import { seo } from '~/utils/seo'
 
 import { config, I18nProvider } from '@libs/i18n'
-import { Toaster } from '@libs/studio'
+import { ThemeProvider, ThemeScript, Toaster } from '@libs/studio'
 import { cn } from '@libs/ui-shared/common'
 
 import appCss from '../styles/app.css?url' // 注意因为试用了?url，所以需要使用相对路径
@@ -80,26 +80,28 @@ export const Route = createRootRouteWithContext<{
 function RootComponent() {
   return (
     <I18nProvider locale={config.defaultLocale} defaultLocale={config.defaultLocale}>
-      <Outlet />
+      <ThemeProvider>
+        <Outlet />
+        <Toaster />
+      </ThemeProvider>
     </I18nProvider>
   )
 }
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <ThemeScript />
       </head>
       <body
         suppressHydrationWarning
         className={cn(
-          'bg-background text-foreground flex min-h-screen flex-col items-center justify-center font-sans antialiased',
-          `theme-orange`
+          'bg-background text-foreground flex min-h-screen flex-col items-center justify-center font-sans antialiased'
         )}
       >
         {children}
-        <Toaster />
         <TanStackDevtools
           config={{
             position: 'bottom-right'

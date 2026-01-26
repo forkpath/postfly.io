@@ -2,7 +2,7 @@ import { useTranslation } from '@libs/i18n'
 import { Icons } from '@libs/ui-shared/web'
 
 import { TurboLink } from '../common/turbo-link'
-import { pathsConfig } from './config/paths'
+import { pathsConfig } from '../config/paths'
 
 interface AuthErrorPageProps {
   readonly error?: string

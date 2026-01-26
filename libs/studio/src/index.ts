@@ -1,3 +1,5 @@
 export * from './common/toast'
 export * from './common/turbo-link'
 export * from './auth'
+export * from './lib/privider/theme'
+export * from './lib/privider/theme-script'

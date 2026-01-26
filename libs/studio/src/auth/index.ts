@@ -13,7 +13,7 @@ export * from './layout'
 export * from './form'
 
 // Config
-export * from './config/paths'
+export * from '../config/paths'
 
 // API
 export * from './lib/api'

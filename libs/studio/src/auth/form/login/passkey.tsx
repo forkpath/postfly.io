@@ -6,8 +6,8 @@ import { AuthProvider } from '@libs/auth'
 import { useTranslation } from '@libs/i18n'
 import { Badge, Button, Icons } from '@libs/ui-shared/web'
 
+import { pathsConfig } from '../../../config/paths'
 import { authClient } from '../../../lib/auth/client'
-import { pathsConfig } from '../../config/paths'
 import { auth } from '../../lib/api'
 import { useAuthFormStore } from '../store'
 

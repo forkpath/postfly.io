@@ -32,7 +32,6 @@ export default defineConfig(() => ({
     nxViteTsPaths(),
     nxCopyAssetsPlugin(['*.md']),
     devtools(),
-    tailwindcss(),
     // SVG as React components - 使用 ?react 后缀
     svgr({
       svgrOptions: {
@@ -49,7 +48,8 @@ export default defineConfig(() => ({
         quoteStyle: 'single'
       }
     }),
-    viteReact()
+    viteReact(),
+    tailwindcss()
   ],
   // SSR 配置 - 确保所有 libs 在 SSR 时也能被正确处理
   ssr: {
