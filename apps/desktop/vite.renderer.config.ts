@@ -26,7 +26,7 @@ export default defineConfig({
     }
   },
   plugins: [
-    nxViteTsPaths(),
+    nxViteTsPaths({}),
     nxCopyAssetsPlugin(['*.md']),
     devtools(),
     // SVG as React components - 使用 ?react 后缀

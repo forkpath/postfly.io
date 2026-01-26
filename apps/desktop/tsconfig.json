@@ -9,8 +9,20 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "~/*": ["apps/web/src/*"],
+      "@libs/common": ["libs/common/src/index.ts"],
+      "@libs/payload": ["libs/payload/src/index.ts"],
+      "@libs/auth": ["libs/auth/src/index.ts"],
+      "@libs/auth/*": ["libs/auth/src/*"],
+      "@libs/ui-shared/*": ["libs/ui-shared/src/*"],
+      "@libs/studio": ["libs/studio/src/index.ts"],
+      "@libs/i18n": ["libs/i18n/src/index.ts"],
+      "@libs/api-core": ["libs/api-core/src/index.ts"],
+      "@libs/api-client": ["libs/api-client/src/index.ts"]
+    }
   },
-  "include": ["src/**/*.ts", "forge.config.ts", "vite.*.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "forge.config.ts", "vite.*.config.ts"],
   "exclude": ["node_modules", ".vite", ".tanstack"]
 }

@@ -12,6 +12,7 @@
     "target": "es2015",
     "module": "esnext",
     "lib": ["es2020", "dom"],
+    "jsx": "react-jsx",
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
@@ -29,7 +30,8 @@
       "@libs/auth": ["libs/auth/src/index.ts"],
       "@libs/auth/*": ["libs/auth/src/*"],
       "@libs/api-core": ["libs/api-core/src/index.ts"],
-      "@libs/api-client": ["libs/api-client/src/index.ts"]
+      "@libs/api-client": ["libs/api-client/src/index.ts"],
+      "@libs/studio": ["libs/studio/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

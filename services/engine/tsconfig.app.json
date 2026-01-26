@@ -4,7 +4,6 @@
     "outDir": "../../dist/out-tsc",
     "module": "ESNext",
     "types": ["node", "react"],
-    "jsx": "react-jsx",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "target": "es2021",

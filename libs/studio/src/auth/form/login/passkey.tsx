@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 
@@ -21,6 +21,7 @@ export const PasskeyLogin = ({ redirectTo = pathsConfig.dashboard.user.index }: 
   const { t } = useTranslation(['auth', 'common'])
 
   const queryClient = useQueryClient()
+  const autoFillTriggered = useRef(false)
 
   const signIn = useMutation({
     ...auth.mutations.signIn.passkey,
@@ -36,8 +37,19 @@ export const PasskeyLogin = ({ redirectTo = pathsConfig.dashboard.user.index }: 
     }
   })
 
+  // Passkey autoFill: 自动提示用户使用已保存的 passkey 登录
+  // 使用 ref 防止 StrictMode 下重复执行
   useEffect(() => {
-    void queryClient.getMutationCache().build(queryClient, auth.mutations.signIn.passkey).execute({ autoFill: true })
+    if (autoFillTriggered.current) return
+    autoFillTriggered.current = true
+
+    void queryClient
+      .getMutationCache()
+      .build(queryClient, auth.mutations.signIn.passkey)
+      .execute({ autoFill: true })
+      .catch(() => {
+        // 静默处理 autoFill 错误（用户取消、不支持等）
+      })
   }, [queryClient])
 
   return (

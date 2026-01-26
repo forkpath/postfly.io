@@ -5,15 +5,20 @@ import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
 import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 
+import { ThemeProvider, Toaster } from '@libs/studio'
+import { cn } from '@libs/ui-shared/common'
+
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
 }>()({
   component: RootComponent,
   notFoundComponent: () => {
     return (
-      <div>
-        <p>This is the notFoundComponent configured on root route</p>
-        <Link to="/">Start Over</Link>
+      <div className="flex h-screen flex-col items-center justify-center">
+        <p className="text-lg">Page Not Found</p>
+        <Link to="/" className="text-primary mt-4 underline">
+          Go Home
+        </Link>
       </div>
     )
   }
@@ -21,45 +26,11 @@ export const Route = createRootRouteWithContext<{
 
 function RootComponent() {
   return (
-    <>
-      <div className="p-2 flex gap-2 text-lg">
-        <Link
-          to="/"
-          activeProps={{
-            className: 'font-bold'
-          }}
-          activeOptions={{ exact: true }}
-        >
-          Home
-        </Link>{' '}
-        <Link
-          to="/posts"
-          activeProps={{
-            className: 'font-bold'
-          }}
-        >
-          Posts
-        </Link>{' '}
-        <Link
-          to="/route-a"
-          activeProps={{
-            className: 'font-bold'
-          }}
-        >
-          Pathless Layout
-        </Link>{' '}
-        {/* <Link
-
-          to="/this-route-does-not-exist"
-          activeProps={{
-            className: 'font-bold'
-          }}
-        >
-          This Route Does Not Exist
-        </Link> */}
+    <ThemeProvider>
+      <div className={cn('bg-background text-foreground flex min-h-screen flex-col font-sans antialiased')}>
+        <Outlet />
+        <Toaster />
       </div>
-      <hr />
-      <Outlet />
       <TanStackDevtools
         config={{
           position: 'bottom-right'
@@ -69,6 +40,6 @@ function RootComponent() {
           { name: 'TanStack Query', render: <ReactQueryDevtoolsPanel /> }
         ]}
       />
-    </>
+    </ThemeProvider>
   )
 }
