@@ -55,5 +55,7 @@ logs
 .source
 
 # Tanstack
+routeTree.gen.ts
+i18nTree.gen.ts
 .tanstack
 .vite
