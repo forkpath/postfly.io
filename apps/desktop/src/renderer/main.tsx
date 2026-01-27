@@ -1,8 +1,9 @@
-import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createRouter, RouterProvider } from '@tanstack/react-router'
 
 import ReactDOM from 'react-dom/client'
+
+import { config, I18nProvider } from '@libs/i18n'
 
 import { routeTree } from './routeTree.gen'
 
@@ -35,8 +36,10 @@ const rootElement = document.getElementById('app') as HTMLElement
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
+    <I18nProvider locale={config.defaultLocale} defaultLocale={config.defaultLocale}>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </I18nProvider>
   )
 }

@@ -27,7 +27,7 @@ export class ForbiddenException extends ExceptionResponse {
 
 export class AuthenticationException extends ExceptionResponse {
   constructor() {
-    super('exp.auth.failed', {}, HttpStatus.UNAUTHORIZED)
+    super('auth.error.authenticationFailed', {}, HttpStatus.UNAUTHORIZED)
   }
 }
 

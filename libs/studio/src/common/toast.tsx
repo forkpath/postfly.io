@@ -1,16 +1,15 @@
-import { useTheme } from 'next-themes'
 import { Toaster as Sonner } from 'sonner'
 
-import { ThemeMode } from '@libs/ui-shared/common'
+import { useTheme } from '../lib/privider/theme'
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = ThemeMode.SYSTEM } = useTheme()
+  const { resolvedMode } = useTheme()
 
   return (
     <Sonner
-      theme={theme as ToasterProps['theme']}
+      theme={resolvedMode}
       className="toaster group"
       style={
         {

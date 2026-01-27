@@ -7,6 +7,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import tailwindcss from '@tailwindcss/vite'
 import viteReact from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import svgr from 'vite-plugin-svgr'
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -31,7 +32,15 @@ export default defineConfig(() => ({
     nxViteTsPaths(),
     nxCopyAssetsPlugin(['*.md']),
     devtools(),
-    tailwindcss(),
+    // SVG as React components - 使用 ?react 后缀
+    svgr({
+      svgrOptions: {
+        exportType: 'default',
+        ref: true,
+        svgo: true,
+        titleProp: true
+      }
+    }),
     tanstackStart({
       srcDirectory: './src',
       router: {
@@ -39,12 +48,21 @@ export default defineConfig(() => ({
         quoteStyle: 'single'
       }
     }),
-    viteReact()
+    viteReact(),
+    tailwindcss()
   ],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //   plugins: () => [ nxViteTsPaths() ],
-  // },
+  // SSR 配置 - 确保所有 libs 在 SSR 时也能被正确处理
+  ssr: {
+    noExternal: [
+      '@libs/ui-shared',
+      '@libs/studio',
+      '@libs/auth',
+      '@libs/i18n',
+      '@libs/common',
+      '@libs/api-client',
+      /^@libs\/.*/
+    ]
+  },
   build: {
     outDir: '../../dist/apps/web',
     emptyOutDir: true,

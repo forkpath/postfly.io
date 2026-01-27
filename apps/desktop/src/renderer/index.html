@@ -1,9 +1,24 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" suppressHydrationWarning>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
+    <title>Ray Desktop</title>
+    <!-- Theme Script: 防止主题闪烁 -->
+    <script>
+      (function() {
+        try {
+          var mode = localStorage.getItem('theme-mode') || 'system';
+          var color = localStorage.getItem('theme-color') || 'orange';
+          var isDark = mode === 'dark' || 
+            (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          
+          document.documentElement.classList.toggle('dark', isDark);
+          document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+          document.body.dataset.theme = color;
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>

@@ -2,6 +2,7 @@
 
 export * from './config'
 export * from './client'
+export * from './env'
 export * from './server'
 export * from './types'
 export * from './utils'

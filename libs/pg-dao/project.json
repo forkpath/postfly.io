@@ -21,7 +21,13 @@
       "command": "prisma db seed --config ./prisma.config.ts",
       "options": {
         "cwd": "libs/pg-dao"
-      }
+      },
+      "dependsOn": [
+        {
+          "projects": "auth",
+          "target": "seed"
+        }
+      ]
     },
     "studio": {
       "command": "prisma studio --config ./prisma.config.ts",

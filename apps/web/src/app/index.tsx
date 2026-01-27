@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import logo from '../logo.svg'
+import Logo from '../logo.svg?react'
 
 export const Route = createFileRoute('/')({
   component: App
@@ -10,7 +10,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+        <Logo className="App-logo" />
         <p>
           Edit <code>src/routes/index.tsx</code> and save to reload.
         </p>

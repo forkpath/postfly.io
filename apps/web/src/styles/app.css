@@ -2,7 +2,8 @@
 @import '../../../../libs/ui-shared/src/common/styles/globals.css';
 @import '../../../../libs/ui-shared/src/web/styles/globals.css';
 
-@source '../../../../libs/ui-shared/src/web/**/*.{ts,tsx,js,jsx}';
+@source '../../../../libs/ui-shared/src';
+@source '../../../../libs/studio/src';
 
 /* styles.css */
 .CollapsibleContent {

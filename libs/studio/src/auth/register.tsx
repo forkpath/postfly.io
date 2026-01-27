@@ -1,0 +1,37 @@
+import { SocialProvider } from '@libs/auth'
+import { useTranslation } from '@libs/i18n'
+
+import { AnonymousLogin } from './form/anonymous'
+import { LoginCta } from './form/login/form'
+import { RegisterForm } from './form/register-form'
+import { SocialProviders } from './form/social-providers'
+import { AuthDivider } from './layout/divider'
+import { AuthHeader } from './layout/header'
+import { InvitationDisclaimer } from './layout/invitation-disclaimer'
+
+interface RegisterPageProps {
+  readonly redirectTo?: string
+  readonly invitationId?: string
+  readonly email?: string
+}
+
+export const RegisterPage = ({ redirectTo, invitationId, email }: RegisterPageProps) => {
+  const { t } = useTranslation('auth')
+
+  // All providers are enabled by default
+  const oAuthProviders = [SocialProvider.APPLE, SocialProvider.GOOGLE, SocialProvider.GITHUB]
+
+  return (
+    <>
+      <AuthHeader title={t('register.header.title')} description={t('register.header.description')} />
+      {invitationId && <InvitationDisclaimer />}
+      <SocialProviders providers={oAuthProviders} redirectTo={redirectTo} />
+      {oAuthProviders.length > 0 && <AuthDivider />}
+      <div className="flex flex-col gap-2">
+        <RegisterForm redirectTo={redirectTo} email={email} />
+        <AnonymousLogin />
+      </div>
+      <LoginCta />
+    </>
+  )
+}

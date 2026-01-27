@@ -12,7 +12,7 @@ export function ClientOnly({ children, fallback = null }: ClientOnlyProps) {
     setMounted(true)
   }, [])
 
-  if (!mounted) return <>{fallback}</>
+  if (!mounted) return fallback
 
-  return <>{children}</>
+  return children
 }

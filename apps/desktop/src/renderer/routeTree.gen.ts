@@ -9,22 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './app/__root'
-import { Route as PathlessLayoutRouteImport } from './app/_pathlessLayout'
-import { Route as PathlessLayoutNestedLayoutRouteImport } from './app/_pathlessLayout/_nested-layout'
-import { Route as PathlessLayoutNestedLayoutRouteARouteImport } from './app/_pathlessLayout/_nested-layout/route-a'
-import { Route as PathlessLayoutNestedLayoutRouteBRouteImport } from './app/_pathlessLayout/_nested-layout/route-b'
+import { Route as AuthRouteImport } from './app/_auth'
+import { Route as AuthAuthErrorRouteImport } from './app/_auth/auth/error'
+import { Route as AuthAuthJoinRouteImport } from './app/_auth/auth/join'
+import { Route as AuthAuthLoginRouteImport } from './app/_auth/auth/login'
+import { Route as AuthAuthPasswordForgotRouteImport } from './app/_auth/auth/password/forgot'
+import { Route as AuthAuthPasswordUpdateRouteImport } from './app/_auth/auth/password/update'
+import { Route as AuthAuthRegisterRouteImport } from './app/_auth/auth/register'
 import { Route as IndexRouteImport } from './app/index'
-import { Route as PostsPostIdRouteImport } from './app/posts.$postId'
-import { Route as PostsIndexRouteImport } from './app/posts.index'
-import { Route as PostsRouteRouteImport } from './app/posts.route'
 
-const PathlessLayoutRoute = PathlessLayoutRouteImport.update({
-  id: '/_pathlessLayout',
-  getParentRoute: () => rootRouteImport
-} as any)
-const PostsRouteRoute = PostsRouteRouteImport.update({
-  id: '/posts',
-  path: '/posts',
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
   getParentRoute: () => rootRouteImport
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -32,94 +27,109 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport
 } as any)
-const PostsIndexRoute = PostsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => PostsRouteRoute
+const AuthAuthRegisterRoute = AuthAuthRegisterRouteImport.update({
+  id: '/auth/register',
+  path: '/auth/register',
+  getParentRoute: () => AuthRoute
 } as any)
-const PostsPostIdRoute = PostsPostIdRouteImport.update({
-  id: '/$postId',
-  path: '/$postId',
-  getParentRoute: () => PostsRouteRoute
+const AuthAuthLoginRoute = AuthAuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
+  getParentRoute: () => AuthRoute
 } as any)
-const PathlessLayoutNestedLayoutRoute = PathlessLayoutNestedLayoutRouteImport.update({
-  id: '/_nested-layout',
-  getParentRoute: () => PathlessLayoutRoute
+const AuthAuthJoinRoute = AuthAuthJoinRouteImport.update({
+  id: '/auth/join',
+  path: '/auth/join',
+  getParentRoute: () => AuthRoute
 } as any)
-const PathlessLayoutNestedLayoutRouteBRoute = PathlessLayoutNestedLayoutRouteBRouteImport.update({
-  id: '/route-b',
-  path: '/route-b',
-  getParentRoute: () => PathlessLayoutNestedLayoutRoute
+const AuthAuthErrorRoute = AuthAuthErrorRouteImport.update({
+  id: '/auth/error',
+  path: '/auth/error',
+  getParentRoute: () => AuthRoute
 } as any)
-const PathlessLayoutNestedLayoutRouteARoute = PathlessLayoutNestedLayoutRouteARouteImport.update({
-  id: '/route-a',
-  path: '/route-a',
-  getParentRoute: () => PathlessLayoutNestedLayoutRoute
+const AuthAuthPasswordUpdateRoute = AuthAuthPasswordUpdateRouteImport.update({
+  id: '/auth/password/update',
+  path: '/auth/password/update',
+  getParentRoute: () => AuthRoute
+} as any)
+const AuthAuthPasswordForgotRoute = AuthAuthPasswordForgotRouteImport.update({
+  id: '/auth/password/forgot',
+  path: '/auth/password/forgot',
+  getParentRoute: () => AuthRoute
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/posts': typeof PostsRouteRouteWithChildren
-  '/posts/$postId': typeof PostsPostIdRoute
-  '/posts/': typeof PostsIndexRoute
-  '/route-a': typeof PathlessLayoutNestedLayoutRouteARoute
-  '/route-b': typeof PathlessLayoutNestedLayoutRouteBRoute
+  '/auth/error': typeof AuthAuthErrorRoute
+  '/auth/join': typeof AuthAuthJoinRoute
+  '/auth/login': typeof AuthAuthLoginRoute
+  '/auth/register': typeof AuthAuthRegisterRoute
+  '/auth/password/forgot': typeof AuthAuthPasswordForgotRoute
+  '/auth/password/update': typeof AuthAuthPasswordUpdateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/posts/$postId': typeof PostsPostIdRoute
-  '/posts': typeof PostsIndexRoute
-  '/route-a': typeof PathlessLayoutNestedLayoutRouteARoute
-  '/route-b': typeof PathlessLayoutNestedLayoutRouteBRoute
+  '/auth/error': typeof AuthAuthErrorRoute
+  '/auth/join': typeof AuthAuthJoinRoute
+  '/auth/login': typeof AuthAuthLoginRoute
+  '/auth/register': typeof AuthAuthRegisterRoute
+  '/auth/password/forgot': typeof AuthAuthPasswordForgotRoute
+  '/auth/password/update': typeof AuthAuthPasswordUpdateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/posts': typeof PostsRouteRouteWithChildren
-  '/_pathlessLayout': typeof PathlessLayoutRouteWithChildren
-  '/_pathlessLayout/_nested-layout': typeof PathlessLayoutNestedLayoutRouteWithChildren
-  '/posts/$postId': typeof PostsPostIdRoute
-  '/posts/': typeof PostsIndexRoute
-  '/_pathlessLayout/_nested-layout/route-a': typeof PathlessLayoutNestedLayoutRouteARoute
-  '/_pathlessLayout/_nested-layout/route-b': typeof PathlessLayoutNestedLayoutRouteBRoute
+  '/_auth': typeof AuthRouteWithChildren
+  '/_auth/auth/error': typeof AuthAuthErrorRoute
+  '/_auth/auth/join': typeof AuthAuthJoinRoute
+  '/_auth/auth/login': typeof AuthAuthLoginRoute
+  '/_auth/auth/register': typeof AuthAuthRegisterRoute
+  '/_auth/auth/password/forgot': typeof AuthAuthPasswordForgotRoute
+  '/_auth/auth/password/update': typeof AuthAuthPasswordUpdateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/posts' | '/posts/$postId' | '/posts/' | '/route-a' | '/route-b'
+  fullPaths:
+    | '/'
+    | '/auth/error'
+    | '/auth/join'
+    | '/auth/login'
+    | '/auth/register'
+    | '/auth/password/forgot'
+    | '/auth/password/update'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/posts/$postId' | '/posts' | '/route-a' | '/route-b'
+  to:
+    | '/'
+    | '/auth/error'
+    | '/auth/join'
+    | '/auth/login'
+    | '/auth/register'
+    | '/auth/password/forgot'
+    | '/auth/password/update'
   id:
     | '__root__'
     | '/'
-    | '/posts'
-    | '/_pathlessLayout'
-    | '/_pathlessLayout/_nested-layout'
-    | '/posts/$postId'
-    | '/posts/'
-    | '/_pathlessLayout/_nested-layout/route-a'
-    | '/_pathlessLayout/_nested-layout/route-b'
+    | '/_auth'
+    | '/_auth/auth/error'
+    | '/_auth/auth/join'
+    | '/_auth/auth/login'
+    | '/_auth/auth/register'
+    | '/_auth/auth/password/forgot'
+    | '/_auth/auth/password/update'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  PostsRouteRoute: typeof PostsRouteRouteWithChildren
-  PathlessLayoutRoute: typeof PathlessLayoutRouteWithChildren
+  AuthRoute: typeof AuthRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_pathlessLayout': {
-      id: '/_pathlessLayout'
+    '/_auth': {
+      id: '/_auth'
       path: ''
       fullPath: ''
-      preLoaderRoute: typeof PathlessLayoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/posts': {
-      id: '/posts'
-      path: '/posts'
-      fullPath: '/posts'
-      preLoaderRoute: typeof PostsRouteRouteImport
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -129,83 +139,73 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/posts/': {
-      id: '/posts/'
-      path: '/'
-      fullPath: '/posts/'
-      preLoaderRoute: typeof PostsIndexRouteImport
-      parentRoute: typeof PostsRouteRoute
+    '/_auth/auth/register': {
+      id: '/_auth/auth/register'
+      path: '/auth/register'
+      fullPath: '/auth/register'
+      preLoaderRoute: typeof AuthAuthRegisterRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/posts/$postId': {
-      id: '/posts/$postId'
-      path: '/$postId'
-      fullPath: '/posts/$postId'
-      preLoaderRoute: typeof PostsPostIdRouteImport
-      parentRoute: typeof PostsRouteRoute
+    '/_auth/auth/login': {
+      id: '/_auth/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthAuthLoginRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_pathlessLayout/_nested-layout': {
-      id: '/_pathlessLayout/_nested-layout'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof PathlessLayoutNestedLayoutRouteImport
-      parentRoute: typeof PathlessLayoutRoute
+    '/_auth/auth/join': {
+      id: '/_auth/auth/join'
+      path: '/auth/join'
+      fullPath: '/auth/join'
+      preLoaderRoute: typeof AuthAuthJoinRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_pathlessLayout/_nested-layout/route-b': {
-      id: '/_pathlessLayout/_nested-layout/route-b'
-      path: '/route-b'
-      fullPath: '/route-b'
-      preLoaderRoute: typeof PathlessLayoutNestedLayoutRouteBRouteImport
-      parentRoute: typeof PathlessLayoutNestedLayoutRoute
+    '/_auth/auth/error': {
+      id: '/_auth/auth/error'
+      path: '/auth/error'
+      fullPath: '/auth/error'
+      preLoaderRoute: typeof AuthAuthErrorRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_pathlessLayout/_nested-layout/route-a': {
-      id: '/_pathlessLayout/_nested-layout/route-a'
-      path: '/route-a'
-      fullPath: '/route-a'
-      preLoaderRoute: typeof PathlessLayoutNestedLayoutRouteARouteImport
-      parentRoute: typeof PathlessLayoutNestedLayoutRoute
+    '/_auth/auth/password/update': {
+      id: '/_auth/auth/password/update'
+      path: '/auth/password/update'
+      fullPath: '/auth/password/update'
+      preLoaderRoute: typeof AuthAuthPasswordUpdateRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/auth/password/forgot': {
+      id: '/_auth/auth/password/forgot'
+      path: '/auth/password/forgot'
+      fullPath: '/auth/password/forgot'
+      preLoaderRoute: typeof AuthAuthPasswordForgotRouteImport
+      parentRoute: typeof AuthRoute
     }
   }
 }
 
-interface PostsRouteRouteChildren {
-  PostsPostIdRoute: typeof PostsPostIdRoute
-  PostsIndexRoute: typeof PostsIndexRoute
+interface AuthRouteChildren {
+  AuthAuthErrorRoute: typeof AuthAuthErrorRoute
+  AuthAuthJoinRoute: typeof AuthAuthJoinRoute
+  AuthAuthLoginRoute: typeof AuthAuthLoginRoute
+  AuthAuthRegisterRoute: typeof AuthAuthRegisterRoute
+  AuthAuthPasswordForgotRoute: typeof AuthAuthPasswordForgotRoute
+  AuthAuthPasswordUpdateRoute: typeof AuthAuthPasswordUpdateRoute
 }
 
-const PostsRouteRouteChildren: PostsRouteRouteChildren = {
-  PostsPostIdRoute: PostsPostIdRoute,
-  PostsIndexRoute: PostsIndexRoute
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthAuthErrorRoute: AuthAuthErrorRoute,
+  AuthAuthJoinRoute: AuthAuthJoinRoute,
+  AuthAuthLoginRoute: AuthAuthLoginRoute,
+  AuthAuthRegisterRoute: AuthAuthRegisterRoute,
+  AuthAuthPasswordForgotRoute: AuthAuthPasswordForgotRoute,
+  AuthAuthPasswordUpdateRoute: AuthAuthPasswordUpdateRoute
 }
 
-const PostsRouteRouteWithChildren = PostsRouteRoute._addFileChildren(PostsRouteRouteChildren)
-
-interface PathlessLayoutNestedLayoutRouteChildren {
-  PathlessLayoutNestedLayoutRouteARoute: typeof PathlessLayoutNestedLayoutRouteARoute
-  PathlessLayoutNestedLayoutRouteBRoute: typeof PathlessLayoutNestedLayoutRouteBRoute
-}
-
-const PathlessLayoutNestedLayoutRouteChildren: PathlessLayoutNestedLayoutRouteChildren = {
-  PathlessLayoutNestedLayoutRouteARoute: PathlessLayoutNestedLayoutRouteARoute,
-  PathlessLayoutNestedLayoutRouteBRoute: PathlessLayoutNestedLayoutRouteBRoute
-}
-
-const PathlessLayoutNestedLayoutRouteWithChildren = PathlessLayoutNestedLayoutRoute._addFileChildren(
-  PathlessLayoutNestedLayoutRouteChildren
-)
-
-interface PathlessLayoutRouteChildren {
-  PathlessLayoutNestedLayoutRoute: typeof PathlessLayoutNestedLayoutRouteWithChildren
-}
-
-const PathlessLayoutRouteChildren: PathlessLayoutRouteChildren = {
-  PathlessLayoutNestedLayoutRoute: PathlessLayoutNestedLayoutRouteWithChildren
-}
-
-const PathlessLayoutRouteWithChildren = PathlessLayoutRoute._addFileChildren(PathlessLayoutRouteChildren)
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  PostsRouteRoute: PostsRouteRouteWithChildren,
-  PathlessLayoutRoute: PathlessLayoutRouteWithChildren
+  AuthRoute: AuthRouteWithChildren
 }
 export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addFileTypes<FileRouteTypes>()

@@ -1,4 +1,4 @@
-import type { FlatNamespace, i18n, KeyPrefix, Namespace, TFunction } from 'i18next'
+import type { FlatNamespace, i18n, KeyPrefix, Namespace, TFunction, TOptions } from 'i18next'
 import type { FallbackNs, UseTranslationOptions } from 'react-i18next'
 
 import { useEffect, useState } from 'react'
@@ -12,6 +12,12 @@ import * as z from 'zod'
 
 import { config, getInitOptions } from '../config'
 import { loadTranslation, makeZodI18nMap } from '../utils'
+
+// 简化的翻译函数类型，允许字符串键
+type TranslateFunction<Ns extends FlatNamespace | FlatNamespace[] | undefined = undefined> = {
+  (key: string, options?: TOptions): string
+  <K extends string>(key: K, options?: TOptions): string
+} & TFunction<Ns extends undefined ? 'common' : Ns>
 
 let client: i18n | null = null
 
@@ -101,13 +107,16 @@ const initializeI18nClient = async ({
 }
 
 // 客户端：React Hook，用于组件内获取 t 函数
-export const useTranslation = <
-  Ns extends FlatNamespace | FlatNamespace[] | undefined = undefined,
-  KPrefix extends KeyPrefix<FallbackNs<Ns>> = undefined
->(
+export const useTranslation = <Ns extends FlatNamespace | FlatNamespace[] | undefined = undefined>(
   ns?: Ns,
-  options?: UseTranslationOptions<KPrefix>
-) => useTranslationBase<Ns, KPrefix>(ns, options)
+  options?: UseTranslationOptions<undefined>
+) => {
+  const result = useTranslationBase(ns, options)
+  return {
+    ...result,
+    t: result.t as unknown as TranslateFunction<Ns>
+  }
+}
 
 // 客户端：获取或初始化 i18n 实例，适用于非组件场景
 export const getI18n = async ({

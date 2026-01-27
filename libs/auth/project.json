@@ -15,6 +15,23 @@
           "TS_NODE_PROJECT": "tsconfig.json"
         }
       }
+    },
+    "seed": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./src/scripts/seed.ts",
+        "cwd": "libs/auth",
+        "env": {
+          "NODE_OPTIONS": "-r tsconfig-paths/register",
+          "TS_NODE_PROJECT": "tsconfig.json"
+        }
+      },
+      "dependsOn": [
+        {
+          "projects": "pg-dao",
+          "target": "generate"
+        }
+      ]
     }
   }
 }
