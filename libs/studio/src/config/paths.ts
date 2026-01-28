@@ -1,7 +1,9 @@
 const ADMIN_PREFIX = '/admin'
 const AUTH_PREFIX = '/auth'
 const BLOG_PREFIX = '/blog'
-const DASHBOARD_PREFIX = '/dashboard'
+const CRM_PREFIX = '/crm'
+const ORGANIZATION_PREFIX = '/organization'
+const USER_PREFIX = '/user'
 const LEGAL_PREFIX = '/legal'
 
 const API_PREFIX = '/api'
@@ -40,25 +42,32 @@ const pathsConfig = {
     updatePassword: `${AUTH_PREFIX}/password/update`,
     error: `${AUTH_PREFIX}/error`
   },
-  dashboard: {
-    user: {
-      index: DASHBOARD_PREFIX,
-      ai: `${DASHBOARD_PREFIX}/ai`,
-      settings: {
-        index: `${DASHBOARD_PREFIX}/settings`,
-        security: `${DASHBOARD_PREFIX}/settings/security`,
-        billing: `${DASHBOARD_PREFIX}/settings/billing`
-      }
-    },
-    organization: (slug: string) => ({
-      index: `${DASHBOARD_PREFIX}/${slug}`,
-      settings: {
-        index: `${DASHBOARD_PREFIX}/${slug}/settings`,
-        billing: `${DASHBOARD_PREFIX}/${slug}/settings/billing`
-      },
-      members: `${DASHBOARD_PREFIX}/${slug}/members`
-    })
+  user: {
+    settings: {
+      index: `${USER_PREFIX}/settings`,
+      security: `${USER_PREFIX}/settings/security`,
+      billing: `${USER_PREFIX}/settings/billing`
+    }
+  },
+  crm: {
+    index: CRM_PREFIX,
+    ai: `${CRM_PREFIX}/ai`
+  },
+  organization: {
+    index: ORGANIZATION_PREFIX,
+    settings: `${ORGANIZATION_PREFIX}/settings`,
+    members: `${ORGANIZATION_PREFIX}/members`
   }
 } as const
 
-export { pathsConfig, DASHBOARD_PREFIX, ADMIN_PREFIX, BLOG_PREFIX, AUTH_PREFIX, API_PREFIX, LEGAL_PREFIX }
+export {
+  pathsConfig,
+  ADMIN_PREFIX,
+  CRM_PREFIX,
+  ORGANIZATION_PREFIX,
+  USER_PREFIX,
+  BLOG_PREFIX,
+  AUTH_PREFIX,
+  API_PREFIX,
+  LEGAL_PREFIX
+}
