@@ -1,7 +1,7 @@
 import { useTranslation } from '@libs/i18n'
 import { Icons } from '@libs/ui-shared/web'
 
-import { TurboLink } from '../common/turbo-link'
+import { GoLink } from '../common/go-link'
 import { pathsConfig } from '../config/paths'
 
 interface AuthErrorPageProps {
@@ -18,12 +18,12 @@ export const AuthErrorPage = ({ error }: AuthErrorPageProps) => {
 
       {error && <code className="bg-muted rounded-md px-2 py-0.5 font-mono">{error}</code>}
 
-      <TurboLink
+      <GoLink
         href={pathsConfig.auth.login}
         className="text-muted-foreground hover:text-primary mt-3 text-sm font-medium underline underline-offset-4"
       >
         {t('goToLogin')}
-      </TurboLink>
+      </GoLink>
     </div>
   )
 }

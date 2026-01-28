@@ -21,7 +21,7 @@ import {
   PasswordInput
 } from '@libs/ui-shared/web'
 
-import { TurboLink } from '../../../common/turbo-link'
+import { GoLink } from '../../../common/go-link'
 import { pathsConfig } from '../../../config/paths'
 import { auth } from '../../lib/api'
 import { useAuthFormStore } from '../store'
@@ -35,7 +35,6 @@ interface PasswordLoginFormProps {
 export const PasswordLoginForm = memo<PasswordLoginFormProps>(
   ({ redirectTo = pathsConfig.dashboard.user.index, email, onTwoFactorRedirect }) => {
     const { t } = useTranslation(['common', 'auth'])
-    const navigate = useNavigate()
     const { provider, setProvider, isSubmitting, setIsSubmitting } = useAuthFormStore()
 
     const form = useForm({
@@ -59,7 +58,8 @@ export const PasswordLoginForm = memo<PasswordLoginFormProps>(
         if ('twoFactorRedirect' in ctx) {
           return onTwoFactorRedirect?.()
         }
-        navigate({ to: redirectTo })
+        // 使用硬导航确保页面完全刷新，session 状态正确更新
+        window.location.href = redirectTo
       }
     })
 
@@ -110,12 +110,12 @@ export const PasswordLoginForm = memo<PasswordLoginFormProps>(
                   </FormControl>
                   <div className="flex w-full items-center justify-between">
                     <FormLabel>{t('password')}</FormLabel>
-                    <TurboLink
+                    <GoLink
                       href={pathsConfig.auth.forgotPassword}
                       className="text-muted-foreground hover:text-primary text-sm underline underline-offset-4"
                     >
                       {t('account.password.forgot.label')}
-                    </TurboLink>
+                    </GoLink>
                   </div>
                 </div>
                 <FormMessage />

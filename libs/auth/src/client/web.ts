@@ -13,6 +13,9 @@ import {
 } from 'better-auth/client/plugins'
 import { createAuthClient } from 'better-auth/react'
 
+/**
+ * React 客户端 - 用于组件内的 useSession 等 hooks
+ */
 export const createClient = (options?: AuthClientOptions) =>
   createAuthClient({
     ...options,

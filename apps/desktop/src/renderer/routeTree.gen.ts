@@ -9,88 +9,92 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './app/__root'
-import { Route as AuthRouteImport } from './app/_auth'
-import { Route as AuthAuthErrorRouteImport } from './app/_auth/auth/error'
-import { Route as AuthAuthJoinRouteImport } from './app/_auth/auth/join'
-import { Route as AuthAuthLoginRouteImport } from './app/_auth/auth/login'
-import { Route as AuthAuthPasswordForgotRouteImport } from './app/_auth/auth/password/forgot'
-import { Route as AuthAuthPasswordUpdateRouteImport } from './app/_auth/auth/password/update'
-import { Route as AuthAuthRegisterRouteImport } from './app/_auth/auth/register'
+import { Route as AuthRouteImport } from './app/auth'
 import { Route as IndexRouteImport } from './app/index'
+import { Route as AuthRegisterRouteImport } from './app/auth/register'
+import { Route as AuthLoginRouteImport } from './app/auth/login'
+import { Route as AuthJoinRouteImport } from './app/auth/join'
+import { Route as AuthErrorRouteImport } from './app/auth/error'
+import { Route as AuthPasswordUpdateRouteImport } from './app/auth/password/update'
+import { Route as AuthPasswordForgotRouteImport } from './app/auth/password/forgot'
 
 const AuthRoute = AuthRouteImport.update({
-  id: '/_auth',
-  getParentRoute: () => rootRouteImport
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthAuthRegisterRoute = AuthAuthRegisterRouteImport.update({
-  id: '/auth/register',
-  path: '/auth/register',
-  getParentRoute: () => AuthRoute
+const AuthRegisterRoute = AuthRegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => AuthRoute,
 } as any)
-const AuthAuthLoginRoute = AuthAuthLoginRouteImport.update({
-  id: '/auth/login',
-  path: '/auth/login',
-  getParentRoute: () => AuthRoute
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AuthRoute,
 } as any)
-const AuthAuthJoinRoute = AuthAuthJoinRouteImport.update({
-  id: '/auth/join',
-  path: '/auth/join',
-  getParentRoute: () => AuthRoute
+const AuthJoinRoute = AuthJoinRouteImport.update({
+  id: '/join',
+  path: '/join',
+  getParentRoute: () => AuthRoute,
 } as any)
-const AuthAuthErrorRoute = AuthAuthErrorRouteImport.update({
-  id: '/auth/error',
-  path: '/auth/error',
-  getParentRoute: () => AuthRoute
+const AuthErrorRoute = AuthErrorRouteImport.update({
+  id: '/error',
+  path: '/error',
+  getParentRoute: () => AuthRoute,
 } as any)
-const AuthAuthPasswordUpdateRoute = AuthAuthPasswordUpdateRouteImport.update({
-  id: '/auth/password/update',
-  path: '/auth/password/update',
-  getParentRoute: () => AuthRoute
+const AuthPasswordUpdateRoute = AuthPasswordUpdateRouteImport.update({
+  id: '/password/update',
+  path: '/password/update',
+  getParentRoute: () => AuthRoute,
 } as any)
-const AuthAuthPasswordForgotRoute = AuthAuthPasswordForgotRouteImport.update({
-  id: '/auth/password/forgot',
-  path: '/auth/password/forgot',
-  getParentRoute: () => AuthRoute
+const AuthPasswordForgotRoute = AuthPasswordForgotRouteImport.update({
+  id: '/password/forgot',
+  path: '/password/forgot',
+  getParentRoute: () => AuthRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth/error': typeof AuthAuthErrorRoute
-  '/auth/join': typeof AuthAuthJoinRoute
-  '/auth/login': typeof AuthAuthLoginRoute
-  '/auth/register': typeof AuthAuthRegisterRoute
-  '/auth/password/forgot': typeof AuthAuthPasswordForgotRoute
-  '/auth/password/update': typeof AuthAuthPasswordUpdateRoute
+  '/auth': typeof AuthRouteWithChildren
+  '/auth/error': typeof AuthErrorRoute
+  '/auth/join': typeof AuthJoinRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/auth/password/forgot': typeof AuthPasswordForgotRoute
+  '/auth/password/update': typeof AuthPasswordUpdateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth/error': typeof AuthAuthErrorRoute
-  '/auth/join': typeof AuthAuthJoinRoute
-  '/auth/login': typeof AuthAuthLoginRoute
-  '/auth/register': typeof AuthAuthRegisterRoute
-  '/auth/password/forgot': typeof AuthAuthPasswordForgotRoute
-  '/auth/password/update': typeof AuthAuthPasswordUpdateRoute
+  '/auth': typeof AuthRouteWithChildren
+  '/auth/error': typeof AuthErrorRoute
+  '/auth/join': typeof AuthJoinRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/auth/password/forgot': typeof AuthPasswordForgotRoute
+  '/auth/password/update': typeof AuthPasswordUpdateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_auth': typeof AuthRouteWithChildren
-  '/_auth/auth/error': typeof AuthAuthErrorRoute
-  '/_auth/auth/join': typeof AuthAuthJoinRoute
-  '/_auth/auth/login': typeof AuthAuthLoginRoute
-  '/_auth/auth/register': typeof AuthAuthRegisterRoute
-  '/_auth/auth/password/forgot': typeof AuthAuthPasswordForgotRoute
-  '/_auth/auth/password/update': typeof AuthAuthPasswordUpdateRoute
+  '/auth': typeof AuthRouteWithChildren
+  '/auth/error': typeof AuthErrorRoute
+  '/auth/join': typeof AuthJoinRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/auth/password/forgot': typeof AuthPasswordForgotRoute
+  '/auth/password/update': typeof AuthPasswordUpdateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/auth/error'
     | '/auth/join'
     | '/auth/login'
@@ -100,6 +104,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/auth/error'
     | '/auth/join'
     | '/auth/login'
@@ -109,13 +114,13 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/_auth'
-    | '/_auth/auth/error'
-    | '/_auth/auth/join'
-    | '/_auth/auth/login'
-    | '/_auth/auth/register'
-    | '/_auth/auth/password/forgot'
-    | '/_auth/auth/password/update'
+    | '/auth'
+    | '/auth/error'
+    | '/auth/join'
+    | '/auth/login'
+    | '/auth/register'
+    | '/auth/password/forgot'
+    | '/auth/password/update'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -125,10 +130,10 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_auth': {
-      id: '/_auth'
-      path: ''
-      fullPath: ''
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -139,73 +144,75 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_auth/auth/register': {
-      id: '/_auth/auth/register'
-      path: '/auth/register'
+    '/auth/register': {
+      id: '/auth/register'
+      path: '/register'
       fullPath: '/auth/register'
-      preLoaderRoute: typeof AuthAuthRegisterRouteImport
+      preLoaderRoute: typeof AuthRegisterRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/auth/login': {
-      id: '/_auth/auth/login'
-      path: '/auth/login'
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/login'
       fullPath: '/auth/login'
-      preLoaderRoute: typeof AuthAuthLoginRouteImport
+      preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/auth/join': {
-      id: '/_auth/auth/join'
-      path: '/auth/join'
+    '/auth/join': {
+      id: '/auth/join'
+      path: '/join'
       fullPath: '/auth/join'
-      preLoaderRoute: typeof AuthAuthJoinRouteImport
+      preLoaderRoute: typeof AuthJoinRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/auth/error': {
-      id: '/_auth/auth/error'
-      path: '/auth/error'
+    '/auth/error': {
+      id: '/auth/error'
+      path: '/error'
       fullPath: '/auth/error'
-      preLoaderRoute: typeof AuthAuthErrorRouteImport
+      preLoaderRoute: typeof AuthErrorRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/auth/password/update': {
-      id: '/_auth/auth/password/update'
-      path: '/auth/password/update'
+    '/auth/password/update': {
+      id: '/auth/password/update'
+      path: '/password/update'
       fullPath: '/auth/password/update'
-      preLoaderRoute: typeof AuthAuthPasswordUpdateRouteImport
+      preLoaderRoute: typeof AuthPasswordUpdateRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/auth/password/forgot': {
-      id: '/_auth/auth/password/forgot'
-      path: '/auth/password/forgot'
+    '/auth/password/forgot': {
+      id: '/auth/password/forgot'
+      path: '/password/forgot'
       fullPath: '/auth/password/forgot'
-      preLoaderRoute: typeof AuthAuthPasswordForgotRouteImport
+      preLoaderRoute: typeof AuthPasswordForgotRouteImport
       parentRoute: typeof AuthRoute
     }
   }
 }
 
 interface AuthRouteChildren {
-  AuthAuthErrorRoute: typeof AuthAuthErrorRoute
-  AuthAuthJoinRoute: typeof AuthAuthJoinRoute
-  AuthAuthLoginRoute: typeof AuthAuthLoginRoute
-  AuthAuthRegisterRoute: typeof AuthAuthRegisterRoute
-  AuthAuthPasswordForgotRoute: typeof AuthAuthPasswordForgotRoute
-  AuthAuthPasswordUpdateRoute: typeof AuthAuthPasswordUpdateRoute
+  AuthErrorRoute: typeof AuthErrorRoute
+  AuthJoinRoute: typeof AuthJoinRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
+  AuthPasswordForgotRoute: typeof AuthPasswordForgotRoute
+  AuthPasswordUpdateRoute: typeof AuthPasswordUpdateRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
-  AuthAuthErrorRoute: AuthAuthErrorRoute,
-  AuthAuthJoinRoute: AuthAuthJoinRoute,
-  AuthAuthLoginRoute: AuthAuthLoginRoute,
-  AuthAuthRegisterRoute: AuthAuthRegisterRoute,
-  AuthAuthPasswordForgotRoute: AuthAuthPasswordForgotRoute,
-  AuthAuthPasswordUpdateRoute: AuthAuthPasswordUpdateRoute
+  AuthErrorRoute: AuthErrorRoute,
+  AuthJoinRoute: AuthJoinRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthRegisterRoute: AuthRegisterRoute,
+  AuthPasswordForgotRoute: AuthPasswordForgotRoute,
+  AuthPasswordUpdateRoute: AuthPasswordUpdateRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthRoute: AuthRouteWithChildren
+  AuthRoute: AuthRouteWithChildren,
 }
-export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addFileTypes<FileRouteTypes>()
+export const routeTree = rootRouteImport
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()

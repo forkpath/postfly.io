@@ -20,7 +20,7 @@ import {
   PasswordInput
 } from '@libs/ui-shared/web'
 
-import { TurboLink } from '../../common/turbo-link'
+import { GoLink } from '../../common/go-link'
 import { pathsConfig } from '../../config/paths'
 import { auth } from '../lib/api'
 import { useAuthFormStore } from './store'
@@ -144,12 +144,12 @@ export const RegisterCta = ({ searchParams }: RegisterCtaProps) => {
     <div className="flex items-center justify-center pt-2">
       <div className="text-muted-foreground text-sm">
         {t('login.noAccount')}
-        <TurboLink
+        <GoLink
           href={searchString ? `${pathsConfig.auth.register}?${searchString}` : pathsConfig.auth.register}
           className="hover:text-primary pl-2 font-medium underline underline-offset-4"
         >
           {t('register.cta')}!
-        </TurboLink>
+        </GoLink>
       </div>
     </div>
   )

@@ -2,7 +2,7 @@ import type { PropsWithChildren } from 'react'
 
 import { Container, Font, Head, Html, Section, Tailwind } from '@react-email/components'
 import { formatHex, oklch } from 'culori'
-import { mapValues } from 'lodash'
+import { default as mapValues } from 'lodash/mapValues'
 
 import { ThemeMode, themes } from '@libs/ui-shared/common'
 

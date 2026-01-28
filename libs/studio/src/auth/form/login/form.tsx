@@ -6,7 +6,7 @@ import { AuthProvider } from '@libs/auth'
 import { useTranslation } from '@libs/i18n'
 import { Badge, Tabs, TabsContent, TabsList, TabsTrigger } from '@libs/ui-shared/web'
 
-import { TurboLink } from '../../../common/turbo-link'
+import { GoLink } from '../../../common/go-link'
 import { pathsConfig } from '../../../config/paths'
 import { authClient } from '../../../lib/auth/client'
 import { MagicLinkLoginForm } from './magic-link'
@@ -85,12 +85,12 @@ export const LoginCta = ({ searchParams }: LoginCtaProps) => {
     <div className="flex items-center justify-center pt-2">
       <div className="text-muted-foreground text-sm">
         {t('register.alreadyHaveAccount')}
-        <TurboLink
+        <GoLink
           href={searchString ? `${pathsConfig.auth.login}?${searchString}` : pathsConfig.auth.login}
           className="hover:text-primary pl-2 font-medium underline underline-offset-4"
         >
           {t('login.cta')}!
-        </TurboLink>
+        </GoLink>
       </div>
     </div>
   )

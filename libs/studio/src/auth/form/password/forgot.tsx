@@ -18,7 +18,7 @@ import {
   Input
 } from '@libs/ui-shared/web'
 
-import { TurboLink } from '../../../common/turbo-link'
+import { GoLink } from '../../../common/go-link'
 import { pathsConfig } from '../../../config/paths'
 import { auth } from '../../lib/api'
 
@@ -49,12 +49,12 @@ export const ForgotPasswordForm = () => {
             {t('account.password.forgot.success.title')}
           </h2>
           <p className="text-center">{t('account.password.forgot.success.description')}</p>
-          <TurboLink
+          <GoLink
             href={pathsConfig.auth.login}
             className="text-muted-foreground hover:text-primary -mt-1 text-sm font-medium underline underline-offset-4"
           >
             {t('login.cta')}
-          </TurboLink>
+          </GoLink>
         </motion.div>
       ) : (
         <Form {...form} key="idle">
@@ -101,12 +101,12 @@ export const ForgotPasswordForm = () => {
             </Button>
 
             <div className="flex items-center justify-center pt-2">
-              <TurboLink
+              <GoLink
                 href={pathsConfig.auth.login}
                 className="text-muted-foreground hover:text-primary pl-2 text-sm font-medium underline underline-offset-4"
               >
                 {t('account.password.forgot.back')}
-              </TurboLink>
+              </GoLink>
             </div>
           </motion.form>
         </Form>
