@@ -1,14 +1,16 @@
 import path from 'node:path'
 
-import { DynamicModule, Module } from '@nestjs/common'
+import { DynamicModule, Logger, Module } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 
-import { AcceptLanguageResolver, I18nModule as NestI18nModule } from 'nestjs-i18n'
+import { AcceptLanguageResolver, I18nJsonLoader, I18nModule as NestI18nModule } from 'nestjs-i18n'
 
 import { I18nConfig } from './i18n.config'
 
 @Module({})
 export class I18nModule {
+  private static readonly logger = new Logger('I18nModule')
+
   static register(): DynamicModule {
     return {
       module: I18nModule,
@@ -17,14 +19,28 @@ export class I18nModule {
           inject: [ConfigService],
           useFactory: (configService: ConfigService) => {
             const { fallbackLng, localePath } = configService.get<I18nConfig>('i18n') as I18nConfig
+            const resolvedPath = path.join(process.cwd(), localePath)
+            const typesPath = path.join(process.cwd(), 'libs/srv-shared/src/i18n/i18n.generated.ts')
+
+            this.logger.log(`Loading translations from: ${resolvedPath}`)
+            this.logger.log(`Types will be generated to: ${typesPath}`)
+
             return {
               fallbackLanguage: fallbackLng,
+              // 显式指定 JSON Loader
+              loader: I18nJsonLoader,
               loaderOptions: {
                 // 使用项目根目录作为基础路径，支持前后端共用翻译文件
-                path: path.join(process.cwd(), localePath),
-                watch: true
+                path: resolvedPath,
+                // 启用文件监听，文件变化时自动重新加载
+                watch: true,
+                // 包含子文件夹（如 en/, zh/ 等）
+                includeSubfolders: true
               },
-              typesOutputPath: path.join(process.cwd(), 'libs/srv-shared/src/i18n/i18n.generated.ts')
+              // 类型输出路径 - 应用启动时自动生成
+              typesOutputPath: typesPath,
+              // 开启日志便于调试
+              logging: true
             }
           },
           resolvers: [AcceptLanguageResolver]

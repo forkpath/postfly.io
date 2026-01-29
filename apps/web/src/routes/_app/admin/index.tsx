@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { useTranslation } from '@libs/i18n'
-import { DashboardHeader, DashboardHeaderDescription, DashboardHeaderTitle } from '@libs/studio'
+import { PageHeader, PageHeaderDescription, PageHeaderTitle } from '@libs/studio'
 import { Card, CardContent, CardHeader, CardTitle, Icons } from '@libs/ui-shared/web'
 
 export const Route = createFileRoute('/_app/admin/')({
@@ -19,12 +19,12 @@ function AdminHomePage() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <DashboardHeader>
+      <PageHeader>
         <div className="flex flex-col gap-1.5">
-          <DashboardHeaderTitle>{t('home.title')}</DashboardHeaderTitle>
-          <DashboardHeaderDescription>{t('home.description')}</DashboardHeaderDescription>
+          <PageHeaderTitle>{t('home.title')}</PageHeaderTitle>
+          <PageHeaderDescription>{t('home.description')}</PageHeaderDescription>
         </div>
-      </DashboardHeader>
+      </PageHeader>
 
       <div className="grid gap-4 md:grid-cols-3">
         {stats.map(stat => (

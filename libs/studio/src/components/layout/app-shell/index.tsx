@@ -28,8 +28,8 @@ import {
   useSidebar
 } from '@libs/ui-shared/web'
 
-import { GoLink } from '../../../../index'
-import { AppHeader } from '../sidebar/header'
+import { GoLink } from '../../go-link'
+import { AppHeader } from './app-header'
 
 export interface AppShellMenuItem {
   icon: ReactNode

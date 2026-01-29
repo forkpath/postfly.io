@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { useTranslation } from '@libs/i18n'
-import { DashboardHeader, DashboardHeaderDescription, DashboardHeaderTitle } from '@libs/studio'
+import { PageHeader, PageHeaderDescription, PageHeaderTitle } from '@libs/studio'
 
 export const Route = createFileRoute('/_app/admin/customers/')({
   component: CustomersPage
@@ -12,12 +12,12 @@ function CustomersPage() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <DashboardHeader>
+      <PageHeader>
         <div className="flex flex-col gap-1.5">
-          <DashboardHeaderTitle>{t('customers.title')}</DashboardHeaderTitle>
-          <DashboardHeaderDescription>{t('customers.description')}</DashboardHeaderDescription>
+          <PageHeaderTitle>{t('customers.title')}</PageHeaderTitle>
+          <PageHeaderDescription>{t('customers.description')}</PageHeaderDescription>
         </div>
-      </DashboardHeader>
+      </PageHeader>
 
       <div className="text-muted-foreground">Customers DataTable - Coming Soon</div>
     </div>

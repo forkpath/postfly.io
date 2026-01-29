@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { useTranslation } from '@libs/i18n'
-import { DashboardHeader, DashboardHeaderDescription, DashboardHeaderTitle } from '@libs/studio'
+import { PageHeader, PageHeaderDescription, PageHeaderTitle } from '@libs/studio'
 
 export const Route = createFileRoute('/_app/user/settings/')({
   component: SettingsPage
@@ -12,12 +12,12 @@ function SettingsPage() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <DashboardHeader>
+      <PageHeader>
         <div className="flex flex-col gap-1.5">
-          <DashboardHeaderTitle>{t('general.title')}</DashboardHeaderTitle>
-          <DashboardHeaderDescription>{t('general.description')}</DashboardHeaderDescription>
+          <PageHeaderTitle>{t('general.title')}</PageHeaderTitle>
+          <PageHeaderDescription>{t('general.description')}</PageHeaderDescription>
         </div>
-      </DashboardHeader>
+      </PageHeader>
 
       <div className="text-muted-foreground">User settings - Coming Soon</div>
     </div>

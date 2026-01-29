@@ -35,8 +35,8 @@ import {
   TabsTrigger
 } from '@libs/ui-shared/web'
 
-import { GoLink, pathsConfig } from '../../../../index'
-import { authClient } from '../../../../lib/auth/client'
+import { GoLink, pathsConfig } from '../../../index'
+import { authClient } from '../../../lib/auth/client'
 
 // ============================================================================
 // Language Dropdown
