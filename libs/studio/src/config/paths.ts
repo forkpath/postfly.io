@@ -1,4 +1,5 @@
 const ADMIN_PREFIX = '/admin'
+const AI_PREFIX = '/ai'
 const AUTH_PREFIX = '/auth'
 const BLOG_PREFIX = '/blog'
 const CRM_PREFIX = '/crm'
@@ -10,6 +11,34 @@ const API_PREFIX = '/api'
 
 const pathsConfig = {
   index: '/',
+  ai: {
+    index: AI_PREFIX,
+    chat: (id: string) => `${AI_PREFIX}/chat/${id}`
+  },
+  crm: {
+    index: CRM_PREFIX, // 用来放置crm仪表盘
+    ai: `${CRM_PREFIX}/ai`,
+    order: {
+      index: `${CRM_PREFIX}/order`,
+      order: (id: string) => `${CRM_PREFIX}/order/${id}`
+    },
+    customer: {
+      index: `${CRM_PREFIX}/customer`,
+      customer: (id: string) => `${CRM_PREFIX}/customer/${id}`
+    },
+    product: {
+      index: `${CRM_PREFIX}/product`,
+      product: (id: string) => `${CRM_PREFIX}/product/${id}`
+    },
+    invoice: {
+      index: `${CRM_PREFIX}/invoice`,
+      invoice: (id: string) => `${CRM_PREFIX}/invoice/${id}`
+    },
+    payment: {
+      index: `${CRM_PREFIX}/payment`,
+      payment: (id: string) => `${CRM_PREFIX}/payment/${id}`
+    }
+  },
   admin: {
     index: ADMIN_PREFIX,
     users: {
@@ -25,6 +54,14 @@ const pathsConfig = {
       customer: (id: string) => `${ADMIN_PREFIX}/customers/${id}`
     }
   },
+  auth: {
+    login: `${AUTH_PREFIX}/login`,
+    register: `${AUTH_PREFIX}/register`,
+    join: `${AUTH_PREFIX}/join`,
+    forgotPassword: `${AUTH_PREFIX}/password/forgot`,
+    updatePassword: `${AUTH_PREFIX}/password/update`,
+    error: `${AUTH_PREFIX}/error`
+  },
   marketing: {
     pricing: '/pricing',
     contact: '/contact',
@@ -34,24 +71,12 @@ const pathsConfig = {
     },
     legal: (slug: string) => `${LEGAL_PREFIX}/${slug}`
   },
-  auth: {
-    login: `${AUTH_PREFIX}/login`,
-    register: `${AUTH_PREFIX}/register`,
-    join: `${AUTH_PREFIX}/join`,
-    forgotPassword: `${AUTH_PREFIX}/password/forgot`,
-    updatePassword: `${AUTH_PREFIX}/password/update`,
-    error: `${AUTH_PREFIX}/error`
-  },
   user: {
     settings: {
       index: `${USER_PREFIX}/settings`,
       security: `${USER_PREFIX}/settings/security`,
       billing: `${USER_PREFIX}/settings/billing`
     }
-  },
-  crm: {
-    index: CRM_PREFIX,
-    ai: `${CRM_PREFIX}/ai`
   },
   organization: {
     index: ORGANIZATION_PREFIX,

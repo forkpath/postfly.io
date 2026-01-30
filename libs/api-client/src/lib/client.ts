@@ -9,6 +9,10 @@ export function detectRuntime(): ApiRuntime {
   if (typeof window === 'undefined') {
     return 'ssr'
   }
+  // React Native 环境检测
+  if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
+    return 'mobile'
+  }
   // Electron 环境检测
   if (
     typeof window !== 'undefined' &&
@@ -34,6 +38,9 @@ function getDefaultBaseURL(runtime: ApiRuntime): string {
     case 'desktop':
       // Desktop 通过 IPC 或直接请求后端
       return process.env['VITE_API_BASE_URL'] || 'http://localhost:8000'
+    case 'mobile':
+      // Mobile 需要完整 URL，从环境变量获取
+      return process.env['EXPO_PUBLIC_API_BASE_URL'] || 'http://localhost:8000'
     case 'web':
     default:
       // Web SPA 通过代理，使用相对路径
@@ -54,6 +61,16 @@ function getDefaultBaseURL(runtime: ApiRuntime): string {
  *
  * // Desktop
  * const api = createClient({ runtime: 'desktop' })
+ *
+ * // Mobile (React Native) - 需要 token-based 认证
+ * const api = createClient({
+ *   runtime: 'mobile',
+ *   baseURL: 'https://api.example.com',
+ *   withCredentials: false,
+ *   auth: {
+ *     getAccessToken: async () => await SecureStore.getItemAsync('auth_token')
+ *   }
+ * })
  *
  * // 自定义鉴权
  * const api = createClient({

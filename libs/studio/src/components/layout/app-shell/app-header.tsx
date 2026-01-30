@@ -409,7 +409,7 @@ interface ProfileDropdownProps {
 }
 
 export const ProfileDropdown = memo<ProfileDropdownProps>(({ user, trigger, align = 'end' }) => {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation(['common', 'auth'])
 
   const handleLogout = () => {
     void authClient.signOut()
@@ -486,7 +486,7 @@ export const ProfileDropdown = memo<ProfileDropdownProps>(({ user, trigger, alig
 
         <DropdownMenuItem variant="destructive" className="px-4 py-2.5 text-base" onClick={handleLogout}>
           <Icons.LogOut className="size-5" />
-          <span>{t('logout')}</span>
+          <span>{t('logout.cta')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

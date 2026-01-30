@@ -1,7 +1,8 @@
 import type { User } from '@libs/auth'
 import type { AppShellMenuItem } from '@libs/studio'
 
-import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+import { useEffect } from 'react'
+import { createFileRoute, Outlet, redirect, useNavigate } from '@tanstack/react-router'
 
 import { hasAdminPermission, hasOrgAdminPermission, MemberRole } from '@libs/auth'
 import { AppShell, authClient, pathsConfig } from '@libs/studio'
@@ -28,6 +29,7 @@ export const Route = createFileRoute('/_app')({
 })
 
 function AppLayout() {
+  const navigate = useNavigate()
   // beforeLoad 返回的静态用户数据，确保首次渲染时可用
   const { user } = Route.useRouteContext()
   // 响应式 session，当用户信息变化时自动更新
@@ -44,79 +46,38 @@ function AppLayout() {
   // 当前活跃组织的管理权限（member.role 为 admin 或 owner）
   const isOrgAdminOrOwner = hasOrgAdminPermission(activeMember?.role as MemberRole)
 
-  // 根据用户权限构建菜单
+  // 根据用户权限构建一级菜单
+  // 二级导航由各自的 layout route 通过 SecondaryNavProvider 提供
   const menu: AppShellMenuItem[] = [
     ...(isOrgAdminOrOwner
       ? [
           {
             label: 'home',
             href: pathsConfig.crm.index,
-            icon: <Icons.Home className="size-6" />,
-            subItems: [
-              {
-                label: 'overview',
-                href: pathsConfig.crm.index,
-                icon: <Icons.LayoutDashboard className="size-4" />
-              },
-              {
-                label: 'ai',
-                href: pathsConfig.crm.ai,
-                icon: <Icons.Brain className="size-4" />
-              }
-            ]
+            icon: <Icons.Home className="size-6" />
           }
         ]
       : []),
-    {
-      label: 'settings',
-      href: pathsConfig.user.settings.index,
-      icon: <Icons.Settings className="size-6" />,
-      subItems: [
-        {
-          label: 'general',
-          href: pathsConfig.user.settings.index,
-          icon: <Icons.Settings2 className="size-4" />
-        },
-        {
-          label: 'security',
-          href: pathsConfig.user.settings.security,
-          icon: <Icons.Lock className="size-4" />
-        },
-        {
-          label: 'billing',
-          href: pathsConfig.user.settings.billing,
-          icon: <Icons.CreditCard className="size-4" />
-        }
-      ]
-    },
     // 管理员菜单
     ...(isAdmin
       ? [
           {
             label: 'admin',
             href: pathsConfig.admin.index,
-            icon: <Icons.Shield className="size-6" />,
-            subItems: [
-              {
-                label: 'users',
-                href: pathsConfig.admin.users.index,
-                icon: <Icons.UsersRound className="size-4" />
-              },
-              {
-                label: 'organizations',
-                href: pathsConfig.admin.organizations.index,
-                icon: <Icons.Building className="size-4" />
-              },
-              {
-                label: 'customers',
-                href: pathsConfig.admin.customers.index,
-                icon: <Icons.HandCoins className="size-4" />
-              }
-            ]
+            icon: <Icons.Shield className="size-6" />
           }
         ]
       : [])
   ]
+
+  useEffect(() => {
+    if (session === null) {
+      navigate({
+        to: pathsConfig.auth.login,
+        search: { redirectTo: undefined, invitationId: undefined, email: undefined }
+      })
+    }
+  }, [navigate, session])
 
   return (
     <AppShell user={currentUser} menu={menu}>
