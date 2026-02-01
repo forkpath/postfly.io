@@ -16,6 +16,7 @@ import { AuthModule, CacheModule, I18nModule, LoggerModule, RedisModule, Throttl
 
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
+import { UserModule } from './presentation/http/user/user.module'
 
 @Module({
   imports: [
@@ -67,9 +68,10 @@ import { AppService } from './app.service'
     MongoDaoModule.register(),
 
     // CQRS 模块
-    CqrsModule
-    // 其他业务模块
-    // StorageModule
+    CqrsModule,
+
+    // 业务模块
+    UserModule
   ],
   controllers: [AppController],
   providers: [

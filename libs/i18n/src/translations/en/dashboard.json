@@ -22,5 +22,35 @@
     "shape": "Shape Chart",
     "radial": "Radial Chart",
     "radar": "Radar Chart"
+  },
+  "stats": {
+    "deliveries": "Deliveries",
+    "onTheWay": "On the way",
+    "deliveryProcess": "Delivery Process",
+    "reachedTarget": "Reached {{percent}}% from target"
+  },
+  "pages": {
+    "title": "Pages",
+    "dashboard": "Dashboard",
+    "sales": "Sales",
+    "order": "Order",
+    "shipping": "Shipping"
+  },
+  "groups": {
+    "clients": "Clients",
+    "billing": "Billing"
+  },
+  "clients": {
+    "accounts": "Accounts",
+    "activity": "Activity",
+    "logins": "Logins",
+    "pricing": "Pricing"
+  },
+  "billing": {
+    "adjustments": "Adjustments",
+    "payments": "Payments",
+    "statements": "Statements",
+    "accountSummary": "Account Summary",
+    "exportInvoices": "Export Invoices"
   }
 }

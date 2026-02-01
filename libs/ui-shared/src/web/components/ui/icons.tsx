@@ -27,6 +27,7 @@ import {
   ChevronUp,
   Circle,
   CircleX,
+  ClipboardList,
   ClockFading,
   Code,
   Copy,
@@ -67,18 +68,21 @@ import {
   Pencil,
   Plus,
   PlusCircle,
+  RefreshCw,
   Search,
   SendHorizontal,
   Settings,
   Settings2,
   Shield,
   ShieldUser,
+  ShoppingCart,
   Slash,
   Star,
   Sun,
   SunMoon,
   Trash,
   TrendingUp,
+  Truck,
   Undo2,
   User,
   User2,
@@ -186,7 +190,11 @@ export const Icons = {
   FileText,
   FileImage,
   Link,
-  Pencil
+  Pencil,
+  RefreshCw,
+  ShoppingCart,
+  Truck,
+  ClipboardList
 }
 
 export type Icon = (typeof Icons)[keyof typeof Icons]

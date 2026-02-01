@@ -5,6 +5,7 @@ const BLOG_PREFIX = '/blog'
 const CRM_PREFIX = '/crm'
 const ORGANIZATION_PREFIX = '/organization'
 const USER_PREFIX = '/user'
+const WORKSPACE_PREFIX = '/workspace'
 const LEGAL_PREFIX = '/legal'
 
 const API_PREFIX = '/api'
@@ -82,6 +83,10 @@ const pathsConfig = {
     index: ORGANIZATION_PREFIX,
     settings: `${ORGANIZATION_PREFIX}/settings`,
     members: `${ORGANIZATION_PREFIX}/members`
+  },
+  workspace: {
+    index: WORKSPACE_PREFIX,
+    select: `${WORKSPACE_PREFIX}/select`
   }
 } as const
 
@@ -91,6 +96,7 @@ export {
   CRM_PREFIX,
   ORGANIZATION_PREFIX,
   USER_PREFIX,
+  WORKSPACE_PREFIX,
   BLOG_PREFIX,
   AUTH_PREFIX,
   API_PREFIX,

@@ -1,0 +1,12 @@
+{
+  "select": {
+    "title": "Select Workspace",
+    "description": "Please select the workspace you want to enter"
+  },
+  "switch": "Switch Workspace",
+  "personal": "Personal Space",
+  "personalDescription": "Your personal workspace",
+  "organizationDescription": "Organization workspace",
+  "current": "Current",
+  "enter": "Enter workspace"
+}

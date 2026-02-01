@@ -22,5 +22,35 @@
     "shape": "形状图",
     "radial": "径向图",
     "radar": "雷达图"
+  },
+  "stats": {
+    "deliveries": "配送量",
+    "onTheWay": "配送中",
+    "deliveryProcess": "配送进度",
+    "reachedTarget": "已完成目标的 {{percent}}%"
+  },
+  "pages": {
+    "title": "页面",
+    "dashboard": "仪表盘",
+    "sales": "销售",
+    "order": "订单",
+    "shipping": "物流"
+  },
+  "groups": {
+    "clients": "客户管理",
+    "billing": "账单管理"
+  },
+  "clients": {
+    "accounts": "账户",
+    "activity": "活动记录",
+    "logins": "登录记录",
+    "pricing": "定价"
+  },
+  "billing": {
+    "adjustments": "调整",
+    "payments": "付款",
+    "statements": "账单",
+    "accountSummary": "账户摘要",
+    "exportInvoices": "导出发票"
   }
 }

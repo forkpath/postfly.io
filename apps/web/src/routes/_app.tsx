@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 import { createFileRoute, Outlet, redirect, useNavigate } from '@tanstack/react-router'
 
 import { hasAdminPermission, hasOrgAdminPermission, MemberRole } from '@libs/auth'
-import { AppShell, authClient, pathsConfig } from '@libs/studio'
+import { AppShell, authClient, pathsConfig, useWorkspaceStore } from '@libs/studio'
 import { Icons } from '@libs/ui-shared/web'
 
 // 应用内页共享布局 - pathless route (不添加到 URL)
@@ -23,7 +23,24 @@ export const Route = createFileRoute('/_app')({
         search: { redirectTo: undefined, invitationId: undefined, email: undefined }
       })
     }
-    return { user: session.user }
+
+    // 获取用户所属的组织列表
+    const { data: organizations } = await authClient.organization.list({})
+
+    // 如果用户有组织成员身份，检查是否已选择工作空间
+    if (organizations && organizations.length > 0) {
+      // 使用 zustand store 来追踪用户是否已选择过工作空间
+      // 通过 getState() 在非 React 上下文中访问 store 状态
+      const { hasSelected } = useWorkspaceStore.getState()
+
+      if (!hasSelected) {
+        throw redirect({
+          to: pathsConfig.workspace.select
+        })
+      }
+    }
+
+    return { user: session.user, organizations: organizations ?? [] }
   },
   component: AppLayout
 })

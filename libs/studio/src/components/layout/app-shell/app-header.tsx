@@ -37,6 +37,7 @@ import {
 
 import { GoLink, pathsConfig } from '../../../index'
 import { authClient } from '../../../lib/auth/client'
+import { useWorkspaceStore, WorkspaceSwitcher } from '../../../modules/workspace'
 
 // ============================================================================
 // Language Dropdown
@@ -410,8 +411,11 @@ interface ProfileDropdownProps {
 
 export const ProfileDropdown = memo<ProfileDropdownProps>(({ user, trigger, align = 'end' }) => {
   const { t } = useTranslation(['common', 'auth'])
+  const resetWorkspace = useWorkspaceStore(state => state.reset)
 
   const handleLogout = () => {
+    // 清除工作空间选择状态
+    resetWorkspace()
     void authClient.signOut()
   }
 
@@ -480,6 +484,12 @@ export const ProfileDropdown = memo<ProfileDropdownProps>(({ user, trigger, alig
               <span>{t('customization', { defaultValue: 'Customization' })}</span>
             </GoLink>
           </DropdownMenuItem>
+        </DropdownMenuGroup>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuGroup>
+          <WorkspaceSwitcher />
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
