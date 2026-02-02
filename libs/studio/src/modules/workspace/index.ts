@@ -1,3 +1,3 @@
 export * from './store'
 export * from './workspace-selector'
-export * from './workspace-switcher'
+export { WorkspaceSwitcher, useWorkspaceSwitcherData } from './workspace-switcher'

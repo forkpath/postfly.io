@@ -1,5 +1,17 @@
+/**
+ * AppHeader 组件 - 应用顶部导航栏
+ *
+ * 该组件提供应用顶部的工具栏功能，包括：
+ * - Sidebar 折叠/展开切换按钮
+ * - 搜索功能入口
+ * - 语言切换下拉菜单
+ * - 活动记录面板
+ * - 通知下拉菜单
+ *
+ * 注意：用户头像已移至 Sidebar 底部，不再在 Header 中显示。
+ */
+
 import type { ReactNode } from 'react'
-import type { User } from '@libs/auth'
 
 import { memo, useState } from 'react'
 
@@ -7,12 +19,10 @@ import { useTranslation } from '@libs/i18n'
 import {
   Avatar,
   AvatarFallback,
-  AvatarImage,
   Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
@@ -35,28 +45,35 @@ import {
   TabsTrigger
 } from '@libs/ui-shared/web'
 
-import { GoLink, pathsConfig } from '../../../index'
-import { authClient } from '../../../lib/auth/client'
-import { useWorkspaceStore, WorkspaceSwitcher } from '../../../modules/workspace'
-
 // ============================================================================
-// Language Dropdown
+// 语言切换下拉菜单
 // ============================================================================
 
+/** 支持的语言列表 */
 const LANGUAGES = [
   { value: 'en', label: 'English' },
   { value: 'zh', label: '中文' }
 ] as const
 
+/** LanguageDropdown 组件属性 */
 interface LanguageDropdownProps {
+  /** 自定义触发器 */
   readonly trigger?: ReactNode
+  /** 下拉菜单对齐方式 */
   readonly align?: 'start' | 'center' | 'end'
 }
 
+/**
+ * 语言切换下拉菜单组件
+ *
+ * 允许用户切换应用的显示语言。
+ * 切换后会调用 i18n.changeLanguage 更新全局语言设置。
+ */
 export const LanguageDropdown = memo<LanguageDropdownProps>(({ trigger, align = 'end' }) => {
   const { i18n } = useTranslation()
   const [language, setLanguage] = useState(i18n.language)
 
+  /** 处理语言切换 */
   const handleLanguageChange = (value: string) => {
     setLanguage(value)
     void i18n.changeLanguage(value)
@@ -91,13 +108,21 @@ export const LanguageDropdown = memo<LanguageDropdownProps>(({ trigger, align = 
 LanguageDropdown.displayName = 'LanguageDropdown'
 
 // ============================================================================
-// Activity Sheet
+// 活动记录面板
 // ============================================================================
 
+/** ActivitySheet 组件属性 */
 interface ActivitySheetProps {
+  /** 自定义触发器 */
   readonly trigger?: ReactNode
 }
 
+/**
+ * 活动记录面板组件
+ *
+ * 以侧边抽屉的形式展示用户的活动记录，
+ * 包括提及、文件共享、审批请求等。
+ */
 export const ActivitySheet = memo<ActivitySheetProps>(({ trigger }) => {
   const { t } = useTranslation('common')
 
@@ -117,6 +142,7 @@ export const ActivitySheet = memo<ActivitySheetProps>(({ trigger }) => {
         </SheetHeader>
 
         <div className="overflow-y-auto">
+          {/* 活动记录项 1：用户提及 */}
           <div className="flex gap-4 px-4 py-3">
             <Avatar>
               <AvatarFallback>JL</AvatarFallback>
@@ -150,6 +176,7 @@ export const ActivitySheet = memo<ActivitySheetProps>(({ trigger }) => {
 
           <Separator />
 
+          {/* 活动记录项 2：文件审阅邀请 */}
           <div className="flex gap-4 px-4 py-3">
             <Avatar>
               <AvatarFallback>JP</AvatarFallback>
@@ -173,6 +200,7 @@ export const ActivitySheet = memo<ActivitySheetProps>(({ trigger }) => {
 
           <Separator />
 
+          {/* 活动记录项 3：设计项目查看请求 */}
           <div className="flex gap-4 px-4 py-3">
             <Avatar>
               <AvatarFallback>TH</AvatarFallback>
@@ -196,6 +224,7 @@ export const ActivitySheet = memo<ActivitySheetProps>(({ trigger }) => {
 
           <Separator />
 
+          {/* 活动记录项 4：设计审阅邀请 */}
           <div className="flex gap-4 px-4 py-3">
             <Avatar>
               <AvatarFallback>D</AvatarFallback>
@@ -219,14 +248,23 @@ export const ActivitySheet = memo<ActivitySheetProps>(({ trigger }) => {
 ActivitySheet.displayName = 'ActivitySheet'
 
 // ============================================================================
-// Notification Dropdown
+// 通知下拉菜单
 // ============================================================================
 
+/** NotificationDropdown 组件属性 */
 interface NotificationDropdownProps {
+  /** 自定义触发器 */
   readonly trigger?: ReactNode
+  /** 下拉菜单对齐方式 */
   readonly align?: 'start' | 'center' | 'end'
 }
 
+/**
+ * 通知下拉菜单组件
+ *
+ * 显示用户的通知列表，支持 Inbox 和 General 两个标签页。
+ * 包含新消息、评论、活动申请等通知类型。
+ */
 export const NotificationDropdown = memo<NotificationDropdownProps>(({ trigger, align = 'end' }) => {
   const { t } = useTranslation('common')
 
@@ -236,6 +274,7 @@ export const NotificationDropdown = memo<NotificationDropdownProps>(({ trigger, 
         {trigger || (
           <Button variant="outline" size="icon" className="relative">
             <Icons.Bell className="size-5" />
+            {/* 未读通知指示器 */}
             <span className="bg-destructive absolute -top-0.5 -right-0.5 size-2 rounded-full" />
           </Button>
         )}
@@ -270,6 +309,7 @@ export const NotificationDropdown = memo<NotificationDropdownProps>(({ trigger, 
 
           <DropdownMenuSeparator className="mt-0 h-0.5" />
 
+          {/* Inbox 标签页内容 */}
           <TabsContent value="inbox">
             <DropdownMenuItem className="gap-3 px-2 py-3 text-base">
               <Avatar className="size-9.5">
@@ -344,6 +384,7 @@ export const NotificationDropdown = memo<NotificationDropdownProps>(({ trigger, 
             </DropdownMenuItem>
           </TabsContent>
 
+          {/* General 标签页内容 */}
           <TabsContent value="general">
             <DropdownMenuItem className="gap-3 px-2 py-3 text-base">
               <Avatar className="size-9.5">
@@ -400,146 +441,65 @@ export const NotificationDropdown = memo<NotificationDropdownProps>(({ trigger, 
 NotificationDropdown.displayName = 'NotificationDropdown'
 
 // ============================================================================
-// Profile Dropdown
+// AppHeader 组件
 // ============================================================================
 
-interface ProfileDropdownProps {
-  readonly user: User
-  readonly trigger?: ReactNode
-  readonly align?: 'start' | 'center' | 'end'
-}
-
-export const ProfileDropdown = memo<ProfileDropdownProps>(({ user, trigger, align = 'end' }) => {
-  const { t } = useTranslation(['common', 'auth'])
-  const resetWorkspace = useWorkspaceStore(state => state.reset)
-
-  const handleLogout = () => {
-    // 清除工作空间选择状态
-    resetWorkspace()
-    void authClient.signOut()
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        {trigger || (
-          <Button variant="ghost" size="icon" className="size-9.5">
-            <Avatar className="size-9.5 rounded-md">
-              <AvatarImage src={user.image ?? undefined} alt={user.name ?? ''} />
-              <AvatarFallback>{user.name?.slice(0, 2).toUpperCase() || 'U'}</AvatarFallback>
-            </Avatar>
-          </Button>
-        )}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-80" align={align}>
-        <DropdownMenuLabel className="flex items-center gap-4 px-4 py-2.5 font-normal">
-          <div className="relative">
-            <Avatar className="size-10">
-              <AvatarImage src={user.image ?? undefined} alt={user.name ?? ''} />
-              <AvatarFallback>{user.name?.slice(0, 2).toUpperCase() || 'U'}</AvatarFallback>
-            </Avatar>
-            <span className="ring-card absolute right-0 bottom-0 block size-2 rounded-full bg-green-600 ring-2" />
-          </div>
-          <div className="flex flex-1 flex-col items-start">
-            <span className="text-foreground text-lg font-semibold">{user.name}</span>
-            <span className="text-muted-foreground text-base">{user.email}</span>
-          </div>
-        </DropdownMenuLabel>
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuGroup>
-          <DropdownMenuItem className="px-4 py-2.5 text-base" asChild>
-            <GoLink href={pathsConfig.user.settings.index}>
-              <Icons.User className="text-foreground size-5" />
-              <span>{t('account.profile')}</span>
-            </GoLink>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="px-4 py-2.5 text-base" asChild>
-            <GoLink href={pathsConfig.user.settings.index}>
-              <Icons.Settings className="text-foreground size-5" />
-              <span>{t('settings')}</span>
-            </GoLink>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="px-4 py-2.5 text-base" asChild>
-            <GoLink href={pathsConfig.user.settings.billing}>
-              <Icons.CreditCard className="text-foreground size-5" />
-              <span>{t('billing')}</span>
-            </GoLink>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuGroup>
-          <DropdownMenuItem className="px-4 py-2.5 text-base" asChild>
-            <GoLink href={pathsConfig.organization.members}>
-              <Icons.Users className="text-foreground size-5" />
-              <span>{t('organization.members')}</span>
-            </GoLink>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="px-4 py-2.5 text-base" asChild>
-            <GoLink href={pathsConfig.organization.settings}>
-              <Icons.Pencil className="text-foreground size-5" />
-              <span>{t('customization', { defaultValue: 'Customization' })}</span>
-            </GoLink>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuGroup>
-          <WorkspaceSwitcher />
-        </DropdownMenuGroup>
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuItem variant="destructive" className="px-4 py-2.5 text-base" onClick={handleLogout}>
-          <Icons.LogOut className="size-5" />
-          <span>{t('logout.cta')}</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-})
-
-ProfileDropdown.displayName = 'ProfileDropdown'
-
-// ============================================================================
-// App Header
-// ============================================================================
-
+/** AppHeader 组件属性 */
 interface AppHeaderProps {
-  readonly user: User
+  /** 切换 Sidebar 可见性的回调 */
   readonly onToggleSidebar?: () => void
+  /** 是否显示 Sidebar 切换按钮 */
   readonly showSidebarToggle?: boolean
+  /** Header 右侧的自定义操作按钮 */
   readonly actions?: ReactNode
 }
 
-export const AppHeader = memo<AppHeaderProps>(({ user, onToggleSidebar, showSidebarToggle = true, actions }) => {
+/**
+ * AppHeader 组件
+ *
+ * 应用的顶部导航栏，包含以下功能：
+ * - Sidebar 折叠/展开按钮（当有二级导航时显示）
+ * - 搜索入口
+ * - 语言切换
+ * - 活动记录
+ * - 通知中心
+ *
+ * 注意：用户头像已移至 Sidebar 底部，点击后显示用户二级导航。
+ */
+export const AppHeader = memo<AppHeaderProps>(({ onToggleSidebar, showSidebarToggle = true, actions }) => {
   const { t } = useTranslation('common')
 
   return (
     <header className="bg-card sticky top-0 z-50 flex h-14 items-center justify-between gap-6 border-b px-4 sm:px-6">
+      {/* 左侧区域：Sidebar 切换和搜索 */}
       <div className="flex items-center gap-4">
+        {/* 移动端 Sidebar 触发器 */}
         <SidebarTrigger className="md:hidden [&_svg]:size-5!" />
+
+        {/* 大屏 Sidebar 切换按钮（仅当有二级导航时显示） */}
         {showSidebarToggle && (
           <Button variant="ghost" size="icon" className="hidden md:flex" onClick={onToggleSidebar}>
             <Icons.PanelLeft className="size-5" />
             <span className="sr-only">{t('toggleSidebar', { defaultValue: 'Toggle sidebar' })}</span>
           </Button>
         )}
+
+        {/* 搜索入口（大屏） */}
         <Button variant="ghost" className="hidden bg-transparent! px-1 py-0 font-normal sm:block">
           <div className="text-muted-foreground hidden items-center gap-1.5 text-sm sm:flex">
             <Icons.Search className="size-4" />
             <span>{t('search.placeholder', { defaultValue: 'Type to search...' })}</span>
           </div>
         </Button>
+
+        {/* 搜索入口（小屏） */}
         <Button variant="ghost" size="icon" className="sm:hidden">
           <Icons.Search className="size-5" />
           <span className="sr-only">{t('search')}</span>
         </Button>
       </div>
+
+      {/* 右侧区域：工具按钮 */}
       <div className="flex items-center gap-1.5 sm:gap-6">
         <div className="flex items-center gap-1.5">
           <LanguageDropdown />
@@ -547,7 +507,6 @@ export const AppHeader = memo<AppHeaderProps>(({ user, onToggleSidebar, showSide
           <NotificationDropdown />
         </div>
         {actions}
-        <ProfileDropdown user={user} />
       </div>
     </header>
   )

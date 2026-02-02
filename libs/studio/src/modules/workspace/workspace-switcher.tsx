@@ -1,6 +1,6 @@
 'use client'
 
-import type { Organization } from '@libs/auth'
+import type { ActiveOrganization, Organization } from '@libs/auth'
 
 import { memo, useCallback } from 'react'
 
@@ -57,10 +57,29 @@ const WorkspaceSwitcherItem = memo<WorkspaceSwitcherItemProps>(({ type, organiza
 
 WorkspaceSwitcherItem.displayName = 'WorkspaceSwitcherItem'
 
-export const WorkspaceSwitcher = memo(() => {
-  const { t } = useTranslation('workspace')
+/**
+ * 预取组织数据的 hook
+ * 在组件挂载时就开始请求数据，避免 dropdown 打开时才请求导致的白屏
+ */
+export function useWorkspaceSwitcherData() {
   const { data: organizations, isPending: isLoadingOrgs } = authClient.useListOrganizations()
   const { data: activeOrg } = authClient.useActiveOrganization()
+
+  return {
+    organizations: organizations ?? [],
+    activeOrg,
+    isLoading: isLoadingOrgs,
+    hasOrganizations: !isLoadingOrgs && organizations && organizations.length > 0
+  }
+}
+
+interface WorkspaceSwitcherProps {
+  readonly organizations: Organization[]
+  readonly activeOrg: ActiveOrganization | null | undefined
+}
+
+export const WorkspaceSwitcher = memo<WorkspaceSwitcherProps>(({ organizations, activeOrg }) => {
+  const { t } = useTranslation('workspace')
 
   const isPersonalActive = !activeOrg
 
@@ -72,9 +91,8 @@ export const WorkspaceSwitcher = memo(() => {
     await authClient.organization.setActive({ organizationId: org.id })
   }, [])
 
-  // 如果正在加载或没有组织，不显示切换器
-  // 注意：在 loading 时也返回 null，避免从"有内容"到"无内容"的闪烁
-  if (isLoadingOrgs || !organizations || organizations.length === 0) {
+  // 如果没有组织，不显示切换器
+  if (organizations.length === 0) {
     return null
   }
 
