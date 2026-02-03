@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { createFileRoute, Outlet, redirect, useNavigate } from '@tanstack/react-router'
 
 import { hasAdminPermission, hasOrgAdminPermission, MemberRole } from '@libs/auth'
+import { useTranslation } from '@libs/i18n'
 import { AppShell, authClient, pathsConfig, useWorkspaceStore } from '@libs/studio'
 import { Icons } from '@libs/ui-shared/web'
 
@@ -47,6 +48,7 @@ export const Route = createFileRoute('/_app')({
 
 function AppLayout() {
   const navigate = useNavigate()
+  const { t } = useTranslation('common')
   // beforeLoad 返回的静态用户数据，确保首次渲染时可用
   const { user } = Route.useRouteContext()
   // 响应式 session，当用户信息变化时自动更新
@@ -64,14 +66,26 @@ function AppLayout() {
   const isOrgAdminOrOwner = hasOrgAdminPermission(activeMember?.role as MemberRole)
 
   // 根据用户权限构建一级菜单
-  // 二级导航由各自的 layout route 通过 SecondaryNavProvider 提供
+  // subItems 用于折叠模式和小屏模式下显示二级导航
   const menu: AppShellMenuItem[] = [
     ...(isOrgAdminOrOwner
       ? [
           {
             label: 'home',
             href: pathsConfig.crm.index,
-            icon: <Icons.Home className="size-6" />
+            icon: <Icons.Home className="size-6" />,
+            subItems: [
+              {
+                label: t('overview'),
+                href: pathsConfig.crm.index,
+                icon: <Icons.LayoutDashboard className="size-4" />
+              },
+              {
+                label: t('ai'),
+                href: pathsConfig.crm.ai,
+                icon: <Icons.Brain className="size-4" />
+              }
+            ]
           }
         ]
       : []),
@@ -81,7 +95,25 @@ function AppLayout() {
           {
             label: 'admin',
             href: pathsConfig.admin.index,
-            icon: <Icons.Shield className="size-6" />
+            defaultSubRoute: pathsConfig.admin.organizations.index,
+            icon: <Icons.Shield className="size-6" />,
+            subItems: [
+              {
+                label: t('users'),
+                href: pathsConfig.admin.users.index,
+                icon: <Icons.UsersRound className="size-4" />
+              },
+              {
+                label: t('organizations'),
+                href: pathsConfig.admin.organizations.index,
+                icon: <Icons.Building className="size-4" />
+              },
+              {
+                label: t('customers'),
+                href: pathsConfig.admin.customers.index,
+                icon: <Icons.HandCoins className="size-4" />
+              }
+            ]
           }
         ]
       : [])

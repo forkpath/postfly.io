@@ -71,9 +71,19 @@ export { SecondaryNavProvider, useSecondaryNav } from './secondary-nav-context'
 // 类型定义
 // ============================================================================
 
+/** 子菜单项 */
+export interface AppShellSubItem {
+  /** 菜单项图标 */
+  icon: ReactNode
+  /** 菜单项标签（翻译 key 或显示文本） */
+  label: string
+  /** 跳转路径 */
+  href: string
+}
+
 /**
  * 一级导航菜单项
- * 不再包含 subItems，二级导航由 SecondaryNavContext 提供
+ * 包含 subItems 用于折叠模式和小屏模式下显示二级导航
  */
 export interface AppShellMenuItem {
   /** 菜单项图标 */
@@ -88,6 +98,11 @@ export interface AppShellMenuItem {
    * 如果不提供，则默认跳转到 href
    */
   defaultSubRoute?: string
+  /**
+   * 子菜单项列表
+   * 用于折叠模式（hover 显示 dropdown）和小屏模式（展开显示子菜单）
+   */
+  subItems?: AppShellSubItem[]
 }
 
 /** AppShell 组件属性 */
@@ -215,34 +230,27 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
 
   /**
    * 处理一级导航菜单项点击
-   * - 二级导航展开时：跳转到最后访问的子路由或默认子路由
-   * - 二级导航折叠时：不跳转，仅作为视觉反馈
+   * 无论二级导航是否折叠，都执行跳转：
+   * - 首次点击：跳转到默认子路由
+   * - 非首次点击：跳转到最后访问的子路由
    */
   const handleMenuItemClick = useCallback(
     (item: AppShellMenuItem, e: React.MouseEvent) => {
-      // 如果二级导航折叠，阻止默认跳转行为
-      if (!sidebarVisible) {
-        e.preventDefault()
-        return
-      }
-
-      // 如果已经在当前模块，不需要跳转
-      if (isMenuActive(item.href)) {
-        e.preventDefault()
-        return
-      }
+      // 阻止默认跳转行为，统一由 navigate 处理
+      e.preventDefault()
 
       // 获取目标路由：最后访问的子路由 > 默认子路由 > 模块根路由
       const defaultPath = item.defaultSubRoute || item.href
       const targetPath = getLastVisitedRoute(item.href, defaultPath)
 
-      // 如果目标路径不是 item.href，需要手动导航
-      if (targetPath !== item.href) {
-        e.preventDefault()
-        void navigate({ to: targetPath })
+      // 如果已经在目标路径，不需要跳转
+      if (location.pathname === targetPath) {
+        return
       }
+
+      void navigate({ to: targetPath })
     },
-    [sidebarVisible, isMenuActive, getLastVisitedRoute, navigate]
+    [location.pathname, getLastVisitedRoute, navigate]
   )
 
   // ============================================================================
@@ -419,7 +427,7 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                           </SidebarMenuButton>
                         )}
 
-                        {/* 大屏折叠状态：hover 显示下拉菜单，点击不跳转 */}
+                        {/* 大屏折叠状态：hover 显示下拉菜单，点击跳转到对应路由 */}
                         {!sidebarVisible && (
                           <DropdownMenu open={hoveredMenu === index} modal={false}>
                             <DropdownMenuTrigger asChild>
@@ -428,12 +436,20 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                                 className="[&>svg]:text-primary hidden group-data-[collapsible=icon]:size-10! md:flex [&>svg]:size-6"
                                 onMouseEnter={() => handleMenuHover(index)}
                                 onMouseLeave={handleMenuLeave}
+                                onClick={() => {
+                                  // 点击跳转到对应路由（与展开模式行为一致）
+                                  const defaultPath = item.defaultSubRoute || item.href
+                                  const targetPath = getLastVisitedRoute(item.href, defaultPath)
+                                  if (location.pathname !== targetPath) {
+                                    void navigate({ to: targetPath })
+                                  }
+                                }}
                               >
                                 {item.icon}
                                 <span>{translateLabel(item.label)}</span>
                               </SidebarMenuButton>
                             </DropdownMenuTrigger>
-                            {isActive && mobileItems.length > 0 && (
+                            {item.subItems && item.subItems.length > 0 && (
                               <DropdownMenuContent
                                 side="right"
                                 align="start"
@@ -442,11 +458,9 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                                 onMouseEnter={handleDropdownContentEnter}
                                 onMouseLeave={handleDropdownContentLeave}
                               >
-                                <DropdownMenuLabel>
-                                  {secondaryNav?.title || translateLabel(item.label)}
-                                </DropdownMenuLabel>
+                                <DropdownMenuLabel>{translateLabel(item.label)}</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                {mobileItems.map(subItem => (
+                                {item.subItems.map(subItem => (
                                   <DropdownMenuItem key={subItem.label} asChild onClick={handleSubItemClick}>
                                     <GoLink href={subItem.href} className="flex items-center gap-2">
                                       {subItem.icon}
@@ -468,7 +482,7 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                           >
                             {item.icon}
                             <span className="flex-1">{translateLabel(item.label)}</span>
-                            {isActive && mobileItems.length > 0 && (
+                            {item.subItems && item.subItems.length > 0 && (
                               <Icons.ChevronRight
                                 className={cn(
                                   'text-muted-foreground size-4 transition-transform',
@@ -480,10 +494,10 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                         </CollapsibleTrigger>
 
                         {/* 小屏模式：展开的子菜单内容 */}
-                        {isActive && mobileItems.length > 0 && (
+                        {item.subItems && item.subItems.length > 0 && (
                           <CollapsibleContent className="md:hidden">
                             <div className="border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5">
-                              {mobileItems.map(subItem => (
+                              {item.subItems.map(subItem => (
                                 <GoLink
                                   key={subItem.label}
                                   href={subItem.href}
@@ -510,13 +524,23 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
-              {/* 大屏展开状态：点击切换用户导航 */}
+              {/* 大屏展开状态：点击跳转到用户路由 */}
               {sidebarVisible && (
                 <SidebarMenuButton
                   isActive={isUserNavActive()}
                   className="hidden h-auto py-2 group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-1! md:flex [&>svg]:size-6"
                   tooltip={user.name ?? t('account')}
-                  onClick={() => setUserNavExpanded(!userNavExpanded)}
+                  onClick={() => {
+                    // 确保用户导航展开
+                    if (!userNavExpanded) {
+                      setUserNavExpanded(true)
+                    }
+                    // 跳转到用户路由：最后访问的 > 默认设置页
+                    const targetPath = getLastVisitedRoute('/user', pathsConfig.user.settings.index)
+                    if (location.pathname !== targetPath) {
+                      void navigate({ to: targetPath })
+                    }
+                  }}
                 >
                   <Avatar className="size-8 shrink-0">
                     <AvatarImage src={user.image ?? undefined} alt={user.name ?? ''} />
@@ -535,7 +559,7 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                 </SidebarMenuButton>
               )}
 
-              {/* 大屏折叠状态：hover 显示用户菜单下拉 */}
+              {/* 大屏折叠状态：hover 显示用户菜单下拉，点击跳转到用户路由 */}
               {!sidebarVisible && (
                 <DropdownMenu open={hoveredUserNav} modal={false}>
                   <DropdownMenuTrigger asChild>
@@ -544,6 +568,13 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                       className="hidden h-auto py-2 group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-1! md:flex"
                       onMouseEnter={handleUserNavHover}
                       onMouseLeave={handleUserNavLeave}
+                      onClick={() => {
+                        // 点击跳转到用户路由（与展开模式行为一致）
+                        const targetPath = getLastVisitedRoute('/user', pathsConfig.user.settings.index)
+                        if (location.pathname !== targetPath) {
+                          void navigate({ to: targetPath })
+                        }
+                      }}
                     >
                       <Avatar className="size-8 shrink-0">
                         <AvatarImage src={user.image ?? undefined} alt={user.name ?? ''} />
