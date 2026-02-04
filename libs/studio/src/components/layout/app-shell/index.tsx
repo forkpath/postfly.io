@@ -21,7 +21,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import type { User } from '@libs/auth'
 
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate } from '@tanstack/react-router'
+import { useLocation, useNavigate, useRouter } from '@tanstack/react-router'
 
 import { isKey, useTranslation } from '@libs/i18n'
 import { cn } from '@libs/ui-shared/common'
@@ -37,6 +37,9 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
   Icons,
   Sidebar,
@@ -53,6 +56,7 @@ import {
 } from '@libs/ui-shared/web'
 
 import { pathsConfig } from '../../../config/paths'
+import { authClient } from '../../../lib/auth/client'
 import { useWorkspaceSwitcherData } from '../../../modules/workspace'
 import { GoLink } from '../../go-link'
 import { AppHeader } from './app-header'
@@ -139,6 +143,7 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
   const { setOpenMobile } = useSidebar()
   const location = useLocation()
   const navigate = useNavigate()
+  const router = useRouter()
   const secondaryNav = useSecondaryNav()
 
   // 从 Zustand store 获取导航状态和操作
@@ -149,6 +154,19 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
 
   // 预取组织数据（避免点击用户头像时才请求导致的白屏）
   const { organizations, activeOrg, hasOrganizations } = useWorkspaceSwitcherData()
+
+  /**
+   * 切换组织/工作空间
+   * 调用 setActive 后 invalidate 路由以刷新 beforeLoad 数据
+   */
+  const handleSwitchOrganization = useCallback(
+    async (organizationId: string | null) => {
+      await authClient.organization.setActive({ organizationId })
+      // 刷新路由数据，触发 beforeLoad 重新执行
+      void router.invalidate()
+    },
+    [router]
+  )
 
   // 本地状态
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null)
@@ -358,9 +376,13 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
   // 导航状态计算
   // ============================================================================
 
-  // 二级导航的菜单项（用于折叠/移动端模式）
-  const mobileItems = secondaryNav?.mobileItems ?? []
-  const hasSecondaryNav = secondaryNav?.desktopContent || mobileItems.length > 0
+  // 查找当前激活的菜单项
+  const activeMenuItem = menu.find(item => isMenuActive(item.href))
+
+  // 判断是否有模块二级导航
+  // 优先检查 desktopContent，其次检查 subItems
+  const hasSecondaryNav =
+    secondaryNav?.desktopContent || (activeMenuItem?.subItems && activeMenuItem.subItems.length > 0)
 
   // 用户导航的移动端菜单项
   const userNavMobileItems = getUserNavMobileItems(t)
@@ -460,14 +482,24 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                               >
                                 <DropdownMenuLabel>{translateLabel(item.label)}</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                {item.subItems.map(subItem => (
-                                  <DropdownMenuItem key={subItem.label} asChild onClick={handleSubItemClick}>
-                                    <GoLink href={subItem.href} className="flex items-center gap-2">
-                                      {subItem.icon}
-                                      <span>{translateLabel(subItem.label)}</span>
-                                    </GoLink>
-                                  </DropdownMenuItem>
-                                ))}
+                                {item.subItems.map(subItem => {
+                                  const isSubItemActive =
+                                    location.pathname === subItem.href ||
+                                    location.pathname.startsWith(subItem.href + '/')
+                                  return (
+                                    <DropdownMenuItem
+                                      key={subItem.label}
+                                      asChild
+                                      onClick={handleSubItemClick}
+                                      className={cn(isSubItemActive && 'bg-accent font-medium')}
+                                    >
+                                      <GoLink href={subItem.href} className="flex items-center gap-2">
+                                        {subItem.icon}
+                                        <span>{translateLabel(subItem.label)}</span>
+                                      </GoLink>
+                                    </DropdownMenuItem>
+                                  )
+                                })}
                               </DropdownMenuContent>
                             )}
                           </DropdownMenu>
@@ -497,17 +529,24 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                         {item.subItems && item.subItems.length > 0 && (
                           <CollapsibleContent className="md:hidden">
                             <div className="border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5">
-                              {item.subItems.map(subItem => (
-                                <GoLink
-                                  key={subItem.label}
-                                  href={subItem.href}
-                                  onClick={() => setOpenMobile(false)}
-                                  className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm"
-                                >
-                                  {subItem.icon}
-                                  <span>{translateLabel(subItem.label)}</span>
-                                </GoLink>
-                              ))}
+                              {item.subItems.map(subItem => {
+                                const isSubItemActive =
+                                  location.pathname === subItem.href || location.pathname.startsWith(subItem.href + '/')
+                                return (
+                                  <GoLink
+                                    key={subItem.label}
+                                    href={subItem.href}
+                                    onClick={() => setOpenMobile(false)}
+                                    className={cn(
+                                      'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm',
+                                      isSubItemActive && 'bg-sidebar-accent font-medium'
+                                    )}
+                                  >
+                                    {subItem.icon}
+                                    <span>{translateLabel(subItem.label)}</span>
+                                  </GoLink>
+                                )
+                              })}
                             </div>
                           </CollapsibleContent>
                         )}
@@ -597,14 +636,71 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                   >
                     <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {userNavMobileItems.map(item => (
-                      <DropdownMenuItem key={item.href} asChild onClick={handleSubItemClick}>
-                        <GoLink href={item.href} className="flex items-center gap-2">
-                          {item.icon}
-                          <span>{translateLabel(item.label)}</span>
-                        </GoLink>
-                      </DropdownMenuItem>
-                    ))}
+                    {userNavMobileItems.map(item => {
+                      const isItemActive =
+                        location.pathname === item.href || location.pathname.startsWith(item.href + '/')
+                      return (
+                        <DropdownMenuItem
+                          key={item.href}
+                          asChild
+                          onClick={handleSubItemClick}
+                          className={cn(isItemActive && 'bg-accent font-medium')}
+                        >
+                          <GoLink href={item.href} className="flex items-center gap-2">
+                            {item.icon}
+                            <span>{translateLabel(item.label)}</span>
+                          </GoLink>
+                        </DropdownMenuItem>
+                      )
+                    })}
+                    {/* 切换身份子菜单 */}
+                    {hasOrganizations && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="flex items-center gap-2">
+                            <Icons.ArrowLeftRight className="size-4" />
+                            <span>{t('workspace.switch')}</span>
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent className="w-48">
+                            {/* 个人空间 */}
+                            <DropdownMenuItem
+                              onClick={() => void handleSwitchOrganization(null)}
+                              className={cn(!activeOrg && 'bg-accent font-medium')}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Avatar className="size-5">
+                                  <AvatarFallback className="bg-muted text-xs">
+                                    <Icons.User className="text-muted-foreground size-3" />
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span>{t('workspace.personal')}</span>
+                                {!activeOrg && <Icons.Check className="text-primary ml-auto size-4" />}
+                              </div>
+                            </DropdownMenuItem>
+                            {/* 组织列表 */}
+                            {organizations.map(org => (
+                              <DropdownMenuItem
+                                key={org.id}
+                                onClick={() => void handleSwitchOrganization(org.id)}
+                                className={cn(activeOrg?.id === org.id && 'bg-accent font-medium')}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="size-5">
+                                    <AvatarImage src={org.logo ?? undefined} alt="" />
+                                    <AvatarFallback className="bg-muted text-xs">
+                                      {org.name.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="truncate">{org.name}</span>
+                                  {activeOrg?.id === org.id && <Icons.Check className="text-primary ml-auto size-4" />}
+                                </div>
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
@@ -635,17 +731,35 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5">
-                    {userNavMobileItems.map(item => (
+                    {userNavMobileItems.map(item => {
+                      const isItemActive =
+                        location.pathname === item.href || location.pathname.startsWith(item.href + '/')
+                      return (
+                        <GoLink
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setOpenMobile(false)}
+                          className={cn(
+                            'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm',
+                            isItemActive && 'bg-sidebar-accent font-medium'
+                          )}
+                        >
+                          {item.icon}
+                          <span>{translateLabel(item.label)}</span>
+                        </GoLink>
+                      )
+                    })}
+                    {/* 切换身份链接 */}
+                    {hasOrganizations && (
                       <GoLink
-                        key={item.href}
-                        href={item.href}
+                        href={pathsConfig.workspace.select}
                         onClick={() => setOpenMobile(false)}
                         className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm"
                       >
-                        {item.icon}
-                        <span>{translateLabel(item.label)}</span>
+                        <Icons.ArrowLeftRight className="size-4" />
+                        <span>{t('workspace.switch')}</span>
                       </GoLink>
-                    ))}
+                    )}
                   </div>
                 </CollapsibleContent>
               </Collapsible>

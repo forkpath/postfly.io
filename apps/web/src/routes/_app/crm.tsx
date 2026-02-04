@@ -12,28 +12,13 @@ export const Route = createFileRoute('/_app/crm')({
 function CrmLayout() {
   const { t } = useTranslation('common')
 
-  // 移动端/折叠状态的菜单项（统一样式）
-  const mobileItems = [
-    {
-      label: t('overview'),
-      href: pathsConfig.crm.index,
-      icon: <Icons.LayoutDashboard className="size-4" />
-    },
-    {
-      label: t('ai'),
-      href: pathsConfig.crm.ai,
-      icon: <Icons.Brain className="size-4" />
-    }
-  ]
-
   return (
     <SecondaryNavProvider
       value={{
         title: t('home'),
         // 大屏模式：自定义的复杂布局组件
-        desktopContent: <CrmSecondaryNav />,
-        // 移动端/折叠模式：统一的菜单项
-        mobileItems
+        // 折叠/小屏模式的菜单项统一由 _app.tsx 的 menu.subItems 提供
+        desktopContent: <CrmSecondaryNav />
       }}
     >
       <Outlet />

@@ -11,7 +11,7 @@ import type { ReactNode } from 'react'
 import type { ActiveOrganization, Organization, User } from '@libs/auth'
 
 import { memo, useCallback } from 'react'
-import { Link, useLocation } from '@tanstack/react-router'
+import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 
 import { useTranslation } from '@libs/i18n'
 import { cn } from '@libs/ui-shared/common'
@@ -81,60 +81,13 @@ const NavItem = memo<NavItemProps>(({ item, isActive }) => {
 NavItem.displayName = 'NavItem'
 
 // ============================================================================
-// 子组件：工作空间切换项
-// ============================================================================
-
-interface WorkspaceItemProps {
-  readonly type: 'personal' | 'organization'
-  readonly organization?: Organization
-  readonly isActive: boolean
-  readonly onSelect: () => void
-}
-
-const WorkspaceItem = memo<WorkspaceItemProps>(({ type, organization, isActive, onSelect }) => {
-  const { t } = useTranslation('workspace')
-
-  const isPersonal = type === 'personal'
-  const name = isPersonal ? t('personal') : (organization?.name ?? '')
-  const logo = isPersonal ? undefined : organization?.logo
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors',
-        'hover:bg-accent hover:text-accent-foreground text-left',
-        isActive && 'bg-accent text-accent-foreground'
-      )}
-    >
-      <Avatar className="size-6">
-        {isPersonal ? (
-          <AvatarFallback className="bg-muted text-xs">
-            <Icons.User className="text-muted-foreground size-3" />
-          </AvatarFallback>
-        ) : (
-          <>
-            <AvatarImage src={logo ?? undefined} alt="" />
-            <AvatarFallback className="bg-muted text-xs">{name.charAt(0).toUpperCase()}</AvatarFallback>
-          </>
-        )}
-      </Avatar>
-      <span className="flex-1 truncate">{name}</span>
-      {isActive && <Icons.Check className="text-primary size-4 shrink-0" />}
-    </button>
-  )
-})
-
-WorkspaceItem.displayName = 'WorkspaceItem'
-
-// ============================================================================
 // 主组件：用户二级导航
 // ============================================================================
 
 export const UserSecondaryNav = memo<UserSecondaryNavProps>(({ user, organizations, activeOrg }) => {
   const { t } = useTranslation(['common', 'workspace'])
   const location = useLocation()
+  const navigate = useNavigate()
   const resetWorkspace = useWorkspaceStore(state => state.reset)
 
   // 判断菜单项是否激活
@@ -149,18 +102,15 @@ export const UserSecondaryNav = memo<UserSecondaryNavProps>(({ user, organizatio
     void authClient.signOut()
   }, [resetWorkspace])
 
-  // 选择个人空间
-  const handleSelectPersonal = useCallback(async () => {
-    await authClient.organization.setActive({ organizationId: null })
-  }, [])
+  // 跳转到工作空间选择页面
+  const handleSwitchWorkspace = useCallback(() => {
+    void navigate({ to: pathsConfig.workspace.select })
+  }, [navigate])
 
-  // 选择组织
-  const handleSelectOrganization = useCallback(async (org: Organization) => {
-    await authClient.organization.setActive({ organizationId: org.id })
-  }, [])
-
-  const isPersonalActive = !activeOrg
   const hasOrganizations = organizations.length > 0
+
+  // 当前工作空间名称
+  const currentWorkspaceName = activeOrg ? activeOrg.name : t('workspace:personal')
 
   // 用户账户相关菜单项
   const accountItems: UserNavItem[] = [
@@ -246,28 +196,44 @@ export const UserSecondaryNav = memo<UserSecondaryNavProps>(({ user, organizatio
           </nav>
         </div>
 
-        {/* 工作空间切换（仅当用户有组织时显示） */}
+        {/* 切换身份（仅当用户有组织时显示） */}
         {hasOrganizations && (
           <>
             <Separator className="my-3" />
             <div>
               <span className="text-muted-foreground mb-2 block px-3 text-xs font-medium uppercase">
-                {t('workspace:switch')}
+                {t('workspace:workspace')}
               </span>
-              <nav className="flex flex-col gap-0.5">
-                {/* 个人空间 */}
-                <WorkspaceItem type="personal" isActive={isPersonalActive} onSelect={handleSelectPersonal} />
-                {/* 组织列表 */}
-                {organizations.map(org => (
-                  <WorkspaceItem
-                    key={org.id}
-                    type="organization"
-                    organization={org}
-                    isActive={activeOrg?.id === org.id}
-                    onSelect={() => handleSelectOrganization(org)}
-                  />
-                ))}
-              </nav>
+              {/* 当前工作空间显示 */}
+              <div className="mb-2 flex items-center gap-3 rounded-md px-3 py-2">
+                <Avatar className="size-6">
+                  {activeOrg ? (
+                    <>
+                      <AvatarImage src={activeOrg.logo ?? undefined} alt="" />
+                      <AvatarFallback className="bg-muted text-xs">
+                        {activeOrg.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </>
+                  ) : (
+                    <AvatarFallback className="bg-muted text-xs">
+                      <Icons.User className="text-muted-foreground size-3" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <span className="flex-1 truncate text-sm font-medium">{currentWorkspaceName}</span>
+              </div>
+              {/* 切换身份按钮 */}
+              <button
+                type="button"
+                onClick={handleSwitchWorkspace}
+                className={cn(
+                  'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors',
+                  'hover:bg-accent hover:text-accent-foreground text-left'
+                )}
+              >
+                <Icons.ArrowLeftRight className="size-4" />
+                <span>{t('workspace:switch')}</span>
+              </button>
             </div>
           </>
         )}
@@ -301,14 +267,14 @@ UserSecondaryNav.displayName = 'UserSecondaryNav'
 export function getUserNavMobileItems(t: (key: string) => string): { icon: ReactNode; label: string; href: string }[] {
   return [
     {
-      icon: <Icons.User className="size-4" />,
-      label: t('account.profile'),
-      href: pathsConfig.user.settings.index
-    },
-    {
       icon: <Icons.Settings className="size-4" />,
       label: t('settings'),
       href: pathsConfig.user.settings.index
+    },
+    {
+      icon: <Icons.Lock className="size-4" />,
+      label: t('security'),
+      href: pathsConfig.user.settings.security
     },
     {
       icon: <Icons.CreditCard className="size-4" />,
@@ -317,8 +283,13 @@ export function getUserNavMobileItems(t: (key: string) => string): { icon: React
     },
     {
       icon: <Icons.Users className="size-4" />,
-      label: t('organization.members'),
+      label: t('members'),
       href: pathsConfig.organization.members
+    },
+    {
+      icon: <Icons.Settings2 className="size-4" />,
+      label: t('organization.settings'),
+      href: pathsConfig.organization.settings
     }
   ]
 }
