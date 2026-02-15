@@ -1,7 +1,7 @@
 import { useTranslation } from '@libs/i18n'
 import { Icons } from '@libs/ui-shared/web'
 
-import { GoLink } from '../../components/go-link'
+import { GoLink } from '../../common/components/go-link'
 import { pathsConfig } from '../../config/paths'
 
 interface AuthErrorPageProps {

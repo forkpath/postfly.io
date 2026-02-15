@@ -20,7 +20,7 @@ import {
   PasswordInput
 } from '@libs/ui-shared/web'
 
-import { GoLink } from '../../../../components/go-link'
+import { GoLink } from '../../../../common/components/go-link'
 import { pathsConfig } from '../../../../config/paths'
 import { auth } from '../../lib/api'
 import { useAuthFormStore } from '../store'

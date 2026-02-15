@@ -55,9 +55,9 @@ import {
   useSidebar
 } from '@libs/ui-shared/web'
 
-import { pathsConfig } from '../../../config/paths'
-import { authClient } from '../../../lib/auth/client'
-import { useWorkspaceSwitcherData } from '../../../modules/workspace'
+import { pathsConfig } from '../../../../config/paths'
+import { authClient } from '../../../../lib/auth/client'
+import { useWorkspaceSwitcherData } from '../../../../modules/workspace'
 import { GoLink } from '../../go-link'
 import { AppHeader } from './app-header'
 import { useNavigationStore } from './navigation-store'
@@ -68,8 +68,11 @@ import { getUserNavMobileItems, UserSecondaryNav } from './user-secondary-nav'
 // 类型导出
 // ============================================================================
 
-export type { SecondaryNavItem, SecondaryNavConfig } from './secondary-nav-context'
+export type { SecondaryNavItem, SecondaryNavConfig, CustomSecondaryNavValue } from './secondary-nav-context'
 export { SecondaryNavProvider, useSecondaryNav } from './secondary-nav-context'
+export type { NavItem, NavGroup, NavStatCard, NavProgress } from './nav-config'
+export { flattenNavConfig, getDefaultSubRoute } from './nav-config'
+export { SecondaryNavRenderer } from './secondary-nav-renderer'
 
 // ============================================================================
 // 类型定义
@@ -381,8 +384,9 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
 
   // 判断是否有模块二级导航
   // 优先检查 desktopContent，其次检查 subItems
-  const hasSecondaryNav =
+  const hasSecondaryNav = Boolean(
     secondaryNav?.desktopContent || (activeMenuItem?.subItems && activeMenuItem.subItems.length > 0)
+  )
 
   // 用户导航的移动端菜单项
   const userNavMobileItems = getUserNavMobileItems(t)
@@ -482,24 +486,15 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                               >
                                 <DropdownMenuLabel>{translateLabel(item.label)}</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                {item.subItems.map(subItem => {
-                                  const isSubItemActive =
-                                    location.pathname === subItem.href ||
-                                    location.pathname.startsWith(subItem.href + '/')
-                                  return (
-                                    <DropdownMenuItem
-                                      key={subItem.label}
-                                      asChild
-                                      onClick={handleSubItemClick}
-                                      className={cn(isSubItemActive && 'bg-accent font-medium')}
-                                    >
-                                      <GoLink href={subItem.href} className="flex items-center gap-2">
-                                        {subItem.icon}
-                                        <span>{translateLabel(subItem.label)}</span>
-                                      </GoLink>
-                                    </DropdownMenuItem>
-                                  )
-                                })}
+                                {/* 折叠模式下的二级菜单不显示选中状态 */}
+                                {item.subItems.map(subItem => (
+                                  <DropdownMenuItem key={subItem.label} asChild onClick={handleSubItemClick}>
+                                    <GoLink href={subItem.href} className="flex items-center gap-2">
+                                      {subItem.icon}
+                                      <span>{translateLabel(subItem.label)}</span>
+                                    </GoLink>
+                                  </DropdownMenuItem>
+                                ))}
                               </DropdownMenuContent>
                             )}
                           </DropdownMenu>
@@ -525,28 +520,21 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
 
-                        {/* 小屏模式：展开的子菜单内容 */}
+                        {/* 小屏模式：展开的子菜单内容（不显示选中状态） */}
                         {item.subItems && item.subItems.length > 0 && (
                           <CollapsibleContent className="md:hidden">
                             <div className="border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5">
-                              {item.subItems.map(subItem => {
-                                const isSubItemActive =
-                                  location.pathname === subItem.href || location.pathname.startsWith(subItem.href + '/')
-                                return (
-                                  <GoLink
-                                    key={subItem.label}
-                                    href={subItem.href}
-                                    onClick={() => setOpenMobile(false)}
-                                    className={cn(
-                                      'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm',
-                                      isSubItemActive && 'bg-sidebar-accent font-medium'
-                                    )}
-                                  >
-                                    {subItem.icon}
-                                    <span>{translateLabel(subItem.label)}</span>
-                                  </GoLink>
-                                )
-                              })}
+                              {item.subItems.map(subItem => (
+                                <GoLink
+                                  key={subItem.label}
+                                  href={subItem.href}
+                                  onClick={() => setOpenMobile(false)}
+                                  className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm"
+                                >
+                                  {subItem.icon}
+                                  <span>{translateLabel(subItem.label)}</span>
+                                </GoLink>
+                              ))}
                             </div>
                           </CollapsibleContent>
                         )}
@@ -636,23 +624,15 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                   >
                     <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {userNavMobileItems.map(item => {
-                      const isItemActive =
-                        location.pathname === item.href || location.pathname.startsWith(item.href + '/')
-                      return (
-                        <DropdownMenuItem
-                          key={item.href}
-                          asChild
-                          onClick={handleSubItemClick}
-                          className={cn(isItemActive && 'bg-accent font-medium')}
-                        >
-                          <GoLink href={item.href} className="flex items-center gap-2">
-                            {item.icon}
-                            <span>{translateLabel(item.label)}</span>
-                          </GoLink>
-                        </DropdownMenuItem>
-                      )
-                    })}
+                    {/* 折叠模式下的用户菜单不显示选中状态 */}
+                    {userNavMobileItems.map(item => (
+                      <DropdownMenuItem key={item.href} asChild onClick={handleSubItemClick}>
+                        <GoLink href={item.href} className="flex items-center gap-2">
+                          {item.icon}
+                          <span>{translateLabel(item.label)}</span>
+                        </GoLink>
+                      </DropdownMenuItem>
+                    ))}
                     {/* 切换身份子菜单 */}
                     {hasOrganizations && (
                       <>
@@ -729,26 +709,20 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                     />
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
+                {/* 小屏模式下的用户菜单不显示选中状态 */}
                 <CollapsibleContent>
                   <div className="border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5">
-                    {userNavMobileItems.map(item => {
-                      const isItemActive =
-                        location.pathname === item.href || location.pathname.startsWith(item.href + '/')
-                      return (
-                        <GoLink
-                          key={item.href}
-                          href={item.href}
-                          onClick={() => setOpenMobile(false)}
-                          className={cn(
-                            'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm',
-                            isItemActive && 'bg-sidebar-accent font-medium'
-                          )}
-                        >
-                          {item.icon}
-                          <span>{translateLabel(item.label)}</span>
-                        </GoLink>
-                      )
-                    })}
+                    {userNavMobileItems.map(item => (
+                      <GoLink
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setOpenMobile(false)}
+                        className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm"
+                      >
+                        {item.icon}
+                        <span>{translateLabel(item.label)}</span>
+                      </GoLink>
+                    ))}
                     {/* 切换身份链接 */}
                     {hasOrganizations && (
                       <GoLink

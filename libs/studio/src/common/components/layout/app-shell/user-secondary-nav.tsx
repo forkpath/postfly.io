@@ -17,9 +17,10 @@ import { useTranslation } from '@libs/i18n'
 import { cn } from '@libs/ui-shared/common'
 import { Avatar, AvatarFallback, AvatarImage, Button, Icons, Separator } from '@libs/ui-shared/web'
 
-import { pathsConfig } from '../../../config/paths'
-import { authClient } from '../../../lib/auth/client'
-import { useWorkspaceStore } from '../../../modules/workspace'
+import { pathsConfig } from '../../../../config/paths'
+import { authClient } from '../../../../lib/auth/client'
+import { useWorkspaceStore } from '../../../../modules/workspace'
+import { useNavigationStore } from './navigation-store'
 
 // ============================================================================
 // 类型定义
@@ -68,11 +69,13 @@ const NavItem = memo<NavItemProps>(({ item, isActive }) => {
       to={item.href}
       className={cn(
         'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors',
-        'hover:bg-accent hover:text-accent-foreground',
-        isActive && 'bg-accent text-accent-foreground font-medium'
+        // hover 状态：改变背景
+        'hover:bg-accent',
+        // 选中状态：改变文本颜色（无背景）
+        isActive ? 'text-primary font-medium' : 'text-foreground'
       )}
     >
-      {item.icon}
+      <span className={cn('[&>svg]:size-4', isActive ? 'text-primary' : 'text-muted-foreground')}>{item.icon}</span>
       <span>{item.label}</span>
     </Link>
   )
@@ -89,12 +92,10 @@ export const UserSecondaryNav = memo<UserSecondaryNavProps>(({ user, organizatio
   const location = useLocation()
   const navigate = useNavigate()
   const resetWorkspace = useWorkspaceStore(state => state.reset)
+  const setUserNavExpanded = useNavigationStore(state => state.setUserNavExpanded)
 
-  // 判断菜单项是否激活
-  const isActive = useCallback(
-    (href: string) => location.pathname === href || location.pathname.startsWith(href + '/'),
-    [location.pathname]
-  )
+  // 判断菜单项是否激活（精确匹配路由）
+  const isActive = useCallback((href: string) => location.pathname === href, [location.pathname])
 
   // 退出登录处理
   const handleLogout = useCallback(() => {
@@ -104,8 +105,10 @@ export const UserSecondaryNav = memo<UserSecondaryNavProps>(({ user, organizatio
 
   // 跳转到工作空间选择页面
   const handleSwitchWorkspace = useCallback(() => {
+    // 关闭用户导航，避免在工作空间选择页面显示用户二级导航
+    setUserNavExpanded(false)
     void navigate({ to: pathsConfig.workspace.select })
-  }, [navigate])
+  }, [navigate, setUserNavExpanded])
 
   const hasOrganizations = organizations.length > 0
 
@@ -117,11 +120,6 @@ export const UserSecondaryNav = memo<UserSecondaryNavProps>(({ user, organizatio
     {
       icon: <Icons.User className="size-4" />,
       label: t('account.profile'),
-      href: pathsConfig.user.settings.index
-    },
-    {
-      icon: <Icons.Settings className="size-4" />,
-      label: t('settings'),
       href: pathsConfig.user.settings.index
     },
     {
@@ -267,19 +265,19 @@ UserSecondaryNav.displayName = 'UserSecondaryNav'
 export function getUserNavMobileItems(t: (key: string) => string): { icon: ReactNode; label: string; href: string }[] {
   return [
     {
-      icon: <Icons.Settings className="size-4" />,
-      label: t('settings'),
+      icon: <Icons.User className="size-4" />,
+      label: t('account.profile'),
       href: pathsConfig.user.settings.index
-    },
-    {
-      icon: <Icons.Lock className="size-4" />,
-      label: t('security'),
-      href: pathsConfig.user.settings.security
     },
     {
       icon: <Icons.CreditCard className="size-4" />,
       label: t('billing'),
       href: pathsConfig.user.settings.billing
+    },
+    {
+      icon: <Icons.Lock className="size-4" />,
+      label: t('security'),
+      href: pathsConfig.user.settings.security
     },
     {
       icon: <Icons.Users className="size-4" />,

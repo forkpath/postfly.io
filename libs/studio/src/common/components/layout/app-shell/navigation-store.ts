@@ -62,6 +62,11 @@ interface NavigationActions {
    * @param defaultPath 默认路径（当没有记录时返回）
    */
   getLastVisitedRoute: (modulePrefix: string, defaultPath: string) => string
+  /**
+   * 重置导航状态
+   * 当用户切换身份（个人/组织）时调用，清除所有导航状态
+   */
+  resetNavigation: () => void
 }
 
 /** 初始状态 */
@@ -100,7 +105,9 @@ export const useNavigationStore = create<NavigationState & NavigationActions>()(
       getLastVisitedRoute: (modulePrefix, defaultPath) => {
         const routes = get().lastVisitedRoutes
         return routes[modulePrefix] || defaultPath
-      }
+      },
+      // 重置导航状态，用于切换身份时清除所有状态
+      resetNavigation: () => set(initialState)
     }),
     {
       name: 'navigation-storage',

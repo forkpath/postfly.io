@@ -1,8 +1,8 @@
+import { useMemo } from 'react'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 import { useTranslation } from '@libs/i18n'
-import { CrmSecondaryNav, pathsConfig, SecondaryNavProvider } from '@libs/studio'
-import { Icons } from '@libs/ui-shared/web'
+import { getCrmNavConfig, SecondaryNavProvider } from '@libs/studio'
 
 // CRM 路由 Layout - 提供二级导航
 export const Route = createFileRoute('/_app/crm')({
@@ -10,17 +10,14 @@ export const Route = createFileRoute('/_app/crm')({
 })
 
 function CrmLayout() {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation(['common', 'dashboard'])
+
+  // 使用统一的导航配置（数据源唯一）
+  const navConfig = useMemo(() => getCrmNavConfig(t as Parameters<typeof getCrmNavConfig>[0]), [t])
 
   return (
-    <SecondaryNavProvider
-      value={{
-        title: t('home'),
-        // 大屏模式：自定义的复杂布局组件
-        // 折叠/小屏模式的菜单项统一由 _app.tsx 的 menu.subItems 提供
-        desktopContent: <CrmSecondaryNav />
-      }}
-    >
+    // 配置式 SecondaryNavProvider：自动生成 desktopContent 和 mobileItems
+    <SecondaryNavProvider config={navConfig} quickAccessTitle={t('dashboard:pages.title')}>
       <Outlet />
     </SecondaryNavProvider>
   )

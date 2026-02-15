@@ -6,7 +6,7 @@ import { AuthProvider } from '@libs/auth'
 import { useTranslation } from '@libs/i18n'
 import { Badge, Tabs, TabsContent, TabsList, TabsTrigger } from '@libs/ui-shared/web'
 
-import { GoLink } from '../../../../components/go-link'
+import { GoLink } from '../../../../common/components/go-link'
 import { pathsConfig } from '../../../../config/paths'
 import { authClient } from '../../../../lib/auth/client'
 import { MagicLinkLoginForm } from './magic-link'

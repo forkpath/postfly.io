@@ -4,18 +4,24 @@
  * 提供声明式的方式来设置当前页面/模块的二级导航内容。
  * 使用 Provider 模式，在组件挂载时自动设置导航，卸载时自动清除。
  *
- * 使用方式：
- * 在需要二级导航的页面中，用 SecondaryNavProvider 包裹页面内容，
- * 并通过 value prop 传入导航配置。
+ * 支持两种使用方式：
+ * 1. 配置式（推荐）：传入 SecondaryNavConfig，自动渲染
+ * 2. 自定义式：传入 desktopContent 和 mobileItems
  *
  * @example
  * ```tsx
- * // 在 CRM 模块的布局中
+ * // 方式1：配置式（推荐，数据源唯一）
+ * const config = getCrmNavConfig(t)
+ * <SecondaryNavProvider config={config}>
+ *   <Outlet />
+ * </SecondaryNavProvider>
+ *
+ * // 方式2：自定义式（需要完全自定义 UI 时使用）
  * <SecondaryNavProvider
  *   value={{
- *     desktopContent: <CrmSecondaryNav />,
- *     mobileItems: crmMobileItems,
- *     title: 'CRM'
+ *     desktopContent: <CustomNav />,
+ *     mobileItems: customItems,
+ *     title: 'Custom'
  *   }}
  * >
  *   <Outlet />
@@ -24,12 +30,15 @@
  */
 
 import type { ReactNode } from 'react'
+import type { SecondaryNavConfig as NavConfig } from './nav-config'
 import type { SecondaryNavItem, SecondaryNavState } from './secondary-nav-store'
 
-import { useLayoutEffect } from 'react'
+import { useLayoutEffect, useMemo } from 'react'
 
 import { useShallow } from 'zustand/shallow'
 
+import { flattenNavConfig } from './nav-config'
+import { SecondaryNavRenderer } from './secondary-nav-renderer'
 import { useSecondaryNavStore } from './secondary-nav-store'
 
 // ============================================================================
@@ -37,37 +46,25 @@ import { useSecondaryNavStore } from './secondary-nav-store'
 // ============================================================================
 
 export type { SecondaryNavItem, SecondaryNavState }
+export type { NavConfig as SecondaryNavConfig }
 
 // ============================================================================
 // 类型定义
 // ============================================================================
 
 /**
- * 二级导航配置
- * 用于 SecondaryNavProvider 的 value prop
+ * 自定义二级导航配置（旧版 API，保留兼容）
+ * 用于需要完全自定义 UI 的场景
  */
-export interface SecondaryNavConfig {
+export interface CustomSecondaryNavValue {
   /**
    * 大屏模式下的完整自定义渲染内容
    * 可以是任意 ReactNode，提供最大的 UI 自由度
-   *
-   * @example
-   * ```tsx
-   * desktopContent: <CrmSecondaryNav />
-   * ```
    */
   desktopContent?: ReactNode
   /**
    * 小屏/折叠模式下的菜单项
    * 使用结构化数据确保移动端体验一致
-   *
-   * @example
-   * ```tsx
-   * mobileItems: [
-   *   { icon: <DashboardIcon />, label: 'Dashboard', href: '/crm' },
-   *   { icon: <OrderIcon />, label: 'Orders', href: '/crm/orders' }
-   * ]
-   * ```
    */
   mobileItems?: SecondaryNavItem[]
   /**
@@ -79,12 +76,28 @@ export interface SecondaryNavConfig {
 
 /**
  * SecondaryNavProvider 组件属性
+ *
+ * 支持两种方式：
+ * 1. config: 传入 SecondaryNavConfig，自动渲染（推荐）
+ * 2. value: 传入自定义内容（兼容旧版 API）
  */
 export interface SecondaryNavProviderProps {
   /** 子组件 */
   readonly children: ReactNode
-  /** 二级导航配置 */
-  readonly value: SecondaryNavConfig
+  /**
+   * 配置式导航（推荐）
+   * 传入 SecondaryNavConfig，自动生成 desktopContent 和 mobileItems
+   */
+  readonly config?: NavConfig
+  /**
+   * 自定义式导航（兼容旧版 API）
+   * 需要完全自定义 UI 时使用
+   */
+  readonly value?: CustomSecondaryNavValue
+  /**
+   * 快捷入口区域的标题（仅 config 模式有效）
+   */
+  readonly quickAccessTitle?: string
 }
 
 // ============================================================================
@@ -95,19 +108,32 @@ export interface SecondaryNavProviderProps {
  * 二级导航 Provider
  *
  * 在组件挂载时设置二级导航内容，卸载时自动清除。
- * 这确保了导航状态与路由/组件生命周期同步。
+ * 支持两种方式：
+ * 1. config: 配置式（推荐），自动生成 UI
+ * 2. value: 自定义式，完全自定义 UI
  *
  * @example
  * ```tsx
+ * // 方式1：配置式（推荐）
  * function CrmLayout() {
+ *   const { t } = useTranslation(['common', 'dashboard'])
+ *   const config = getCrmNavConfig(t)
+ *
+ *   return (
+ *     <SecondaryNavProvider config={config}>
+ *       <Outlet />
+ *     </SecondaryNavProvider>
+ *   )
+ * }
+ *
+ * // 方式2：自定义式
+ * function CustomLayout() {
  *   return (
  *     <SecondaryNavProvider
  *       value={{
- *         desktopContent: <CrmSecondaryNav />,
- *         mobileItems: [
- *           { icon: <Icons.Home />, label: 'home', href: '/crm' }
- *         ],
- *         title: 'CRM'
+ *         desktopContent: <CustomNav />,
+ *         mobileItems: customItems,
+ *         title: 'Custom'
  *       }}
  *     >
  *       <Outlet />
@@ -116,26 +142,45 @@ export interface SecondaryNavProviderProps {
  * }
  * ```
  */
-export function SecondaryNavProvider({ children, value }: SecondaryNavProviderProps) {
+export function SecondaryNavProvider({ children, config, value, quickAccessTitle }: SecondaryNavProviderProps) {
   const setSecondaryNav = useSecondaryNavStore(state => state.setSecondaryNav)
   const clearSecondaryNav = useSecondaryNavStore(state => state.clearSecondaryNav)
 
+  // 如果使用配置式，自动生成 desktopContent 和 mobileItems
+  const resolvedValue = useMemo(() => {
+    if (config) {
+      // 配置式：自动生成
+      const mobileItems = flattenNavConfig(config)
+      return {
+        desktopContent: <SecondaryNavRenderer config={config} sectionTitle={quickAccessTitle} />,
+        mobileItems,
+        title: config.title ?? null
+      }
+    }
+
+    // 自定义式：使用传入的 value
+    return {
+      desktopContent: value?.desktopContent ?? null,
+      mobileItems: value?.mobileItems ?? [],
+      title: value?.title ?? null
+    }
+  }, [config, value, quickAccessTitle])
+
   // 使用 useLayoutEffect 在渲染前同步设置二级导航
   // 这样可以避免路由切换时二级导航闪烁的问题
-  // useLayoutEffect 会在 DOM 更新后、浏览器绑制前同步执行
   useLayoutEffect(() => {
     // 组件挂载时设置二级导航
     setSecondaryNav({
-      desktopContent: value.desktopContent ?? null,
-      mobileItems: value.mobileItems ?? [],
-      title: value.title ?? null
+      desktopContent: resolvedValue.desktopContent,
+      mobileItems: resolvedValue.mobileItems,
+      title: resolvedValue.title
     })
 
     // 组件卸载时清除二级导航
     return () => {
       clearSecondaryNav()
     }
-  }, [value, setSecondaryNav, clearSecondaryNav])
+  }, [resolvedValue, setSecondaryNav, clearSecondaryNav])
 
   return <>{children}</>
 }

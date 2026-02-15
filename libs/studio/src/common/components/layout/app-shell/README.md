@@ -94,30 +94,101 @@ function App() {
 
 ### 配置二级导航
 
-使用 `SecondaryNavProvider` 为特定路由配置二级导航：
+**推荐方式：配置式（数据源唯一）**
+
+```tsx
+import { SecondaryNavProvider, getCrmNavConfig } from '@libs/studio'
+
+function CrmLayout() {
+  const { t } = useTranslation(['common', 'dashboard'])
+
+  // 使用统一的导航配置函数
+  const navConfig = useMemo(
+    () => getCrmNavConfig(t),
+    [t]
+  )
+
+  return (
+    // 配置式：自动生成 desktopContent 和 mobileItems
+    <SecondaryNavProvider config={navConfig} quickAccessTitle={t('dashboard:pages.title')}>
+      <Outlet />
+    </SecondaryNavProvider>
+  )
+}
+```
+
+**自定义方式（需要完全自定义 UI 时使用）**
 
 ```tsx
 import { SecondaryNavProvider } from '@libs/studio'
 
-function CrmLayout() {
+function CustomLayout() {
   return (
     <SecondaryNavProvider
       value={{
-        // 大屏模式显示的完整导航组件
-        desktopContent: <CrmSecondaryNav />,
-        // 小屏/折叠模式的菜单项
-        mobileItems: [
-          { icon: <DashboardIcon />, label: 'Dashboard', href: '/crm' },
-          { icon: <OrderIcon />, label: 'Orders', href: '/crm/orders' }
-        ],
-        // 移动端菜单标题
-        title: 'CRM'
+        desktopContent: <CustomSecondaryNav />,
+        mobileItems: customItems,
+        title: 'Custom'
       }}
     >
       <Outlet />
     </SecondaryNavProvider>
   )
 }
+```
+
+## 导航配置架构
+
+### 单一数据源原则
+
+每个模块的导航数据只定义一次，通过配置函数导出：
+
+```
+libs/studio/src/modules/
+├── crm/
+│   └── nav-config.ts      # getCrmNavConfig(t)
+├── admin/
+│   └── nav-config.ts      # getAdminNavConfig(t)
+└── ...
+```
+
+### 配置类型
+
+```typescript
+interface SecondaryNavConfig {
+  title?: string           // 导航标题
+  stats?: NavStatCard[]    // 统计卡片
+  progress?: NavProgress   // 进度指示器
+  quickAccess?: NavItem[]  // 快捷入口（网格）
+  groups: NavGroup[]       // 导航分组
+}
+
+interface NavItem {
+  label: string    // 显示标签
+  href: string     // 跳转路径
+  icon: ReactNode  // 图标
+}
+```
+
+### 自动转换
+
+配置会自动转换为：
+- **大屏展开**：`SecondaryNavRenderer` 渲染完整 UI
+- **大屏折叠/小屏**：`flattenNavConfig()` 生成扁平列表
+
+```tsx
+// _app.tsx 中的使用示例
+const crmNavConfig = getCrmNavConfig(t)
+
+const menu = [
+  {
+    label: 'home',
+    href: '/crm',
+    icon: <HomeIcon />,
+    defaultSubRoute: getDefaultSubRoute(crmNavConfig),
+    subItems: flattenNavConfig(crmNavConfig)  // 自动扁平化
+  }
+]
 ```
 
 ## 状态管理
@@ -142,6 +213,31 @@ setLastVisitedRoute('/admin', '/admin/users')
 
 // 示例：获取 admin 模块的最后访问路由，默认返回 /admin/users
 const lastRoute = getLastVisitedRoute('/admin', '/admin/users')
+
+// 重置导航状态（用于切换身份时）
+const resetNavigation = useNavigationStore(state => state.resetNavigation)
+resetNavigation() // 清除所有导航状态
+```
+
+### 身份切换
+
+当用户切换身份（个人空间/组织）时，需要重置导航状态：
+
+```tsx
+import { useNavigationStore } from '@libs/studio/common/components/layout/app-shell/navigation-store'
+
+function handleSwitchIdentity() {
+  const resetNavigation = useNavigationStore.getState().resetNavigation
+  
+  // 切换身份
+  await authClient.organization.setActive({ organizationId: orgId })
+  
+  // 重置导航状态
+  resetNavigation()
+  
+  // 导航到默认页面
+  navigate({ to: '/crm' })
+}
 ```
 
 ### secondary-nav-store.ts

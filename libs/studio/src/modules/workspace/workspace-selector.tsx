@@ -9,6 +9,7 @@ import { useTranslation } from '@libs/i18n'
 import { cn } from '@libs/ui-shared/common'
 import { Avatar, AvatarFallback, AvatarImage, buttonVariants, Icons, Skeleton } from '@libs/ui-shared/web'
 
+import { useNavigationStore } from '../../common/components/layout/app-shell/navigation-store'
 import { pathsConfig } from '../../config/paths'
 import { authClient } from '../../lib/auth/client'
 import { useWorkspaceStore } from './store'
@@ -66,24 +67,29 @@ export const WorkspaceSelector = () => {
   const navigate = useNavigate()
   const { data: organizations, isPending } = authClient.useListOrganizations()
   const markSelected = useWorkspaceStore(state => state.markSelected)
+  const resetNavigation = useNavigationStore(state => state.resetNavigation)
 
   const handleSelectPersonal = useCallback(async () => {
     // 设置 activeOrganization 为 null 表示个人空间
     await authClient.organization.setActive({ organizationId: null })
+    // 重置导航状态（清除用户导航展开状态和最后访问的路由）
+    resetNavigation()
     // 标记用户已选择工作空间
     markSelected()
     navigate({ to: pathsConfig.crm.index })
-  }, [navigate, markSelected])
+  }, [navigate, markSelected, resetNavigation])
 
   const handleSelectOrganization = useCallback(
     async (org: Organization) => {
       // 设置活跃组织
       await authClient.organization.setActive({ organizationId: org.id })
+      // 重置导航状态（清除用户导航展开状态和最后访问的路由）
+      resetNavigation()
       // 标记用户已选择工作空间
       markSelected()
       navigate({ to: pathsConfig.crm.index })
     },
-    [navigate, markSelected]
+    [navigate, markSelected, resetNavigation]
   )
 
   return (

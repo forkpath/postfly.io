@@ -1,12 +1,21 @@
 import type { User } from '@libs/auth'
 import type { AppShellMenuItem } from '@libs/studio'
 
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { createFileRoute, Outlet, redirect, useNavigate } from '@tanstack/react-router'
 
 import { hasAdminPermission, hasOrgAdminPermission, MemberRole } from '@libs/auth'
 import { useTranslation } from '@libs/i18n'
-import { AppShell, authClient, CRM_PREFIX, pathsConfig, useWorkspaceStore } from '@libs/studio'
+import {
+  AppShell,
+  authClient,
+  flattenNavConfig,
+  getAdminNavConfig,
+  getCrmNavConfig,
+  getDefaultSubRoute,
+  pathsConfig,
+  useWorkspaceStore
+} from '@libs/studio'
 import { Icons } from '@libs/ui-shared/web'
 
 // 应用内页共享布局 - pathless route (不添加到 URL)
@@ -65,8 +74,12 @@ function AppLayout() {
   // 当前活跃组织的管理权限（member.role 为 admin 或 owner）
   const isOrgAdminOrOwner = hasOrgAdminPermission(activeMember?.role as MemberRole)
 
+  // 获取各模块的导航配置（单一数据源）
+  const crmNavConfig = useMemo(() => getCrmNavConfig(t as Parameters<typeof getCrmNavConfig>[0]), [t])
+  const adminNavConfig = useMemo(() => getAdminNavConfig(t as Parameters<typeof getAdminNavConfig>[0]), [t])
+
   // 根据用户权限构建一级菜单
-  // subItems 用于折叠模式和小屏模式下显示二级导航
+  // subItems 从各模块的 navConfig 自动生成，确保数据源唯一
   const menu: AppShellMenuItem[] = [
     ...(isOrgAdminOrOwner
       ? [
@@ -74,76 +87,10 @@ function AppLayout() {
             label: 'home',
             href: pathsConfig.crm.index,
             icon: <Icons.Home className="size-6" />,
-            subItems: [
-              // 快捷页面入口 - 与 CrmSecondaryNav 中的 quickPages 对应
-              {
-                label: t('dashboard:pages.dashboard'),
-                href: pathsConfig.crm.index,
-                icon: <Icons.LayoutDashboard className="size-4" />
-              },
-              {
-                label: t('dashboard:pages.sales'),
-                href: pathsConfig.crm.ai,
-                icon: <Icons.TrendingUp className="size-4" />
-              },
-              {
-                label: t('dashboard:pages.order'),
-                href: pathsConfig.crm.order.index,
-                icon: <Icons.ShoppingCart className="size-4" />
-              },
-              {
-                label: t('dashboard:pages.shipping'),
-                href: pathsConfig.crm.invoice.index,
-                icon: <Icons.Truck className="size-4" />
-              },
-              // Clients 分组
-              {
-                label: t('dashboard:clients.accounts'),
-                href: pathsConfig.crm.customer.index,
-                icon: <Icons.Users className="size-4" />
-              },
-              {
-                label: t('dashboard:clients.activity'),
-                href: `${CRM_PREFIX}/activity`,
-                icon: <Icons.Activity className="size-4" />
-              },
-              {
-                label: t('dashboard:clients.logins'),
-                href: `${CRM_PREFIX}/logins`,
-                icon: <Icons.LogIn className="size-4" />
-              },
-              {
-                label: t('dashboard:clients.pricing'),
-                href: `${CRM_PREFIX}/pricing`,
-                icon: <Icons.CreditCard className="size-4" />
-              },
-              // Billing 分组
-              {
-                label: t('dashboard:billing.adjustments'),
-                href: `${CRM_PREFIX}/adjustments`,
-                icon: <Icons.Settings2 className="size-4" />
-              },
-              {
-                label: t('dashboard:billing.payments'),
-                href: pathsConfig.crm.payment.index,
-                icon: <Icons.HandCoins className="size-4" />
-              },
-              {
-                label: t('dashboard:billing.statements'),
-                href: `${CRM_PREFIX}/statements`,
-                icon: <Icons.FileText className="size-4" />
-              },
-              {
-                label: t('dashboard:billing.accountSummary'),
-                href: `${CRM_PREFIX}/account-summary`,
-                icon: <Icons.ClipboardList className="size-4" />
-              },
-              {
-                label: t('dashboard:billing.exportInvoices'),
-                href: `${CRM_PREFIX}/export-invoices`,
-                icon: <Icons.Download className="size-4" />
-              }
-            ]
+            // 默认子路由：从配置中获取
+            defaultSubRoute: getDefaultSubRoute(crmNavConfig),
+            // subItems：从配置中扁平化获取
+            subItems: flattenNavConfig(crmNavConfig)
           }
         ]
       : []),
@@ -153,25 +100,11 @@ function AppLayout() {
           {
             label: 'admin',
             href: pathsConfig.admin.index,
-            defaultSubRoute: pathsConfig.admin.organizations.index,
             icon: <Icons.Shield className="size-6" />,
-            subItems: [
-              {
-                label: t('users'),
-                href: pathsConfig.admin.users.index,
-                icon: <Icons.UsersRound className="size-4" />
-              },
-              {
-                label: t('organizations'),
-                href: pathsConfig.admin.organizations.index,
-                icon: <Icons.Building className="size-4" />
-              },
-              {
-                label: t('customers'),
-                href: pathsConfig.admin.customers.index,
-                icon: <Icons.HandCoins className="size-4" />
-              }
-            ]
+            // 默认子路由：从配置中获取
+            defaultSubRoute: getDefaultSubRoute(adminNavConfig),
+            // subItems：从配置中扁平化获取
+            subItems: flattenNavConfig(adminNavConfig)
           }
         ]
       : [])
