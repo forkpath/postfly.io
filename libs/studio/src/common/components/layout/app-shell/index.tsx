@@ -21,7 +21,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import type { User } from '@libs/auth'
 
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate, useRouter } from '@tanstack/react-router'
+import { useLocation, useNavigate } from '@tanstack/react-router'
 
 import { isKey, useTranslation } from '@libs/i18n'
 import { cn } from '@libs/ui-shared/common'
@@ -146,7 +146,6 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
   const { setOpenMobile } = useSidebar()
   const location = useLocation()
   const navigate = useNavigate()
-  const router = useRouter()
   const secondaryNav = useSecondaryNav()
 
   // 从 Zustand store 获取导航状态和操作
@@ -158,17 +157,20 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
   // 预取组织数据（避免点击用户头像时才请求导致的白屏）
   const { organizations, activeOrg, hasOrganizations } = useWorkspaceSwitcherData()
 
+  const resetNavigation = useNavigationStore(state => state.resetNavigation)
+
   /**
    * 切换组织/工作空间
-   * 调用 setActive 后 invalidate 路由以刷新 beforeLoad 数据
+   * setActive 更新 session cookie 后，使用硬导航确保页面完全重载，
+   * 避免 TanStack Router 的 beforeLoad 在 cookie 未同步时读取到无效 session
    */
   const handleSwitchOrganization = useCallback(
     async (organizationId: string | null) => {
       await authClient.organization.setActive({ organizationId })
-      // 刷新路由数据，触发 beforeLoad 重新执行
-      void router.invalidate()
+      resetNavigation()
+      window.location.href = organizationId ? pathsConfig.crm.index : pathsConfig.user.settings.index
     },
-    [router]
+    [resetNavigation]
   )
 
   // 本地状态
@@ -382,23 +384,25 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
   // 查找当前激活的菜单项
   const activeMenuItem = menu.find(item => isMenuActive(item.href))
 
-  // 判断是否有模块二级导航
-  // 优先检查 desktopContent，其次检查 subItems
+  // 判断是否有模块二级导航（基于路由配置，不依赖实际渲染）
   const hasSecondaryNav = Boolean(
     secondaryNav?.desktopContent || (activeMenuItem?.subItems && activeMenuItem.subItems.length > 0)
   )
+
+  // 模块二级导航的实际内容是否已挂载（SecondaryNavProvider 已渲染）
+  const moduleNavContentReady = Boolean(secondaryNav?.desktopContent)
 
   // 用户导航的移动端菜单项
   const userNavMobileItems = getUserNavMobileItems(t)
 
   // 判断是否显示用户的二级导航
-  // 条件：用户导航展开 AND （当前在用户路由 OR 模块没有二级导航）
-  // 这样当从用户路由切换到有二级导航的模块时，会直接显示模块导航，避免闪烁
-  const showUserSecondaryNav = userNavExpanded && (isUserNavActive() || !hasSecondaryNav)
+  // 当从用户路由导航到模块路由时，SecondaryNavProvider 需要一帧才能挂载，
+  // 期间 moduleNavContentReady 为 false。保留用户导航作为视觉占位，
+  // 直到模块导航内容就绪后再切换，避免二级导航先折叠再展开的闪烁
+  const showUserSecondaryNav = userNavExpanded && (isUserNavActive() || !hasSecondaryNav || !moduleNavContentReady)
 
   // 判断是否显示模块的二级导航
-  // 条件：有模块二级导航 AND 用户导航没有显示
-  const showModuleSecondaryNav = hasSecondaryNav && !showUserSecondaryNav
+  const showModuleSecondaryNav = hasSecondaryNav && moduleNavContentReady && !showUserSecondaryNav
 
   // ============================================================================
   // 渲染
@@ -752,10 +756,10 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
             </div>
           )}
 
-          {/* 模块二级导航 */}
-          {showModuleSecondaryNav && secondaryNav?.desktopContent && (
+          {/* 模块二级导航（showModuleSecondaryNav 已确保 desktopContent 非空） */}
+          {showModuleSecondaryNav && (
             <div className="bg-muted sticky top-0 flex h-dvh w-65 flex-col border-r max-md:hidden">
-              <div className="flex flex-1 flex-col overflow-y-auto">{secondaryNav.desktopContent}</div>
+              <div className="flex flex-1 flex-col overflow-y-auto">{secondaryNav!.desktopContent}</div>
             </div>
           )}
         </>

@@ -11,7 +11,7 @@ import type { ReactNode } from 'react'
 import type { ActiveOrganization, Organization, User } from '@libs/auth'
 
 import { memo, useCallback } from 'react'
-import { Link, useLocation, useNavigate } from '@tanstack/react-router'
+import { Link, useLocation } from '@tanstack/react-router'
 
 import { useTranslation } from '@libs/i18n'
 import { cn } from '@libs/ui-shared/common'
@@ -20,7 +20,6 @@ import { Avatar, AvatarFallback, AvatarImage, Button, Icons, Separator } from '@
 import { pathsConfig } from '../../../../config/paths'
 import { authClient } from '../../../../lib/auth/client'
 import { useWorkspaceStore } from '../../../../modules/workspace'
-import { useNavigationStore } from './navigation-store'
 
 // ============================================================================
 // 类型定义
@@ -90,9 +89,7 @@ NavItem.displayName = 'NavItem'
 export const UserSecondaryNav = memo<UserSecondaryNavProps>(({ user, organizations, activeOrg }) => {
   const { t } = useTranslation(['common', 'workspace'])
   const location = useLocation()
-  const navigate = useNavigate()
   const resetWorkspace = useWorkspaceStore(state => state.reset)
-  const setUserNavExpanded = useNavigationStore(state => state.setUserNavExpanded)
 
   // 判断菜单项是否激活（精确匹配路由）
   const isActive = useCallback((href: string) => location.pathname === href, [location.pathname])
@@ -104,11 +101,10 @@ export const UserSecondaryNav = memo<UserSecondaryNavProps>(({ user, organizatio
   }, [resetWorkspace])
 
   // 跳转到工作空间选择页面
+  // 使用硬导航以确保完全脱离 _app 路由树，避免旧布局在过渡期间残留
   const handleSwitchWorkspace = useCallback(() => {
-    // 关闭用户导航，避免在工作空间选择页面显示用户二级导航
-    setUserNavExpanded(false)
-    void navigate({ to: pathsConfig.workspace.select })
-  }, [navigate, setUserNavExpanded])
+    window.location.href = pathsConfig.workspace.select
+  }, [])
 
   const hasOrganizations = organizations.length > 0
 

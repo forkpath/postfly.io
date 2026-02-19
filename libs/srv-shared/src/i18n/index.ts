@@ -1,4 +1,3 @@
 export * from './i18n.config'
 export * from './i18n.module'
-
-export * from './i18n.generated'
+export * from './i18n.types'

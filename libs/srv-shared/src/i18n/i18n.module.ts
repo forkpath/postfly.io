@@ -20,7 +20,7 @@ export class I18nModule {
           useFactory: (configService: ConfigService) => {
             const { fallbackLng, localePath } = configService.get<I18nConfig>('i18n') as I18nConfig
             const resolvedPath = path.join(process.cwd(), localePath)
-            const typesPath = path.join(process.cwd(), 'libs/srv-shared/src/i18n/i18n.generated.ts')
+            const typesPath = path.join(process.cwd(), 'libs/srv-shared/src/i18n/i18n.types.ts')
 
             this.logger.log(`Loading translations from: ${resolvedPath}`)
             this.logger.log(`Types will be generated to: ${typesPath}`)

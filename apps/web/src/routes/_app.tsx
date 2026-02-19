@@ -1,7 +1,7 @@
-import type { User } from '@libs/auth'
+import type { Member, User } from '@libs/auth'
 import type { AppShellMenuItem } from '@libs/studio'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { createFileRoute, Outlet, redirect, useNavigate } from '@tanstack/react-router'
 
 import { hasAdminPermission, hasOrgAdminPermission, MemberRole } from '@libs/auth'
@@ -35,12 +35,15 @@ export const Route = createFileRoute('/_app')({
     }
 
     // 获取用户所属的组织列表
-    const { data: organizations } = await authClient.organization.list({})
+    // authClient 配置了 throw: true，API 直接返回数据而非 { data, error } 包装
+    const organizations = (await authClient.organization.list({})) as unknown as Array<{
+      id: string
+      name: string
+      slug: string
+    }> | null
 
     // 如果用户有组织成员身份，检查是否已选择工作空间
     if (organizations && organizations.length > 0) {
-      // 使用 zustand store 来追踪用户是否已选择过工作空间
-      // 通过 getState() 在非 React 上下文中访问 store 状态
       const { hasSelected } = useWorkspaceStore.getState()
 
       if (!hasSelected) {
@@ -50,7 +53,25 @@ export const Route = createFileRoute('/_app')({
       }
     }
 
-    return { user: session.user, organizations: organizations ?? [] }
+    // 获取当前活跃组织中的成员信息（包含角色）
+    // 在 beforeLoad 中同步获取，避免组件挂载后 hook 异步加载导致菜单闪烁
+    let activeMember: Member | null = null
+    try {
+      const memberResult = (await authClient.organization.getActiveMember()) as unknown as
+        | (Member & { role: string })
+        | null
+      if (memberResult?.role) {
+        activeMember = memberResult
+      }
+    } catch {
+      activeMember = null
+    }
+
+    return {
+      user: session.user,
+      organizations: organizations ?? [],
+      activeMember
+    }
   },
   component: AppLayout
 })
@@ -58,14 +79,13 @@ export const Route = createFileRoute('/_app')({
 function AppLayout() {
   const navigate = useNavigate()
   const { t } = useTranslation(['common', 'dashboard'])
-  // beforeLoad 返回的静态用户数据，确保首次渲染时可用
-  const { user } = Route.useRouteContext()
+  // beforeLoad 返回的静态数据，确保首次渲染时可用
+  const { user, activeMember: contextActiveMember } = Route.useRouteContext()
   // 响应式 session，当用户信息变化时自动更新
   const { data: session } = authClient.useSession()
-  // 当前活跃组织信息
-  // const { data: activeOrg } = authClient.useActiveOrganization()
-  // 当前用户在活跃组织中的成员信息（包含角色）
-  const { data: activeMember } = authClient.useActiveMember()
+  // beforeLoad 每次导航都会重新获取 activeMember，是最可靠的数据源
+  // 避免使用 useActiveMember() hook，因为 hook 内部缓存在跨页面导航时可能包含陈旧数据
+  const activeMember = contextActiveMember
 
   // 优先使用实时 session 数据，回退到 beforeLoad 的初始数据
   const currentUser = (session?.user ?? user) as User
@@ -110,8 +130,14 @@ function AppLayout() {
       : [])
   ]
 
+  // 跟踪 session 是否曾经有效，避免初始 null（hook 未解析）触发误跳转
+  // beforeLoad 已确保首次加载时 session 有效，此 effect 仅处理运行时 session 失效（如 token 过期）
+  const hadSession = useRef(false)
   useEffect(() => {
-    if (session === null) {
+    if (session !== null) {
+      hadSession.current = true
+    }
+    if (hadSession.current && session === null) {
       navigate({
         to: pathsConfig.auth.login,
         search: { redirectTo: undefined, invitationId: undefined, email: undefined }
