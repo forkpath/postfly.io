@@ -40,7 +40,16 @@
         "description": "加入其他创始人一起定制 TurboStarter，分享发布策略，并第一时间获取更新。",
         "button": "加入社区"
       }
-    }
+    },
+    "startUsing": "立即使用",
+    "viewPricing": "查看定价",
+    "startFree": "免费开始",
+    "contactSales": "联系销售",
+    "readDocs": "阅读文档",
+    "contactUs": "联系我们",
+    "viewRoles": "查看岗位",
+    "sendMessage": "发送消息",
+    "startBuildingFree": "免费开始构建"
   },
   "editToReload": "编辑 <code>{{file}}</code> 并保存以重新加载。",
   "workInProgress": {
@@ -101,7 +110,8 @@
         "position": "工程负责人",
         "body": "社区很棒。快速解答、发布建议、持续改进让我们保持节奏。"
       }
-    }
+    },
+    "trustedBy": "深受快速成长型企业信赖"
   },
   "faq": {
     "label": "常见问题",
@@ -141,29 +151,27 @@
   },
   "contact": {
     "label": "联系",
-    "title": "联系我们以获取支持",
+    "title": "联系我们",
     "cta": "联系销售",
     "description": "如需支持或反馈，请联系我们",
     "form": {
-      "name": {
-        "placeholder": "张三"
-      },
-      "email": {
-        "placeholder": "your@email.com"
-      },
-      "message": {
-        "placeholder": "我们能帮你什么？"
-      },
+      "name": "姓名",
+      "email": "邮箱",
+      "message": "留言",
       "submit": "发送消息",
       "success": {
         "title": "消息已发送！",
         "description": "感谢你的留言，我们会尽快回复。"
-      }
+      },
+      "namePlaceholder": "张三",
+      "emailPlaceholder": "youremail@yourdomain.com",
+      "messagePlaceholder": "请输入你的消息"
     },
     "email": {
       "subject": "你收到了一条新的联系表单",
       "body": "新的联系表单提交"
-    }
+    },
+    "subtitle": "赋能开发者和技术团队可视化地创建、模拟和管理 AI 驱动的工作流"
   },
   "blog": {
     "label": "博客",
@@ -238,5 +246,302 @@
       "title": "正在安装更新...",
       "description": "更新正在安装中，请稍候。"
     }
+  },
+  "nav": {
+    "pricing": "定价",
+    "about": "关于",
+    "careers": "招聘",
+    "blog": "博客"
+  },
+  "hero": {
+    "badge": "为快速发展的工程团队而生。",
+    "title": "管理和模拟",
+    "titleHighlight": "工作流",
+    "titleMiddle": "智能体",
+    "subtitle": "赋能开发者和技术团队可视化地创建、模拟和管理 AI 驱动的工作流",
+    "gartner": "2025年度创新AI解决方案 by"
+  },
+  "logoCloud": {
+    "trustedBy": "深受快速成长型企业信赖"
+  },
+  "howItWorks": {
+    "badge": "工作原理",
+    "title": "轻松集成",
+    "subtitle": "赋能开发者和技术团队可视化地创建、模拟和管理 AI 驱动的工作流",
+    "tabs": {
+      "workflow": {
+        "title": "设计你的工作流",
+        "description": "通过拖拽界面创建、连接和配置智能体，构建逻辑工作流"
+      },
+      "tools": {
+        "title": "连接你的工具",
+        "description": "智能体独立运作并协调任务，共同完成所有复杂目标"
+      },
+      "deploy": {
+        "title": "部署与扩展",
+        "description": "在沙盒中运行智能体工作流，预览行为、调试逻辑并测试交互"
+      }
+    }
+  },
+  "agenticIntelligence": {
+    "badge": "核心能力",
+    "title": "为智能体智能而生",
+    "subtitle": "通过专为技术团队设计的可视化界面，构建、测试和部署 AI 智能体",
+    "features": {
+      "llmSelector": {
+        "title": "LLM 模型选择器",
+        "description": "通过触发器、工具使用、结果和时间戳的详细记录，实时跟踪智能体活动。"
+      },
+      "textToWorkflow": {
+        "title": "文本转工作流构建器",
+        "description": "在安全沙盒中预览和调试工作流逻辑，帮助你自信地迭代。"
+      },
+      "nativeTools": {
+        "title": "原生工具集成",
+        "description": "通过触发器、工具使用、结果和时间戳的详细记录，实时跟踪智能体活动。"
+      },
+      "oneClickAuth": {
+        "title": "一键认证",
+        "description": "通过拖拽界面创建、连接和配置智能体，构建逻辑工作流"
+      },
+      "realtimeSync": {
+        "title": "实时同步",
+        "description": "智能体独立运作并协调任务，共同完成复杂目标"
+      },
+      "customSDK": {
+        "title": "自定义连接器 SDK",
+        "description": "在沙盒中运行智能体工作流，预览行为、调试逻辑并测试交互"
+      }
+    }
+  },
+  "useCases": {
+    "badge": "应用场景",
+    "title": "跨越多个行业",
+    "subtitle": "赋能开发者和技术团队可视化地创建、模拟和管理 AI 驱动的工作流",
+    "items": {
+      "devops": {
+        "title": "DevOps",
+        "description": "无需编写样板代码即可可视化编排自主智能体"
+      },
+      "salesops": {
+        "title": "销售运营",
+        "description": "无需编写样板代码即可可视化编排自主智能体"
+      },
+      "supplyChain": {
+        "title": "供应链",
+        "description": "无需编写样板代码即可可视化编排自主智能体"
+      },
+      "customerSupport": {
+        "title": "客户支持",
+        "description": "无需编写样板代码即可可视化编排自主智能体"
+      },
+      "dataops": {
+        "title": "DataOps",
+        "description": "无需编写样板代码即可可视化编排自主智能体"
+      },
+      "finops": {
+        "title": "FinOps",
+        "description": "无需编写样板代码即可可视化编排自主智能体"
+      }
+    }
+  },
+  "benefits": {
+    "badge": "核心优势",
+    "title": "让工程师效率提升10倍",
+    "subtitle": "赋能开发者和技术团队可视化地创建、模拟和管理 AI 驱动的工作流",
+    "items": {
+      "launchFaster": {
+        "title": "快速上线",
+        "description": "无需编写样板代码即可可视化编排自主智能体"
+      },
+      "iterateRapidly": {
+        "title": "快速迭代",
+        "description": "无需编写样板代码即可可视化编排自主智能体"
+      },
+      "scaleSmarter": {
+        "title": "智能扩展",
+        "description": "无需编写样板代码即可可视化编排自主智能体"
+      },
+      "reuseIntelligence": {
+        "title": "智能复用",
+        "description": "无需编写样板代码即可可视化编排自主智能体"
+      },
+      "preventBreakdowns": {
+        "title": "故障预防",
+        "description": "无需编写样板代码即可可视化编排自主智能体"
+      },
+      "automateMore": {
+        "title": "自动化升级",
+        "description": "无需编写样板代码即可可视化编排自主智能体"
+      }
+    },
+    "middle": {
+      "connected": "已连接",
+      "dashboard": "仪表盘",
+      "apiCalls": "API 调用",
+      "successRate": "成功率",
+      "workflows": "工作流"
+    }
+  },
+  "pricing": {
+    "badge": "定价",
+    "title": "简单合理的定价",
+    "monthly": "月付",
+    "yearly": "年付",
+    "save20": "节省 20%",
+    "perSeat": "/席位",
+    "billed": "计费方式",
+    "billedMonthly": "按月",
+    "billedAnnually": "按年",
+    "selectCycle": "选择计费周期",
+    "tiers": {
+      "growth": {
+        "title": "成长版",
+        "subtitle": "早期团队"
+      },
+      "scale": {
+        "title": "专业版",
+        "subtitle": "快速发展的初创公司"
+      },
+      "enterprise": {
+        "title": "企业版",
+        "subtitle": "大型企业"
+      }
+    }
+  },
+  "security": {
+    "label": "安全优先团队之选",
+    "title": "安全自信地扩展",
+    "subtitle": "我们的 AI 助手采用企业级安全实践设计，符合全球数据保护标准。"
+  },
+  "faqs": {
+    "badge": "常见问题",
+    "title": "常见问题解答",
+    "subtitle": "在这里找到你的疑问和问题。还没找到你要找的？",
+    "items": [
+      {
+        "question": "这个平台具体做什么？",
+        "answer": "我们的平台让你可以设计、部署和管理 AI 驱动的智能体工作流，这些工作流可以结合自动化（AI）和手动步骤。这些工作流连接到你现有的工具（如 Slack、Notion 或 Google Sheets），并使用 AI 智能体完成任务。"
+      },
+      {
+        "question": "如何开始创建我的第一个工作流？",
+        "answer": "使用我们的拖拽界面设计你的工作流。连接你已有的工具，定义步骤（AI 和手动），在部署前在沙盒环境中测试所有内容。无需编码。"
+      },
+      {
+        "question": "可以集成哪些工具和服务？",
+        "answer": "我们支持数百种集成，包括 Slack、Notion、Google Workspace、Salesforce、GitHub、Zapier 等。你还可以通过我们灵活的连接器系统连接自定义 API 和数据库。"
+      },
+      {
+        "question": "使用 AI 智能体时数据安全吗？",
+        "answer": "是的，我们非常重视安全。所有数据在传输和存储中都经过加密，我们符合 SOC 2 标准，你对智能体可以访问的数据有完全控制权。智能体只与你明确授权的特定工具和数据交互。"
+      },
+      {
+        "question": "可以在上线前测试工作流吗？",
+        "answer": "当然可以。我们的沙盒环境让你在部署前安全地预览和调试工作流逻辑。你可以测试不同场景、验证智能体行为，确保一切按预期运行而不影响生产系统。"
+      },
+      {
+        "question": "自动化步骤和手动步骤有什么区别？",
+        "answer": "自动化步骤完全由 AI 智能体处理（如数据分析、内容生成或 API 调用），而手动步骤需要人工输入或审批。你可以混合两种类型来创建工作流，既利用 AI 效率又在需要时保持人工监督。"
+      }
+    ]
+  },
+  "ctaSection": {
+    "title": "连接你的现有技术栈",
+    "titleLine2": "开始自动化"
+  },
+  "about": {
+    "badge": "关于我们",
+    "title": "我们正在构建智能体驱动开发的未来",
+    "description": "由工程师和 AI 研究者创立，Notus 源于一个简单的困扰：构建智能系统仍然需要大量手动编排。我们决心改变这一现状，创建一个让团队能够可视化、直觉化地设计、模拟和启动自主智能体的工具。",
+    "description2": "如今，Notus 为全球的初创公司、开发团队和 AI 优先平台提供下一代工作流。无论你是自动化内部运营、扩展客户支持，还是构建复杂的多智能体系统。",
+    "featuredIn": "媒体报道",
+    "journeyBadge": "历程与价值观",
+    "journeyTitle": "帮助工程团队专注于重要的事",
+    "journeySubtitle": "赋能开发者和技术团队可视化地创建、模拟和管理 AI 驱动的工作流",
+    "metrics": {
+      "workflows": "工作流创建数",
+      "community": "技术社区",
+      "reviews": "G2 评价"
+    },
+    "teamBadge": "我们的团队",
+    "teamTitle": "行业领袖团队",
+    "teamSubtitle": "赋能开发者和技术团队可视化地创建、模拟和管理 AI 驱动的工作流",
+    "careersBadge": "招聘",
+    "careersTitle": "让我们一起改变现代企业团队的运作方式",
+    "careersSubtitle": "打造一家跨世代公司需要杰出的、努力工作的人。我们正在攻克其他人都不敢尝试的商业基础设施的复杂性。",
+    "joinTeam": "加入团队",
+    "investors": "我们的投资者"
+  },
+  "careers": {
+    "badge": "招聘",
+    "title": "让我们一起改变现代企业团队的运作方式",
+    "subtitle": "打造一家跨世代公司需要杰出的、努力工作的人。我们正在攻克其他人都不敢尝试的商业基础设施的复杂性。",
+    "investors": "我们的投资者",
+    "featuredIn": "媒体报道",
+    "openRolesBadge": "开放岗位",
+    "openRolesTitle": "查看我们的开放岗位",
+    "goalsBadge": "目标",
+    "goalsTitle": "为什么在 Nodus 工作？",
+    "daysAgo": "天前",
+    "why": {
+      "ownership": {
+        "title": "完全自主权",
+        "description": "你将拥有自己的工作，并能看到你的工作对公司的影响。"
+      },
+      "highPaced": {
+        "title": "高速迭代环境",
+        "description": "快速行动并交付高质量。我们以初创速度运营，达到企业级精度。"
+      },
+      "integrity": {
+        "title": "绝对正直",
+        "description": "言出必行。透明和诚实指导每一个决策和互动。"
+      },
+      "people": {
+        "title": "人本文化",
+        "description": "你的成长、健康和成功是我们使命的基础。"
+      },
+      "impact": {
+        "title": "有意义的影响",
+        "description": "构建改变数百万团队工作方式的技术。你的代码很重要。"
+      },
+      "vision": {
+        "title": "愿景驱动",
+        "description": "加入我们，重新构想通过自主 AI 系统实现的工作未来。"
+      }
+    }
+  },
+  "footer": {
+    "tagline": "管理和模拟智能体工作流",
+    "product": {
+      "title": "产品",
+      "agentBuilder": "智能体构建器",
+      "simulation": "模拟仿真",
+      "integrations": "集成",
+      "multiAgent": "多智能体",
+      "workflowApi": "工作流 API"
+    },
+    "company": {
+      "title": "公司",
+      "signIn": "登录",
+      "about": "关于",
+      "contact": "联系",
+      "pricing": "定价",
+      "careers": "招聘",
+      "docs": "文档",
+      "changelog": "更新日志",
+      "glossary": "术语表"
+    },
+    "legal": {
+      "title": "法律",
+      "privacy": "隐私政策",
+      "terms": "服务条款",
+      "cookies": "Cookie 政策"
+    },
+    "newsletter": {
+      "title": "订阅",
+      "placeholder": "你的邮箱",
+      "description": "获取最新产品新闻和幕后更新。"
+    },
+    "copyright": "版权所有。"
   }
 }

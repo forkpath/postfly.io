@@ -40,7 +40,16 @@
         "description": "Join other founders customizing TurboStarter, share launch tactics, and stay close to new drops.",
         "button": "Join the community"
       }
-    }
+    },
+    "startUsing": "Get Started",
+    "viewPricing": "View Pricing",
+    "startFree": "Start for Free",
+    "contactSales": "Contact Sales",
+    "readDocs": "Read Docs",
+    "contactUs": "Contact Us",
+    "viewRoles": "View Roles",
+    "sendMessage": "Send Message",
+    "startBuildingFree": "Start Building for Free"
   },
   "editToReload": "Edit <code>{{file}}</code> and save to reload.",
   "workInProgress": {
@@ -101,7 +110,8 @@
         "position": "Engineering Lead",
         "body": "The community is stellar. Fast answers, launch feedback, and constant improvements keep our team moving."
       }
-    }
+    },
+    "trustedBy": "Trusted by Fast Growing Startups"
   },
   "faq": {
     "label": "FAQ",
@@ -141,29 +151,27 @@
   },
   "contact": {
     "label": "Contact",
-    "title": "Get in touch with us today for support",
+    "title": "Contact us",
     "cta": "Talk to sales",
     "description": "Reach us for assistance or feedback",
     "form": {
-      "name": {
-        "placeholder": "John Doe"
-      },
-      "email": {
-        "placeholder": "your@email.com"
-      },
-      "message": {
-        "placeholder": "How can we help you?"
-      },
+      "name": "Name",
+      "email": "Email",
+      "message": "Message",
       "submit": "Send message",
       "success": {
         "title": "Message sent!",
         "description": "Thank you for your message. We'll get back to you soon."
-      }
+      },
+      "namePlaceholder": "John Doe",
+      "emailPlaceholder": "youremail@yourdomain.com",
+      "messagePlaceholder": "Your message"
     },
     "email": {
       "subject": "You've received a new contact form submission",
       "body": "New contact form submission"
-    }
+    },
+    "subtitle": "We empower developers and technical teams to create, simulate, and manage AI-driven workflows visually"
   },
   "blog": {
     "label": "Blog",
@@ -238,5 +246,302 @@
       "title": "Installing update...",
       "description": "The update is being installed. Please wait a moment."
     }
+  },
+  "nav": {
+    "pricing": "Pricing",
+    "about": "About",
+    "careers": "Careers",
+    "blog": "Blog"
+  },
+  "hero": {
+    "badge": "For fast moving engineering teams.",
+    "title": "Manage and simulate",
+    "titleHighlight": "workflows",
+    "titleMiddle": "agentic",
+    "subtitle": "We empower developers and technical teams to create, simulate, and manage AI-driven workflows visually",
+    "gartner": "Innovative AI solution 2025 by"
+  },
+  "logoCloud": {
+    "trustedBy": "Trusted by Fast Growing Startups"
+  },
+  "howItWorks": {
+    "badge": "How it works",
+    "title": "Integrates easily",
+    "subtitle": "We empower developers and technical teams to create, simulate, and manage AI-driven workflows visually",
+    "tabs": {
+      "workflow": {
+        "title": "Design your Workflow",
+        "description": "A drag-and-drop interface to create, connect, and configure agents into logical workflows"
+      },
+      "tools": {
+        "title": "Connect your Tools",
+        "description": "Agents operate independently and coordinate tasks to complete all complex goals together"
+      },
+      "deploy": {
+        "title": "Deploy & Scale",
+        "description": "Run agent workflows in a sandbox to preview behavior, debug logic, and test interactions"
+      }
+    }
+  },
+  "agenticIntelligence": {
+    "badge": "Features",
+    "title": "Built for Agentic Intelligence",
+    "subtitle": "Build, test and deploy AI agents with a powerful visual interface designed for technical teams",
+    "features": {
+      "llmSelector": {
+        "title": "LLM Model Selector",
+        "description": "Track real-time activity of agents with detailed records of triggers, tools used, outcomes, and timestamps."
+      },
+      "textToWorkflow": {
+        "title": "Text to workflow builder",
+        "description": "Preview and debug workflow logic in a safe sandbox before deploying, helping you iterate with confidence."
+      },
+      "nativeTools": {
+        "title": "Native Tools Integration",
+        "description": "Track real-time activity of agents with detailed records of triggers, tools used, outcomes, and timestamps."
+      },
+      "oneClickAuth": {
+        "title": "One Click Auth",
+        "description": "A drag-and-drop interface to create, connect, and configure agents into logical workflows"
+      },
+      "realtimeSync": {
+        "title": "Realtime Sync",
+        "description": "Agents operate independently and coordinate tasks to complete complex all goals"
+      },
+      "customSDK": {
+        "title": "Custom Connector SDK",
+        "description": "Run agent workflows in a sandbox to preview behavior, debug logic, and test interactions"
+      }
+    }
+  },
+  "useCases": {
+    "badge": "Use Cases",
+    "title": "Across various Industries",
+    "subtitle": "We empower developers and technical teams to create, simulate, and manage AI-driven workflows visually",
+    "items": {
+      "devops": {
+        "title": "DevOps",
+        "description": "Visually orchestrate autonomous agents without writing boilerplate code"
+      },
+      "salesops": {
+        "title": "SalesOps",
+        "description": "Visually orchestrate autonomous agents without writing boilerplate code"
+      },
+      "supplyChain": {
+        "title": "Supply Chain",
+        "description": "Visually orchestrate autonomous agents without writing boilerplate code"
+      },
+      "customerSupport": {
+        "title": "Customer Support",
+        "description": "Visually orchestrate autonomous agents without writing boilerplate code"
+      },
+      "dataops": {
+        "title": "DataOps",
+        "description": "Visually orchestrate autonomous agents without writing boilerplate code"
+      },
+      "finops": {
+        "title": "FinOps",
+        "description": "Visually orchestrate autonomous agents without writing boilerplate code"
+      }
+    }
+  },
+  "benefits": {
+    "badge": "Benefits",
+    "title": "Making Engineers 10x faster",
+    "subtitle": "We empower developers and technical teams to create, simulate, and manage AI-driven workflows visually",
+    "items": {
+      "launchFaster": {
+        "title": "Launch Faster",
+        "description": "Visually orchestrate autonomous agents without writing boilerplate code"
+      },
+      "iterateRapidly": {
+        "title": "Iterate Rapidly",
+        "description": "Visually orchestrate autonomous agents without writing boilerplate code"
+      },
+      "scaleSmarter": {
+        "title": "Scale Smarter",
+        "description": "Visually orchestrate autonomous agents without writing boilerplate code"
+      },
+      "reuseIntelligence": {
+        "title": "Reuse Intelligence",
+        "description": "Visually orchestrate autonomous agents without writing boilerplate code"
+      },
+      "preventBreakdowns": {
+        "title": "Prevent Breakdowns",
+        "description": "Visually orchestrate autonomous agents without writing boilerplate code"
+      },
+      "automateMore": {
+        "title": "Automate More",
+        "description": "Visually orchestrate autonomous agents without writing boilerplate code"
+      }
+    },
+    "middle": {
+      "connected": "Connected",
+      "dashboard": "Dashboard",
+      "apiCalls": "API Calls",
+      "successRate": "Success Rate",
+      "workflows": "Workflows"
+    }
+  },
+  "pricing": {
+    "badge": "Pricing",
+    "title": "Simple and Feasible Pricing",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "save20": "Save 20%",
+    "perSeat": "/seat",
+    "billed": "billed",
+    "billedMonthly": "monthly",
+    "billedAnnually": "annually",
+    "selectCycle": "Select a preferred cycle",
+    "tiers": {
+      "growth": {
+        "title": "Growth",
+        "subtitle": "Early stage teams"
+      },
+      "scale": {
+        "title": "Scale",
+        "subtitle": "Fast moving startups"
+      },
+      "enterprise": {
+        "title": "Enterprise",
+        "subtitle": "Large enterprises"
+      }
+    }
+  },
+  "security": {
+    "label": "FOR SECURITY FIRST TEAMS",
+    "title": "Scale securely with confidence",
+    "subtitle": "Our AI assistant is designed with enterprise-grade security practices and compliant with global data protection standards."
+  },
+  "faqs": {
+    "badge": "FAQs",
+    "title": "Frequently Asked Questions",
+    "subtitle": "Find all your doubts and questions in one place. Still couldn't find what you're looking for?",
+    "items": [
+      {
+        "question": "What exactly does this platform do?",
+        "answer": "Our platform lets you design, deploy, and manage AI-powered agentic workflows that can combine both automated (AI) and manual steps. These workflows connect to your existing tools (like Slack, Notion, or Google Sheets) and use AI agents to complete tasks."
+      },
+      {
+        "question": "How do I get started with creating my first workflow?",
+        "answer": "Start by using our drag-and-drop interface to design your workflow. Connect the tools you already use, define the steps (both AI and manual), and test everything in our sandbox environment before deploying. No coding required."
+      },
+      {
+        "question": "What tools and services can I integrate?",
+        "answer": "We support hundreds of integrations including Slack, Notion, Google Workspace, Salesforce, GitHub, Zapier, and many more. You can also connect custom APIs and databases through our flexible connector system."
+      },
+      {
+        "question": "Is my data secure when using AI agents?",
+        "answer": "Yes, we take security seriously. All data is encrypted in transit and at rest, we're SOC 2 compliant, and you maintain full control over what data your agents can access. Agents only interact with the specific tools and data you explicitly authorize."
+      },
+      {
+        "question": "Can I test workflows before they go live?",
+        "answer": "Absolutely. Our sandbox environment lets you preview and debug workflow logic safely before deployment. You can test different scenarios, validate agent behavior, and ensure everything works as expected without affecting your live systems."
+      },
+      {
+        "question": "What's the difference between automated and manual steps?",
+        "answer": "Automated steps are handled entirely by AI agents (like data analysis, content generation, or API calls), while manual steps require human input or approval. You can mix both types to create workflows that leverage AI efficiency while maintaining human oversight where needed."
+      }
+    ]
+  },
+  "ctaSection": {
+    "title": "Connect your Current Stack",
+    "titleLine2": "and Start Automating"
+  },
+  "about": {
+    "badge": "About Us",
+    "title": "We're Building the Future of Agent-Driven Development",
+    "description": "Founded by engineers and AI researchers, Notus was born out of a simple frustration: building intelligent systems still required too much manual orchestration. We set out to change that by creating a tool that lets teams design, simulate, and launch autonomous agents visually and intuitively.",
+    "description2": "Today, Notus powers next-gen workflows for startups, dev teams, and AI-first platforms across the globe. Whether you're automating internal ops, scaling customer support, or building complex multi-agent systems.",
+    "featuredIn": "As featured in",
+    "journeyBadge": "Journey and Values",
+    "journeyTitle": "Helping Engineering Teams Focus on Important Things",
+    "journeySubtitle": "We empower developers and technical teams to create, simulate, and manage AI-driven workflows visually",
+    "metrics": {
+      "workflows": "Workflows created",
+      "community": "Tech Community",
+      "reviews": "G2 reviews"
+    },
+    "teamBadge": "Our Team",
+    "teamTitle": "Team of Industry Leaders",
+    "teamSubtitle": "We empower developers and technical teams to create, simulate, and manage AI-driven workflows visually",
+    "careersBadge": "Careers",
+    "careersTitle": "Let's Change How Modern Enterprise Teams Function",
+    "careersSubtitle": "Building a generational company requires exceptional, hard-working people. We are tackling the complexities of commerce infrastructure that no one else has dared to.",
+    "joinTeam": "Join the team",
+    "investors": "Our Investors"
+  },
+  "careers": {
+    "badge": "Careers",
+    "title": "Let's Change How Modern Enterprise Teams Function",
+    "subtitle": "Building a generational company requires exceptional, hard-working people. We are tackling the complexities of commerce infrastructure that no one else has dared to.",
+    "investors": "Our Investors",
+    "featuredIn": "As featured in",
+    "openRolesBadge": "Open Roles",
+    "openRolesTitle": "Checkout Our Open Roles",
+    "goalsBadge": "Goals",
+    "goalsTitle": "Why Work at Nodus?",
+    "daysAgo": "days ago",
+    "why": {
+      "ownership": {
+        "title": "Complete Ownership",
+        "description": "You will own your work and be able to see the impact of your work on the company."
+      },
+      "highPaced": {
+        "title": "High-Paced Environment",
+        "description": "Move fast and ship quality. We operate at startup velocity with enterprise precision."
+      },
+      "integrity": {
+        "title": "Absolute Integrity",
+        "description": "We do what we say. Transparency and honesty guide every decision and interaction."
+      },
+      "people": {
+        "title": "People-First Culture",
+        "description": "Your growth, well-being, and success are fundamental to our mission."
+      },
+      "impact": {
+        "title": "Meaningful Impact",
+        "description": "Build technology that transforms how millions of teams work. Your code matters."
+      },
+      "vision": {
+        "title": "Vision Driven",
+        "description": "Join us in reimagining the future of work through autonomous AI systems."
+      }
+    }
+  },
+  "footer": {
+    "tagline": "Manage and simulate agentic workflows",
+    "product": {
+      "title": "Product",
+      "agentBuilder": "Agent Builder",
+      "simulation": "Simulation",
+      "integrations": "Integrations",
+      "multiAgent": "Multi Agent",
+      "workflowApi": "Workflow API"
+    },
+    "company": {
+      "title": "Company",
+      "signIn": "Sign In",
+      "about": "About",
+      "contact": "Contact",
+      "pricing": "Pricing",
+      "careers": "Careers",
+      "docs": "Docs",
+      "changelog": "Changelog",
+      "glossary": "Glossary"
+    },
+    "legal": {
+      "title": "Legal",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "cookies": "Cookie Policy"
+    },
+    "newsletter": {
+      "title": "Newsletter",
+      "placeholder": "Your email",
+      "description": "Get the latest product news and behind the scenes updates."
+    },
+    "copyright": "All rights reserved."
   }
 }

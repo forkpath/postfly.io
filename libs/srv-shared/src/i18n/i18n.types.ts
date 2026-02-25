@@ -939,6 +939,15 @@ export type I18nTranslations = {
                     "button": string;
                 };
             };
+            "startUsing": string;
+            "viewPricing": string;
+            "startFree": string;
+            "contactSales": string;
+            "readDocs": string;
+            "contactUs": string;
+            "viewRoles": string;
+            "sendMessage": string;
+            "startBuildingFree": string;
         };
         "editToReload": string;
         "workInProgress": {
@@ -1000,6 +1009,7 @@ export type I18nTranslations = {
                     "body": string;
                 };
             };
+            "trustedBy": string;
         };
         "faq": {
             "label": string;
@@ -1043,25 +1053,23 @@ export type I18nTranslations = {
             "cta": string;
             "description": string;
             "form": {
-                "name": {
-                    "placeholder": string;
-                };
-                "email": {
-                    "placeholder": string;
-                };
-                "message": {
-                    "placeholder": string;
-                };
+                "name": string;
+                "email": string;
+                "message": string;
                 "submit": string;
                 "success": {
                     "title": string;
                     "description": string;
                 };
+                "namePlaceholder": string;
+                "emailPlaceholder": string;
+                "messagePlaceholder": string;
             };
             "email": {
                 "subject": string;
                 "body": string;
             };
+            "subtitle": string;
         };
         "blog": {
             "label": string;
@@ -1136,6 +1144,303 @@ export type I18nTranslations = {
                 "title": string;
                 "description": string;
             };
+        };
+        "nav": {
+            "pricing": string;
+            "about": string;
+            "careers": string;
+            "blog": string;
+        };
+        "hero": {
+            "badge": string;
+            "title": string;
+            "titleHighlight": string;
+            "titleMiddle": string;
+            "subtitle": string;
+            "gartner": string;
+        };
+        "logoCloud": {
+            "trustedBy": string;
+        };
+        "howItWorks": {
+            "badge": string;
+            "title": string;
+            "subtitle": string;
+            "tabs": {
+                "workflow": {
+                    "title": string;
+                    "description": string;
+                };
+                "tools": {
+                    "title": string;
+                    "description": string;
+                };
+                "deploy": {
+                    "title": string;
+                    "description": string;
+                };
+            };
+        };
+        "agenticIntelligence": {
+            "badge": string;
+            "title": string;
+            "subtitle": string;
+            "features": {
+                "llmSelector": {
+                    "title": string;
+                    "description": string;
+                };
+                "textToWorkflow": {
+                    "title": string;
+                    "description": string;
+                };
+                "nativeTools": {
+                    "title": string;
+                    "description": string;
+                };
+                "oneClickAuth": {
+                    "title": string;
+                    "description": string;
+                };
+                "realtimeSync": {
+                    "title": string;
+                    "description": string;
+                };
+                "customSDK": {
+                    "title": string;
+                    "description": string;
+                };
+            };
+        };
+        "useCases": {
+            "badge": string;
+            "title": string;
+            "subtitle": string;
+            "items": {
+                "devops": {
+                    "title": string;
+                    "description": string;
+                };
+                "salesops": {
+                    "title": string;
+                    "description": string;
+                };
+                "supplyChain": {
+                    "title": string;
+                    "description": string;
+                };
+                "customerSupport": {
+                    "title": string;
+                    "description": string;
+                };
+                "dataops": {
+                    "title": string;
+                    "description": string;
+                };
+                "finops": {
+                    "title": string;
+                    "description": string;
+                };
+            };
+        };
+        "benefits": {
+            "badge": string;
+            "title": string;
+            "subtitle": string;
+            "items": {
+                "launchFaster": {
+                    "title": string;
+                    "description": string;
+                };
+                "iterateRapidly": {
+                    "title": string;
+                    "description": string;
+                };
+                "scaleSmarter": {
+                    "title": string;
+                    "description": string;
+                };
+                "reuseIntelligence": {
+                    "title": string;
+                    "description": string;
+                };
+                "preventBreakdowns": {
+                    "title": string;
+                    "description": string;
+                };
+                "automateMore": {
+                    "title": string;
+                    "description": string;
+                };
+            };
+            "middle": {
+                "connected": string;
+                "dashboard": string;
+                "apiCalls": string;
+                "successRate": string;
+                "workflows": string;
+            };
+        };
+        "pricing": {
+            "badge": string;
+            "title": string;
+            "monthly": string;
+            "yearly": string;
+            "save20": string;
+            "perSeat": string;
+            "billed": string;
+            "billedMonthly": string;
+            "billedAnnually": string;
+            "selectCycle": string;
+            "tiers": {
+                "growth": {
+                    "title": string;
+                    "subtitle": string;
+                };
+                "scale": {
+                    "title": string;
+                    "subtitle": string;
+                };
+                "enterprise": {
+                    "title": string;
+                    "subtitle": string;
+                };
+            };
+        };
+        "security": {
+            "label": string;
+            "title": string;
+            "subtitle": string;
+        };
+        "faqs": {
+            "badge": string;
+            "title": string;
+            "subtitle": string;
+            "items": [
+                {
+                    "question": string;
+                    "answer": string;
+                },
+                {
+                    "question": string;
+                    "answer": string;
+                },
+                {
+                    "question": string;
+                    "answer": string;
+                },
+                {
+                    "question": string;
+                    "answer": string;
+                },
+                {
+                    "question": string;
+                    "answer": string;
+                },
+                {
+                    "question": string;
+                    "answer": string;
+                }
+            ];
+        };
+        "ctaSection": {
+            "title": string;
+            "titleLine2": string;
+        };
+        "about": {
+            "badge": string;
+            "title": string;
+            "description": string;
+            "description2": string;
+            "featuredIn": string;
+            "journeyBadge": string;
+            "journeyTitle": string;
+            "journeySubtitle": string;
+            "metrics": {
+                "workflows": string;
+                "community": string;
+                "reviews": string;
+            };
+            "teamBadge": string;
+            "teamTitle": string;
+            "teamSubtitle": string;
+            "careersBadge": string;
+            "careersTitle": string;
+            "careersSubtitle": string;
+            "joinTeam": string;
+            "investors": string;
+        };
+        "careers": {
+            "badge": string;
+            "title": string;
+            "subtitle": string;
+            "investors": string;
+            "featuredIn": string;
+            "openRolesBadge": string;
+            "openRolesTitle": string;
+            "goalsBadge": string;
+            "goalsTitle": string;
+            "daysAgo": string;
+            "why": {
+                "ownership": {
+                    "title": string;
+                    "description": string;
+                };
+                "highPaced": {
+                    "title": string;
+                    "description": string;
+                };
+                "integrity": {
+                    "title": string;
+                    "description": string;
+                };
+                "people": {
+                    "title": string;
+                    "description": string;
+                };
+                "impact": {
+                    "title": string;
+                    "description": string;
+                };
+                "vision": {
+                    "title": string;
+                    "description": string;
+                };
+            };
+        };
+        "footer": {
+            "tagline": string;
+            "product": {
+                "title": string;
+                "agentBuilder": string;
+                "simulation": string;
+                "integrations": string;
+                "multiAgent": string;
+                "workflowApi": string;
+            };
+            "company": {
+                "title": string;
+                "signIn": string;
+                "about": string;
+                "contact": string;
+                "pricing": string;
+                "careers": string;
+                "docs": string;
+                "changelog": string;
+                "glossary": string;
+            };
+            "legal": {
+                "title": string;
+                "privacy": string;
+                "terms": string;
+                "cookies": string;
+            };
+            "newsletter": {
+                "title": string;
+                "placeholder": string;
+                "description": string;
+            };
+            "copyright": string;
         };
     };
     "organization": {
