@@ -1,6 +1,9 @@
 import type { ErrorComponentProps } from '@tanstack/react-router'
 
+import { useEffect } from 'react'
 import { ErrorComponent, Link, rootRouteId, useMatch, useRouter } from '@tanstack/react-router'
+
+import { captureException } from '@libs/monitoring/web'
 
 export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
   const router = useRouter()
@@ -9,7 +12,10 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
     select: state => state.id === rootRouteId
   })
 
-  console.error(error)
+  useEffect(() => {
+    console.error(error)
+    captureException(error, { scope: 'web-route-boundary' })
+  }, [error])
 
   return (
     <div className="min-w-0 flex-1 p-4 flex flex-col items-center justify-center gap-6">

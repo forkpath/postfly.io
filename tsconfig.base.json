@@ -28,6 +28,8 @@
       "@libs/analytics/*": ["libs/analytics/src/*"],
       "@libs/billing": ["libs/billing/src/index.ts"],
       "@libs/billing/*": ["libs/billing/src/*"],
+      "@libs/monitoring": ["libs/monitoring/src/index.ts"],
+      "@libs/monitoring/*": ["libs/monitoring/src/*"],
       "@libs/email": ["libs/email/src/index.ts"],
       "@libs/email/*": ["libs/email/src/*"],
       "@libs/i18n": ["libs/i18n/src/index.ts"],
