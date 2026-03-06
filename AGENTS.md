@@ -7,11 +7,15 @@ Central orientation for contributors working inside the neo Nx monorepo. Follow 
 - `apps/web` – Marketing Site (@tanstack/react-start)
 - `apps/desktop` – Desktop application (Electron)
 - `service/engine` - Api service (Nestjs)
-- `libs/pg-dao` – Postgresql Database model (Prisma).
+- `libs/pg-dao` – Postgresql Database model (Prisma)
 - `libs/mongo-dao` - MongoDB model (Mongoose)
 - `libs/auth` - Auth module for app and service (Better-auth)
+- `libs/common` - Shared types/utils
+- `libs/email` - Email module for app and service
+- `libs/i18n/src/translationns` - translation files for app and service
 - `libs/ui-shared/src/web` - react components and common styles (Tailwind v4 and Shadcn)
-- `libs/payload` - req & res payload validator for app and service (Zod)
+- `libs/payload/src/schemas` - req & res payload validator for app and service (Zod)
+- `libs/api-client/src/domains` - Api request based on payload validator (React-query)
 - `libs/studio` - page components for desktop and web
 
 ## Tooling & Commands
