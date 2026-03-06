@@ -9,6 +9,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 
 import { DefaultCatchBoundary } from '~/components/default-catch-boundary'
 import { NotFound } from '~/components/not-found'
+import { AnalyticsProvider } from '~/lib/providers/analytics'
 import { seo } from '~/utils/seo'
 
 import { config, I18nProvider } from '@libs/i18n'
@@ -80,10 +81,12 @@ export const Route = createRootRouteWithContext<{
 function RootComponent() {
   return (
     <I18nProvider locale={config.defaultLocale} defaultLocale={config.defaultLocale}>
-      <ThemeProvider>
-        <Outlet />
-        <Toaster />
-      </ThemeProvider>
+      <AnalyticsProvider>
+        <ThemeProvider>
+          <Outlet />
+          <Toaster />
+        </ThemeProvider>
+      </AnalyticsProvider>
     </I18nProvider>
   )
 }
