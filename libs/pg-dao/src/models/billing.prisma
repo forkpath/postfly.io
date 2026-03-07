@@ -1,0 +1,129 @@
+enum BillingReferenceType {
+  user
+  organization
+
+  @@schema("crm")
+}
+
+enum BillingProvider {
+  stripe
+  revenuecat
+  superwall
+
+  @@schema("crm")
+}
+
+enum BillingSubscriptionStatus {
+  trialing
+  active
+  past_due
+  unpaid
+  canceled
+  incomplete
+  paused
+
+  @@schema("crm")
+}
+
+enum BillingOrderStatus {
+  pending
+  succeeded
+  failed
+  refunded
+  canceled
+
+  @@schema("crm")
+}
+
+enum BillingInterval {
+  day
+  week
+  month
+  year
+
+  @@schema("crm")
+}
+
+model BillingCustomer {
+  id            String               @id @default(cuid())
+  referenceId   String               @map("reference_id")
+  referenceType BillingReferenceType @default(user) @map("reference_type")
+  provider      BillingProvider
+  externalId    String               @map("external_id")
+  email         String?
+  metadata      Json?
+  createdAt     DateTime             @default(now()) @map("created_at")
+  updatedAt     DateTime             @updatedAt @map("updated_at")
+  subscriptions BillingSubscription[]
+  orders        BillingOrder[]
+  webhookEvents BillingWebhookEvent[]
+
+  @@unique([externalId, provider])
+  @@index([referenceId, provider])
+  @@map("billing_customer")
+  @@schema("crm")
+}
+
+model BillingSubscription {
+  id                  String                    @id @default(cuid())
+  customerId          String                    @map("customer_id")
+  customer            BillingCustomer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  provider            BillingProvider
+  externalId          String                    @map("external_id")
+  planId              String                    @map("plan_id")
+  variantId           String                    @map("variant_id")
+  status              BillingSubscriptionStatus
+  interval            BillingInterval?
+  currency            String?
+  amount              Int?
+  cancelAtPeriodEnd   Boolean                   @default(false) @map("cancel_at_period_end")
+  currentPeriodStart  DateTime?                 @map("current_period_start")
+  currentPeriodEnd    DateTime?                 @map("current_period_end")
+  trialEndsAt         DateTime?                 @map("trial_ends_at")
+  metadata            Json?
+  createdAt           DateTime                  @default(now()) @map("created_at")
+  updatedAt           DateTime                  @updatedAt @map("updated_at")
+
+  @@unique([externalId, provider])
+  @@index([customerId, status])
+  @@map("billing_subscription")
+  @@schema("crm")
+}
+
+model BillingOrder {
+  id         String             @id @default(cuid())
+  customerId String             @map("customer_id")
+  customer   BillingCustomer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  provider   BillingProvider
+  externalId String             @map("external_id")
+  planId     String             @map("plan_id")
+  variantId  String             @map("variant_id")
+  status     BillingOrderStatus
+  currency   String?
+  amount     Int?
+  metadata   Json?
+  createdAt  DateTime           @default(now()) @map("created_at")
+  updatedAt  DateTime           @updatedAt @map("updated_at")
+
+  @@unique([externalId, provider])
+  @@index([customerId, status])
+  @@map("billing_order")
+  @@schema("crm")
+}
+
+model BillingWebhookEvent {
+  id         String          @id @default(cuid())
+  customerId String?         @map("customer_id")
+  customer   BillingCustomer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  provider   BillingProvider
+  externalId String?         @map("external_id")
+  eventType  String          @map("event_type")
+  payload    Json
+  processedAt DateTime?      @map("processed_at")
+  createdAt  DateTime        @default(now()) @map("created_at")
+
+  @@index([provider, eventType])
+  @@index([externalId])
+  @@map("billing_webhook_event")
+  @@schema("crm")
+}

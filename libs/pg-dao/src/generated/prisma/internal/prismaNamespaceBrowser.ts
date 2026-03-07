@@ -56,7 +56,11 @@ export const ModelName = {
   TwoFactor: 'TwoFactor',
   Organization: 'Organization',
   Member: 'Member',
-  Invitation: 'Invitation'
+  Invitation: 'Invitation',
+  BillingCustomer: 'BillingCustomer',
+  BillingSubscription: 'BillingSubscription',
+  BillingOrder: 'BillingOrder',
+  BillingWebhookEvent: 'BillingWebhookEvent'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -195,12 +199,94 @@ export const InvitationScalarFieldEnum = {
 
 export type InvitationScalarFieldEnum = (typeof InvitationScalarFieldEnum)[keyof typeof InvitationScalarFieldEnum]
 
+export const BillingCustomerScalarFieldEnum = {
+  id: 'id',
+  referenceId: 'referenceId',
+  referenceType: 'referenceType',
+  provider: 'provider',
+  externalId: 'externalId',
+  email: 'email',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingCustomerScalarFieldEnum =
+  (typeof BillingCustomerScalarFieldEnum)[keyof typeof BillingCustomerScalarFieldEnum]
+
+export const BillingSubscriptionScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  provider: 'provider',
+  externalId: 'externalId',
+  planId: 'planId',
+  variantId: 'variantId',
+  status: 'status',
+  interval: 'interval',
+  currency: 'currency',
+  amount: 'amount',
+  cancelAtPeriodEnd: 'cancelAtPeriodEnd',
+  currentPeriodStart: 'currentPeriodStart',
+  currentPeriodEnd: 'currentPeriodEnd',
+  trialEndsAt: 'trialEndsAt',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingSubscriptionScalarFieldEnum =
+  (typeof BillingSubscriptionScalarFieldEnum)[keyof typeof BillingSubscriptionScalarFieldEnum]
+
+export const BillingOrderScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  provider: 'provider',
+  externalId: 'externalId',
+  planId: 'planId',
+  variantId: 'variantId',
+  status: 'status',
+  currency: 'currency',
+  amount: 'amount',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingOrderScalarFieldEnum = (typeof BillingOrderScalarFieldEnum)[keyof typeof BillingOrderScalarFieldEnum]
+
+export const BillingWebhookEventScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  provider: 'provider',
+  externalId: 'externalId',
+  eventType: 'eventType',
+  payload: 'payload',
+  processedAt: 'processedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type BillingWebhookEventScalarFieldEnum =
+  (typeof BillingWebhookEventScalarFieldEnum)[keyof typeof BillingWebhookEventScalarFieldEnum]
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+export const NullableJsonNullValueInput = {
+  DbNull: 'DbNull',
+  JsonNull: 'JsonNull'
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+export const JsonNullValueInput = {
+  JsonNull: 'JsonNull'
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 export const QueryMode = {
   default: 'default',
@@ -215,3 +301,11 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+export const JsonNullValueFilter = {
+  DbNull: 'DbNull',
+  JsonNull: 'JsonNull',
+  AnyNull: 'AnyNull'
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]

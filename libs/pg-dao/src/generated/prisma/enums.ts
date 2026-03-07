@@ -8,5 +8,48 @@
  * 🟢 You can import this file directly.
  */
 
-// This file is empty because there are no enums in the schema.
-export {}
+export const BillingReferenceType = {
+  user: 'user',
+  organization: 'organization'
+} as const
+
+export type BillingReferenceType = (typeof BillingReferenceType)[keyof typeof BillingReferenceType]
+
+export const BillingProvider = {
+  stripe: 'stripe',
+  revenuecat: 'revenuecat',
+  superwall: 'superwall'
+} as const
+
+export type BillingProvider = (typeof BillingProvider)[keyof typeof BillingProvider]
+
+export const BillingSubscriptionStatus = {
+  trialing: 'trialing',
+  active: 'active',
+  past_due: 'past_due',
+  unpaid: 'unpaid',
+  canceled: 'canceled',
+  incomplete: 'incomplete',
+  paused: 'paused'
+} as const
+
+export type BillingSubscriptionStatus = (typeof BillingSubscriptionStatus)[keyof typeof BillingSubscriptionStatus]
+
+export const BillingOrderStatus = {
+  pending: 'pending',
+  succeeded: 'succeeded',
+  failed: 'failed',
+  refunded: 'refunded',
+  canceled: 'canceled'
+} as const
+
+export type BillingOrderStatus = (typeof BillingOrderStatus)[keyof typeof BillingOrderStatus]
+
+export const BillingInterval = {
+  day: 'day',
+  week: 'week',
+  month: 'month',
+  year: 'year'
+} as const
+
+export type BillingInterval = (typeof BillingInterval)[keyof typeof BillingInterval]

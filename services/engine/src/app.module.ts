@@ -16,6 +16,7 @@ import { AuthModule, CacheModule, I18nModule, LoggerModule, RedisModule, Throttl
 
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
+import { BillingModule } from './presentation/http/billing/billing.module'
 import { UserModule } from './presentation/http/user/user.module'
 
 @Module({
@@ -71,6 +72,7 @@ import { UserModule } from './presentation/http/user/user.module'
     CqrsModule,
 
     // 业务模块
+    BillingModule,
     UserModule
   ],
   controllers: [AppController],

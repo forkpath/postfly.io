@@ -31,4 +31,4 @@ export type { ApiClientProviderProps } from './lib/context'
 export type { MutationErrorContext, QueryClientOptions, QueryErrorContext } from './lib/query-client'
 
 // Domains
-export { authKeys, authMutations, orgKeys, userKeys } from './domains'
+export { authKeys, authMutations, billingKeys, billingMutations, billingQueries, orgKeys, userKeys } from './domains'

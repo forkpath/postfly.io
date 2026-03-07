@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core'
 import { NestExpressApplication } from '@nestjs/platform-express'
 
 import cookieParser from 'cookie-parser'
+import express from 'express'
 import helmet from 'helmet'
 
 import { ServerConfig } from '@libs/srv-core'
@@ -31,6 +32,10 @@ async function bootstrap() {
 
   const globalPrefix = 'api'
   app.setGlobalPrefix(globalPrefix)
+
+  app.use(`/${globalPrefix}/billing/webhook/stripe`, express.raw({ type: 'application/json' }))
+  app.use(express.json())
+  app.use(express.urlencoded({ extended: true }))
 
   const configService = app.get(ConfigService)
   const { enginePort, corsOrigins } = configService.get('server') as ServerConfig
