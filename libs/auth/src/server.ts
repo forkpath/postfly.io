@@ -12,6 +12,7 @@ import { prisma } from '@libs/pg-dao'
 
 import { env } from './env'
 import { getUrl } from './lib/utils'
+import { ac, roles } from './permissions'
 import { AuthProvider, SocialProvider, VerificationType } from './types'
 
 export const auth = betterAuth({
@@ -118,6 +119,11 @@ export const auth = betterAuth({
     anonymous(),
     admin(),
     organization({
+      ac,
+      roles,
+      dynamicAccessControl: {
+        enabled: true
+      },
       sendInvitationEmail: async ({ invitation, inviter, organization }, request) => {
         const url = getUrl({
           request

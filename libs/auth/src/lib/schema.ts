@@ -1,6 +1,6 @@
 import * as z from 'zod'
 
-import { MemberRole, UserRole } from '../types'
+import { UserRole } from '../types'
 
 const emailSchema = z.object({
   email: z.email().max(254)
@@ -71,11 +71,11 @@ const updateOrganizationSchema = z.object({
 
 const inviteMemberSchema = z.object({
   email: z.email().max(254),
-  role: z.enum(MemberRole)
+  role: z.string().min(1).max(64)
 })
 
 const updateMemberSchema = z.object({
-  role: z.enum(MemberRole).optional()
+  role: z.string().min(1).max(64).optional()
 })
 
 const banUserSchema = z.object({

@@ -120,6 +120,8 @@ model Organization {
   members     Member[]
   invitations Invitation[]
 
+  organizationroles OrganizationRole[]
+
   @@unique([slug])
   @@map("organization")
   @@schema("public")
@@ -155,5 +157,20 @@ model Invitation {
   @@index([organizationId])
   @@index([email])
   @@map("invitation")
+  @@schema("public")
+}
+
+model OrganizationRole {
+  id             String       @id
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role           String
+  permission     String
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime?    @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@index([role])
+  @@map("organization_role")
   @@schema("public")
 }

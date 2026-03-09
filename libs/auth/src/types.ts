@@ -240,3 +240,4 @@ export {
 }
 
 export type { User, Session, Invitation, Organization, ActiveOrganization, Member } from './server'
+export type { ResourceAction, Statements, RoleName, PermissionCheckParams } from './permissions'

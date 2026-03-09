@@ -17,6 +17,10 @@ interface SeedContext {
   passwordHash: string
 }
 
+interface SeededMember {
+  userId: string
+}
+
 const seedUser = async (
   { context, passwordHash }: SeedContext,
   { email, role = UserRole.USER }: { email: string; role?: string }
@@ -24,7 +28,6 @@ const seedUser = async (
   const name = generateName(email)
   const userId = context.generateId({ model: 'user' }).toString()
 
-  // 使用 upsert 来处理冲突
   const user = await prisma.user.upsert({
     where: { email },
     update: {
@@ -45,7 +48,6 @@ const seedUser = async (
     }
   })
 
-  // 检查是否已存在 credential account
   const existingAccount = await prisma.account.findFirst({
     where: {
       userId: user.id,
@@ -77,7 +79,6 @@ const seedOrganizationMember = async (
 
   if (!user) return null
 
-  // 检查是否已存在 member
   const existingMember = await prisma.member.findFirst({
     where: {
       userId: user.id,
@@ -121,7 +122,6 @@ const seedOrganizationInvitation = async (
 ) => {
   const email = getEmail(['org', 'invite', role])
 
-  // 检查是否已存在 invitation
   const existingInvitation = await prisma.invitation.findFirst({
     where: {
       organizationId,
@@ -156,7 +156,6 @@ const seedOrganization = async (seedCtx: SeedContext) => {
   const organizationId = seedCtx.context.generateId({ model: 'organization' }).toString()
   const organizationSlug = 'seed-organization'
 
-  // 使用 upsert 来处理冲突
   const organization = await prisma.organization.upsert({
     where: { slug: organizationSlug },
     update: {
@@ -172,23 +171,22 @@ const seedOrganization = async (seedCtx: SeedContext) => {
     }
   })
 
-  // Seed members for each role
+  const memberRoles = Object.values(MemberRole)
+
   const members = await Promise.all(
-    Object.values(MemberRole).map(role => seedOrganizationMember(seedCtx, { organizationId: organization.id, role }))
+    memberRoles.map(role => seedOrganizationMember(seedCtx, { organizationId: organization.id, role }))
   )
 
-  // Seed invitations (exclude OWNER role)
+  const invitationRoles = memberRoles.filter(role => role !== MemberRole.OWNER)
   await Promise.all(
-    members.flatMap(member =>
-      Object.values(MemberRole)
-        .filter(role => role !== MemberRole.OWNER)
-        .map(role =>
-          seedOrganizationInvitation(seedCtx, {
-            organizationId: organization.id,
-            role,
-            inviterId: member?.userId ?? ''
-          })
-        )
+    members.flatMap((member: SeededMember | null) =>
+      invitationRoles.map(role =>
+        seedOrganizationInvitation(seedCtx, {
+          organizationId: organization.id,
+          role,
+          inviterId: member?.userId ?? ''
+        })
+      )
     )
   )
 
@@ -199,25 +197,24 @@ const seedUsers = async (seedCtx: SeedContext) =>
   Promise.all(Object.values(UserRole).map(role => seedUser(seedCtx, { email: getEmail(role), role })))
 
 async function main() {
-  console.log('🌱 Seeding auth data...')
+  console.log('Seeding auth data...')
 
-  // 初始化 better-auth 上下文（在 async 函数内部使用 await）
   const context = await auth.$context
   const passwordHash = await context.password.hash(env.SEED_PASSWORD)
   const seedCtx: SeedContext = { context, passwordHash }
 
   await seedUsers(seedCtx)
-  console.log('✅ Users seeded')
+  console.log('Users seeded')
 
   await seedOrganization(seedCtx)
-  console.log('✅ Organization seeded')
+  console.log('Organization seeded')
 
-  console.log('🎉 Auth data seeded successfully!')
+  console.log('Auth data seeded successfully!')
 }
 
 main()
   .catch(error => {
-    console.error('❌ Seed failed:', error)
+    console.error('Seed failed:', error)
     process.exit(1)
   })
   .finally(async () => {
