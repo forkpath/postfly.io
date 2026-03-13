@@ -32,7 +32,8 @@
     "add:web-ui": "pnpx shadcn@latest add -p libs/ui-shared/src/web/components",
     "add:mobile-ui": "pnpx shadcn@latest add -p libs/ui-shared/src/mobile/components",
     "update": "nx migrate latest",
-    "postinstall": "lefthook install"
+    "postinstall": "lefthook install",
+    "sync:skills": "./scripts/sync-skills.sh"
   },
   "private": true,
   "dependencies": {
@@ -99,6 +100,7 @@
     "culori": "^4.0.2",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.19",
+    "dotenv-expand": "^12.0.3",
     "electron-squirrel-startup": "^1.0.1",
     "envin": "^1.1.13",
     "helmet": "^8.1.0",
