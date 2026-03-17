@@ -63,6 +63,11 @@ export type Member = Prisma.MemberModel
  */
 export type Invitation = Prisma.InvitationModel
 /**
+ * Model OrganizationRole
+ *
+ */
+export type OrganizationRole = Prisma.OrganizationRoleModel
+/**
  * Model BillingCustomer
  *
  */

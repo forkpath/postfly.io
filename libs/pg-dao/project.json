@@ -54,6 +54,12 @@
         "cwd": "libs/pg-dao"
       }
     },
+    "reset": {
+      "command": "prisma migrate reset --schema ./src --force",
+      "options": {
+        "cwd": "libs/pg-dao"
+      }
+    },
     "deploy": {
       "command": "prisma migrate deploy --schema ./src",
       "options": {

@@ -11,6 +11,7 @@
     "db:validate": "nx run pg-dao:validate",
     "db:generate": "nx run pg-dao:generate",
     "db:migrate": "nx run pg-dao:migrate -- --name",
+    "db:reset": "nx run pg-dao:reset",
     "format:check": "nx format:check",
     "format:write": "nx format:write",
     "ui:add": "pnpx shadcn@latest add",

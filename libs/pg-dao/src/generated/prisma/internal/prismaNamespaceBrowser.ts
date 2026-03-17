@@ -57,6 +57,7 @@ export const ModelName = {
   Organization: 'Organization',
   Member: 'Member',
   Invitation: 'Invitation',
+  OrganizationRole: 'OrganizationRole',
   BillingCustomer: 'BillingCustomer',
   BillingSubscription: 'BillingSubscription',
   BillingOrder: 'BillingOrder',
@@ -198,6 +199,18 @@ export const InvitationScalarFieldEnum = {
 } as const
 
 export type InvitationScalarFieldEnum = (typeof InvitationScalarFieldEnum)[keyof typeof InvitationScalarFieldEnum]
+
+export const OrganizationRoleScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  role: 'role',
+  permission: 'permission',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrganizationRoleScalarFieldEnum =
+  (typeof OrganizationRoleScalarFieldEnum)[keyof typeof OrganizationRoleScalarFieldEnum]
 
 export const BillingCustomerScalarFieldEnum = {
   id: 'id',

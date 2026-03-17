@@ -372,6 +372,7 @@ export const ModelName = {
   Organization: 'Organization',
   Member: 'Member',
   Invitation: 'Invitation',
+  OrganizationRole: 'OrganizationRole',
   BillingCustomer: 'BillingCustomer',
   BillingSubscription: 'BillingSubscription',
   BillingOrder: 'BillingOrder',
@@ -406,6 +407,7 @@ export type TypeMap<
       | 'organization'
       | 'member'
       | 'invitation'
+      | 'organizationRole'
       | 'billingCustomer'
       | 'billingSubscription'
       | 'billingOrder'
@@ -1079,6 +1081,80 @@ export type TypeMap<
         }
       }
     }
+    OrganizationRole: {
+      payload: Prisma.$OrganizationRolePayload<ExtArgs>
+      fields: Prisma.OrganizationRoleFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OrganizationRoleFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrganizationRolePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OrganizationRoleFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrganizationRolePayload>
+        }
+        findFirst: {
+          args: Prisma.OrganizationRoleFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrganizationRolePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OrganizationRoleFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrganizationRolePayload>
+        }
+        findMany: {
+          args: Prisma.OrganizationRoleFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrganizationRolePayload>[]
+        }
+        create: {
+          args: Prisma.OrganizationRoleCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrganizationRolePayload>
+        }
+        createMany: {
+          args: Prisma.OrganizationRoleCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OrganizationRoleCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrganizationRolePayload>[]
+        }
+        delete: {
+          args: Prisma.OrganizationRoleDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrganizationRolePayload>
+        }
+        update: {
+          args: Prisma.OrganizationRoleUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrganizationRolePayload>
+        }
+        deleteMany: {
+          args: Prisma.OrganizationRoleDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OrganizationRoleUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OrganizationRoleUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrganizationRolePayload>[]
+        }
+        upsert: {
+          args: Prisma.OrganizationRoleUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrganizationRolePayload>
+        }
+        aggregate: {
+          args: Prisma.OrganizationRoleAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOrganizationRole>
+        }
+        groupBy: {
+          args: Prisma.OrganizationRoleGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrganizationRoleGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OrganizationRoleCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrganizationRoleCountAggregateOutputType> | number
+        }
+      }
+    }
     BillingCustomer: {
       payload: Prisma.$BillingCustomerPayload<ExtArgs>
       fields: Prisma.BillingCustomerFieldRefs
@@ -1534,6 +1610,18 @@ export const InvitationScalarFieldEnum = {
 
 export type InvitationScalarFieldEnum = (typeof InvitationScalarFieldEnum)[keyof typeof InvitationScalarFieldEnum]
 
+export const OrganizationRoleScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  role: 'role',
+  permission: 'permission',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrganizationRoleScalarFieldEnum =
+  (typeof OrganizationRoleScalarFieldEnum)[keyof typeof OrganizationRoleScalarFieldEnum]
+
 export const BillingCustomerScalarFieldEnum = {
   id: 'id',
   referenceId: 'referenceId',
@@ -1880,6 +1968,7 @@ export type GlobalOmitConfig = {
   organization?: Prisma.OrganizationOmit
   member?: Prisma.MemberOmit
   invitation?: Prisma.InvitationOmit
+  organizationRole?: Prisma.OrganizationRoleOmit
   billingCustomer?: Prisma.BillingCustomerOmit
   billingSubscription?: Prisma.BillingSubscriptionOmit
   billingOrder?: Prisma.BillingOrderOmit
