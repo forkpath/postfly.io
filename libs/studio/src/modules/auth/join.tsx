@@ -19,7 +19,7 @@ export const JoinPage = ({ redirectTo, invitationId, email }: JoinPageProps) => 
   const { t } = useTranslation('auth')
 
   // All providers are enabled by default
-  const oAuthProviders = [SocialProvider.APPLE, SocialProvider.GOOGLE, SocialProvider.GITHUB]
+  const oAuthProviders = [SocialProvider.GOOGLE, SocialProvider.GITHUB]
 
   return (
     <>

@@ -15,6 +15,7 @@ export default defineConfig(() => ({
   server: {
     port: parseInt(process.env.WEB_PORT as string, 10) || 3000,
     host: 'localhost',
+    allowedHosts: ['localhost', 'postfly.io'],
     proxy: {
       '/api': {
         target: 'http://localhost:8000',

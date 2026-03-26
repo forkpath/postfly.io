@@ -8,7 +8,6 @@ import * as z from 'zod'
 type AuthMobileClientOptions = Parameters<typeof expoClient>[0]
 
 const SocialProvider = {
-  APPLE: 'apple',
   GOOGLE: 'google',
   GITHUB: 'github'
 } as const

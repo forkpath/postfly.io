@@ -17,6 +17,7 @@ import { AuthProvider, SocialProvider, VerificationType } from './types'
 
 export const auth = betterAuth({
   appName: 'Ray',
+  baseURL: env.BETTER_AUTH_URL || undefined,
   basePath: '/api/auth',
   session: {
     cookieCache: {
@@ -63,8 +64,7 @@ export const auth = betterAuth({
   trustedOrigins: [
     'chrome-extension://',
     'ray://',
-    /* Needed only for Apple ID authentication */
-    'https://appleid.apple.com',
+    ...(env.BETTER_AUTH_URL ? [env.BETTER_AUTH_URL.toString()] : []),
     ...(env.NODE_ENV === NodeEnv.DEVELOPMENT ? ['http://localhost*', 'https://localhost*'] : [])
   ],
   emailAndPassword: {
@@ -158,11 +158,6 @@ export const auth = betterAuth({
     expo()
   ],
   socialProviders: {
-    [SocialProvider.APPLE]: {
-      clientId: env.APPLE_CLIENT_ID,
-      clientSecret: env.APPLE_CLIENT_SECRET,
-      appBundleIdentifier: env.APPLE_APP_BUNDLE_IDENTIFIER
-    },
     [SocialProvider.GOOGLE]: {
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET

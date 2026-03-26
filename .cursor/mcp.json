@@ -9,17 +9,13 @@
       "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
     },
     "chrome-devtools": {
-      "command": "npx chrome-devtools-mcp@latest",
-      "args": []
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest", "--channel", "stable", "--autoConnect"]
     },
     "prisma": {
       "command": "npx",
+      "env": {},
       "args": ["-y", "prisma", "mcp"]
-    },
-    "nx-mcp": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["nx", "mcp"]
     }
   }
 }

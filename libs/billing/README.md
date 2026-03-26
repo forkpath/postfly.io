@@ -1,6 +1,6 @@
 # `@libs/billing`
 
-`ray` 的统一计费域库，参考 `core/packages/billing` 迁移而来，当前阶段包含：
+`ray` 的统一计费域库，当前阶段包含：
 
 - `shared`：套餐配置、类型、价格工具、Prisma 持久化 helper
 - `web`：Stripe Checkout / Billing Portal / Webhook
@@ -46,7 +46,7 @@ EXPO_PUBLIC_SUPERWALL_PLACEMENT_PREMIUM=premium
 ## Web 使用方式
 
 ```ts
-import { createStripeCheckoutSession, createStripeBillingPortalSession } from '@libs/billing/web'
+import { createStripeBillingPortalSession, createStripeCheckoutSession } from '@libs/billing/web'
 
 const checkout = await createStripeCheckoutSession({
   referenceId: user.id,

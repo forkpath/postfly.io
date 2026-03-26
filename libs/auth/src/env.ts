@@ -9,10 +9,8 @@ export const preset = {
   id: 'auth',
   server: {
     BETTER_AUTH_SECRET: z.string(),
+    BETTER_AUTH_URL: z.url().optional().default(''),
 
-    APPLE_CLIENT_ID: z.string().optional().default(''),
-    APPLE_CLIENT_SECRET: z.string().optional().default(''),
-    APPLE_APP_BUNDLE_IDENTIFIER: z.string().optional().default(''),
     GOOGLE_CLIENT_ID: z.string().optional().default(''),
     GOOGLE_CLIENT_SECRET: z.string().optional().default(''),
     GITHUB_CLIENT_ID: z.string().optional().default(''),

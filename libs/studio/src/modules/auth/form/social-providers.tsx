@@ -19,8 +19,7 @@ interface SocialProvidersProps {
 
 export const SocialIcons: Record<SocialProviderType, Icon> = {
   github: Icons.Github,
-  google: Icons.Google,
-  apple: Icons.Apple
+  google: Icons.Google
 }
 
 const SocialProvider = ({

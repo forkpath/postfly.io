@@ -55,7 +55,7 @@ const Login = memo<LoginProps>(({ redirectTo, invitationId, email, onTwoFactorRe
   const { t } = useTranslation('auth')
 
   // All providers are enabled by default
-  const oAuthProviders = [SocialProvider.APPLE, SocialProvider.GOOGLE, SocialProvider.GITHUB]
+  const oAuthProviders = [SocialProvider.GOOGLE, SocialProvider.GITHUB]
   const options = [AuthProvider.PASSWORD, AuthProvider.MAGIC_LINK].filter(opt =>
     LOGIN_OPTIONS.includes(opt as LoginOption)
   ) as LoginOption[]

@@ -14,7 +14,7 @@
 
 ## 功能特性
 
-- ✅ 多种认证方式：密码、Magic Link、Passkey、OAuth（Apple/Google/GitHub）
+- ✅ 多种认证方式：密码、Magic Link、Passkey、OAuth（Google/GitHub）
 - ✅ 组织管理：创建组织、邀请成员、角色分配
 - ✅ 动态访问控制：运行时创建/修改角色和权限（dynamicAccessControl）
 - ✅ 基于资源的权限模型：CRUD + 工作区能力（`crm` / `organization`）
