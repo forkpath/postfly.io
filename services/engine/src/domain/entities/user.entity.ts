@@ -76,7 +76,7 @@ export interface UserListParams {
  * 分页结果
  */
 export interface PaginatedResult<T> {
-  readonly data: T[]
+  readonly list: T[]
   readonly total: number
   readonly page: number
   readonly limit: number

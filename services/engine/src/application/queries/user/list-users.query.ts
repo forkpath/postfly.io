@@ -23,6 +23,13 @@ export class ListUsersHandler implements IQueryHandler<ListUsersQuery, Paginated
   ) {}
 
   async execute(query: ListUsersQuery): Promise<PaginatedUsersResponse> {
-    return this.userRepository.findMany(query.params)
+    const r = await this.userRepository.findMany(query.params)
+    return {
+      list: r.list,
+      total: r.total,
+      page: r.page,
+      limit: r.limit,
+      totalPages: r.totalPages
+    }
   }
 }

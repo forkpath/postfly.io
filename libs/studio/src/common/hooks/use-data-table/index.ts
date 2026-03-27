@@ -9,7 +9,7 @@ import { useSearchParamsDataTable } from './search-params'
 
 export function useDataTable<
   TData,
-  TQueryFnData extends { data?: TData[]; total?: number },
+  TQueryFnData extends { list?: TData[]; total?: number },
   TQueryKey extends QueryKey
 >(
   props: UseLocalDataTableProps<TData, TQueryFnData, TQueryKey>
@@ -23,7 +23,7 @@ export function useDataTable<TData>(props: UseSearchParamsDataTableProps<TData>)
 
 export function useDataTable<
   TData,
-  TQueryFnData extends { data?: TData[]; total?: number },
+  TQueryFnData extends { list?: TData[]; total?: number },
   TQueryKey extends QueryKey
 >(props: UseLocalDataTableProps<TData, TQueryFnData, TQueryKey> | UseSearchParamsDataTableProps<TData>) {
   if (props.persistance === 'local') {

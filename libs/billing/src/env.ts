@@ -3,7 +3,7 @@ import type { Preset } from 'envin/types'
 import { defineEnv } from 'envin'
 import * as z from 'zod'
 
-import { BillingProvider, BillingReferenceType } from './lib/types'
+import { BillingProvider } from './lib/types'
 
 function getEnvVar(key: string): string | undefined {
   if (typeof process !== 'undefined' && process.env) {
@@ -22,10 +22,6 @@ function getEnvVar(key: string): string | undefined {
   return undefined
 }
 
-const referenceTypeSchema = z
-  .enum([BillingReferenceType.USER, BillingReferenceType.ORGANIZATION] as const)
-  .default(BillingReferenceType.USER)
-
 const mobileProviderSchema = z
   .enum([BillingProvider.REVENUECAT, BillingProvider.SUPERWALL] as const)
   .default(BillingProvider.REVENUECAT)
@@ -33,7 +29,6 @@ const mobileProviderSchema = z
 export const serverPreset = {
   id: 'billing-server',
   server: {
-    BILLING_REFERENCE_TYPE: referenceTypeSchema,
     STRIPE_SECRET_KEY: z.string().optional(),
     STRIPE_WEBHOOK_SECRET: z.string().optional()
   }
@@ -69,7 +64,6 @@ export const mobilePreset = {
 export const serverEnv = defineEnv({
   ...serverPreset,
   env: {
-    BILLING_REFERENCE_TYPE: getEnvVar('BILLING_REFERENCE_TYPE'),
     STRIPE_SECRET_KEY: getEnvVar('STRIPE_SECRET_KEY'),
     STRIPE_WEBHOOK_SECRET: getEnvVar('STRIPE_WEBHOOK_SECRET')
   }
@@ -78,7 +72,6 @@ export const serverEnv = defineEnv({
 export const webEnv = defineEnv({
   ...webPreset,
   env: {
-    BILLING_REFERENCE_TYPE: getEnvVar('BILLING_REFERENCE_TYPE'),
     STRIPE_SECRET_KEY: getEnvVar('STRIPE_SECRET_KEY'),
     STRIPE_WEBHOOK_SECRET: getEnvVar('STRIPE_WEBHOOK_SECRET'),
     VITE_STRIPE_PUBLISHABLE_KEY: getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY'),

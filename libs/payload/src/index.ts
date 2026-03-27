@@ -1,5 +1,5 @@
-// 接口定义
 export * from './interfaces/base.interface'
 
-// schemas
-export * from './schemas/auth.schema'
+export * from './schemas/auth'
+export * from './schemas/shared'
+export * from './schemas/admin'

@@ -8,7 +8,7 @@ const USER_PREFIX = '/user'
 const WORKSPACE_PREFIX = '/workspace'
 const LEGAL_PREFIX = '/legal'
 
-const API_PREFIX = '/api'
+const API_PREFIX = '/api/v1'
 
 const pathsConfig = {
   index: '/',
@@ -48,7 +48,7 @@ const pathsConfig = {
     },
     organizations: {
       index: `${ADMIN_PREFIX}/organizations`,
-      organization: (slug: string) => `${ADMIN_PREFIX}/organizations/${slug}`
+      organization: (id: string) => `${ADMIN_PREFIX}/organizations/${id}`
     },
     customers: {
       index: `${ADMIN_PREFIX}/customers`,

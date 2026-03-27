@@ -1,9 +1,21 @@
 import { createFileRoute } from '@tanstack/react-router'
 
+import { z } from 'zod'
+
 import { useTranslation } from '@libs/i18n'
-import { PageHeader, PageHeaderDescription, PageHeaderTitle } from '@libs/studio'
+import { OrganizationsDataTable, PageHeader, PageHeaderDescription, PageHeaderTitle } from '@libs/studio'
+
+const searchSchema = z.object({
+  page: z.coerce.number().int().default(1).catch(1),
+  perPage: z.coerce.number().int().default(10).catch(10),
+  sort: z.string().optional().catch(undefined),
+  q: z.string().optional().catch(undefined),
+  createdAt: z.string().optional().catch(undefined),
+  members: z.string().optional().catch(undefined)
+})
 
 export const Route = createFileRoute('/_app/admin/organizations/')({
+  validateSearch: searchSchema,
   component: OrganizationsPage
 })
 
@@ -19,7 +31,7 @@ function OrganizationsPage() {
         </div>
       </PageHeader>
 
-      <div className="text-muted-foreground">Organizations DataTable - Coming Soon</div>
+      <OrganizationsDataTable />
     </div>
   )
 }

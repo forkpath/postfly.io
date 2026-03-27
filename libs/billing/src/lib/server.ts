@@ -2,47 +2,25 @@ import type {
   BillingCustomerRecord,
   BillingOrderRecord,
   BillingOrderStatus,
-  BillingReferenceType as BillingReferenceTypeValue,
   BillingSubscriptionRecord,
   BillingSubscriptionStatus
 } from './types'
-import type { Prisma } from '@libs/pg-dao/generated/prisma/client'
 
 import { prisma } from '@libs/pg-dao'
-
-import { BillingProvider, BillingReferenceType } from './types'
-
-function toRecord<T>(value: unknown): T | null {
-  if (!value || typeof value !== 'object') {
-    return null
-  }
-
-  return value as T
-}
-
-function toJsonInput(value?: Record<string, unknown>) {
-  return value as Prisma.InputJsonValue | undefined
-}
 
 function mapCustomer(input: {
   id: string
   referenceId: string
-  referenceType: string
   provider: string
   externalId: string
-  email: string | null
-  metadata: unknown
   createdAt: Date
   updatedAt: Date
 }): BillingCustomerRecord {
   return {
     id: input.id,
     referenceId: input.referenceId,
-    referenceType: input.referenceType as BillingReferenceTypeValue,
-    provider: input.provider as BillingProvider,
+    provider: input.provider,
     externalId: input.externalId,
-    email: input.email,
-    metadata: toRecord<Record<string, unknown>>(input.metadata),
     createdAt: input.createdAt,
     updatedAt: input.updatedAt
   }
@@ -51,38 +29,28 @@ function mapCustomer(input: {
 function mapSubscription(input: {
   id: string
   customerId: string
-  provider: string
   externalId: string
-  planId: string
   variantId: string
   status: string
-  interval: string | null
-  currency: string | null
-  amount: number | null
-  cancelAtPeriodEnd: boolean
-  currentPeriodStart: Date | null
-  currentPeriodEnd: Date | null
+  store: string
+  periodStartsAt: Date
+  periodEndsAt: Date
+  trialStartsAt: Date | null
   trialEndsAt: Date | null
-  metadata: unknown
   createdAt: Date
   updatedAt: Date
 }): BillingSubscriptionRecord {
   return {
     id: input.id,
     customerId: input.customerId,
-    provider: input.provider as BillingProvider,
     externalId: input.externalId,
-    planId: input.planId,
     variantId: input.variantId,
     status: input.status as BillingSubscriptionStatus,
-    interval: input.interval as BillingSubscriptionRecord['interval'],
-    currency: input.currency,
-    amount: input.amount,
-    cancelAtPeriodEnd: input.cancelAtPeriodEnd,
-    currentPeriodStart: input.currentPeriodStart,
-    currentPeriodEnd: input.currentPeriodEnd,
+    store: input.store,
+    periodStartsAt: input.periodStartsAt,
+    periodEndsAt: input.periodEndsAt,
+    trialStartsAt: input.trialStartsAt,
     trialEndsAt: input.trialEndsAt,
-    metadata: toRecord<Record<string, unknown>>(input.metadata),
     createdAt: input.createdAt,
     updatedAt: input.updatedAt
   }
@@ -91,35 +59,27 @@ function mapSubscription(input: {
 function mapOrder(input: {
   id: string
   customerId: string
-  provider: string
   externalId: string
-  planId: string
   variantId: string
   status: string
-  currency: string | null
-  amount: number | null
-  metadata: unknown
+  store: string
   createdAt: Date
   updatedAt: Date
 }): BillingOrderRecord {
   return {
     id: input.id,
     customerId: input.customerId,
-    provider: input.provider as BillingProvider,
     externalId: input.externalId,
-    planId: input.planId,
     variantId: input.variantId,
     status: input.status as BillingOrderStatus,
-    currency: input.currency,
-    amount: input.amount,
-    metadata: toRecord<Record<string, unknown>>(input.metadata),
+    store: input.store,
     createdAt: input.createdAt,
     updatedAt: input.updatedAt
   }
 }
 
-export async function getBillingCustomersByReferenceId(referenceId: string, provider?: BillingProvider) {
-  const customers = await prisma.billingCustomer.findMany({
+export async function getBillingCustomersByReferenceId(referenceId: string, provider?: string) {
+  const customers = await prisma.customer.findMany({
     where: {
       referenceId,
       ...(provider ? { provider } : {})
@@ -132,8 +92,8 @@ export async function getBillingCustomersByReferenceId(referenceId: string, prov
   return customers.map(mapCustomer)
 }
 
-export async function getBillingCustomerByExternalId(externalId: string, provider: BillingProvider) {
-  const customer = await prisma.billingCustomer.findUnique({
+export async function getBillingCustomerByExternalId(externalId: string, provider: string) {
+  const customer = await prisma.customer.findUnique({
     where: {
       externalId_provider: {
         externalId,
@@ -145,15 +105,8 @@ export async function getBillingCustomerByExternalId(externalId: string, provide
   return customer ? mapCustomer(customer) : null
 }
 
-export async function upsertBillingCustomer(input: {
-  referenceId: string
-  referenceType?: BillingReferenceTypeValue
-  provider: BillingProvider
-  externalId: string
-  email?: string | null
-  metadata?: Record<string, unknown>
-}) {
-  const customer = await prisma.billingCustomer.upsert({
+export async function upsertBillingCustomer(input: { referenceId: string; provider: string; externalId: string }) {
+  const customer = await prisma.customer.upsert({
     where: {
       externalId_provider: {
         externalId: input.externalId,
@@ -162,17 +115,11 @@ export async function upsertBillingCustomer(input: {
     },
     create: {
       referenceId: input.referenceId,
-      referenceType: input.referenceType ?? BillingReferenceType.USER,
       provider: input.provider,
-      externalId: input.externalId,
-      email: input.email ?? null,
-      metadata: toJsonInput(input.metadata)
+      externalId: input.externalId
     },
     update: {
-      referenceId: input.referenceId,
-      referenceType: input.referenceType ?? BillingReferenceType.USER,
-      email: input.email ?? null,
-      metadata: toJsonInput(input.metadata)
+      referenceId: input.referenceId
     }
   })
 
@@ -181,55 +128,40 @@ export async function upsertBillingCustomer(input: {
 
 export async function upsertBillingSubscription(input: {
   customerId: string
-  provider: BillingProvider
   externalId: string
-  planId: string
   variantId: string
   status: BillingSubscriptionStatus
-  interval?: BillingSubscriptionRecord['interval']
-  currency?: string | null
-  amount?: number | null
-  cancelAtPeriodEnd?: boolean
-  currentPeriodStart?: Date | null
-  currentPeriodEnd?: Date | null
+  store: string
+  periodStartsAt: Date
+  periodEndsAt: Date
+  trialStartsAt?: Date | null
   trialEndsAt?: Date | null
-  metadata?: Record<string, unknown>
 }) {
-  const subscription = await prisma.billingSubscription.upsert({
+  const subscription = await prisma.subscription.upsert({
     where: {
-      externalId_provider: {
+      externalId_store: {
         externalId: input.externalId,
-        provider: input.provider
+        store: input.store
       }
     },
     create: {
       customerId: input.customerId,
-      provider: input.provider,
       externalId: input.externalId,
-      planId: input.planId,
       variantId: input.variantId,
       status: input.status,
-      interval: input.interval ?? null,
-      currency: input.currency ?? null,
-      amount: input.amount ?? null,
-      cancelAtPeriodEnd: input.cancelAtPeriodEnd ?? false,
-      currentPeriodStart: input.currentPeriodStart ?? null,
-      currentPeriodEnd: input.currentPeriodEnd ?? null,
-      trialEndsAt: input.trialEndsAt ?? null,
-      metadata: toJsonInput(input.metadata)
+      store: input.store,
+      periodStartsAt: input.periodStartsAt,
+      periodEndsAt: input.periodEndsAt,
+      trialStartsAt: input.trialStartsAt ?? null,
+      trialEndsAt: input.trialEndsAt ?? null
     },
     update: {
-      planId: input.planId,
       variantId: input.variantId,
       status: input.status,
-      interval: input.interval ?? null,
-      currency: input.currency ?? null,
-      amount: input.amount ?? null,
-      cancelAtPeriodEnd: input.cancelAtPeriodEnd ?? false,
-      currentPeriodStart: input.currentPeriodStart ?? null,
-      currentPeriodEnd: input.currentPeriodEnd ?? null,
-      trialEndsAt: input.trialEndsAt ?? null,
-      metadata: toJsonInput(input.metadata)
+      periodStartsAt: input.periodStartsAt,
+      periodEndsAt: input.periodEndsAt,
+      trialStartsAt: input.trialStartsAt ?? null,
+      trialEndsAt: input.trialEndsAt ?? null
     }
   })
 
@@ -238,68 +170,60 @@ export async function upsertBillingSubscription(input: {
 
 export async function upsertBillingOrder(input: {
   customerId: string
-  provider: BillingProvider
   externalId: string
-  planId: string
   variantId: string
   status: BillingOrderStatus
-  currency?: string | null
-  amount?: number | null
-  metadata?: Record<string, unknown>
+  store: string
 }) {
-  const order = await prisma.billingOrder.upsert({
+  const order = await prisma.order.upsert({
     where: {
-      externalId_provider: {
+      externalId_store: {
         externalId: input.externalId,
-        provider: input.provider
+        store: input.store
       }
     },
     create: {
       customerId: input.customerId,
-      provider: input.provider,
       externalId: input.externalId,
-      planId: input.planId,
       variantId: input.variantId,
       status: input.status,
-      currency: input.currency ?? null,
-      amount: input.amount ?? null,
-      metadata: toJsonInput(input.metadata)
+      store: input.store
     },
     update: {
-      planId: input.planId,
       variantId: input.variantId,
-      status: input.status,
-      currency: input.currency ?? null,
-      amount: input.amount ?? null,
-      metadata: toJsonInput(input.metadata)
+      status: input.status
     }
   })
 
   return mapOrder(order)
 }
 
-export async function saveBillingWebhookEvent(input: {
-  customerId?: string
-  provider: BillingProvider
-  externalId?: string
-  eventType: string
-  payload: Record<string, unknown>
-  processedAt?: Date
+export async function findWebhookEvent(eventId: string, provider: string) {
+  return prisma.webhookEvent.findUnique({
+    where: { eventId_provider: { eventId, provider } }
+  })
+}
+
+export async function createWebhookEvent(input: {
+  eventId: string
+  provider: string
+  type: string
+  status: 'processed' | 'failed' | 'skipped'
+  error?: string
 }) {
-  return prisma.billingWebhookEvent.create({
+  return prisma.webhookEvent.create({
     data: {
-      customerId: input.customerId,
+      eventId: input.eventId,
       provider: input.provider,
-      externalId: input.externalId,
-      eventType: input.eventType,
-      payload: input.payload as Prisma.InputJsonValue,
-      processedAt: input.processedAt ?? null
+      type: input.type,
+      status: input.status,
+      error: input.error ?? null
     }
   })
 }
 
 export async function getBillingSummaryByReferenceId(referenceId: string) {
-  const customers = await prisma.billingCustomer.findMany({
+  const customers = await prisma.customer.findMany({
     where: {
       referenceId
     },

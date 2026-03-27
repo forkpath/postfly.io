@@ -17,6 +17,8 @@ import { AuthModule, CacheModule, I18nModule, LoggerModule, RedisModule, Throttl
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { BillingModule } from './presentation/http/billing/billing.module'
+import { CustomerModule } from './presentation/http/customer/customer.module'
+import { OrganizationModule } from './presentation/http/organization/organization.module'
 import { UserModule } from './presentation/http/user/user.module'
 
 @Module({
@@ -73,7 +75,9 @@ import { UserModule } from './presentation/http/user/user.module'
 
     // 业务模块
     BillingModule,
-    UserModule
+    UserModule,
+    OrganizationModule,
+    CustomerModule
   ],
   controllers: [AppController],
   providers: [

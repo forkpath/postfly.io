@@ -1,0 +1,30 @@
+import type { IQueryHandler } from '@nestjs/cqrs'
+import type { IOrganizationRepository } from '../../../domain/repositories/organization.repository.interface'
+import type { GetOrganizationsReq, GetOrganizationsRes } from '@libs/payload'
+
+import { Inject } from '@nestjs/common'
+import { QueryHandler } from '@nestjs/cqrs'
+
+import { ORGANIZATION_REPOSITORY } from '../../../domain/repositories/organization.repository.interface'
+import { OrganizationMapper } from '../../mappers/organization.mapper'
+
+export class ListOrganizationsQuery {
+  constructor(public readonly params: GetOrganizationsReq) {}
+}
+
+@QueryHandler(ListOrganizationsQuery)
+export class ListOrganizationsHandler implements IQueryHandler<ListOrganizationsQuery, GetOrganizationsRes> {
+  constructor(
+    @Inject(ORGANIZATION_REPOSITORY)
+    private readonly orgRepository: IOrganizationRepository
+  ) {}
+
+  async execute(query: ListOrganizationsQuery): Promise<GetOrganizationsRes> {
+    const result = await this.orgRepository.findAll(query.params)
+    return {
+      list: result.list.map(OrganizationMapper.toOrganizationListItem),
+      total: result.total,
+      max: result.max
+    }
+  }
+}

@@ -57,7 +57,6 @@ export const PasswordLoginForm = memo<PasswordLoginFormProps>(
         if ('twoFactorRedirect' in ctx) {
           return onTwoFactorRedirect?.()
         }
-        // 使用硬导航确保页面完全刷新，session 状态正确更新
         window.location.href = redirectTo
       }
     })

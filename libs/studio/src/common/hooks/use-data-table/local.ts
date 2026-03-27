@@ -28,7 +28,7 @@ import { DEBOUNCE_MS, getFiltersFromColumnFilters } from './common'
 
 export interface UseLocalDataTableProps<
   TData,
-  TQueryFnData extends { data?: TData[]; total?: number },
+  TQueryFnData extends { list?: TData[]; total?: number },
   TQueryKey extends QueryKey
 > extends CommonProps,
     Omit<TableOptions<TData>, 'data' | 'state' | 'getCoreRowModel'> {
@@ -43,7 +43,7 @@ export interface UseLocalDataTableProps<
 
 export function useLocalDataTable<
   TData,
-  TQueryFnData extends { data?: TData[]; total?: number },
+  TQueryFnData extends { list?: TData[]; total?: number },
   TQueryKey extends QueryKey
 >(props: UseLocalDataTableProps<TData, TQueryFnData, TQueryKey>) {
   const { debounceMs = DEBOUNCE_MS, columns, initialState, query: queryFn, ...tableProps } = props
@@ -134,7 +134,7 @@ export function useLocalDataTable<
 
   const table = useReactTable({
     columns,
-    data: query.data?.data ?? [],
+    data: query.data?.list ?? [],
     pageCount,
     state: {
       pagination,

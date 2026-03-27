@@ -44,7 +44,7 @@ export type UserSessionResponse = z.infer<typeof userSessionResponseSchema>
  * 分页用户列表响应 Schema
  */
 export const paginatedUsersResponseSchema = z.object({
-  data: z.array(userResponseSchema),
+  list: z.array(userResponseSchema),
   total: z.number(),
   page: z.number(),
   limit: z.number(),

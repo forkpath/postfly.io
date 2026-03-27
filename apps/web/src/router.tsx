@@ -2,14 +2,24 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { createRouter } from '@tanstack/react-router'
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query'
 
-import { getQueryClient } from '@libs/api-client'
+import { toast } from 'sonner'
+
+import { getErrorMessage, getQueryClient } from '@libs/api-client'
 
 import { DefaultCatchBoundary } from './components/default-catch-boundary'
 import { NotFound } from './components/not-found'
 import { routeTree } from './routeTree.gen'
 
 export function getRouter() {
-  const queryClient = getQueryClient()
+  const queryClient = getQueryClient({
+    onQueryError: (error, { query }) => {
+      if (query.meta?.suppressError) return
+      toast.error(getErrorMessage(error))
+    },
+    onMutationError: error => {
+      toast.error(getErrorMessage(error))
+    }
+  })
 
   const router = createRouter({
     routeTree,

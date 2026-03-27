@@ -50,7 +50,7 @@ export interface AuthOptions {
 export interface ApiClientOptions {
   /**
    * API 基础路径
-   * @default '/api' (web/ssr) 或完整 URL (desktop)
+   * @default '/api/v1' (web/ssr) 或完整 URL (desktop)
    */
   baseURL?: string
 

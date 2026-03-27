@@ -1,3 +1,7 @@
+import { BillingOrderStatus, BillingProvider, BillingSubscriptionStatus } from '@libs/common'
+
+export { BillingOrderStatus, BillingProvider, BillingSubscriptionStatus }
+
 export const BillingPlan = {
   FREE: 'free',
   PREMIUM: 'premium',
@@ -21,43 +25,6 @@ export const BillingInterval = {
 } as const
 
 export type BillingInterval = (typeof BillingInterval)[keyof typeof BillingInterval]
-
-export const BillingProvider = {
-  STRIPE: 'stripe',
-  REVENUECAT: 'revenuecat',
-  SUPERWALL: 'superwall'
-} as const
-
-export type BillingProvider = (typeof BillingProvider)[keyof typeof BillingProvider]
-
-export const BillingReferenceType = {
-  USER: 'user',
-  ORGANIZATION: 'organization'
-} as const
-
-export type BillingReferenceType = (typeof BillingReferenceType)[keyof typeof BillingReferenceType]
-
-export const BillingSubscriptionStatus = {
-  TRIALING: 'trialing',
-  ACTIVE: 'active',
-  PAST_DUE: 'past_due',
-  UNPAID: 'unpaid',
-  CANCELED: 'canceled',
-  INCOMPLETE: 'incomplete',
-  PAUSED: 'paused'
-} as const
-
-export type BillingSubscriptionStatus = (typeof BillingSubscriptionStatus)[keyof typeof BillingSubscriptionStatus]
-
-export const BillingOrderStatus = {
-  PENDING: 'pending',
-  SUCCEEDED: 'succeeded',
-  FAILED: 'failed',
-  REFUNDED: 'refunded',
-  CANCELED: 'canceled'
-} as const
-
-export type BillingOrderStatus = (typeof BillingOrderStatus)[keyof typeof BillingOrderStatus]
 
 export interface BillingVariant {
   id: string
@@ -101,11 +68,8 @@ export interface BillingConfig {
 export interface BillingCustomerRecord {
   id: string
   referenceId: string
-  referenceType: BillingReferenceType
-  provider: BillingProvider
   externalId: string
-  email: string | null
-  metadata: Record<string, unknown> | null
+  provider: string
   createdAt: Date
   updatedAt: Date
 }
@@ -113,19 +77,14 @@ export interface BillingCustomerRecord {
 export interface BillingSubscriptionRecord {
   id: string
   customerId: string
-  provider: BillingProvider
   externalId: string
-  planId: string
   variantId: string
   status: BillingSubscriptionStatus
-  interval: BillingInterval | null
-  currency: string | null
-  amount: number | null
-  cancelAtPeriodEnd: boolean
-  currentPeriodStart: Date | null
-  currentPeriodEnd: Date | null
+  store: string
+  periodStartsAt: Date
+  periodEndsAt: Date
+  trialStartsAt: Date | null
   trialEndsAt: Date | null
-  metadata: Record<string, unknown> | null
   createdAt: Date
   updatedAt: Date
 }
@@ -133,14 +92,10 @@ export interface BillingSubscriptionRecord {
 export interface BillingOrderRecord {
   id: string
   customerId: string
-  provider: BillingProvider
   externalId: string
-  planId: string
   variantId: string
   status: BillingOrderStatus
-  currency: string | null
-  amount: number | null
-  metadata: Record<string, unknown> | null
+  store: string
   createdAt: Date
   updatedAt: Date
 }
@@ -153,7 +108,6 @@ export interface BillingSummary {
 
 export interface BillingCheckoutInput {
   referenceId: string
-  referenceType?: BillingReferenceType
   email: string
   variantId: string
   successUrl: string
@@ -162,7 +116,6 @@ export interface BillingCheckoutInput {
 
 export interface BillingPortalInput {
   referenceId: string
-  referenceType?: BillingReferenceType
   email: string
   returnUrl: string
 }

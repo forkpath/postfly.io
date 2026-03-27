@@ -68,22 +68,22 @@ export type Invitation = Prisma.InvitationModel
  */
 export type OrganizationRole = Prisma.OrganizationRoleModel
 /**
- * Model BillingCustomer
+ * Model WebhookEvent
  *
  */
-export type BillingCustomer = Prisma.BillingCustomerModel
+export type WebhookEvent = Prisma.WebhookEventModel
 /**
- * Model BillingSubscription
+ * Model Customer
  *
  */
-export type BillingSubscription = Prisma.BillingSubscriptionModel
+export type Customer = Prisma.CustomerModel
 /**
- * Model BillingOrder
+ * Model Subscription
  *
  */
-export type BillingOrder = Prisma.BillingOrderModel
+export type Subscription = Prisma.SubscriptionModel
 /**
- * Model BillingWebhookEvent
+ * Model Order
  *
  */
-export type BillingWebhookEvent = Prisma.BillingWebhookEventModel
+export type Order = Prisma.OrderModel

@@ -83,6 +83,7 @@ import {
   SunMoon,
   Trash,
   TrendingUp,
+  TriangleAlert,
   Truck,
   Undo2,
   User,
@@ -101,6 +102,7 @@ import { Icons as GlobalIcons } from '../../../common/assets'
 
 export const Icons = {
   ...GlobalIcons,
+  AlertTriangle: TriangleAlert,
   Activity,
   Minus,
   PanelLeft,

@@ -55,3 +55,21 @@ export class InvalidUserRoleException extends UserDomainException {
     super(`Invalid user role: ${role}`, 'INVALID_USER_ROLE')
   }
 }
+
+/**
+ * 账户未找到异常
+ */
+export class AccountNotFoundException extends UserDomainException {
+  constructor(accountId: string) {
+    super(`Account with id ${accountId} not found`, 'ACCOUNT_NOT_FOUND')
+  }
+}
+
+/**
+ * 不能删除最后一个认证方式
+ */
+export class LastAccountCannotBeDeletedException extends UserDomainException {
+  constructor(userId: string) {
+    super(`Cannot delete the last authentication method for user ${userId}`, 'LAST_ACCOUNT_CANNOT_BE_DELETED')
+  }
+}

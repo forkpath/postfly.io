@@ -1,6 +1,5 @@
 import { BadRequestException, Body, Controller, Get, Headers, Post, Req } from '@nestjs/common'
 
-import { serverEnv } from '@libs/billing'
 import { getBillingSummaryByReferenceId } from '@libs/billing/server'
 import {
   billingPortalSchema,
@@ -35,7 +34,6 @@ export class BillingController {
 
     return createStripeCheckoutSession({
       referenceId: session.user.id,
-      referenceType: serverEnv.BILLING_REFERENCE_TYPE,
       email: session.user.email,
       variantId: input.variantId,
       successUrl: input.successUrl,
@@ -49,7 +47,6 @@ export class BillingController {
 
     return createStripeBillingPortalSession({
       referenceId: session.user.id,
-      referenceType: serverEnv.BILLING_REFERENCE_TYPE,
       email: session.user.email,
       returnUrl: input.returnUrl
     })

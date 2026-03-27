@@ -5,14 +5,9 @@ import type { BetterAuthClientOptions, BetterAuthClientPlugin } from 'better-aut
 
 import * as z from 'zod'
 
+import { InvitationStatus, MemberRole, SocialProvider, UserRole } from '@libs/common'
+
 type AuthMobileClientOptions = Parameters<typeof expoClient>[0]
-
-const SocialProvider = {
-  GOOGLE: 'google',
-  GITHUB: 'github'
-} as const
-
-type SocialProvider = (typeof SocialProvider)[keyof typeof SocialProvider]
 
 const AuthProvider = {
   ...SocialProvider,
@@ -40,30 +35,6 @@ const authConfigSchema = z.object({
     oAuth: z.array(z.enum(SocialProvider))
   })
 })
-
-const UserRole = {
-  USER: 'user',
-  ADMIN: 'admin'
-} as const
-
-type UserRole = (typeof UserRole)[keyof typeof UserRole]
-
-const MemberRole = {
-  MEMBER: 'member',
-  ADMIN: 'admin',
-  OWNER: 'owner'
-} as const
-
-type MemberRole = (typeof MemberRole)[keyof typeof MemberRole]
-
-const InvitationStatus = {
-  PENDING: 'pending',
-  ACCEPTED: 'accepted',
-  CANCELED: 'canceled',
-  REJECTED: 'rejected'
-} as const
-
-type InvitationStatus = (typeof InvitationStatus)[keyof typeof InvitationStatus]
 
 const VerificationType = {
   MAGIC_LINK: 'magic-link',

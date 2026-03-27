@@ -1,5 +1,19 @@
 import type { PaginatedResult, UserEntity, UserListParams, UserSessionEntity } from '../../domain/entities/user.entity'
-import type { IUserRepository } from '../../domain/repositories/user.repository.interface'
+import type {
+  AccountEntity,
+  IUserRepository,
+  UserInvitationEntity,
+  UserMembershipEntity,
+  UserOrderEntity,
+  UserSubscriptionEntity
+} from '../../domain/repositories/user.repository.interface'
+import type {
+  GetUserAccountsReq,
+  GetUserInvitationsReq,
+  GetUserMembershipsReq,
+  GetUserOrdersReq,
+  GetUserSubscriptionsReq
+} from '@libs/payload'
 
 import { Injectable } from '@nestjs/common'
 
@@ -28,7 +42,17 @@ export class UserRepository implements IUserRepository {
   }
 
   async findMany(params: UserListParams): Promise<PaginatedResult<UserEntity>> {
-    const { page = 1, limit = 20, search, role, banned, sortBy = 'createdAt', sortOrder = 'desc' } = params
+    const {
+      page: rawPage = 1,
+      limit: rawLimit = 20,
+      search,
+      role,
+      banned,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = params
+    const page = Number(rawPage)
+    const limit = Number(rawLimit)
 
     const where = {
       ...(search && {
@@ -52,7 +76,7 @@ export class UserRepository implements IUserRepository {
     ])
 
     return {
-      data: users.map(u => this.mapToEntity(u)),
+      list: users.map(u => this.mapToEntity(u)),
       total,
       page,
       limit,
@@ -129,9 +153,279 @@ export class UserRepository implements IUserRepository {
     })
   }
 
-  /**
-   * 将 Prisma 用户映射为领域实体
-   */
+  async findAccounts(userId: string, params: GetUserAccountsReq): Promise<{ list: AccountEntity[]; total: number }> {
+    const { page: rp = 1, perPage: rpp = 10, sort, providerId, createdAt, updatedAt } = params
+    const page = Number(rp)
+    const perPage = Number(rpp)
+
+    const where: Record<string, unknown> = { userId }
+    if (providerId) where.providerId = { in: providerId }
+    if (createdAt) {
+      where.createdAt = {
+        gte: new Date(createdAt[0]),
+        lte: new Date(createdAt[1])
+      }
+    }
+    if (updatedAt) {
+      where.updatedAt = {
+        gte: new Date(updatedAt[0]),
+        lte: new Date(updatedAt[1])
+      }
+    }
+
+    const orderBy = sort?.length
+      ? sort.map(s => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
+      : [{ createdAt: 'desc' as const }]
+
+    const [data, total] = await Promise.all([
+      prisma.account.findMany({
+        where,
+        skip: (page - 1) * perPage,
+        take: perPage,
+        orderBy
+      }),
+      prisma.account.count({ where })
+    ])
+
+    return {
+      list: data.map(a => ({
+        id: a.id,
+        userId: a.userId,
+        providerId: a.providerId,
+        accountId: a.accountId,
+        createdAt: a.createdAt,
+        updatedAt: a.updatedAt
+      })),
+      total
+    }
+  }
+
+  async countAccounts(userId: string): Promise<number> {
+    return prisma.account.count({ where: { userId } })
+  }
+
+  async deleteAccount(userId: string, accountId: string): Promise<void> {
+    await prisma.account.delete({
+      where: { id: accountId, userId }
+    })
+  }
+
+  async findSubscriptions(
+    userId: string,
+    params: GetUserSubscriptionsReq
+  ): Promise<{ list: UserSubscriptionEntity[]; total: number }> {
+    const { page: rp = 1, perPage: rpp = 10, sort, status, createdAt } = params
+    const page = Number(rp)
+    const perPage = Number(rpp)
+
+    const where: Record<string, unknown> = {
+      customer: { referenceId: userId }
+    }
+    if (status) where.status = { in: status }
+    if (createdAt) {
+      where.createdAt = {
+        gte: new Date(createdAt[0]),
+        lte: new Date(createdAt[1])
+      }
+    }
+
+    const orderBy = sort?.length
+      ? sort.map(s => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
+      : [{ createdAt: 'desc' as const }]
+
+    const [data, total] = await Promise.all([
+      prisma.subscription.findMany({
+        where,
+        skip: (page - 1) * perPage,
+        take: perPage,
+        orderBy
+      }),
+      prisma.subscription.count({ where })
+    ])
+
+    return {
+      list: data.map(s => ({
+        id: s.id,
+        customerId: s.customerId,
+        externalId: s.externalId,
+        variantId: s.variantId,
+        status: s.status,
+        store: s.store,
+        periodStartsAt: s.periodStartsAt,
+        periodEndsAt: s.periodEndsAt,
+        trialStartsAt: s.trialStartsAt,
+        trialEndsAt: s.trialEndsAt,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt
+      })),
+      total
+    }
+  }
+
+  async findOrders(userId: string, params: GetUserOrdersReq): Promise<{ list: UserOrderEntity[]; total: number }> {
+    const { page: rp = 1, perPage: rpp = 10, sort, status, createdAt } = params
+    const page = Number(rp)
+    const perPage = Number(rpp)
+
+    const where: Record<string, unknown> = {
+      customer: { referenceId: userId }
+    }
+    if (status) where.status = { in: status }
+    if (createdAt) {
+      where.createdAt = {
+        gte: new Date(createdAt[0]),
+        lte: new Date(createdAt[1])
+      }
+    }
+
+    const orderBy = sort?.length
+      ? sort.map(s => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
+      : [{ createdAt: 'desc' as const }]
+
+    const [data, total] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        skip: (page - 1) * perPage,
+        take: perPage,
+        orderBy
+      }),
+      prisma.order.count({ where })
+    ])
+
+    return {
+      list: data.map(o => ({
+        id: o.id,
+        customerId: o.customerId,
+        externalId: o.externalId,
+        variantId: o.variantId,
+        status: o.status,
+        store: o.store,
+        createdAt: o.createdAt,
+        updatedAt: o.updatedAt
+      })),
+      total
+    }
+  }
+
+  async findMemberships(
+    userId: string,
+    params: GetUserMembershipsReq
+  ): Promise<{ list: UserMembershipEntity[]; total: number }> {
+    const { page: rp = 1, perPage: rpp = 10, sort, role, createdAt } = params
+    const page = Number(rp)
+    const perPage = Number(rpp)
+
+    const where: Record<string, unknown> = { userId }
+    if (role) where.role = { in: role }
+    if (createdAt) {
+      where.createdAt = {
+        gte: new Date(createdAt[0]),
+        lte: new Date(createdAt[1])
+      }
+    }
+
+    const orderBy = sort?.length
+      ? sort.map(s => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
+      : [{ createdAt: 'desc' as const }]
+
+    const [data, total] = await Promise.all([
+      prisma.member.findMany({
+        where,
+        skip: (page - 1) * perPage,
+        take: perPage,
+        orderBy,
+        include: {
+          organization: { select: { id: true, name: true, slug: true, logo: true } },
+          user: { select: { id: true, name: true, email: true } }
+        }
+      }),
+      prisma.member.count({ where })
+    ])
+
+    return {
+      list: data.map(m => ({
+        id: m.id,
+        organizationId: m.organizationId,
+        role: m.role,
+        createdAt: m.createdAt,
+        userId: m.userId,
+        organization: {
+          id: m.organization.id,
+          name: m.organization.name,
+          slug: m.organization.slug ?? null,
+          logo: m.organization.logo ?? null
+        },
+        user: {
+          id: m.user.id,
+          name: m.user.name,
+          email: m.user.email
+        }
+      })),
+      total
+    }
+  }
+
+  async findInvitations(
+    userId: string,
+    params: GetUserInvitationsReq
+  ): Promise<{ list: UserInvitationEntity[]; total: number }> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true }
+    })
+    if (!user) return { list: [], total: 0 }
+
+    const { page: rp = 1, perPage: rpp = 10, sort, role, status, expiresAt } = params
+    const page = Number(rp)
+    const perPage = Number(rpp)
+
+    const where: Record<string, unknown> = { email: user.email }
+    if (role) where.role = { in: role }
+    if (status) where.status = { in: status }
+    if (expiresAt) {
+      where.expiresAt = {
+        gte: new Date(expiresAt[0]),
+        lte: new Date(expiresAt[1])
+      }
+    }
+
+    const orderBy = sort?.length
+      ? sort.map(s => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
+      : [{ createdAt: 'desc' as const }]
+
+    const [data, total] = await Promise.all([
+      prisma.invitation.findMany({
+        where,
+        skip: (page - 1) * perPage,
+        take: perPage,
+        orderBy,
+        include: {
+          organization: { select: { id: true, name: true, logo: true } }
+        }
+      }),
+      prisma.invitation.count({ where })
+    ])
+
+    return {
+      list: data.map(i => ({
+        id: i.id,
+        email: i.email,
+        role: i.role ?? 'member',
+        status: i.status,
+        expiresAt: i.expiresAt,
+        createdAt: i.createdAt,
+        inviterId: i.inviterId,
+        organizationId: i.organizationId,
+        organization: {
+          id: i.organization.id,
+          name: i.organization.name,
+          logo: i.organization.logo ?? null
+        }
+      })),
+      total
+    }
+  }
+
   private mapToEntity(user: {
     id: string
     name: string

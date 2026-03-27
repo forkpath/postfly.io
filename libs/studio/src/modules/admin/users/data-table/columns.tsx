@@ -1,0 +1,132 @@
+import type { ColumnDef } from '@tanstack/react-table'
+import type { GetUsersRes } from '@libs/payload'
+
+import { Link } from '@tanstack/react-router'
+
+import { useTranslation } from '@libs/i18n'
+import { Avatar, AvatarFallback, AvatarImage, Badge, DataTableColumnHeader, Icons } from '@libs/ui-shared/web'
+
+import { pathsConfig } from '../../../../config/paths'
+import { authClient } from '../../../../lib/auth/client'
+
+type UserRow = GetUsersRes['list'][number]
+
+export const useColumns = (): ColumnDef<UserRow>[] => {
+  const { t, i18n } = useTranslation('common')
+  const { data: session } = authClient.useSession()
+
+  return [
+    {
+      id: 'q',
+      accessorKey: 'q',
+      meta: {
+        placeholder: `${t('search')}...`,
+        variant: 'text'
+      },
+      enableHiding: false,
+      enableColumnFilter: true
+    },
+    {
+      id: 'name',
+      accessorKey: 'name',
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('name')} />,
+      cell: ({ row }) => (
+        <Link to={pathsConfig.admin.users.user(row.original.id)} className="group flex items-center gap-3">
+          <Avatar>
+            <AvatarImage src={row.original.image ?? undefined} alt={row.original.name} />
+            <AvatarFallback>
+              <Icons.UserRound className="w-5" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex items-center gap-2">
+            <span className="group-hover:text-primary truncate font-medium underline underline-offset-4">
+              {row.original.name}
+            </span>
+            {row.original.id === session?.user.id && <Badge variant="outline">{t('you')}</Badge>}
+          </div>
+        </Link>
+      ),
+      enableHiding: false
+    },
+    {
+      id: 'email',
+      accessorKey: 'email',
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('email')} />,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          {row.original.email}
+          <Badge variant={row.original.emailVerified ? 'secondary' : 'destructive'}>
+            {row.original.emailVerified ? t('verified') : t('unverified')}
+          </Badge>
+        </div>
+      ),
+      meta: { label: t('email') }
+    },
+    {
+      id: 'role',
+      accessorKey: 'role',
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('role')} />,
+      cell: ({ row }) => {
+        const role = row.original.role
+        return <Badge variant="outline">{role ?? t('user')}</Badge>
+      },
+      meta: {
+        label: t('role'),
+        variant: 'multiSelect',
+        options: [
+          { label: t('user'), value: 'user' },
+          { label: t('admin'), value: 'admin' }
+        ]
+      },
+      enableColumnFilter: true
+    },
+    {
+      id: 'twoFactorEnabled',
+      accessorKey: 'twoFactorEnabled',
+      header: ({ column }) => <DataTableColumnHeader column={column} title="2FA" />,
+      cell: ({ row }) =>
+        row.original.twoFactorEnabled ? <Icons.Check className="size-4" /> : <Icons.X className="size-4" />,
+      meta: {
+        label: '2FA',
+        variant: 'multiSelect',
+        options: [
+          { label: t('enabled'), value: 'true' },
+          { label: t('disabled'), value: 'false' }
+        ]
+      },
+      enableColumnFilter: true
+    },
+    {
+      id: 'banned',
+      accessorKey: 'banned',
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('banned')} />,
+      cell: ({ row }) => (row.original.banned ? <Icons.Check className="size-4" /> : <Icons.X className="size-4" />),
+      meta: {
+        label: t('banned'),
+        variant: 'multiSelect',
+        options: [
+          { label: t('banned'), value: 'true' },
+          { label: t('notBanned'), value: 'false' }
+        ]
+      },
+      enableColumnFilter: true
+    },
+    {
+      id: 'createdAt',
+      accessorKey: 'createdAt',
+      header: ({ column }) => (
+        <div className="ml-auto w-fit">
+          <DataTableColumnHeader column={column} title={t('createdAt')} />
+        </div>
+      ),
+      cell: ({ row }) => (
+        <div className="ml-auto text-right">{new Date(row.original.createdAt).toLocaleDateString(i18n.language)}</div>
+      ),
+      meta: {
+        label: t('createdAt'),
+        variant: 'dateRange'
+      },
+      enableColumnFilter: true
+    }
+  ]
+}

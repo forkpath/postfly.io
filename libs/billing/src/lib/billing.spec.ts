@@ -21,19 +21,14 @@ describe('billing utils', () => {
       {
         id: 'sub_1',
         customerId: 'cus_1',
-        provider: 'stripe',
         externalId: 'sub_ext_1',
-        planId: 'premium',
         variantId: 'premium-monthly',
         status: 'active',
-        interval: 'month',
-        currency: 'USD',
-        amount: 1900,
-        cancelAtPeriodEnd: false,
-        currentPeriodStart: null,
-        currentPeriodEnd: null,
+        store: 'stripe',
+        periodStartsAt: new Date(),
+        periodEndsAt: new Date(),
+        trialStartsAt: null,
         trialEndsAt: null,
-        metadata: null,
         createdAt: new Date(),
         updatedAt: new Date()
       }

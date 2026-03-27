@@ -8,48 +8,31 @@
  * 🟢 You can import this file directly.
  */
 
-export const BillingReferenceType = {
-  user: 'user',
-  organization: 'organization'
-} as const
-
-export type BillingReferenceType = (typeof BillingReferenceType)[keyof typeof BillingReferenceType]
-
-export const BillingProvider = {
-  stripe: 'stripe',
-  revenuecat: 'revenuecat',
-  superwall: 'superwall'
-} as const
-
-export type BillingProvider = (typeof BillingProvider)[keyof typeof BillingProvider]
-
-export const BillingSubscriptionStatus = {
-  trialing: 'trialing',
+export const SubscriptionStatus = {
   active: 'active',
-  past_due: 'past_due',
-  unpaid: 'unpaid',
   canceled: 'canceled',
   incomplete: 'incomplete',
-  paused: 'paused'
+  incomplete_expired: 'incomplete_expired',
+  past_due: 'past_due',
+  paused: 'paused',
+  trialing: 'trialing',
+  unpaid: 'unpaid'
 } as const
 
-export type BillingSubscriptionStatus = (typeof BillingSubscriptionStatus)[keyof typeof BillingSubscriptionStatus]
+export type SubscriptionStatus = (typeof SubscriptionStatus)[keyof typeof SubscriptionStatus]
 
-export const BillingOrderStatus = {
+export const PaymentStatus = {
   pending: 'pending',
   succeeded: 'succeeded',
+  failed: 'failed'
+} as const
+
+export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus]
+
+export const WebhookEventStatus = {
+  processed: 'processed',
   failed: 'failed',
-  refunded: 'refunded',
-  canceled: 'canceled'
+  skipped: 'skipped'
 } as const
 
-export type BillingOrderStatus = (typeof BillingOrderStatus)[keyof typeof BillingOrderStatus]
-
-export const BillingInterval = {
-  day: 'day',
-  week: 'week',
-  month: 'month',
-  year: 'year'
-} as const
-
-export type BillingInterval = (typeof BillingInterval)[keyof typeof BillingInterval]
+export type WebhookEventStatus = (typeof WebhookEventStatus)[keyof typeof WebhookEventStatus]

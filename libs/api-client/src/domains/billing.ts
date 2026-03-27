@@ -3,11 +3,8 @@ import { createMutationFactory, createQueryOptionsFactory } from '../lib/queries
 export interface BillingCustomer {
   id: string
   referenceId: string
-  referenceType: 'user' | 'organization'
-  provider: 'stripe' | 'revenuecat' | 'superwall'
   externalId: string
-  email: string | null
-  metadata: Record<string, unknown> | null
+  provider: string
   createdAt: string
   updatedAt: string
 }
@@ -15,19 +12,14 @@ export interface BillingCustomer {
 export interface BillingSubscription {
   id: string
   customerId: string
-  provider: 'stripe' | 'revenuecat' | 'superwall'
   externalId: string
-  planId: string
   variantId: string
-  status: 'trialing' | 'active' | 'past_due' | 'unpaid' | 'canceled' | 'incomplete' | 'paused'
-  interval: 'day' | 'week' | 'month' | 'year' | null
-  currency: string | null
-  amount: number | null
-  cancelAtPeriodEnd: boolean
-  currentPeriodStart: string | null
-  currentPeriodEnd: string | null
+  status: 'trialing' | 'active' | 'past_due' | 'unpaid' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'paused'
+  store: string
+  periodStartsAt: string
+  periodEndsAt: string
+  trialStartsAt: string | null
   trialEndsAt: string | null
-  metadata: Record<string, unknown> | null
   createdAt: string
   updatedAt: string
 }
@@ -35,14 +27,10 @@ export interface BillingSubscription {
 export interface BillingOrder {
   id: string
   customerId: string
-  provider: 'stripe' | 'revenuecat' | 'superwall'
   externalId: string
-  planId: string
   variantId: string
-  status: 'pending' | 'succeeded' | 'failed' | 'refunded' | 'canceled'
-  currency: string | null
-  amount: number | null
-  metadata: Record<string, unknown> | null
+  status: 'pending' | 'succeeded' | 'failed'
+  store: string
   createdAt: string
   updatedAt: string
 }

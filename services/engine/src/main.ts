@@ -30,7 +30,7 @@ async function bootstrap() {
   const logger = app.get(LoggerService)
   app.useLogger(logger)
 
-  const globalPrefix = 'api'
+  const globalPrefix = 'api/v1'
   app.setGlobalPrefix(globalPrefix)
 
   app.use(`/${globalPrefix}/billing/webhook/stripe`, express.raw({ type: 'application/json' }))

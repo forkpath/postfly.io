@@ -43,7 +43,7 @@ export interface ApiClientProviderProps extends PropsWithChildren {
  * </ApiClientProvider>
  *
  * // 自定义配置（options 仅首次生效）
- * <ApiClientProvider options={{ baseURL: '/api', timeout: 10000 }}>
+ * <ApiClientProvider options={{ baseURL: '/api/v1', timeout: 10000 }}>
  *   <App />
  * </ApiClientProvider>
  *
@@ -53,7 +53,7 @@ export interface ApiClientProviderProps extends PropsWithChildren {
  * </ApiClientProvider>
  *
  * // 动态配置：传入新的 client 实例
- * const [apiClient, setApiClient] = useState(() => createClient({ baseURL: '/api' }))
+ * const [apiClient, setApiClient] = useState(() => createClient({ baseURL: '/api/v1' }))
  * <ApiClientProvider client={apiClient}>
  *   <App />
  * </ApiClientProvider>

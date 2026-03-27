@@ -1,4 +1,11 @@
 import type { PaginatedUsersResponse, UserResponse, UserSessionResponse } from '../../../application/dtos/user/user.dto'
+import type {
+  GetUserAccountsRes,
+  GetUserInvitationsRes,
+  GetUserMembershipsRes,
+  GetUserOrdersRes,
+  GetUserSubscriptionsRes
+} from '@libs/payload'
 
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
 import { CommandBus, QueryBus } from '@nestjs/cqrs'
@@ -6,6 +13,7 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs'
 import { Roles, Session } from '@libs/srv-shared'
 
 import { BanUserCommand } from '../../../application/commands/user/ban-user.command'
+import { DeleteAccountCommand } from '../../../application/commands/user/delete-account.command'
 import { DeleteUserCommand } from '../../../application/commands/user/delete-user.command'
 import {
   RevokeAllSessionsCommand,
@@ -23,6 +31,11 @@ import {
 } from '../../../application/dtos/user/user.dto'
 import { GetUserSessionsQuery } from '../../../application/queries/user/get-user-sessions.query'
 import { GetUserQuery } from '../../../application/queries/user/get-user.query'
+import { ListUserAccountsQuery } from '../../../application/queries/user/list-user-accounts.query'
+import { ListUserInvitationsQuery } from '../../../application/queries/user/list-user-invitations.query'
+import { ListUserMembershipsQuery } from '../../../application/queries/user/list-user-memberships.query'
+import { ListUserOrdersQuery } from '../../../application/queries/user/list-user-orders.query'
+import { ListUserSubscriptionsQuery } from '../../../application/queries/user/list-user-subscriptions.query'
 import { ListUsersQuery } from '../../../application/queries/user/list-users.query'
 
 /**
@@ -124,11 +137,47 @@ export class UserController {
     return this.commandBus.execute(new RevokeSessionCommand(dto.token))
   }
 
-  /**
-   * 撤销用户所有会话
-   */
   @Delete(':id/sessions/all')
   async revokeAllSessions(@Param('id') id: string): Promise<void> {
     return this.commandBus.execute(new RevokeAllSessionsCommand(id))
+  }
+
+  @Get(':id/accounts')
+  async listAccounts(@Param('id') id: string, @Query() query: Record<string, unknown>): Promise<GetUserAccountsRes> {
+    return this.queryBus.execute(new ListUserAccountsQuery(id, query as never))
+  }
+
+  @Delete(':id/accounts/:accountId')
+  async deleteAccount(@Param('id') id: string, @Param('accountId') accountId: string): Promise<void> {
+    return this.commandBus.execute(new DeleteAccountCommand(id, accountId))
+  }
+
+  @Get(':id/subscriptions')
+  async listSubscriptions(
+    @Param('id') id: string,
+    @Query() query: Record<string, unknown>
+  ): Promise<GetUserSubscriptionsRes> {
+    return this.queryBus.execute(new ListUserSubscriptionsQuery(id, query as never))
+  }
+
+  @Get(':id/orders')
+  async listOrders(@Param('id') id: string, @Query() query: Record<string, unknown>): Promise<GetUserOrdersRes> {
+    return this.queryBus.execute(new ListUserOrdersQuery(id, query as never))
+  }
+
+  @Get(':id/memberships')
+  async listMemberships(
+    @Param('id') id: string,
+    @Query() query: Record<string, unknown>
+  ): Promise<GetUserMembershipsRes> {
+    return this.queryBus.execute(new ListUserMembershipsQuery(id, query as never))
+  }
+
+  @Get(':id/invitations')
+  async listInvitations(
+    @Param('id') id: string,
+    @Query() query: Record<string, unknown>
+  ): Promise<GetUserInvitationsRes> {
+    return this.queryBus.execute(new ListUserInvitationsQuery(id, query as never))
   }
 }

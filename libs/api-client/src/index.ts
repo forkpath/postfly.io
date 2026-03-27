@@ -32,3 +32,15 @@ export type { MutationErrorContext, QueryClientOptions, QueryErrorContext } from
 
 // Domains
 export { authKeys, authMutations, billingKeys, billingMutations, billingQueries, orgKeys, userKeys } from './domains'
+
+// Admin Domains
+export {
+  adminUserKeys,
+  adminUserQueries,
+  adminUserMutations,
+  adminOrgKeys,
+  adminOrgQueries,
+  adminOrgMutations,
+  adminCustomerKeys,
+  adminCustomerQueries
+} from './domains/admin'

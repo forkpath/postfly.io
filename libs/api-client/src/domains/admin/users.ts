@@ -24,11 +24,16 @@
  * banMutation.mutate({ id: 'user-123', reason: 'Violation' })
  * ```
  */
-import {
-  createMutationFactory,
-  createQueryOptionsFactory,
-  createQueryOptionsWithParams
-} from '../../lib/queries/factory'
+import type {
+  GetUserAccountsRes,
+  GetUserInvitationsRes,
+  GetUserMembershipsRes,
+  GetUserOrdersRes,
+  GetUsersRes,
+  GetUserSubscriptionsRes
+} from '@libs/payload'
+
+import { createMutationFactory, createQueryOptionsWithParams } from '../../lib/queries/factory'
 
 // ==================== Types ====================
 
@@ -67,14 +72,6 @@ export interface AdminUserListParams {
   sortOrder?: 'asc' | 'desc'
 }
 
-export interface PaginatedAdminUsers {
-  data: AdminUser[]
-  total: number
-  page: number
-  limit: number
-  totalPages: number
-}
-
 export interface UpdateAdminUserInput {
   name?: string
   image?: string | null
@@ -95,10 +92,15 @@ export interface SetPasswordInput {
 export const adminUserKeys = {
   all: ['admin', 'users'] as const,
   lists: () => [...adminUserKeys.all, 'list'] as const,
-  list: (params?: AdminUserListParams) => [...adminUserKeys.lists(), params] as const,
+  list: (params?: Record<string, unknown>) => [...adminUserKeys.lists(), params] as const,
   details: () => [...adminUserKeys.all, 'detail'] as const,
   detail: (id: string) => [...adminUserKeys.details(), id] as const,
-  sessions: (userId: string) => [...adminUserKeys.detail(userId), 'sessions'] as const
+  sessions: (userId: string) => [...adminUserKeys.detail(userId), 'sessions'] as const,
+  accounts: (userId: string) => [...adminUserKeys.detail(userId), 'accounts'] as const,
+  subscriptions: (userId: string) => [...adminUserKeys.detail(userId), 'subscriptions'] as const,
+  orders: (userId: string) => [...adminUserKeys.detail(userId), 'orders'] as const,
+  memberships: (userId: string) => [...adminUserKeys.detail(userId), 'memberships'] as const,
+  invitations: (userId: string) => [...adminUserKeys.detail(userId), 'invitations'] as const
 } as const
 
 export type AdminUserKeys = typeof adminUserKeys
@@ -106,27 +108,74 @@ export type AdminUserKeys = typeof adminUserKeys
 // ==================== Queries ====================
 
 export const adminUserQueries = {
-  /** 获取用户列表 */
-  list: createQueryOptionsWithParams<PaginatedAdminUsers, Error, PaginatedAdminUsers, AdminUserListParams | undefined>(
+  list: createQueryOptionsWithParams<GetUsersRes, Error, GetUsersRes, Record<string, unknown> | undefined>(
     (api, params) => ({
       queryKey: adminUserKeys.list(params),
       queryFn: () => api.get('/admin/users', { params })
     })
   ),
 
-  /** 获取用户详情 */
   detail: createQueryOptionsWithParams<AdminUser, Error, AdminUser, { id: string }>((api, { id }) => ({
     queryKey: adminUserKeys.detail(id),
     queryFn: () => api.get(`/admin/users/${id}`)
   })),
 
-  /** 获取用户会话列表 */
   sessions: createQueryOptionsWithParams<AdminUserSession[], Error, AdminUserSession[], { userId: string }>(
     (api, { userId }) => ({
       queryKey: adminUserKeys.sessions(userId),
       queryFn: () => api.get(`/admin/users/${userId}/sessions`)
     })
-  )
+  ),
+
+  accounts: createQueryOptionsWithParams<
+    GetUserAccountsRes,
+    Error,
+    GetUserAccountsRes,
+    { id: string } & Record<string, unknown>
+  >((api, { id, ...params }) => ({
+    queryKey: adminUserKeys.accounts(id),
+    queryFn: () => api.get(`/admin/users/${id}/accounts`, { params })
+  })),
+
+  subscriptions: createQueryOptionsWithParams<
+    GetUserSubscriptionsRes,
+    Error,
+    GetUserSubscriptionsRes,
+    { id: string } & Record<string, unknown>
+  >((api, { id, ...params }) => ({
+    queryKey: adminUserKeys.subscriptions(id),
+    queryFn: () => api.get(`/admin/users/${id}/subscriptions`, { params })
+  })),
+
+  orders: createQueryOptionsWithParams<
+    GetUserOrdersRes,
+    Error,
+    GetUserOrdersRes,
+    { id: string } & Record<string, unknown>
+  >((api, { id, ...params }) => ({
+    queryKey: adminUserKeys.orders(id),
+    queryFn: () => api.get(`/admin/users/${id}/orders`, { params })
+  })),
+
+  memberships: createQueryOptionsWithParams<
+    GetUserMembershipsRes,
+    Error,
+    GetUserMembershipsRes,
+    { id: string } & Record<string, unknown>
+  >((api, { id, ...params }) => ({
+    queryKey: adminUserKeys.memberships(id),
+    queryFn: () => api.get(`/admin/users/${id}/memberships`, { params })
+  })),
+
+  invitations: createQueryOptionsWithParams<
+    GetUserInvitationsRes,
+    Error,
+    GetUserInvitationsRes,
+    { id: string } & Record<string, unknown>
+  >((api, { id, ...params }) => ({
+    queryKey: adminUserKeys.invitations(id),
+    queryFn: () => api.get(`/admin/users/${id}/invitations`, { params })
+  }))
 }
 
 // ==================== Mutations ====================
@@ -158,8 +207,11 @@ export const adminUserMutations = {
     api.delete(`/admin/users/${userId}/sessions`, { data: { token } })
   ),
 
-  /** 撤销用户所有会话 */
   revokeAllSessions: createMutationFactory<void, Error, { userId: string }>((api, { userId }) =>
     api.delete(`/admin/users/${userId}/sessions/all`)
+  ),
+
+  deleteAccount: createMutationFactory<void, Error, { userId: string; accountId: string }>(
+    (api, { userId, accountId }) => api.delete(`/admin/users/${userId}/accounts/${accountId}`)
   )
 }

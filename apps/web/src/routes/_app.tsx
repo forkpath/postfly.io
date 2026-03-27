@@ -4,6 +4,7 @@ import type { AppShellMenuItem } from '@libs/studio'
 import { useEffect, useMemo, useRef } from 'react'
 import { createFileRoute, Outlet, redirect, useNavigate } from '@tanstack/react-router'
 
+import { ApiClientProvider } from '@libs/api-client'
 import { hasAdminPermission, hasOrgAdminPermission, MemberRole } from '@libs/auth'
 import { useTranslation } from '@libs/i18n'
 import {
@@ -13,6 +14,7 @@ import {
   getAdminNavConfig,
   getCrmNavConfig,
   getDefaultSubRoute,
+  ImpersonatingBanner,
   pathsConfig,
   useWorkspaceStore
 } from '@libs/studio'
@@ -146,8 +148,11 @@ function AppLayout() {
   }, [navigate, session])
 
   return (
-    <AppShell user={currentUser} menu={menu}>
-      <Outlet />
-    </AppShell>
+    <ApiClientProvider options={{ baseURL: '/api/v1' }}>
+      <AppShell user={currentUser} menu={menu}>
+        <ImpersonatingBanner />
+        <Outlet />
+      </AppShell>
+    </ApiClientProvider>
   )
 }

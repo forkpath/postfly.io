@@ -1,129 +1,96 @@
-enum BillingReferenceType {
-  user
-  organization
-
-  @@schema("billing")
-}
-
-enum BillingProvider {
-  stripe
-  revenuecat
-  superwall
-
-  @@schema("billing")
-}
-
-enum BillingSubscriptionStatus {
-  trialing
+enum SubscriptionStatus {
   active
-  past_due
-  unpaid
   canceled
   incomplete
+  incomplete_expired
+  past_due
   paused
+  trialing
+  unpaid
 
   @@schema("billing")
 }
 
-enum BillingOrderStatus {
+enum PaymentStatus {
   pending
   succeeded
   failed
-  refunded
-  canceled
 
   @@schema("billing")
 }
 
-enum BillingInterval {
-  day
-  week
-  month
-  year
+enum WebhookEventStatus {
+  processed
+  failed
+  skipped
 
+  @@schema("billing")
+}
+
+model WebhookEvent {
+  id          String             @id @default(cuid())
+  eventId     String             @map("event_id")
+  provider    String
+  type        String
+  status      WebhookEventStatus
+  error       String?
+  processedAt DateTime           @default(now()) @map("processed_at")
+
+  @@unique([eventId, provider])
+  @@index([provider, type])
+  @@index([processedAt])
+  @@map("webhook_event")
   @@schema("billing")
 }
 
 model Customer {
-  id            String               @id @default(cuid())
-  referenceId   String               @map("reference_id")
-  referenceType BillingReferenceType @default(user) @map("reference_type")
-  provider      BillingProvider
-  externalId    String               @map("external_id")
-  email         String?
-  metadata      Json?
-  createdAt     DateTime             @default(now()) @map("created_at")
-  updatedAt     DateTime             @updatedAt @map("updated_at")
+  id            String         @id @default(cuid())
+  referenceId   String         @map("reference_id")
+  externalId    String         @map("external_id")
+  provider      String
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
   subscriptions Subscription[]
   orders        Order[]
-  webhookEvents WebhookEvent[]
 
+  @@unique([referenceId, provider])
   @@unique([externalId, provider])
-  @@index([referenceId, provider])
   @@map("customer")
   @@schema("billing")
 }
 
 model Subscription {
-  id                 String                    @id @default(cuid())
-  customerId         String                    @map("customer_id")
-  customer           Customer                  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  provider           BillingProvider
-  externalId         String                    @map("external_id")
-  planId             String                    @map("plan_id")
-  variantId          String                    @map("variant_id")
-  status             BillingSubscriptionStatus
-  interval           BillingInterval?
-  currency           String?
-  amount             Int?
-  cancelAtPeriodEnd  Boolean                   @default(false) @map("cancel_at_period_end")
-  currentPeriodStart DateTime?                 @map("current_period_start")
-  currentPeriodEnd   DateTime?                 @map("current_period_end")
-  trialEndsAt        DateTime?                 @map("trial_ends_at")
-  metadata           Json?
-  createdAt          DateTime                  @default(now()) @map("created_at")
-  updatedAt          DateTime                  @updatedAt @map("updated_at")
+  id             String             @id @default(cuid())
+  customerId     String             @map("customer_id")
+  customer       Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  externalId     String             @map("external_id")
+  variantId      String             @map("variant_id")
+  status         SubscriptionStatus
+  store          String
+  periodStartsAt DateTime           @map("period_starts_at")
+  periodEndsAt   DateTime           @map("period_ends_at")
+  trialStartsAt  DateTime?          @map("trial_starts_at")
+  trialEndsAt    DateTime?          @map("trial_ends_at")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
 
-  @@unique([externalId, provider])
-  @@index([customerId, status])
-  @@map("billing_subscription")
+  @@unique([externalId, store])
+  @@map("subscription")
   @@schema("billing")
 }
 
 model Order {
-  id         String             @id @default(cuid())
-  customerId String             @map("customer_id")
-  customer   Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  provider   BillingProvider
-  externalId String             @map("external_id")
-  planId     String             @map("plan_id")
-  variantId  String             @map("variant_id")
-  status     BillingOrderStatus
-  currency   String?
-  amount     Int?
-  metadata   Json?
-  createdAt  DateTime           @default(now()) @map("created_at")
-  updatedAt  DateTime           @updatedAt @map("updated_at")
+  id         String        @id @default(cuid())
+  customerId String        @map("customer_id")
+  customer   Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  externalId String        @map("external_id")
+  variantId  String        @map("variant_id")
+  status     PaymentStatus
+  store      String
+  createdAt  DateTime      @default(now()) @map("created_at")
+  updatedAt  DateTime      @updatedAt @map("updated_at")
 
-  @@unique([externalId, provider])
-  @@index([customerId, status])
-  @@map("billing_order")
-  @@schema("billing")
-}
-
-model WebhookEvent {
-  id          String          @id @default(cuid())
-  customerId  String?         @map("customer_id")
-  customer    Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  provider    BillingProvider
-  externalId  String?         @map("external_id")
-  eventType   String          @map("event_type")
-  payload     Json
-  processedAt DateTime?       @map("processed_at")
-  createdAt   DateTime        @default(now()) @map("created_at")
-
-  @@index([provider, eventType])
-  @@index([externalId])
-  @@map("billing_webhook_event")
+  @@unique([externalId, store])
+  @@map("order")
   @@schema("billing")
 }
