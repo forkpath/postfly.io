@@ -361,7 +361,7 @@ export const Route = createFileRoute('/_app/warehouse/inventory/')({
       warehouse: ['view']
     })
     if (!hasAccess) {
-      throw redirect({ to: pathsConfig.user.settings.index })
+      throw redirect({ to: pathsConfig.user.profile })
     }
   },
   component: InventoryPage

@@ -13,7 +13,7 @@ interface AnonymousLoginProps {
   readonly redirectTo?: string
 }
 
-export const AnonymousLogin = ({ redirectTo = pathsConfig.user.settings.index }: AnonymousLoginProps) => {
+export const AnonymousLogin = ({ redirectTo = pathsConfig.user.profile }: AnonymousLoginProps) => {
   const navigate = useNavigate()
   const { t } = useTranslation('auth')
   const { provider, setProvider, isSubmitting, setIsSubmitting } = useAuthFormStore()

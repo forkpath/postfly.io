@@ -73,7 +73,7 @@ export const WorkspaceSelector = () => {
     markSelected()
     // setActive 更新 session cookie 后，使用硬导航确保页面完全重载
     // 避免 TanStack Router 的 beforeLoad 在 cookie 未同步时读取到无效 session
-    window.location.href = pathsConfig.user.settings.index
+    window.location.href = pathsConfig.user.profile
   }, [markSelected, resetNavigation])
 
   const handleSelectOrganization = useCallback(

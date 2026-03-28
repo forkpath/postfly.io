@@ -30,7 +30,7 @@ interface RegisterFormProps {
   readonly email?: string
 }
 
-export const RegisterForm = memo<RegisterFormProps>(({ redirectTo = pathsConfig.user.settings.index, email }) => {
+export const RegisterForm = memo<RegisterFormProps>(({ redirectTo = pathsConfig.user.profile, email }) => {
   const { t } = useTranslation(['common', 'auth'])
   const { provider, setProvider, isSubmitting, setIsSubmitting } = useAuthFormStore()
 

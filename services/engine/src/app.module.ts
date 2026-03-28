@@ -19,6 +19,7 @@ import { AppService } from './app.service'
 import { BillingModule } from './presentation/http/billing/billing.module'
 import { CustomerModule } from './presentation/http/customer/customer.module'
 import { OrganizationModule } from './presentation/http/organization/organization.module'
+import { StorageModule } from './presentation/http/storage/storage.module'
 import { UserModule } from './presentation/http/user/user.module'
 
 @Module({
@@ -77,7 +78,8 @@ import { UserModule } from './presentation/http/user/user.module'
     BillingModule,
     UserModule,
     OrganizationModule,
-    CustomerModule
+    CustomerModule,
+    StorageModule
   ],
   controllers: [AppController],
   providers: [

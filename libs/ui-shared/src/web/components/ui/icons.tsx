@@ -95,7 +95,9 @@ import {
   VenetianMask,
   Webhook,
   X,
-  XCircle
+  XCircle,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react'
 
 import { Icons as GlobalIcons } from '../../../common/assets'
@@ -198,7 +200,9 @@ export const Icons = {
   RefreshCw,
   ShoppingCart,
   Truck,
-  ClipboardList
+  ClipboardList,
+  ZoomIn,
+  ZoomOut
 }
 
 export type Icon = (typeof Icons)[keyof typeof Icons]

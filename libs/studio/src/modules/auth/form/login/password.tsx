@@ -32,7 +32,7 @@ interface PasswordLoginFormProps {
 }
 
 export const PasswordLoginForm = memo<PasswordLoginFormProps>(
-  ({ redirectTo = pathsConfig.user.settings.index, email, onTwoFactorRedirect }) => {
+  ({ redirectTo = pathsConfig.user.profile, email, onTwoFactorRedirect }) => {
     const { t } = useTranslation(['common', 'auth'])
     const { provider, setProvider, isSubmitting, setIsSubmitting } = useAuthFormStore()
 

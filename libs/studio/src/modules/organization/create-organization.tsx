@@ -61,7 +61,7 @@ export const CreateOrganizationModal = ({ trigger }: CreateOrganizationModalProp
       setOpen(false)
       form.reset()
       if (data?.slug) {
-        void navigate({ to: pathsConfig.organization.index })
+        void navigate({ to: pathsConfig.crm.index })
       }
     }
   })

@@ -14,7 +14,7 @@ export const Route = createFileRoute('/auth')({
     } | null
     if (session?.user) {
       // 已登录用户重定向到 dashboard
-      throw redirect({ to: pathsConfig.user.settings.index })
+      throw redirect({ to: pathsConfig.user.profile })
     }
   },
   component: AuthLayout

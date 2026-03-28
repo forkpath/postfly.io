@@ -25,7 +25,7 @@ import {
 import { pathsConfig } from '../../../../config/paths'
 import { auth } from '../../lib/api'
 
-const TotpForm = memo<FormProps>(({ redirectTo = pathsConfig.user.settings.index }) => {
+const TotpForm = memo<FormProps>(({ redirectTo = pathsConfig.user.profile }) => {
   const navigate = useNavigate()
   const { t } = useTranslation(['common', 'auth'])
 

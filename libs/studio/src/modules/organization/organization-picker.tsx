@@ -33,7 +33,7 @@ export const OrganizationPicker = () => {
                 buttonVariants({ variant: 'outline' }),
                 'text-muted-foreground h-36 w-full items-center justify-between gap-3 px-6 py-4 has-[>svg]:px-6'
               )}
-              href={pathsConfig.organization.index}
+              href={pathsConfig.crm.index}
             >
               <div className="flex w-full min-w-0 flex-col items-start gap-3">
                 <Avatar className="size-16">

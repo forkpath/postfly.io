@@ -62,41 +62,39 @@ const SocialProvider = ({
   )
 }
 
-export const SocialProviders = memo<SocialProvidersProps>(
-  ({ providers, redirectTo = pathsConfig.user.settings.index }) => {
-    const { provider: actualProvider, setProvider, isSubmitting, setIsSubmitting } = useAuthFormStore()
+export const SocialProviders = memo<SocialProvidersProps>(({ providers, redirectTo = pathsConfig.user.profile }) => {
+  const { provider: actualProvider, setProvider, isSubmitting, setIsSubmitting } = useAuthFormStore()
 
-    const signIn = useMutation({
-      ...auth.mutations.signIn.social,
-      onMutate: ({ provider }) => {
-        setProvider(provider as SocialProviderType)
-        setIsSubmitting(true)
-      },
-      onSettled: () => {
-        setIsSubmitting(false)
-      }
-    })
+  const signIn = useMutation({
+    ...auth.mutations.signIn.social,
+    onMutate: ({ provider }) => {
+      setProvider(provider as SocialProviderType)
+      setIsSubmitting(true)
+    },
+    onSettled: () => {
+      setIsSubmitting(false)
+    }
+  })
 
-    return (
-      <div className="flex flex-wrap gap-2">
-        {Object.values(providers).map(provider => (
-          <SocialProvider
-            key={provider}
-            provider={provider}
-            isSubmitting={isSubmitting}
-            onClick={() =>
-              signIn.mutate({
-                provider,
-                callbackURL: redirectTo,
-                errorCallbackURL: pathsConfig.auth.error
-              })
-            }
-            actualProvider={actualProvider}
-          />
-        ))}
-      </div>
-    )
-  }
-)
+  return (
+    <div className="flex flex-wrap gap-2">
+      {Object.values(providers).map(provider => (
+        <SocialProvider
+          key={provider}
+          provider={provider}
+          isSubmitting={isSubmitting}
+          onClick={() =>
+            signIn.mutate({
+              provider,
+              callbackURL: redirectTo,
+              errorCallbackURL: pathsConfig.auth.error
+            })
+          }
+          actualProvider={actualProvider}
+        />
+      ))}
+    </div>
+  )
+})
 
 SocialProviders.displayName = 'SocialProviders'

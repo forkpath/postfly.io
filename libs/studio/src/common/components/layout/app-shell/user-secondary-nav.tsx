@@ -116,31 +116,17 @@ export const UserSecondaryNav = memo<UserSecondaryNavProps>(({ user, organizatio
     {
       icon: <Icons.User className="size-4" />,
       label: t('account.profile'),
-      href: pathsConfig.user.settings.index
+      href: pathsConfig.user.profile
     },
     {
       icon: <Icons.CreditCard className="size-4" />,
       label: t('billing'),
-      href: pathsConfig.user.settings.billing
+      href: pathsConfig.user.billing
     },
     {
       icon: <Icons.Lock className="size-4" />,
       label: t('security'),
-      href: pathsConfig.user.settings.security
-    }
-  ]
-
-  // 组织相关菜单项
-  const organizationItems: UserNavItem[] = [
-    {
-      icon: <Icons.Users className="size-4" />,
-      label: t('members'),
-      href: pathsConfig.organization.members
-    },
-    {
-      icon: <Icons.Settings2 className="size-4" />,
-      label: t('organization') + ' ' + t('settings'),
-      href: pathsConfig.organization.settings
+      href: pathsConfig.user.security
     }
   ]
 
@@ -171,20 +157,6 @@ export const UserSecondaryNav = memo<UserSecondaryNavProps>(({ user, organizatio
           <span className="text-muted-foreground mb-2 block px-3 text-xs font-medium uppercase">{t('account')}</span>
           <nav className="flex flex-col gap-0.5">
             {accountItems.map(item => (
-              <NavItem key={item.href} item={item} isActive={isActive(item.href)} />
-            ))}
-          </nav>
-        </div>
-
-        <Separator className="my-3" />
-
-        {/* 组织管理 */}
-        <div className="mb-4">
-          <span className="text-muted-foreground mb-2 block px-3 text-xs font-medium uppercase">
-            {t('organization')}
-          </span>
-          <nav className="flex flex-col gap-0.5">
-            {organizationItems.map(item => (
               <NavItem key={item.href} item={item} isActive={isActive(item.href)} />
             ))}
           </nav>
@@ -263,27 +235,17 @@ export function getUserNavMobileItems(t: (key: string) => string): { icon: React
     {
       icon: <Icons.User className="size-4" />,
       label: t('account.profile'),
-      href: pathsConfig.user.settings.index
+      href: pathsConfig.user.profile
     },
     {
       icon: <Icons.CreditCard className="size-4" />,
       label: t('billing'),
-      href: pathsConfig.user.settings.billing
+      href: pathsConfig.user.billing
     },
     {
       icon: <Icons.Lock className="size-4" />,
       label: t('security'),
-      href: pathsConfig.user.settings.security
-    },
-    {
-      icon: <Icons.Users className="size-4" />,
-      label: t('members'),
-      href: pathsConfig.organization.members
-    },
-    {
-      icon: <Icons.Settings2 className="size-4" />,
-      label: t('organization.settings'),
-      href: pathsConfig.organization.settings
+      href: pathsConfig.user.security
     }
   ]
 }

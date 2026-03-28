@@ -29,7 +29,7 @@ const queries = {
   summary: {
     get: queryOptions({
       queryKey: [KEY, 'me'],
-      queryFn: () => request('/api/billing/me')
+      queryFn: () => request('/api/v1/billing/me')
     })
   }
 }
@@ -38,7 +38,7 @@ const mutations = {
   checkout: mutationOptions({
     mutationKey: [KEY, 'checkout'],
     mutationFn: (input: { variantId: string; successUrl: string; cancelUrl: string }) =>
-      request<{ provider: 'stripe'; url: string | null }>('/api/billing/checkout', {
+      request<{ provider: 'stripe'; url: string | null }>('/api/v1/billing/checkout', {
         method: 'POST',
         body: JSON.stringify(input)
       })
@@ -46,7 +46,7 @@ const mutations = {
   portal: mutationOptions({
     mutationKey: [KEY, 'portal'],
     mutationFn: (input: { returnUrl: string }) =>
-      request<{ provider: 'stripe'; url: string }>('/api/billing/portal', {
+      request<{ provider: 'stripe'; url: string }>('/api/v1/billing/portal', {
         method: 'POST',
         body: JSON.stringify(input)
       })

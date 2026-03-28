@@ -91,7 +91,7 @@ const config: Config = {
     accessKeySecret: process.env['STORAGE_ACCESS_KEY_SECRET'] || 'storage_access_key_secret',
     bucket: process.env['STORAGE_BUCKET'] || 'ray',
     region: process.env['STORAGE_REGION'] || 'us-east-1',
-    endpoint: process.env['STORAGE_ENDPOINT'] || 'localhost'
+    endpoint: process.env['STORAGE_END_POINT'] || ''
   },
   sms: {
     accessKeyId: process.env['SMS_ACCESS_KEY_ID'] || 'sms_access_key_id',

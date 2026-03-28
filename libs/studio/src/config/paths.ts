@@ -3,7 +3,6 @@ const AI_PREFIX = '/ai'
 const AUTH_PREFIX = '/auth'
 const BLOG_PREFIX = '/blog'
 const CRM_PREFIX = '/crm'
-const ORGANIZATION_PREFIX = '/organization'
 const USER_PREFIX = '/user'
 const WORKSPACE_PREFIX = '/workspace'
 const LEGAL_PREFIX = '/legal'
@@ -73,16 +72,9 @@ const pathsConfig = {
     legal: (slug: string) => `${LEGAL_PREFIX}/${slug}`
   },
   user: {
-    settings: {
-      index: `${USER_PREFIX}/settings`,
-      security: `${USER_PREFIX}/settings/security`,
-      billing: `${USER_PREFIX}/settings/billing`
-    }
-  },
-  organization: {
-    index: ORGANIZATION_PREFIX,
-    settings: `${ORGANIZATION_PREFIX}/settings`,
-    members: `${ORGANIZATION_PREFIX}/members`
+    profile: `${USER_PREFIX}/profile`,
+    security: `${USER_PREFIX}/security`,
+    billing: `${USER_PREFIX}/billing`
   },
   workspace: {
     index: WORKSPACE_PREFIX,
@@ -94,7 +86,6 @@ export {
   pathsConfig,
   ADMIN_PREFIX,
   CRM_PREFIX,
-  ORGANIZATION_PREFIX,
   USER_PREFIX,
   WORKSPACE_PREFIX,
   BLOG_PREFIX,

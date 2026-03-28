@@ -13,7 +13,7 @@ export const Route = createFileRoute('/_app/admin')({
   beforeLoad: async ({ context }) => {
     const user = context.user as User
     if (!hasAdminPermission(user)) {
-      throw redirect({ to: pathsConfig.user.settings.index })
+      throw redirect({ to: pathsConfig.user.profile })
     }
   },
   component: AdminRoute

@@ -135,7 +135,7 @@ const HOVER_OPEN_DELAY = 100
 /** 鼠标离开关闭下拉菜单的延迟时间（毫秒） */
 const HOVER_CLOSE_DELAY = 200
 /** 用户导航的路径前缀（用于判断用户导航是否激活） */
-const USER_NAV_PATHS = ['/user', '/organization']
+const USER_NAV_PATHS = ['/user']
 
 // ============================================================================
 // 内部组件：AppShellInner
@@ -168,7 +168,7 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
     async (organizationId: string | null) => {
       await authClient.organization.setActive({ organizationId })
       resetNavigation()
-      window.location.href = organizationId ? pathsConfig.crm.index : pathsConfig.user.settings.index
+      window.location.href = organizationId ? pathsConfig.crm.index : pathsConfig.user.profile
     },
     [resetNavigation]
   )
@@ -203,7 +203,7 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
 
   /**
    * 判断用户导航是否激活
-   * 当前路径以 /user 或 /organization 开头时激活
+   * 当前路径以 /user 开头时激活
    */
   const isUserNavActive = useCallback(() => {
     const currentPath = location.pathname
@@ -567,7 +567,7 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                       setUserNavExpanded(true)
                     }
                     // 跳转到用户路由：最后访问的 > 默认设置页
-                    const targetPath = getLastVisitedRoute('/user', pathsConfig.user.settings.index)
+                    const targetPath = getLastVisitedRoute('/user', pathsConfig.user.profile)
                     if (location.pathname !== targetPath) {
                       void navigate({ to: targetPath })
                     }
@@ -601,7 +601,7 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                       onMouseLeave={handleUserNavLeave}
                       onClick={() => {
                         // 点击跳转到用户路由（与展开模式行为一致）
-                        const targetPath = getLastVisitedRoute('/user', pathsConfig.user.settings.index)
+                        const targetPath = getLastVisitedRoute('/user', pathsConfig.user.profile)
                         if (location.pathname !== targetPath) {
                           void navigate({ to: targetPath })
                         }

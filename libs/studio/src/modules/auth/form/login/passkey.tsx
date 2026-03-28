@@ -15,7 +15,7 @@ interface PasskeyLoginProps {
   readonly redirectTo?: string
 }
 
-export const PasskeyLogin = ({ redirectTo = pathsConfig.user.settings.index }: PasskeyLoginProps) => {
+export const PasskeyLogin = ({ redirectTo = pathsConfig.user.profile }: PasskeyLoginProps) => {
   const navigate = useNavigate()
   const { setProvider, setIsSubmitting, isSubmitting, provider } = useAuthFormStore()
   const { t } = useTranslation(['auth', 'common'])
