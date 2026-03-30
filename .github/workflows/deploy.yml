@@ -1,0 +1,41 @@
+name: Deploy
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  verify-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure tag is on main
+        run: |
+          TAG_COMMIT=$(git rev-list -n 1 "$GITHUB_REF")
+          if ! git merge-base --is-ancestor "$TAG_COMMIT" origin/main; then
+            echo "::error::Tag must be on main branch"
+            exit 1
+          fi
+
+  deploy:
+    needs: verify-branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ vars.DEPLOY_PORT || 22 }}
+          script: |
+            cd ${{ vars.DEPLOY_PATH || '/opt/ray' }}
+            git fetch --tags
+            git checkout ${{ github.ref_name }}
+            ./scripts/deploy.sh update

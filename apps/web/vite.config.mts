@@ -6,8 +6,11 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import tailwindcss from '@tailwindcss/vite'
 import viteReact from '@vitejs/plugin-react'
+import { nitro } from 'nitro/vite'
 import { defineConfig } from 'vite'
 import svgr from 'vite-plugin-svgr'
+
+const isDev = process.env.NODE_ENV !== 'production'
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -29,11 +32,9 @@ export default defineConfig(() => ({
     host: 'localhost'
   },
   plugins: [
-    // 保证这个插件在最前面
     nxViteTsPaths(),
     nxCopyAssetsPlugin(['*.md']),
     devtools(),
-    // SVG as React components - 使用 ?react 后缀
     svgr({
       svgrOptions: {
         exportType: 'default',
@@ -48,10 +49,12 @@ export default defineConfig(() => ({
         quoteStyle: 'single'
       }
     }),
+    nitro({
+      preset: isDev ? undefined : 'node-server'
+    }),
     viteReact(),
     tailwindcss()
   ],
-  // SSR 配置 - 确保所有 libs 在 SSR 时也能被正确处理
   ssr: {
     noExternal: [
       '@libs/ui-shared',

@@ -17,7 +17,17 @@ const __dirname = dirname(__filename)
 const ROOT_DIR = join(__dirname, '..')
 
 // 需要清理的目录
-const TARGET_DIRS = ['node_modules', 'dist', '.nx', '.vite', '.cache', '.tanstack', '.log', '.playwright-mcp']
+const TARGET_DIRS = [
+  'node_modules',
+  'dist',
+  '.nx',
+  '.vite',
+  '.cache',
+  '.tanstack',
+  '.log',
+  '.playwright-mcp',
+  '.output'
+]
 
 // 跳过的目录（性能优化）
 const SKIP_DIRS = ['node_modules', '.git']

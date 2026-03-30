@@ -1,0 +1,60 @@
+_format_version: '3.0'
+_transform: true
+
+services:
+  # ─── Engine (NestJS API) ──────────────────────────────────────
+  - name: engine-api
+    url: http://engine:8000
+    routes:
+      - name: engine-api-route
+        paths:
+          - /api
+        strip_path: false
+        preserve_host: true
+    plugins:
+      - name: cors
+        config:
+          origins:
+            - '*'
+          methods:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+            - OPTIONS
+          headers:
+            - Content-Type
+            - Authorization
+            - Accept
+            - Cookie
+          credentials: true
+          max_age: 3600
+
+  # ─── Auth (Better Auth via Engine) ────────────────────────────
+  - name: engine-auth
+    url: http://engine:8000
+    routes:
+      - name: engine-auth-route
+        paths:
+          - /api/auth
+        strip_path: false
+        preserve_host: true
+
+  # ─── Web (TanStack Start SSR + SPA) ──────────────────────────
+  - name: web-ssr
+    url: http://web:3000
+    routes:
+      - name: web-catch-all
+        paths:
+          - /
+        strip_path: false
+        preserve_host: true
+
+plugins:
+  - name: rate-limiting
+    config:
+      minute: 200
+      policy: local
+      fault_tolerant: true
+      hide_client_headers: false
