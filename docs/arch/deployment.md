@@ -1,224 +1,307 @@
-# Deployment Architecture
+# 部署指南
 
-## Overview
+## 架构概览
 
 ```
-                         ┌──────────────┐
-          Client ──────► │   Kong :80   │
-                         └──────┬───────┘
-                                │
-                   ┌────────────┴────────────┐
-                   │                         │
-            /api/* │                    /* (other)
-                   ▼                         ▼
-           ┌──────────────┐         ┌──────────────┐
-           │ Engine :8000 │         │  Web  :3000  │
-           │   (NestJS)   │         │ (TanStack SSR│
-           └──────┬───────┘         └──────────────┘
-                  │
-     ┌────────────┼────────────┐
-     ▼            ▼            ▼
- PostgreSQL    MongoDB      Redis
-   :5432       :27017       :6379
+                    ┌──────────────────┐
+    Client ───────► │  Kong :80/:443   │
+                    └────────┬─────────┘
+                             │
+                ┌────────────┴────────────┐
+                │                         │
+         /api/* │                    /* (other)
+                ▼                         ▼
+        ┌──────────────┐         ┌──────────────┐
+        │ Engine :8000 │         │  Web  :3000  │
+        │   (NestJS)   │         │ (TanStack SSR│
+        └──────┬───────┘         └──────────────┘
+               │
+  ┌────────────┼────────────┐
+  ▼            ▼            ▼
+PostgreSQL   MongoDB      Redis
+ :5432       :27017       :6379
 ```
 
-Kong acts as the API gateway / reverse proxy:
-- `/api/*` → Engine (NestJS, port 8000)
-- `/*`     → Web (TanStack Start SSR, port 3000)
+- Kong 作为 API 网关 / 反向代理，自动管理 HTTPS 证书
+- `http://` 和 `www.` 开头的请求全部 301 到 `https://裸域名`
+- `/api/*` → Engine（NestJS）
+- `/*` → Web（TanStack Start SSR + SPA）
 
-## Docker Images
+## 更新策略
 
-### Web (`docker/web.Dockerfile`)
-Multi-stage build using Nitro to produce a self-contained SSR server.
-
-- **Build**: Full monorepo → `nx run web:build` → Nitro bundles to `.output/`
-- **Runtime**: `node .output/server/index.mjs` — only needs Node.js, no node_modules
-- **Size**: ~50MB compressed
-- `VITE_*` variables are **baked at build time** via `--build-arg`
-
-### Engine (`docker/engine.Dockerfile`)
-Multi-stage build using Nx prune for a minimal production bundle.
-
-- **Build**: Full monorepo → `nx run engine:prune` → pruned lockfile + workspace modules
-- **Runtime**: `node main.js` with production `node_modules`
-- Environment variables are read at **runtime** via `ConfigService`
-
-## Update Strategy
-
-Deployments **only rebuild and restart application services** (engine, web).
-Infrastructure containers (Redis, PostgreSQL, MongoDB, RabbitMQ, Kong, Konga)
-are never touched during updates — their images are pinned to specific versions
-and their data volumes are preserved.
+每次部署**仅重建和重启 engine、web**，基础设施容器不受影响。
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  Infrastructure (started once, never redeployed)    │
+│  基础设施（首次启动后不再变动）                         │
 │  redis:7.4 · postgres:17 · mongo:8.0               │
 │  rabbitmq:4.0.1 · kong:3.9 · konga                 │
-│  ↕ named volumes: ray-redis, ray-postgres, etc.     │
+│  ↕ 持久化卷: ray-redis, ray-postgres, ray-mongo …   │
 ├─────────────────────────────────────────────────────┤
-│  Application (rebuilt on every deploy)              │
+│  应用（每次部署重建）                                  │
 │  engine · web                                       │
 └─────────────────────────────────────────────────────┘
 ```
 
-## First-time Server Setup
+---
+
+## 首次部署
+
+### 前置条件
+
+- 一台 Linux 服务器（推荐 Ubuntu 22.04+），已安装 Docker 和 Docker Compose
+- Git 已安装
+- 域名已购买，DNS 能配置 A 记录
+
+### 步骤 1：克隆代码
 
 ```bash
-# 1. Clone repo to /opt
 sudo mkdir -p /opt/ray && sudo chown $(whoami) /opt/ray
-git clone <repo-url> /opt/ray && cd /opt/ray
+git clone <repo-url> /opt/ray
+cd /opt/ray
+```
 
-# 2. Configure environment
+### 步骤 2：配置环境变量（唯一需要手动编辑的环节）
+
+```bash
 cp .env.example docker/.env
-# Edit docker/.env with production values
+vim docker/.env
+```
 
-# 3. Start infrastructure first
+**必须修改的变量：**
+
+| 变量 | 示例值 | 说明 |
+|---|---|---|
+| `DOMAIN` | `postfly.io` | 生产域名，Kong ACME 插件用此申请证书 |
+| `ACME_EMAIL` | `admin@postfly.io` | Let's Encrypt 通知邮箱 |
+| `VITE_URL` | `https://postfly.io` | 前端访问 URL |
+| `VITE_PRODUCT_NAME` | `Postfly` | 产品名称 |
+| `BETTER_AUTH_SECRET` | 随机 32+ 字符 | Session token 签名密钥 |
+| `BETTER_AUTH_URL` | `https://postfly.io` | Better Auth 回调地址 |
+| `CORS_ORIGINS` | `https://postfly.io` | 允许跨域的前端域名 |
+| `POSTGRES_PASSWORD` | 强密码 | PostgreSQL 密码 |
+| `REDIS_PASSWORD` | 强密码 | Redis 密码 |
+| `MONGO_INITDB_ROOT_PASSWORD` | 强密码 | MongoDB 密码 |
+| `STRIPE_SECRET_KEY` | `sk_live_xxx` | Stripe 服务端密钥 |
+| `STRIPE_WEBHOOK_SECRET` | `whsec_xxx` | Stripe Webhook 签名密钥 |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | `pk_live_xxx` | Stripe 前端公钥 |
+| OAuth 相关 | 各平台密钥 | Google / GitHub / Apple 登录 |
+
+**环境变量在各阶段的使用方式：**
+
+| 变量类型 | 使用时机 | 说明 |
+|---|---|---|
+| `VITE_*` | Docker build 阶段 | 通过 `--build-arg` 写入前端 JS，不可运行时更改 |
+| `VITE_*` | 容器运行时 | envin (Zod) 在 SSR 服务器启动时通过 `process.env` 读取校验 |
+| `DOMAIN` / `ACME_EMAIL` / `REDIS_PASSWORD` | Kong 启动时 | `entrypoint.sh` 渲染 `kong.yml` 模板 |
+| 其余所有变量 | 容器运行时 | `env_file: .env` 注入到 engine 和 web 容器 |
+
+> **注意：** Web 容器也需要 `BETTER_AUTH_SECRET` 等服务端变量，因为 SSR 服务器执行
+> auth 逻辑时 envin 会校验这些值。如果缺失，SSR 服务器启动即崩溃
+> (`EnvError: Invalid environment variables`)。这就是 web 服务和 engine 共用同一份
+> `docker/.env` 的原因。
+
+### 步骤 3：启动基础设施
+
+```bash
 ./scripts/deploy.sh infra
+```
 
-# 4. Build and start app services
-./scripts/deploy.sh build
-./scripts/deploy.sh up
+启动 Redis、PostgreSQL、MongoDB、RabbitMQ，等待 healthcheck 全部通过。
 
-# 5. Run database migrations
+### 步骤 4：构建并启动应用
+
+```bash
+./scripts/deploy.sh build    # 构建 engine + web Docker 镜像
+./scripts/deploy.sh up       # 启动全部服务（含 Kong、Konga）
+```
+
+### 步骤 5：数据库迁移
+
+```bash
 ./scripts/deploy.sh migrate
 ```
 
-## Deploy Script (`scripts/deploy.sh`)
+### 步骤 6：配置 DNS
 
-| Command | Description |
-|---|---|
-| `update` (default) | `git pull` → rebuild engine+web → restart engine+web |
-| `build` | Build engine+web images only |
-| `up` | Start all services |
-| `restart` | Restart engine+web only (no rebuild) |
-| `down` | Stop all services (volumes preserved) |
-| `infra` | Start infrastructure only |
-| `logs [service]` | Tail logs (default: engine web) |
-| `status` | Show running containers |
-| `migrate` | Run Prisma migrations |
+在域名服务商处添加以下记录：
 
-`VITE_*` build args are read from `docker/.env` during `docker compose build`
-via the `build.args` section in `docker-compose.yml`.
-
-## Automatic Deployment via GitHub Actions
-
-Pushing a tag on main triggers the deploy workflow (`.github/workflows/deploy.yml`):
-
-```bash
-git tag v1.0.0 && git push origin v1.0.0
-```
-
-The workflow will:
-1. Verify the tag is on the `main` branch (tags on other branches are rejected)
-2. SSH into the server
-3. `git checkout` the tagged commit at `/opt/ray`
-4. Run `./scripts/deploy.sh update` (only rebuilds engine + web)
-
-### Required GitHub Secrets
-
-| Secret | Description |
-|---|---|
-| `DEPLOY_HOST` | Server IP or hostname |
-| `DEPLOY_USER` | SSH username |
-| `DEPLOY_SSH_KEY` | SSH private key (ed25519 recommended) |
-
-### Optional GitHub Variables
-
-| Variable | Default | Description |
+| 记录类型 | 主机记录 | 记录值 |
 |---|---|---|
-| `DEPLOY_PORT` | `22` | SSH port |
-| `DEPLOY_PATH` | `/opt/ray` | Project path on server |
+| A | `@` | 服务器 IP |
+| A | `www` | 服务器 IP |
 
-### Server-side SSH setup
+DNS 生效后，首次通过 `https://postfly.io` 访问时，Kong ACME 插件会自动向 Let's Encrypt 申请证书。
+
+### 步骤 7：配置 GitHub Actions 自动部署（可选）
+
+在 GitHub 仓库设置中添加 Secrets：
+
+| Secret | 说明 |
+|---|---|
+| `DEPLOY_HOST` | 服务器 IP 或域名 |
+| `DEPLOY_USER` | SSH 用户名 |
+| `DEPLOY_SSH_KEY` | SSH 私钥 |
+
+生成部署专用密钥对：
 
 ```bash
-# 1. Generate SSH key pair (on your local machine)
+# 本地机器
 ssh-keygen -t ed25519 -C "github-deploy" -f ~/.ssh/ray-deploy
 
-# 2. Add public key to server's authorized_keys
+# 将公钥添加到服务器
 ssh-copy-id -i ~/.ssh/ray-deploy.pub user@server
 
-# 3. Add private key content to GitHub Secrets as DEPLOY_SSH_KEY
+# 将私钥内容复制到 GitHub Secrets → DEPLOY_SSH_KEY
 cat ~/.ssh/ray-deploy
 ```
 
-## Kong Configuration
+可选的 GitHub Variables：
 
-Kong runs in **DB-less mode** with declarative config at `docker/kong/kong.yml`.
+| Variable | 默认值 | 说明 |
+|---|---|---|
+| `DEPLOY_PORT` | `22` | SSH 端口 |
+| `DEPLOY_PATH` | `/opt/ray` | 服务器上的项目路径 |
 
-### Routing Rules
+---
 
-| Priority | Path | Upstream |
+## 日常更新
+
+### 方式一：手动（在服务器上执行）
+
+```bash
+cd /opt/ray
+./scripts/deploy.sh          # git pull → 重建 engine+web → 重启
+./scripts/deploy.sh migrate  # 如果数据库 schema 有变更
+```
+
+### 方式二：自动（推荐）
+
+在本地 main 分支上打 tag 并推送：
+
+```bash
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+GitHub Actions 会自动：
+1. 验证 tag 在 main 分支上（其他分支的 tag 会被拒绝）
+2. SSH 到服务器
+3. `git checkout v1.0.1`
+4. 执行 `./scripts/deploy.sh update`（仅重建 engine + web）
+
+---
+
+## deploy.sh 命令参考
+
+| 命令 | 说明 |
+|---|---|
+| `update`（默认） | `git pull` → 重建 engine+web → 重启 engine+web |
+| `build` | 仅构建 engine+web 镜像 |
+| `up` | 启动全部服务 |
+| `restart` | 仅重启 engine+web（不重新构建） |
+| `down` | 停止全部服务（数据卷保留） |
+| `infra` | 仅启动基础设施 |
+| `logs [service]` | 查看日志（默认 engine + web） |
+| `status` | 查看容器运行状态 |
+| `migrate` | 执行 Prisma 数据库迁移 |
+
+---
+
+## 什么时候需要改环境变量？
+
+| 场景 | 操作 |
+|---|---|
+| 日常发版 | **不需要**动 `.env` |
+| 换域名 | 改 `DOMAIN`、`VITE_URL`、`BETTER_AUTH_URL`、`CORS_ORIGINS`，然后 `deploy.sh build` + `deploy.sh up` |
+| 改 Stripe 密钥 | 改对应的 `STRIPE_*` / `VITE_STRIPE_*`，然后 `deploy.sh build` + `deploy.sh up` |
+| 加新的 OAuth 提供商 | 加对应密钥，`deploy.sh restart`（不需要 rebuild） |
+| 改数据库密码 | 改密码后 `deploy.sh down` + `deploy.sh up`（基础设施也需重启） |
+| 仅改服务端变量（非 `VITE_*`） | 改完后 `deploy.sh restart` 即可 |
+| 改 `VITE_*` 变量 | 必须 `deploy.sh build` + `deploy.sh up`（需要重新构建写入前端 JS） |
+
+---
+
+## Docker 镜像说明
+
+### Web（`docker/web.Dockerfile`）
+
+多阶段构建，使用 Nitro 生成自包含的 SSR 服务器。
+
+- **构建**：完整 monorepo → `nx run web:build` → Nitro 打包到 `.output/`
+- **运行**：`node .output/server/index.mjs`，无需 `node_modules`
+- **体积**：约 50MB（压缩后）
+- `VITE_*` 变量在构建时通过 `--build-arg` 注入
+
+### Engine（`docker/engine.Dockerfile`）
+
+多阶段构建，使用 Nx prune 生成最小化的生产包。
+
+- **构建**：完整 monorepo → `nx run engine:prune` → 裁剪后的 lockfile + 最小 workspace 模块
+- **运行**：`node main.js`，需要生产环境 `node_modules`
+- 环境变量在**运行时**通过 `ConfigService` 读取
+
+---
+
+## Kong 配置
+
+Kong 以 **DB-less 模式**运行，声明式配置位于 `docker/kong/kong.yml`。
+
+### 路由规则
+
+| 优先级 | 路径 | 上游 |
 |---|---|---|
 | 1 | `/api/auth/*` | `engine:8000` |
 | 2 | `/api/*` | `engine:8000` |
 | 3 | `/*` | `web:3000` |
 
-### HTTPS & Let's Encrypt
+### HTTPS 与 Let's Encrypt
 
-Kong uses its built-in **ACME plugin** to automatically obtain and renew Let's Encrypt certificates.
-Certificates are stored in Redis (database 1) and auto-renewed 30 days before expiry.
+Kong 使用内置的 **ACME 插件**自动申请和续期 Let's Encrypt 证书。
 
-All HTTP requests are redirected to HTTPS via `301` (except `/.well-known/acme-challenge`
-which must remain HTTP for Let's Encrypt validation).
+- 证书存储在 Redis（database 1），到期前 30 天自动续期
+- 同时为裸域名和 `www.` 子域名申请证书
 
-Required environment variables in `docker/.env`:
+**请求处理流程：**
 
-```bash
-DOMAIN=ray.example.com       # your production domain
-ACME_EMAIL=admin@example.com  # Let's Encrypt account email
+| 访问方式 | 结果 |
+|---|---|
+| `http://postfly.io/*` | 301 → `https://postfly.io/*` |
+| `http://www.postfly.io/*` | 301 → `https://postfly.io/*` |
+| `https://www.postfly.io/*` | 301 → `https://postfly.io/*` |
+| `https://postfly.io/*` | 正常处理 |
+
+**工作原理：**
+1. Kong 启动时，`docker/kong/entrypoint.sh` 将 `${DOMAIN}`、`${ACME_EMAIL}`、`${REDIS_PASSWORD}` 替换到配置模板中
+2. Kong 监听 80（HTTP）和 443（HTTPS）
+3. 首次 HTTPS 请求触发 Let's Encrypt 证书申请
+4. 后续 HTTP / www 请求自动 301 跳转
+5. ACME 插件自动续期
+
+### Konga 管理 UI
+
+通过 `http://<server-ip>:1337` 访问 Konga 管理界面。
+连接 Kong Admin API 地址：`http://kong:8001`。
+
+---
+
+## 文件结构
+
 ```
+docker/
+├── docker-compose.yml          # 服务编排
+├── .env                        # 生产环境变量（不入 git）
+├── web.Dockerfile              # Web 镜像构建
+├── engine.Dockerfile           # Engine 镜像构建
+├── kong/
+│   ├── kong.yml                # Kong 配置模板（含 ${DOMAIN} 等占位符）
+│   └── entrypoint.sh           # Kong 启动前的模板渲染脚本
+└── mongo/
+    └── init-db.js              # MongoDB 初始化脚本
 
-How it works:
-1. On startup, `docker/kong/entrypoint.sh` replaces `${DOMAIN}`, `${ACME_EMAIL}`,
-   `${REDIS_PASSWORD}` in the config template and produces the final `kong.yml`
-2. Kong starts and listens on port 80 (HTTP) and 443 (HTTPS)
-3. First HTTPS request triggers cert acquisition from Let's Encrypt
-4. Subsequent HTTP requests are 301-redirected to HTTPS
-5. Cert renewal is handled automatically by the ACME plugin
+scripts/
+└── deploy.sh                   # 部署脚本
 
-### Konga Admin UI
-Available at port `1337` for managing Kong via browser. Connect to Kong Admin API at `http://kong:8001`.
-
-## Environment Variables
-
-### Build-time (`VITE_*`, baked into client JS)
-These are injected at Docker build time via `--build-arg` and embedded into client-side JS bundles.
-
-### Runtime — Web SSR Server (envin validation)
-The project uses **envin** (Zod-based) to validate environment variables at module load time.
-Even though `VITE_*` are baked into client JS, the SSR server also reads `process.env` at
-runtime via envin's validation. Required variables like `VITE_PRODUCT_NAME`, `VITE_URL`,
-`BETTER_AUTH_SECRET`, etc. must be available in the web container's runtime environment,
-otherwise the SSR server will crash on startup with `EnvError: Invalid environment variables`.
-
-For this reason, the web service uses `env_file: .env` — the same `.env` as the engine.
-
-### Runtime (Engine)
-All engine variables are read at startup. Key overrides in docker-compose:
-
-| Variable | Docker Value | Description |
-|---|---|---|
-| `REDIS_HOST` | `redis` | Docker service name |
-| `MONGO_HOST` | `mongo` | Docker service name |
-| `POSTGRES_HOST` | `postgres` | Docker service name |
-| `RABBITMQ_URI` | `amqp://...@rabbitmq:5672` | Uses Docker service name |
-| `CORS_ORIGINS` | Your domain | Must match the public URL |
-
-## Updating Services
-
-### Manual (on server)
-
-```bash
-cd /opt/ray
-./scripts/deploy.sh          # git pull → rebuild engine+web → restart
-./scripts/deploy.sh migrate  # if schema changed
-```
-
-### Via tag push (automated)
-
-```bash
-git tag v1.0.1 && git push origin v1.0.1
-# GitHub Actions → SSH → server → rebuild engine+web → restart
+.github/workflows/
+└── deploy.yml                  # 自动部署 workflow（tag 触发）
 ```
