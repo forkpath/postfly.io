@@ -155,22 +155,31 @@ Kong runs in **DB-less mode** with declarative config at `docker/kong/kong.yml`.
 | 2 | `/api/*` | `engine:8000` |
 | 3 | `/*` | `web:3000` |
 
+### HTTPS & Let's Encrypt
+
+Kong uses its built-in **ACME plugin** to automatically obtain and renew Let's Encrypt certificates.
+Certificates are stored in Redis (database 1) and auto-renewed 30 days before expiry.
+
+All HTTP requests are redirected to HTTPS via `301` (except `/.well-known/acme-challenge`
+which must remain HTTP for Let's Encrypt validation).
+
+Required environment variables in `docker/.env`:
+
+```bash
+DOMAIN=ray.example.com       # your production domain
+ACME_EMAIL=admin@example.com  # Let's Encrypt account email
+```
+
+How it works:
+1. On startup, `docker/kong/entrypoint.sh` replaces `${DOMAIN}`, `${ACME_EMAIL}`,
+   `${REDIS_PASSWORD}` in the config template and produces the final `kong.yml`
+2. Kong starts and listens on port 80 (HTTP) and 443 (HTTPS)
+3. First HTTPS request triggers cert acquisition from Let's Encrypt
+4. Subsequent HTTP requests are 301-redirected to HTTPS
+5. Cert renewal is handled automatically by the ACME plugin
+
 ### Konga Admin UI
 Available at port `1337` for managing Kong via browser. Connect to Kong Admin API at `http://kong:8001`.
-
-### Adding SSL
-For HTTPS, mount certificates into Kong:
-
-```yaml
-kong:
-  volumes:
-    - ./kong/kong.yml:/etc/kong/kong.yml:ro
-    - ./certs/fullchain.pem:/etc/kong/ssl/fullchain.pem:ro
-    - ./certs/privkey.pem:/etc/kong/ssl/privkey.pem:ro
-  environment:
-    KONG_SSL_CERT: /etc/kong/ssl/fullchain.pem
-    KONG_SSL_CERT_KEY: /etc/kong/ssl/privkey.pem
-```
 
 ## Environment Variables
 

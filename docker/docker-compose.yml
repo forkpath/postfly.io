@@ -168,9 +168,10 @@ services:
     container_name: ray-kong
     networks: [ray-net]
     ports:
-      - '${PUBLIC_PORT:-80}:8000'
-      - '${PUBLIC_SSL_PORT:-443}:8443'
+      - '80:8000'
+      - '443:8443'
       - '8001:8001'
+    entrypoint: ['/entrypoint.sh']
     environment:
       KONG_DATABASE: 'off'
       KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
@@ -183,9 +184,16 @@ services:
       KONG_TRUSTED_IPS: 0.0.0.0/0
       KONG_REAL_IP_HEADER: X-Forwarded-For
       KONG_REAL_IP_RECURSIVE: 'on'
+      KONG_LUA_SSL_TRUSTED_CERTIFICATE: system
+      DOMAIN: ${DOMAIN:-localhost}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
-      - ./kong/kong.yml:/etc/kong/kong.yml:ro
+      - ./kong/kong.yml:/etc/kong/kong.yml.template:ro
+      - ./kong/entrypoint.sh:/entrypoint.sh:ro
     depends_on:
+      redis:
+        condition: service_healthy
       web:
         condition: service_healthy
       engine:

@@ -186,3 +186,11 @@ package: 会先将renderer打包，然后用electron打开
 make: 本地将renderer进行打包，并完成electron打包，输出.deb/.dmg/.exe等可执行程序
 publish: 利用github实现云端发包
 ```
+
+- 本地利用cloudflared进行反向代理
+
+需要在域名上正确的配置tunnel映射
+
+| type   | name       | content                                               |
+| ------ | ---------- | ----------------------------------------------------- |
+| Tunnel | postfly.io | 37531130-b3eb-4c31-83c1-5d521e96def8.cfargotunnel.com |
