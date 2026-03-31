@@ -18,6 +18,9 @@ coverage
 tmp
 *.log
 *.tgz
-apps/mobile
+apps/mobile/src
+apps/mobile/android
+apps/mobile/ios
+apps/mobile/assets
 apps/desktop
 e2e

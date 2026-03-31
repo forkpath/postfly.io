@@ -52,7 +52,6 @@ services:
     container_name: ray-mongo
     networks: [ray-net]
     ports: ['27017:27017']
-    command: ['mongod', '--auth', '--bind_ip_all']
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}

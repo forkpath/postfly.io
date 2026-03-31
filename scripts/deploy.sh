@@ -14,7 +14,9 @@ info()  { printf '\033[1;34m[INFO]\033[0m  %s\n' "$*"; }
 ok()    { printf '\033[1;32m[OK]\033[0m    %s\n' "$*"; }
 err()   { printf '\033[1;31m[ERR]\033[0m   %s\n' "$*" >&2; }
 
-dc() { docker compose -f "$COMPOSE_FILE" "$@"; }
+ENV_FILE="$PROJECT_ROOT/docker/.env"
+
+dc() { docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" "$@"; }
 
 usage() {
   cat <<EOF
