@@ -8,7 +8,8 @@ FROM base AS deps
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/mobile/package.json apps/mobile/package.json
-RUN pnpm install --frozen-lockfile --ignore-scripts && pnpm rebuild
+RUN pnpm install --frozen-lockfile --ignore-scripts \
+    && pnpm rebuild @prisma/engines prisma @nestjs/core
 
 # ─── Stage 3: Build ──────────────────────────────────────────────
 FROM base AS build
