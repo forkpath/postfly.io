@@ -128,16 +128,6 @@ services:
     build:
       context: ..
       dockerfile: docker/web.Dockerfile
-      args:
-        VITE_PRODUCT_NAME: ${VITE_PRODUCT_NAME:-Ray}
-        VITE_URL: ${VITE_URL:-https://ray.example.com}
-        VITE_DEFAULT_LOCALE: ${VITE_DEFAULT_LOCALE:-en}
-        VITE_THEME_MODE: ${VITE_THEME_MODE:-system}
-        VITE_THEME_COLOR: ${VITE_THEME_COLOR:-green}
-        VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY:-}
-        VITE_BILLING_STRIPE_PRICE_PREMIUM_LIFETIME: ${VITE_BILLING_STRIPE_PRICE_PREMIUM_LIFETIME:-}
-        VITE_BILLING_STRIPE_PRICE_PREMIUM_MONTHLY: ${VITE_BILLING_STRIPE_PRICE_PREMIUM_MONTHLY:-}
-        VITE_BILLING_STRIPE_PRICE_PREMIUM_YEARLY: ${VITE_BILLING_STRIPE_PRICE_PREMIUM_YEARLY:-}
     image: ray-web:${IMAGE_TAG:-latest}
     container_name: ray-web
     networks: [ray-net]

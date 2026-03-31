@@ -51,6 +51,7 @@ PostgreSQL   MongoDB      Redis
 
 - 一台 Linux 服务器（推荐 Ubuntu 22.04+），已安装 Docker 和 Docker Compose
 - Git 已安装
+- Node.js >= 22.21.1 和 pnpm >= 10.25.0 已安装（用于宿主机 Nx 构建）
 - 域名已购买，DNS 能配置 A 记录
 
 ### 步骤 1：克隆代码
@@ -70,31 +71,31 @@ vim docker/.env
 
 **必须修改的变量：**
 
-| 变量 | 示例值 | 说明 |
-|---|---|---|
-| `DOMAIN` | `postfly.io` | 生产域名，Kong ACME 插件用此申请证书 |
-| `ACME_EMAIL` | `admin@postfly.io` | Let's Encrypt 通知邮箱 |
-| `VITE_URL` | `https://postfly.io` | 前端访问 URL |
-| `VITE_PRODUCT_NAME` | `Postfly` | 产品名称 |
-| `BETTER_AUTH_SECRET` | 随机 32+ 字符 | Session token 签名密钥 |
-| `BETTER_AUTH_URL` | `https://postfly.io` | Better Auth 回调地址 |
-| `CORS_ORIGINS` | `https://postfly.io` | 允许跨域的前端域名 |
-| `POSTGRES_PASSWORD` | 强密码 | PostgreSQL 密码 |
-| `REDIS_PASSWORD` | 强密码 | Redis 密码 |
-| `MONGO_INITDB_ROOT_PASSWORD` | 强密码 | MongoDB 密码 |
-| `STRIPE_SECRET_KEY` | `sk_live_xxx` | Stripe 服务端密钥 |
-| `STRIPE_WEBHOOK_SECRET` | `whsec_xxx` | Stripe Webhook 签名密钥 |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | `pk_live_xxx` | Stripe 前端公钥 |
-| OAuth 相关 | 各平台密钥 | Google / GitHub / Apple 登录 |
+| 变量                          | 示例值               | 说明                                 |
+| ----------------------------- | -------------------- | ------------------------------------ |
+| `DOMAIN`                      | `postfly.io`         | 生产域名，Kong ACME 插件用此申请证书 |
+| `ACME_EMAIL`                  | `admin@postfly.io`   | Let's Encrypt 通知邮箱               |
+| `VITE_URL`                    | `https://postfly.io` | 前端访问 URL                         |
+| `VITE_PRODUCT_NAME`           | `Postfly`            | 产品名称                             |
+| `BETTER_AUTH_SECRET`          | 随机 32+ 字符        | Session token 签名密钥               |
+| `BETTER_AUTH_URL`             | `https://postfly.io` | Better Auth 回调地址                 |
+| `CORS_ORIGINS`                | `https://postfly.io` | 允许跨域的前端域名                   |
+| `POSTGRES_PASSWORD`           | 强密码               | PostgreSQL 密码                      |
+| `REDIS_PASSWORD`              | 强密码               | Redis 密码                           |
+| `MONGO_INITDB_ROOT_PASSWORD`  | 强密码               | MongoDB 密码                         |
+| `STRIPE_SECRET_KEY`           | `sk_live_xxx`        | Stripe 服务端密钥                    |
+| `STRIPE_WEBHOOK_SECRET`       | `whsec_xxx`          | Stripe Webhook 签名密钥              |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | `pk_live_xxx`        | Stripe 前端公钥                      |
+| OAuth 相关                    | 各平台密钥           | Google / GitHub / Apple 登录         |
 
 **环境变量在各阶段的使用方式：**
 
-| 变量类型 | 使用时机 | 说明 |
-|---|---|---|
-| `VITE_*` | Docker build 阶段 | 通过 `--build-arg` 写入前端 JS，不可运行时更改 |
-| `VITE_*` | 容器运行时 | envin (Zod) 在 SSR 服务器启动时通过 `process.env` 读取校验 |
-| `DOMAIN` / `ACME_EMAIL` / `REDIS_PASSWORD` | Kong 启动时 | `entrypoint.sh` 渲染 `kong.yml` 模板 |
-| 其余所有变量 | 容器运行时 | `env_file: .env` 注入到 engine 和 web 容器 |
+| 变量类型                                   | 使用时机           | 说明                                                       |
+| ------------------------------------------ | ------------------ | ---------------------------------------------------------- |
+| `VITE_*`                                   | 宿主机 Nx 构建阶段 | Vite 在构建时读取 `process.env.VITE_*` 写入前端 JS         |
+| `VITE_*`                                   | 容器运行时         | envin (Zod) 在 SSR 服务器启动时通过 `process.env` 读取校验 |
+| `DOMAIN` / `ACME_EMAIL` / `REDIS_PASSWORD` | Kong 启动时        | `entrypoint.sh` 渲染 `kong.yml` 模板                       |
+| 其余所有变量                               | 容器运行时         | `env_file: .env` 注入到 engine 和 web 容器                 |
 
 > **注意：** Web 容器也需要 `BETTER_AUTH_SECRET` 等服务端变量，因为 SSR 服务器执行
 > auth 逻辑时 envin 会校验这些值。如果缺失，SSR 服务器启动即崩溃
@@ -112,9 +113,16 @@ vim docker/.env
 ### 步骤 4：构建并启动应用
 
 ```bash
-./scripts/deploy.sh build    # 构建 engine + web Docker 镜像
+./scripts/deploy.sh build    # 宿主机 Nx 构建 → 打包为 Docker 镜像
 ./scripts/deploy.sh up       # 启动全部服务（含 Kong、Konga）
 ```
+
+`build` 命令会依次执行：
+
+1. `pnpm install` — 安装依赖
+2. `nx run web:build` — Vite + Nitro 打包 web，产物在 `apps/web/.output/`
+3. `nx run engine:prune` — webpack 打包 engine + 裁剪依赖，产物在 `dist/services/engine/`
+4. `docker compose build` — 将构建产物打包成轻量级 Docker 镜像
 
 ### 步骤 5：数据库迁移
 
@@ -126,10 +134,10 @@ vim docker/.env
 
 在域名服务商处添加以下记录：
 
-| 记录类型 | 主机记录 | 记录值 |
-|---|---|---|
-| A | `@` | 服务器 IP |
-| A | `www` | 服务器 IP |
+| 记录类型 | 主机记录 | 记录值    |
+| -------- | -------- | --------- |
+| A        | `@`      | 服务器 IP |
+| A        | `www`    | 服务器 IP |
 
 DNS 生效后，首次通过 `https://postfly.io` 访问时，Kong ACME 插件会自动向 Let's Encrypt 申请证书。
 
@@ -137,11 +145,11 @@ DNS 生效后，首次通过 `https://postfly.io` 访问时，Kong ACME 插件�
 
 在 GitHub 仓库设置中添加 Secrets：
 
-| Secret | 说明 |
-|---|---|
-| `DEPLOY_HOST` | 服务器 IP 或域名 |
-| `DEPLOY_USER` | SSH 用户名 |
-| `DEPLOY_SSH_KEY` | SSH 私钥 |
+| Secret           | 说明             |
+| ---------------- | ---------------- |
+| `DEPLOY_HOST`    | 服务器 IP 或域名 |
+| `DEPLOY_USER`    | SSH 用户名       |
+| `DEPLOY_SSH_KEY` | SSH 私钥         |
 
 生成部署专用密钥对：
 
@@ -158,9 +166,9 @@ cat ~/.ssh/ray-deploy
 
 可选的 GitHub Variables：
 
-| Variable | 默认值 | 说明 |
-|---|---|---|
-| `DEPLOY_PORT` | `22` | SSH 端口 |
+| Variable      | 默认值     | 说明               |
+| ------------- | ---------- | ------------------ |
+| `DEPLOY_PORT` | `22`       | SSH 端口           |
 | `DEPLOY_PATH` | `/opt/ray` | 服务器上的项目路径 |
 
 ---
@@ -185,6 +193,7 @@ git push origin v1.0.1
 ```
 
 GitHub Actions 会自动：
+
 1. 验证 tag 在 main 分支上（其他分支的 tag 会被拒绝）
 2. SSH 到服务器
 3. `git checkout v1.0.1`
@@ -194,51 +203,80 @@ GitHub Actions 会自动：
 
 ## deploy.sh 命令参考
 
-| 命令 | 说明 |
-|---|---|
+| 命令             | 说明                                           |
+| ---------------- | ---------------------------------------------- |
 | `update`（默认） | `git pull` → 重建 engine+web → 重启 engine+web |
-| `build` | 仅构建 engine+web 镜像 |
-| `up` | 启动全部服务 |
-| `restart` | 仅重启 engine+web（不重新构建） |
-| `down` | 停止全部服务（数据卷保留） |
-| `infra` | 仅启动基础设施 |
-| `logs [service]` | 查看日志（默认 engine + web） |
-| `status` | 查看容器运行状态 |
-| `migrate` | 执行 Prisma 数据库迁移 |
+| `build`          | 仅构建 engine+web 镜像                         |
+| `up`             | 启动全部服务                                   |
+| `restart`        | 仅重启 engine+web（不重新构建）                |
+| `down`           | 停止全部服务（数据卷保留）                     |
+| `infra`          | 仅启动基础设施                                 |
+| `logs [service]` | 查看日志（默认 engine + web）                  |
+| `status`         | 查看容器运行状态                               |
+| `migrate`        | 执行 Prisma 数据库迁移                         |
 
 ---
 
 ## 什么时候需要改环境变量？
 
-| 场景 | 操作 |
-|---|---|
-| 日常发版 | **不需要**动 `.env` |
-| 换域名 | 改 `DOMAIN`、`VITE_URL`、`BETTER_AUTH_URL`、`CORS_ORIGINS`，然后 `deploy.sh build` + `deploy.sh up` |
-| 改 Stripe 密钥 | 改对应的 `STRIPE_*` / `VITE_STRIPE_*`，然后 `deploy.sh build` + `deploy.sh up` |
-| 加新的 OAuth 提供商 | 加对应密钥，`deploy.sh restart`（不需要 rebuild） |
-| 改数据库密码 | 改密码后 `deploy.sh down` + `deploy.sh up`（基础设施也需重启） |
-| 仅改服务端变量（非 `VITE_*`） | 改完后 `deploy.sh restart` 即可 |
-| 改 `VITE_*` 变量 | 必须 `deploy.sh build` + `deploy.sh up`（需要重新构建写入前端 JS） |
+| 场景                          | 操作                                                                                                |
+| ----------------------------- | --------------------------------------------------------------------------------------------------- |
+| 日常发版                      | **不需要**动 `.env`                                                                                 |
+| 换域名                        | 改 `DOMAIN`、`VITE_URL`、`BETTER_AUTH_URL`、`CORS_ORIGINS`，然后 `deploy.sh build` + `deploy.sh up` |
+| 改 Stripe 密钥                | 改对应的 `STRIPE_*` / `VITE_STRIPE_*`，然后 `deploy.sh build` + `deploy.sh up`                      |
+| 加新的 OAuth 提供商           | 加对应密钥，`deploy.sh restart`（不需要 rebuild）                                                   |
+| 改数据库密码                  | 改密码后 `deploy.sh down` + `deploy.sh up`（基础设施也需重启）                                      |
+| 仅改服务端变量（非 `VITE_*`） | 改完后 `deploy.sh restart` 即可                                                                     |
+| 改 `VITE_*` 变量              | 必须 `deploy.sh build` + `deploy.sh up`（需要重新 Nx 构建写入前端 JS）                              |
 
 ---
 
-## Docker 镜像说明
+## 构建架构
+
+遵循 **Nx 官方最佳实践**：宿主机构建 + Docker 运行时打包。
+
+```
+宿主机（有 Node.js + pnpm）          Docker（仅运行时）
+┌─────────────────────────┐          ┌──────────────────┐
+│  pnpm install           │          │  COPY .output/   │
+│  nx run web:build       │────────► │  node index.mjs  │  web 镜像
+│  → apps/web/.output/    │          └──────────────────┘
+│                         │          ┌──────────────────┐
+│  nx run engine:prune    │          │  COPY dist/      │
+│  → dist/services/engine/│────────► │  pnpm install    │  engine 镜像
+│    main.js              │          │  node main.js    │
+│    package.json (pruned)│          └──────────────────┘
+│    pnpm-lock.yaml       │
+│    workspace_modules/   │
+└─────────────────────────┘
+```
+
+**为什么不在 Docker 内运行 Nx 构建？**
+
+Nx 的 `nx run` 命令在执行任何任务前，必须先加载全部插件计算项目图。
+`@nx/vitest` 等插件会评估 `vite.config.mts`，触发文件监听器，在 Docker BuildKit
+的受限环境下容易命中 inotify 限制、缺少 `.npmrc`、缺少 git 等一系列问题。
+宿主机构建完全规避了这些问题，且 Docker 镜像更小、构建更快。
 
 ### Web（`docker/web.Dockerfile`）
 
-多阶段构建，使用 Nitro 生成自包含的 SSR 服务器。
+运行时镜像，仅包含 Nitro 自包含的 SSR 服务器。
 
-- **构建**：完整 monorepo → `nx run web:build` → Nitro 打包到 `.output/`
+- **宿主机产物**：`apps/web/.output/`（Nitro node-server preset 打包，含所有依赖）
 - **运行**：`node .output/server/index.mjs`，无需 `node_modules`
-- **体积**：约 50MB（压缩后）
-- `VITE_*` 变量在构建时通过 `--build-arg` 注入
+- **镜像体积**：约 50MB
+- `VITE_*` 变量在宿主机构建时由 Vite 读取 `process.env` 写入前端 JS
 
 ### Engine（`docker/engine.Dockerfile`）
 
-多阶段构建，使用 Nx prune 生成最小化的生产包。
+运行时镜像，包含 webpack 产物和最小化的生产依赖。
 
-- **构建**：完整 monorepo → `nx run engine:prune` → 裁剪后的 lockfile + 最小 workspace 模块
-- **运行**：`node main.js`，需要生产环境 `node_modules`
+- **宿主机产物**：`dist/services/engine/`
+  - `main.js` — webpack bundle
+  - `package.json` — `NxAppWebpackPlugin(generatePackageJson: true)` 自动生成，仅含外部依赖
+  - `pnpm-lock.yaml` — `@nx/js:prune-lockfile` 裁剪后的锁文件
+  - `workspace_modules/` — `@nx/js:copy-workspace-modules` 复制的工作区模块
+- **运行**：`pnpm install --prod` + `node main.js`
 - 环境变量在**运行时**通过 `ConfigService` 读取
 
 ---
@@ -249,11 +287,11 @@ Kong 以 **DB-less 模式**运行，声明式配置位于 `docker/kong/kong.yml`
 
 ### 路由规则
 
-| 优先级 | 路径 | 上游 |
-|---|---|---|
-| 1 | `/api/auth/*` | `engine:8000` |
-| 2 | `/api/*` | `engine:8000` |
-| 3 | `/*` | `web:3000` |
+| 优先级 | 路径          | 上游          |
+| ------ | ------------- | ------------- |
+| 1      | `/api/auth/*` | `engine:8000` |
+| 2      | `/api/*`      | `engine:8000` |
+| 3      | `/*`          | `web:3000`    |
 
 ### HTTPS 与 Let's Encrypt
 
@@ -264,14 +302,15 @@ Kong 使用内置的 **ACME 插件**自动申请和续期 Let's Encrypt 证书�
 
 **请求处理流程：**
 
-| 访问方式 | 结果 |
-|---|---|
-| `http://postfly.io/*` | 301 → `https://postfly.io/*` |
-| `http://www.postfly.io/*` | 301 → `https://postfly.io/*` |
+| 访问方式                   | 结果                         |
+| -------------------------- | ---------------------------- |
+| `http://postfly.io/*`      | 301 → `https://postfly.io/*` |
+| `http://www.postfly.io/*`  | 301 → `https://postfly.io/*` |
 | `https://www.postfly.io/*` | 301 → `https://postfly.io/*` |
-| `https://postfly.io/*` | 正常处理 |
+| `https://postfly.io/*`     | 正常处理                     |
 
 **工作原理：**
+
 1. Kong 启动时，`docker/kong/entrypoint.sh` 将 `${DOMAIN}`、`${ACME_EMAIL}`、`${REDIS_PASSWORD}` 替换到配置模板中
 2. Kong 监听 80（HTTP）和 443（HTTPS）
 3. 首次 HTTPS 请求触发 Let's Encrypt 证书申请

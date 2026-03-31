@@ -55,9 +55,32 @@ check_env() {
 }
 
 # ── Commands ─────────────────────────────────────────────────────
+cmd_nx_build() {
+  info "Installing dependencies..."
+  pnpm install --frozen-lockfile
+
+  # Load VITE_* variables from docker/.env so Vite inlines them at build time
+  if [ -f "$ENV_FILE" ]; then
+    info "Loading environment from $ENV_FILE"
+    set -a
+    # shellcheck disable=SC1090
+    . "$ENV_FILE"
+    set +a
+  fi
+
+  info "Building web (TanStack Start + Nitro)..."
+  NODE_ENV=production pnpm exec nx run web:build
+
+  info "Building engine (webpack + prune)..."
+  pnpm exec nx run engine:prune
+
+  ok "Nx builds complete"
+}
+
 cmd_build() {
-  info "Building app images (engine, web)..."
-  dc build --parallel "${APP_SERVICES[@]}"
+  cmd_nx_build
+  info "Packaging app images (engine, web)..."
+  dc build --parallel "$@" "${APP_SERVICES[@]}"
   ok "Images built successfully"
 }
 
@@ -134,7 +157,7 @@ shift 2>/dev/null || true
 
 case "$COMMAND" in
   update)   cmd_update ;;
-  build)    cmd_build ;;
+  build)    cmd_build "$@" ;;
   up)       cmd_up ;;
   restart)  cmd_restart ;;
   down)     cmd_down ;;
