@@ -77,6 +77,9 @@ cmd_nx_build() {
   info "Building engine (webpack)..."
   pnpm exec nx run engine:build
 
+  info "Generating pruned lockfile for engine..."
+  node scripts/create-engine-lockfile.js
+
   ok "Nx builds complete"
 }
 

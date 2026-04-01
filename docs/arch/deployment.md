@@ -236,18 +236,19 @@ GitHub Actions 会自动：
 遵循 **Nx 官方最佳实践**：宿主机构建 + Docker 运行时打包。
 
 ```
-宿主机（有 Node.js + pnpm）          Docker（仅运行时）
-┌─────────────────────────┐          ┌──────────────────┐
-│  pnpm install           │          │  COPY .output/   │
-│  nx run web:build       │────────► │  node index.mjs  │  web 镜像
-│  → apps/web/.output/    │          └──────────────────┘
-│                         │          ┌──────────────────┐
-│  nx run engine:build    │          │  COPY dist/      │
-│  → dist/services/engine/│────────► │  npm install     │  engine 镜像
-│    main.js + package.json           │  node main.js    │
-│                         │          └──────────────────┘
-│    workspace_modules/   │
-└─────────────────────────┘
+宿主机（有 Node.js + pnpm）              Docker（仅运行时）
+┌──────────────────────────────┐        ┌──────────────────┐
+│  pnpm install                │        │  COPY .output/   │
+│  nx run web:build            │──────► │  node index.mjs  │  web 镜像
+│  → apps/web/.output/         │        └──────────────────┘
+│                              │        ┌──────────────────┐
+│  nx run engine:build         │        │  COPY dist/      │
+│  → dist/services/engine/     │──────► │  COPY .npmrc     │  engine 镜像
+│    main.js + package.json    │        │  pnpm install    │
+│                              │        │  node main.js    │
+│  node create-engine-lockfile │        └──────────────────┘
+│  → pnpm-lock.yaml (pruned)  │
+└──────────────────────────────┘
 ```
 
 **为什么不在 Docker 内运行 Nx 构建？**
@@ -273,7 +274,10 @@ Nx 的 `nx run` 命令在执行任何任务前，必须先加载全部插件计�
 - **宿主机产物**：`dist/services/engine/`
   - `main.js` — webpack bundle（源码已打包，`node_modules` 保持外部引用）
   - `package.json` — `generatePackageJson: true` 自动生成，仅含外部依赖
-- **运行**：`npm install --omit=dev` + `node main.js`
+  - `pnpm-lock.yaml` — `scripts/create-engine-lockfile.js` 调用 Nx 的 `createLockFile` API，
+    从宿主机根 lockfile 中裁剪出匹配该 `package.json` 的版本
+- **运行**：`pnpm install --frozen-lockfile --prod` + `node main.js`
+- Docker 内使用 **pnpm**（与宿主机一致），通过裁剪版 lockfile 确保依赖解析确定性
 - 环境变量在**运行时**通过 `ConfigService` 读取
 
 > **注意**：engine 的 `tsconfig.app.json` 设置了 `importHelpers: false`，
@@ -339,7 +343,8 @@ docker/
     └── init-db.js              # MongoDB 初始化脚本
 
 scripts/
-└── deploy.sh                   # 部署脚本
+├── deploy.sh                   # 部署脚本
+└── create-engine-lockfile.js   # 为 engine 生成裁剪版 pnpm-lock.yaml
 
 .github/workflows/
 └── deploy.yml                  # 自动部署 workflow（tag 触发）
