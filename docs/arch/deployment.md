@@ -242,9 +242,10 @@ GitHub Actions 会自动：
 │  nx run web:build       │────────► │  node index.mjs  │  web 镜像
 │  → apps/web/.output/    │          └──────────────────┘
 │                         │          ┌──────────────────┐
-│  nx run engine:build    │          │  COPY main.js    │
-│  → dist/services/engine/│────────► │  node main.js    │  engine 镜像
-│    main.js (all-in-one) │          └──────────────────┘
+│  nx run engine:build    │          │  COPY dist/      │
+│  → dist/services/engine/│────────► │  npm install     │  engine 镜像
+│    main.js + package.json           │  node main.js    │
+│                         │          └──────────────────┘
 │    workspace_modules/   │
 └─────────────────────────┘
 ```
@@ -267,14 +268,16 @@ Nx 的 `nx run` 命令在执行任何任务前，必须先加载全部插件计�
 
 ### Engine（`docker/engine.Dockerfile`）
 
-运行时镜像，仅包含一个自包含的 webpack bundle。
+运行时镜像，包含 webpack bundle + 外部依赖。
 
-- **宿主机产物**：`dist/services/engine/main.js`
-  - webpack 配置 `externalDependencies: 'none'` — 所有依赖全部打包进 bundle
-  - 不生成 `package.json`，Docker 镜像内不需要 `npm install`
-- **运行**：`node main.js`
-- **镜像体积**：极小（node:22-alpine + 一个 JS 文件 + i18n 翻译文件）
+- **宿主机产物**：`dist/services/engine/`
+  - `main.js` — webpack bundle（源码已打包，`node_modules` 保持外部引用）
+  - `package.json` — `generatePackageJson: true` 自动生成，仅含外部依赖
+- **运行**：`npm install --omit=dev` + `node main.js`
 - 环境变量在**运行时**通过 `ConfigService` 读取
+
+> **注意**：engine 的 `tsconfig.app.json` 设置了 `importHelpers: false`，
+> TypeScript 辅助函数直接内联到代码中，避免运行时依赖 `tslib`。
 
 ---
 
