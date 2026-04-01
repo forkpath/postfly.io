@@ -59,20 +59,23 @@ cmd_nx_build() {
   info "Installing dependencies..."
   pnpm install --frozen-lockfile
 
-  # Load VITE_* variables from docker/.env so Vite inlines them at build time
+  # Load VITE_* variables from docker/.env so Vite inlines them at build time.
+  # Only export VITE_* lines — sourcing the full .env is unsafe (special chars).
   if [ -f "$ENV_FILE" ]; then
-    info "Loading environment from $ENV_FILE"
-    set -a
-    # shellcheck disable=SC1090
-    . "$ENV_FILE"
-    set +a
+    info "Loading VITE_* variables from $ENV_FILE"
+    while IFS= read -r line || [ -n "$line" ]; do
+      [[ "$line" =~ ^[[:space:]]*#|^[[:space:]]*$ ]] && continue
+      if [[ "$line" =~ ^(VITE_[A-Za-z0-9_]+)=(.*) ]]; then
+        export "${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
+      fi
+    done < "$ENV_FILE"
   fi
 
   info "Building web (TanStack Start + Nitro)..."
   NODE_ENV=production pnpm exec nx run web:build
 
-  info "Building engine (webpack + prune)..."
-  pnpm exec nx run engine:prune
+  info "Building engine (webpack)..."
+  pnpm exec nx run engine:build
 
   ok "Nx builds complete"
 }
