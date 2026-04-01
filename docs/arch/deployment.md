@@ -121,7 +121,7 @@ vim docker/.env
 
 1. `pnpm install` — 安装依赖
 2. `nx run web:build` — Vite + Nitro 打包 web，产物在 `apps/web/.output/`
-3. `nx run engine:prune` — webpack 打包 engine + 裁剪依赖，产物在 `dist/services/engine/`
+3. `nx run engine:build` — webpack 打包 engine，产物在 `dist/services/engine/`
 4. `docker compose build` — 将构建产物打包成轻量级 Docker 镜像
 
 ### 步骤 5：数据库迁移
