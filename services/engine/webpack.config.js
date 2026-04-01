@@ -18,7 +18,8 @@ module.exports = {
       assets: ['./src/assets'],
       optimization: false,
       outputHashing: 'none',
-      generatePackageJson: true,
+      externalDependencies: 'none',
+      generatePackageJson: false,
       sourceMap: process.env.NODE_ENV !== 'production'
     })
   ]
