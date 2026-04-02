@@ -53,9 +53,7 @@ export default defineConfig(() => ({
     }),
     nitro({
       preset: isDev ? undefined : 'node-server',
-      output: isDev
-        ? undefined
-        : { dir: resolve(import.meta.dirname, '../../dist/apps/web') }
+      output: isDev ? undefined : { dir: resolve(import.meta.dirname, '../../dist/apps/web') }
     }),
     viteReact(),
     tailwindcss()
