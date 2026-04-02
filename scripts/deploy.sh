@@ -91,6 +91,15 @@ cmd_nx_build() {
   info "Generating pruned lockfile for engine..."
   node scripts/create-engine-lockfile.js
 
+  # TanStack Start (Vinxi) always outputs to {projectRoot}/.output/ regardless
+  # of any nitro() plugin config. Move it to dist/apps/web/ for consistency
+  # with engine's dist/services/engine/ layout.
+  if [ -d "apps/web/.output" ]; then
+    info "Moving web build output to dist/apps/web/..."
+    rm -rf dist/apps/web
+    mv apps/web/.output dist/apps/web
+  fi
+
   # Validate build outputs exist before Docker packaging
   local failed=0
   if [ ! -f "dist/apps/web/server/index.mjs" ]; then
