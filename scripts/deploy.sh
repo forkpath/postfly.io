@@ -55,9 +55,23 @@ check_env() {
 }
 
 # ── Commands ─────────────────────────────────────────────────────
-cmd_nx_build() {
+cmd_install() {
+  local hash_file="node_modules/.lockfile-hash"
+  local current_hash
+  current_hash=$(sha256sum pnpm-lock.yaml 2>/dev/null | cut -d' ' -f1)
+
+  if [ -d "node_modules" ] && [ -f "$hash_file" ] && [ "$(cat "$hash_file")" = "$current_hash" ]; then
+    info "Dependencies up to date (lockfile unchanged), skipping install"
+    return
+  fi
+
   info "Installing dependencies..."
   pnpm install --frozen-lockfile
+  echo "$current_hash" > "$hash_file"
+}
+
+cmd_nx_build() {
+  cmd_install
 
   # Load VITE_* variables from docker/.env so Vite inlines them at build time.
   # Only export VITE_* lines — sourcing the full .env is unsafe (special chars).
@@ -71,14 +85,23 @@ cmd_nx_build() {
     done < "$ENV_FILE"
   fi
 
-  info "Building web (TanStack Start + Nitro)..."
-  NODE_ENV=production pnpm exec nx run web:build
-
-  info "Building engine (webpack)..."
-  pnpm exec nx run engine:build
+  info "Building web + engine in parallel..."
+  NODE_ENV=production pnpm exec nx run-many --targets=build --projects=web,engine --parallel=2
 
   info "Generating pruned lockfile for engine..."
   node scripts/create-engine-lockfile.js
+
+  # Validate build outputs exist before Docker packaging
+  local failed=0
+  if [ ! -f "dist/apps/web/server/index.mjs" ]; then
+    err "Web build output not found at dist/apps/web/server/index.mjs"
+    failed=1
+  fi
+  if [ ! -f "dist/services/engine/main.js" ]; then
+    err "Engine build output not found at dist/services/engine/main.js"
+    failed=1
+  fi
+  [ "$failed" -eq 1 ] && exit 1
 
   ok "Nx builds complete"
 }
