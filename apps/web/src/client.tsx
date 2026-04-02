@@ -1,6 +1,11 @@
-/// <reference types="vinxi/types/client" />
+import { StrictMode } from 'react'
 import { StartClient } from '@tanstack/react-start/client'
 
 import { hydrateRoot } from 'react-dom/client'
 
-hydrateRoot(document, <StartClient />)
+hydrateRoot(
+  document,
+  <StrictMode>
+    <StartClient />
+  </StrictMode>
+)
