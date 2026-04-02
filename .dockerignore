@@ -1,11 +1,12 @@
 node_modules
 .nx
 
-# Ignore build outputs except the ones needed by Dockerfiles
-dist
-!dist/services/engine
-.output
-!apps/web/.output
+# Anchor with / so patterns only match at context root, not nested paths.
+# /dist → excludes root dist, then negation restores only the build outputs
+#         that Dockerfiles need to COPY.
+/dist
+!/dist/services/engine
+!/dist/apps/web
 .git
 .github
 .cursor

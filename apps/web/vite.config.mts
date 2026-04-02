@@ -1,4 +1,6 @@
 /// <reference types='vitest' />
+import { resolve } from 'node:path'
+
 import { devtools } from '@tanstack/devtools-vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 
@@ -50,7 +52,10 @@ export default defineConfig(() => ({
       }
     }),
     nitro({
-      preset: isDev ? undefined : 'node-server'
+      preset: isDev ? undefined : 'node-server',
+      output: isDev
+        ? undefined
+        : { dir: resolve(import.meta.dirname, '../../dist/apps/web') }
     }),
     viteReact(),
     tailwindcss()

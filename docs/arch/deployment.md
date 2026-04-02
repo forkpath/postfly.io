@@ -117,11 +117,11 @@ vim docker/.env
 ./scripts/deploy.sh up       # 启动全部服务（含 Kong、Konga）
 ```
 
-`build` 命令会依次执行：
+`build` 命令会执行：
 
-1. `pnpm install` — 安装依赖
-2. `nx run web:build` — Vite + Nitro 打包 web，产物在 `apps/web/.output/`
-3. `nx run engine:build` — webpack 打包 engine，产物在 `dist/services/engine/`
+1. `pnpm install` — 安装依赖（lockfile 未变时自动跳过）
+2. `nx run-many web:build + engine:build` — 并行打包，产物分别在 `dist/apps/web/` 和 `dist/services/engine/`
+3. 验证构建产物完整性
 4. `docker compose build` — 将构建产物打包成轻量级 Docker 镜像
 
 ### 步骤 5：数据库迁移
@@ -238,16 +238,18 @@ GitHub Actions 会自动：
 ```
 宿主机（有 Node.js + pnpm）              Docker（仅运行时）
 ┌──────────────────────────────┐        ┌──────────────────┐
-│  pnpm install                │        │  COPY .output/   │
-│  nx run web:build            │──────► │  node index.mjs  │  web 镜像
-│  → apps/web/.output/         │        └──────────────────┘
+│  pnpm install                │        │  COPY dist/      │
+│                              │        │    apps/web/     │
+│  nx run-many (parallel)      │──────► │  node            │  web 镜像
+│  → dist/apps/web/            │        │    server/       │
+│    server/index.mjs          │        │    index.mjs     │
+│    public/                   │        └──────────────────┘
 │                              │        ┌──────────────────┐
-│  nx run engine:build         │        │  COPY dist/      │
-│  → dist/services/engine/     │──────► │  COPY .npmrc     │  engine 镜像
-│    main.js + package.json    │        │  pnpm install    │
-│                              │        │  node main.js    │
-│  node create-engine-lockfile │        └──────────────────┘
-│  → pnpm-lock.yaml (pruned)  │
+│  → dist/services/engine/     │        │  COPY dist/      │
+│    main.js + package.json    │──────► │  COPY .npmrc     │  engine 镜像
+│                              │        │  pnpm install    │
+│  node create-engine-lockfile │        │  node main.js    │
+│  → pnpm-lock.yaml (pruned)  │        └──────────────────┘
 └──────────────────────────────┘
 ```
 
@@ -262,8 +264,8 @@ Nx 的 `nx run` 命令在执行任何任务前，必须先加载全部插件计�
 
 运行时镜像，仅包含 Nitro 自包含的 SSR 服务器。
 
-- **宿主机产物**：`apps/web/.output/`（Nitro node-server preset 打包，含所有依赖）
-- **运行**：`node .output/server/index.mjs`，无需 `node_modules`
+- **宿主机产物**：`dist/apps/web/`（Nitro node-server preset 打包，含所有依赖）
+- **运行**：`node server/index.mjs`，无需 `node_modules`
 - **镜像体积**：约 50MB
 - `VITE_*` 变量在宿主机构建时由 Vite 读取 `process.env` 写入前端 JS
 
