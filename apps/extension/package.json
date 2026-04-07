@@ -1,0 +1,24 @@
+{
+  "name": "extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build:chrome": "wxt zip",
+    "build:firefox": "wxt zip -b firefox",
+    "postinstall": "wxt prepare",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@webext-core/messaging": "^2.3.0",
+    "sonner": "^2.0.7"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.27",
+    "@wxt-dev/auto-icons": "^1.1.1",
+    "@wxt-dev/module-react": "^1.2.2",
+    "wxt": "^0.20.19"
+  }
+}

@@ -43,5 +43,5 @@
       "@libs/studio/*": ["libs/studio/src/*"]
     }
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": ["node_modules", "tmp", "build", "dist", ".expo", ".wxt"]
 }

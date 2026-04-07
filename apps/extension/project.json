@@ -1,0 +1,46 @@
+{
+  "name": "extension",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/extension/src",
+  "projectType": "application",
+  "tags": ["scope:frontend", "type:app", "platform:extension"],
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "wxt",
+        "cwd": "apps/extension"
+      }
+    },
+    "dev-firefox": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "wxt -b firefox",
+        "cwd": "apps/extension"
+      }
+    },
+    "build-chrome": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "wxt zip",
+        "cwd": "apps/extension"
+      },
+      "dependsOn": ["^build"]
+    },
+    "build-firefox": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "wxt zip -b firefox",
+        "cwd": "apps/extension"
+      },
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "apps/extension"
+      }
+    }
+  }
+}

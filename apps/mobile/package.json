@@ -7,10 +7,7 @@
     "dev": "expo start --clear",
     "dev:ios": "expo start --ios",
     "dev:android": "expo start --android",
-    "ios": "expo run:ios",
-    "android": "expo run:android",
-    "typecheck": "tsc --noEmit",
-    "export": "expo export --platform ios --platform android"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@expo/metro-runtime": "~55.0.7",

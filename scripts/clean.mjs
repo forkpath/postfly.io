@@ -26,7 +26,9 @@ const TARGET_DIRS = [
   '.tanstack',
   '.log',
   '.playwright-mcp',
-  '.output'
+  '.output',
+  '.expo',
+  '.wxt'
 ]
 
 // 跳过的目录（性能优化）
