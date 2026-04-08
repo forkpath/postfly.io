@@ -1,4 +1,5 @@
 packages:
+  - apps/desktop
   - apps/mobile
   - apps/extension
 
@@ -8,3 +9,33 @@ onlyBuiltDependencies:
   - '@nestjs/core'
   - '@prisma/engines'
   - prisma
+
+catalog:
+  '@nx/vite': 22.6.4
+  '@tailwindcss/vite': ^4.1.18
+  '@tanstack/devtools-vite': ^0.4.1
+  '@tanstack/react-devtools': ^0.9.2
+  '@tanstack/react-query': 5.95.2
+  '@tanstack/react-query-devtools': 5.95.2
+  '@tanstack/react-router': ^1.157.16
+  '@tanstack/react-router-devtools': ^1.149.0
+  '@tanstack/router-plugin': ^1.157.16
+  '@vitejs/plugin-react': ^4.2.0
+  axios: ^1.13.2
+  envin: ^1.1.13
+  posthog-js: ^1.359.1
+  sonner: ^2.0.7
+  tailwindcss: ^4.1.18
+  typescript: ~5.9.3
+  vite: ^7.0.0
+  vite-plugin-svgr: ^4.5.0
+  zod: ^4.3.5
+
+catalogs:
+  node24:
+    '@types/node': 24.12.2
+  react19:
+    '@types/react': 19.2.14
+    '@types/react-dom': 19.2.3
+    react: 19.2.4
+    react-dom: 19.2.4

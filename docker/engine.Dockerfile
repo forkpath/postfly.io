@@ -5,7 +5,7 @@
 #
 # Using pnpm (same as the monorepo) avoids npm/pnpm peer-dep mismatch.
 # ────────────────────────────────────────────────────────────────────
-FROM node:22-alpine
+FROM node:24-alpine
 
 RUN apk add --no-cache libc6-compat && \
     corepack enable && corepack prepare pnpm@10 --activate

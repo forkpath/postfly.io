@@ -18,17 +18,12 @@
       "@libs/analytics/*": ["libs/analytics/src/*"],
       "@libs/monitoring": ["libs/monitoring/src/index.ts"],
       "@libs/monitoring/*": ["libs/monitoring/src/*"],
-      "@libs/api-core": ["libs/api-core/src/index.ts"],
       "@libs/api-client": ["libs/api-client/src/index.ts"],
       "@libs/api-client/*": ["libs/api-client/src/*"],
       "@libs/ui-shared/*": ["libs/ui-shared/src/*"],
-      "@libs/studio": ["libs/studio/src/index.ts"],
-      "@libs/studio/*": ["libs/studio/src/*"],
       "@libs/payload": ["libs/payload/src/index.ts"],
       "@libs/email": ["libs/email/src/index.ts"],
-      "@libs/email/*": ["libs/email/src/*"],
-      "@libs/pg-dao": ["libs/pg-dao/src/index.ts"],
-      "@libs/pg-dao/*": ["libs/pg-dao/src/*"]
+      "@libs/email/*": ["libs/email/src/*"]
     }
   },
   "include": ["../../libs/ui-shared/src/common/typings/*.d.ts", ".wxt/wxt.d.ts", "src/**/*", "*.ts", "*.js"],

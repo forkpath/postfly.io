@@ -4,7 +4,7 @@ import { createClient } from '@libs/api-client'
 import { Platform } from '@libs/common'
 
 export const apiClient = createClient({
-  baseURL: appConfig.url,
+  baseURL: appConfig.apiBaseUrl,
   headers: {
     'x-client-platform': Platform.EXTENSION
   }

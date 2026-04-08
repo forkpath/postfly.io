@@ -3,7 +3,7 @@ import type { AxiosAdapter, AxiosInstance } from 'axios'
 /**
  * API 客户端运行时环境
  */
-export type ApiRuntime = 'web' | 'desktop' | 'ssr' | 'mobile'
+export type ApiRuntime = 'web' | 'desktop' | 'ssr' | 'mobile' | 'extension'
 
 /**
  * 鉴权配置选项

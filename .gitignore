@@ -73,3 +73,5 @@ logs
 **/i18nTree.gen.ts
 .tanstack
 .vite
+.claude/worktrees
+.claude/settings.local.json

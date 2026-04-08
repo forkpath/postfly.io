@@ -12,6 +12,7 @@ export default [
   },
   {
     ignores: [
+      '**/build',
       '**/dist',
       '**/out-tsc',
       '**/.output',

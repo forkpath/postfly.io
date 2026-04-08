@@ -16,11 +16,11 @@
 
 ### 系统要求
 
-| 工具 | 版本要求 |
-|------|----------|
-| Node.js | >= 22.19.0 |
-| pnpm | >= 10.8.1 |
-| Chrome | 最新稳定版（用于开发和调试） |
+| 工具    | 版本要求                                  |
+| ------- | ----------------------------------------- |
+| Node.js | >= 22.19.0                                |
+| pnpm    | >= 10.8.1                                 |
+| Chrome  | 最新稳定版（用于开发和调试）              |
 | Firefox | 最新稳定版（可选，用于 Firefox 扩展开发） |
 
 ### 前置条件
@@ -52,7 +52,8 @@ npx wxt prepare
 
 ```env
 # 必需
-VITE_SITE_URL=http://localhost:3000        # 后端 API / 认证服务地址
+VITE_URL=http://localhost:3000             # 前端页面（营销站 / OAuth 回跳）
+VITE_API_BASE_URL=http://localhost:8000    # 后端 engine API / 认证服务地址
 VITE_PRODUCT_NAME=Ray                      # 扩展在 manifest 中的名称
 VITE_DEFAULT_LOCALE=en                     # 默认语言（en | zh）
 
@@ -70,6 +71,24 @@ VITE_SENTRY_ENVIRONMENT=development        # Sentry 环境标识
 ```
 
 > 所有 `VITE_` 前缀的环境变量会通过 Vite 的 `import.meta.env` 注入到扩展代码中。
+
+### 环境变量校验
+
+扩展根目录的 `env.config.ts` 使用 **envin + Zod** 在构建期对所有必需变量做类型校验。
+启动 / 打包时如果缺失 `VITE_URL`、`VITE_API_BASE_URL` 或 `VITE_PRODUCT_NAME`，构建会立即报错，避免将无效配置打入产物。
+
+- `postinstall`（`wxt prepare`）和 `lint` 阶段自动跳过校验，不阻塞安装与格式检查。
+- 如需在 CI 中临时跳过，可设 `SKIP_ENV_VALIDATION=1`。
+
+### `VITE_URL` 与 `VITE_API_BASE_URL` 的区别
+
+| 变量 | 指向 | 用途 |
+| --- | --- | --- |
+| `VITE_URL` | 营销站 / Web 前端 | OAuth 回跳、打开 Web 页面、Cookie 域 |
+| `VITE_API_BASE_URL` | engine 后端服务 | API 请求、Better Auth 会话 |
+
+Ray 的后端是独立的 engine（NestJS），与 Web 前端分属不同域名，因此扩展必须同时持有这两个地址。
+切勿将 `VITE_URL` 当作 API 基址使用。
 
 ## 开发调试
 
@@ -89,6 +108,7 @@ nx run extension:dev-firefox
 ```
 
 WXT 开发服务器启动后会：
+
 1. 编译扩展代码到 `apps/extension/build/chrome-mv3-dev/`
 2. 启动 Vite HMR 服务器（默认端口 1234）
 3. 自动监听文件变更并热重载
@@ -196,7 +216,7 @@ apps/extension/
 
 ```
 Web:      fetch('/api/billing/me')  → Vite proxy → http://localhost:8000
-Extension: fetch('http://localhost:3000/api/billing/me') → 直接请求
+Extension: fetch('http://localhost:8000/api/billing/me') → 直接请求
 ```
 
 请求头中携带 `x-client-platform: extension` 用于后端区分客户端平台。
@@ -236,6 +256,50 @@ nx run extension:build-firefox
 ```bash
 nx run extension:typecheck
 ```
+
+## 发布注意事项
+
+### `host_permissions` 与商店审核
+
+`wxt.config.ts` 中的 `host_permissions` 会根据构建模式自动切换：
+
+| 模式 | 值 | 说明 |
+| --- | --- | --- |
+| `development` | `<all_urls>` | 方便本地调试，无需手动维护域名列表 |
+| `production` | 从 `VITE_API_BASE_URL` / `VITE_URL` 派生 | 仅申请必要的域名权限 |
+
+**为什么要收敛权限？**
+
+- Chrome Web Store 对 `<all_urls>` 权限的审核显著更严格，可能被要求提供额外理由或被直接拒绝。
+- 窄权限让用户安装时看到的授权提示更友好，提升安装转化率。
+- Firefox Add-ons 同样对宽泛权限有更多人工审核环节。
+
+**如果扩展确实需要在所有网页上运行 content script**：
+
+当前 `src/app/content/index.tsx` 中的 `matches: ['<all_urls>']` 是开发占位符。发布前应当：
+
+1. 明确 content script 真正需要注入的网站范围，将 `matches` 收窄到实际需要的 URL 模式。
+2. 如果确实需要全站注入，在商店提交时准备好「为什么需要访问所有网站」的说明文案。
+3. 考虑使用 `optional_host_permissions` + `chrome.permissions.request()` 让用户按需授权。
+
+### CORS 与跨域鉴权
+
+扩展来源为 `chrome-extension://<id>`，向 engine 发起的请求属于跨站请求：
+
+- engine 需正确配置 CORS，允许来自 `chrome-extension://<id>` 的 `Origin`（或在 MV3 中通过 background fetch 绕过）。
+- Better Auth 的 Session Cookie 必须设置 `SameSite=None; Secure`，且 API 与站点最好位于同一注册二级域（如 `app.ray.com` + `api.ray.com`）。
+- 如果不能满足 Cookie 条件，需要实现 Bearer Token / `Authorization` header 路径。
+
+### 构建产物安全
+
+- `VITE_*` 变量在构建时被替换为字面量，**商店上架后任何人都可以从 `.crx` / `.xpi` 中提取**。
+- `client id`、公开 Publishable Key 可以写入；`client secret`、API Secret 绝对不可写入。
+- 对于 Sentry DSN / PostHog Key 等，虽然泄露风险较低，但建议通过速率限制或域名白名单做二次保护。
+
+### 版本与 API 兼容
+
+- 扩展更新依赖商店审核周期，无法像 Web 一样即时部署；engine API 发布破坏性变更时，需保持旧版本兼容一段时间。
+- 建议在 API 路径中保留版本号（`/api/v1/…`），或使用功能开关让扩展优雅降级。
 
 ## 发布流程
 

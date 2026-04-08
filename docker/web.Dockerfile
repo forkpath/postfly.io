@@ -5,7 +5,7 @@
 # TanStack Start + Nitro (node-server preset) bundles everything
 # into dist/apps/web/ — no npm install needed at runtime.
 # ────────────────────────────────────────────────────────────────────
-FROM node:22-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 

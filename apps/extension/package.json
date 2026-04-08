@@ -12,13 +12,29 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@sentry/browser": "^10.42.0",
+    "@tanstack/react-query": "catalog:",
+    "@tanstack/react-query-devtools": "catalog:",
     "@webext-core/messaging": "^2.3.0",
-    "sonner": "^2.0.7"
+    "envin": "catalog:",
+    "posthog-js": "catalog:",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "sonner": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
+    "@nx/vite": "catalog:",
+    "@tailwindcss/vite": "catalog:",
     "@types/chrome": "^0.1.27",
+    "@types/node": "catalog:node24",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
     "@wxt-dev/auto-icons": "^1.1.1",
     "@wxt-dev/module-react": "^1.2.2",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vite-plugin-svgr": "catalog:",
     "wxt": "^0.20.19"
   }
 }

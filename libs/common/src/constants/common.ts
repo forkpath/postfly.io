@@ -13,7 +13,8 @@ export const Platform = {
   WEB: 'web',
   MOBILE: 'mobile',
   EXTENSION: 'extension',
-  DESKTOP: 'desktop'
+  DESKTOP: 'desktop',
+  SSR: 'ssr'
 } as const
 
 export const ExecutionSide = {

@@ -146,6 +146,8 @@ interface ApiClientOptions {
 | `web` | `''`（使用 vite proxy） |
 | `ssr` | `process.env.API_BASE_URL` |
 | `desktop` | `process.env.VITE_API_BASE_URL` |
+| `mobile` | `process.env.VITE_API_BASE_URL` |
+| `extension` | `process.env.EXPO_PUBLIC_API_BASE_URL` |
 
 **鉴权示例**：
 

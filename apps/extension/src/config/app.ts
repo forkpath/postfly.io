@@ -1,11 +1,12 @@
-import type { ThemeColor, ThemeMode } from '@libs/ui-shared/common'
+import env from '../../env'
 
 export const appConfig = {
-  name: (import.meta.env.VITE_PRODUCT_NAME as string) ?? 'Ray',
-  url: (import.meta.env.VITE_SITE_URL as string) ?? 'http://localhost:3000',
-  locale: (import.meta.env.VITE_DEFAULT_LOCALE as string) ?? 'en',
+  name: env.VITE_PRODUCT_NAME,
+  apiBaseUrl: env.VITE_API_BASE_URL,
+  url: env.VITE_URL,
+  locale: env.VITE_DEFAULT_LOCALE,
   theme: {
-    mode: ((import.meta.env.VITE_THEME_MODE as string) ?? 'system') as ThemeMode,
-    color: ((import.meta.env.VITE_THEME_COLOR as string) ?? 'orange') as ThemeColor
+    mode: env.VITE_THEME_MODE,
+    color: env.VITE_THEME_COLOR
   }
 } as const
