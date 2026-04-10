@@ -5,7 +5,20 @@ build
 dist
 tmp
 out-tsc
+
+# nitro
+.nitro
 .output
+
+# expo
+.expo/
+expo-env.d.ts
+apps/*/ios
+apps/*/android
+
+# wxt
+.wxt
+web-ext.config.ts
 
 # dependencies
 node_modules
@@ -60,3 +73,5 @@ logs
 **/i18nTree.gen.ts
 .tanstack
 .vite
+.claude/worktrees
+.claude/settings.local.json

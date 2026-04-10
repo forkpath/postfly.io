@@ -1,17 +1,25 @@
 import type { ApiClientOptions, ApiRuntime } from './types'
 
 import { createApiClient } from '@libs/api-core'
+import { Platform } from '@libs/common'
 
 /**
  * 检测当前运行时环境
  */
 export function detectRuntime(): ApiRuntime {
   if (typeof window === 'undefined') {
-    return 'ssr'
+    return Platform.SSR
   }
   // React Native 环境检测
   if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
-    return 'mobile'
+    return Platform.MOBILE
+  }
+  // 浏览器扩展Extension 环境检测
+  if (
+    typeof window !== 'undefined' &&
+    (window as Window & { chrome?: { runtime?: { id?: string } } }).chrome?.runtime?.id
+  ) {
+    return Platform.EXTENSION
   }
   // Electron 环境检测
   if (
@@ -22,9 +30,9 @@ export function detectRuntime(): ApiRuntime {
     'type' in window.process &&
     window.process.type === 'renderer'
   ) {
-    return 'desktop'
+    return Platform.DESKTOP
   }
-  return 'web'
+  return Platform.WEB
 }
 
 /**
@@ -36,6 +44,7 @@ function getDefaultBaseURL(runtime: ApiRuntime): string {
       // SSR 环境需要完整 URL，从环境变量获取
       return process.env['API_BASE_URL'] || 'http://localhost:8000'
     case 'desktop':
+    case 'extension':
       // Desktop 通过 IPC 或直接请求后端
       return process.env['VITE_API_BASE_URL'] || 'http://localhost:8000'
     case 'mobile':

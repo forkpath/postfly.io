@@ -59,6 +59,18 @@
       "options": {
         "targetName": "e2e"
       }
+    },
+    {
+      "plugin": "@nx/expo/plugin",
+      "options": {
+        "startTargetName": "start",
+        "runIosTargetName": "run-ios",
+        "runAndroidTargetName": "run-android",
+        "exportTargetName": "export",
+        "prebuildTargetName": "prebuild",
+        "buildTargetName": "build",
+        "submitTargetName": "submit"
+      }
     }
   ],
   "generators": {
@@ -78,5 +90,6 @@
         "unitTestRunner": "vitest"
       }
     }
-  }
+  },
+  "analytics": true
 }

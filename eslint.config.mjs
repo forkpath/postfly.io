@@ -11,7 +11,16 @@ export default [
     }
   },
   {
-    ignores: ['**/dist', '**/out-tsc', '**/.output', '**/vite.config.*.timestamp*', '**/vitest.config.*.timestamp*']
+    ignores: [
+      '**/build',
+      '**/dist',
+      '**/out-tsc',
+      '**/.output',
+      '**/vite.config.*.timestamp*',
+      '**/vitest.config.*.timestamp*',
+      '**/.expo',
+      '**/.wxt'
+    ]
   },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],

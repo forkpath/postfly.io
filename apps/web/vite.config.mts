@@ -6,32 +6,11 @@ import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import tailwindcss from '@tailwindcss/vite'
 import viteReact from '@vitejs/plugin-react'
-import { nitro } from 'nitro/vite'
 import { defineConfig } from 'vite'
 import svgr from 'vite-plugin-svgr'
 
-const isDev = process.env.NODE_ENV !== 'production'
-
-export default defineConfig(() => ({
-  root: import.meta.dirname,
-  cacheDir: '../../node_modules/.vite/apps/web',
-  server: {
-    port: parseInt(process.env.WEB_PORT as string, 10) || 3000,
-    host: 'localhost',
-    allowedHosts: ['localhost', 'postfly.io'],
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        rewrite: path => path.replace(/^\/api/, '/api')
-      }
-    }
-  },
-  preview: {
-    port: 3000,
-    host: 'localhost'
-  },
-  plugins: [
+export default defineConfig(async ({ command }) => {
+  const plugins = [
     nxViteTsPaths(),
     nxCopyAssetsPlugin(['*.md']),
     devtools(),
@@ -49,41 +28,65 @@ export default defineConfig(() => ({
         quoteStyle: 'single'
       }
     }),
-    nitro({
-      preset: isDev ? undefined : 'node-server'
-    }),
     viteReact(),
     tailwindcss()
-  ],
-  ssr: {
-    noExternal: [
-      '@libs/ui-shared',
-      '@libs/studio',
-      '@libs/auth',
-      '@libs/i18n',
-      '@libs/common',
-      '@libs/api-client',
-      /^@libs\/.*/
-    ]
-  },
-  build: {
-    outDir: '../../dist/apps/web',
-    emptyOutDir: true,
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true
-    }
-  },
-  test: {
-    name: 'web',
-    watch: false,
-    globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../../coverage/apps/web',
-      provider: 'v8'
+  ]
+
+  if (command === 'build') {
+    const { nitro } = await import('nitro/vite')
+    plugins.splice(5, 0, nitro({ preset: 'node-server' }))
+  }
+
+  return {
+    root: import.meta.dirname,
+    cacheDir: '../../node_modules/.vite/apps/web',
+    server: {
+      port: parseInt(process.env.WEB_PORT as string, 10) || 3000,
+      host: 'localhost',
+      allowedHosts: ['localhost', 'postfly.io'],
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+          rewrite: (path: string) => path.replace(/^\/api/, '/api')
+        }
+      }
+    },
+    preview: {
+      port: 3000,
+      host: 'localhost'
+    },
+    plugins,
+    ssr: {
+      noExternal: [
+        '@libs/ui-shared',
+        '@libs/studio',
+        '@libs/auth',
+        '@libs/i18n',
+        '@libs/common',
+        '@libs/api-client',
+        /^@libs\/.*/
+      ]
+    },
+    build: {
+      outDir: '../../dist/apps/web',
+      emptyOutDir: true,
+      reportCompressedSize: true,
+      commonjsOptions: {
+        transformMixedEsModules: true
+      }
+    },
+    test: {
+      name: 'web',
+      watch: false,
+      globals: true,
+      environment: 'jsdom',
+      include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+      reporters: ['default'],
+      coverage: {
+        reportsDirectory: '../../coverage/apps/web',
+        provider: 'v8'
+      }
     }
   }
-}))
+})

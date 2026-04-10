@@ -1,14 +1,13 @@
 import type {
   BillingInterval,
   BillingOrderRecord,
-  BillingPlan,
   BillingPlanConfig,
   BillingSubscriptionRecord,
   BillingVariant
 } from './types'
 
 import { billingConfig } from './config'
-import { BillingModel, BillingSubscriptionStatus } from './types'
+import { BillingModel, BillingPlan, BillingSubscriptionStatus } from './types'
 
 const ACTIVE_SUBSCRIPTION_STATUSES: BillingSubscriptionRecord['status'][] = [
   BillingSubscriptionStatus.ACTIVE,
@@ -91,4 +90,35 @@ export function getLatestSuccessfulOrder(orders: BillingOrderRecord[]): BillingO
 
 export function isRecurringVariant(variant: BillingVariant): boolean {
   return variant.model === BillingModel.RECURRING
+}
+
+export function getActivePlan(summary?: {
+  subscriptions?: { status: BillingSubscriptionRecord['status']; variantId: string }[]
+  orders?: { status: string; variantId: string; updatedAt: string | Date }[]
+}): BillingPlan {
+  if (!summary) {
+    return BillingPlan.FREE
+  }
+
+  const activeSubscription = summary.subscriptions?.find(sub => ACTIVE_SUBSCRIPTION_STATUSES.includes(sub.status))
+
+  if (activeSubscription) {
+    const variant = findBillingVariant(activeSubscription.variantId)
+    if (variant) {
+      return variant.planId
+    }
+  }
+
+  const successfulOrder = summary.orders
+    ?.filter(order => order.status === 'succeeded')
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0]
+
+  if (successfulOrder) {
+    const variant = findBillingVariant(successfulOrder.variantId)
+    if (variant) {
+      return variant.planId
+    }
+  }
+
+  return BillingPlan.FREE
 }

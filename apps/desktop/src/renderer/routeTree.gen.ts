@@ -8,15 +8,15 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './app/__root'
-import { Route as AuthRouteImport } from './app/auth'
-import { Route as IndexRouteImport } from './app/index'
-import { Route as AuthRegisterRouteImport } from './app/auth/register'
-import { Route as AuthLoginRouteImport } from './app/auth/login'
-import { Route as AuthJoinRouteImport } from './app/auth/join'
-import { Route as AuthErrorRouteImport } from './app/auth/error'
-import { Route as AuthPasswordUpdateRouteImport } from './app/auth/password/update'
-import { Route as AuthPasswordForgotRouteImport } from './app/auth/password/forgot'
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRegisterRouteImport } from './routes/auth/register'
+import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AuthJoinRouteImport } from './routes/auth/join'
+import { Route as AuthErrorRouteImport } from './routes/auth/error'
+import { Route as AuthPasswordUpdateRouteImport } from './routes/auth/password/update'
+import { Route as AuthPasswordForgotRouteImport } from './routes/auth/password/forgot'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',

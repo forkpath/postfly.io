@@ -16,7 +16,11 @@ function getEnvVar(key: string): string | undefined {
 
   const viteEnv =
     typeof import.meta !== 'undefined'
-      ? (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env
+      ? (
+          import.meta as ImportMeta & {
+            env?: Record<string, string | undefined>
+          }
+        ).env
       : undefined
 
   if (viteEnv) {
@@ -25,6 +29,26 @@ function getEnvVar(key: string): string | undefined {
 
   return undefined
 }
+
+/* ── Shared client schema (Vite-based platforms) ── */
+
+const viteClientSchema = {
+  VITE_ANALYTICS_PROVIDER: analyticsProviderSchema,
+  VITE_POSTHOG_KEY: z.string().optional(),
+  VITE_POSTHOG_HOST: z.string().optional().default('https://us.i.posthog.com'),
+  VITE_GOOGLE_ANALYTICS_MEASUREMENT_ID: z.string().optional()
+}
+
+function resolveViteClientEnv() {
+  return {
+    VITE_ANALYTICS_PROVIDER: getEnvVar('VITE_ANALYTICS_PROVIDER'),
+    VITE_POSTHOG_KEY: getEnvVar('VITE_POSTHOG_KEY'),
+    VITE_POSTHOG_HOST: getEnvVar('VITE_POSTHOG_HOST'),
+    VITE_GOOGLE_ANALYTICS_MEASUREMENT_ID: getEnvVar('VITE_GOOGLE_ANALYTICS_MEASUREMENT_ID')
+  }
+}
+
+/* ── Server ── */
 
 export const serverPreset = {
   id: 'analytics-server',
@@ -36,17 +60,16 @@ export const serverPreset = {
   }
 } as const satisfies Preset
 
+/* ── Web (TanStack Start / Vite SSR) ── */
+
 export const webPreset = {
   id: 'analytics-web',
   clientPrefix: 'VITE_',
   extends: [serverPreset],
-  client: {
-    VITE_ANALYTICS_PROVIDER: analyticsProviderSchema,
-    VITE_POSTHOG_KEY: z.string().optional(),
-    VITE_POSTHOG_HOST: z.string().optional().default('https://us.i.posthog.com'),
-    VITE_GOOGLE_ANALYTICS_MEASUREMENT_ID: z.string().optional()
-  }
+  client: viteClientSchema
 } as const satisfies Preset
+
+/* ── Mobile (Expo / React Native) ── */
 
 export const mobilePreset = {
   id: 'analytics-mobile',
@@ -57,6 +80,24 @@ export const mobilePreset = {
     EXPO_PUBLIC_POSTHOG_HOST: z.string().optional().default('https://us.i.posthog.com')
   }
 } as const satisfies Preset
+
+/* ── Desktop (Electron + Vite renderer) ── */
+
+export const desktopPreset = {
+  id: 'analytics-desktop',
+  clientPrefix: 'VITE_',
+  client: viteClientSchema
+} as const satisfies Preset
+
+/* ── Extension (WXT + Vite) ── */
+
+export const extensionPreset = {
+  id: 'analytics-extension',
+  clientPrefix: 'VITE_',
+  client: viteClientSchema
+} as const satisfies Preset
+
+/* ── Env instances ── */
 
 export const serverEnv = defineEnv({
   ...serverPreset,
@@ -75,10 +116,7 @@ export const webEnv = defineEnv({
     POSTHOG_KEY: getEnvVar('POSTHOG_KEY'),
     POSTHOG_HOST: getEnvVar('POSTHOG_HOST'),
     GOOGLE_ANALYTICS_SECRET: getEnvVar('GOOGLE_ANALYTICS_SECRET'),
-    VITE_ANALYTICS_PROVIDER: getEnvVar('VITE_ANALYTICS_PROVIDER'),
-    VITE_POSTHOG_KEY: getEnvVar('VITE_POSTHOG_KEY'),
-    VITE_POSTHOG_HOST: getEnvVar('VITE_POSTHOG_HOST'),
-    VITE_GOOGLE_ANALYTICS_MEASUREMENT_ID: getEnvVar('VITE_GOOGLE_ANALYTICS_MEASUREMENT_ID')
+    ...resolveViteClientEnv()
   }
 })
 
@@ -89,4 +127,14 @@ export const mobileEnv = defineEnv({
     EXPO_PUBLIC_POSTHOG_KEY: getEnvVar('EXPO_PUBLIC_POSTHOG_KEY'),
     EXPO_PUBLIC_POSTHOG_HOST: getEnvVar('EXPO_PUBLIC_POSTHOG_HOST')
   }
+})
+
+export const desktopEnv = defineEnv({
+  ...desktopPreset,
+  env: resolveViteClientEnv()
+})
+
+export const extensionEnv = defineEnv({
+  ...extensionPreset,
+  env: resolveViteClientEnv()
 })

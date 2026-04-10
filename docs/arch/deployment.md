@@ -51,7 +51,7 @@ PostgreSQL   MongoDB      Redis
 
 - 一台 Linux 服务器（推荐 Ubuntu 22.04+），已安装 Docker 和 Docker Compose
 - Git 已安装
-- Node.js >= 22.21.1 和 pnpm >= 10.25.0 已安装（用于宿主机 Nx 构建）
+- Node.js >= 24.0.0 和 pnpm >= 10.25.0 已安装（用于宿主机 Nx 构建）
 - 域名已购买，DNS 能配置 A 记录
 
 ### 步骤 1：克隆代码

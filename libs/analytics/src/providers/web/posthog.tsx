@@ -4,8 +4,8 @@ import type { AnalyticsProviderClientStrategy } from '../../lib/types'
 
 import { useCallback } from 'react'
 
+import { PostHogProvider } from '@posthog/react'
 import posthog from 'posthog-js'
-import { PostHogProvider } from 'posthog-js/react'
 
 import { webEnv } from '../../env'
 import { usePageView } from './use-page-view'

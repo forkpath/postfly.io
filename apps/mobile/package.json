@@ -7,22 +7,27 @@
     "dev": "expo start --clear",
     "dev:ios": "expo start --ios",
     "dev:android": "expo start --android",
-    "ios": "expo run:ios",
-    "android": "expo run:android",
-    "typecheck": "tsc --noEmit",
-    "export": "expo export --platform ios --platform android"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~55.0.6",
-    "@tanstack/react-query": "^5.90.16",
-    "expo": "^55.0.4",
-    "expo-linking": "^55.0.7",
-    "expo-router": "^55.0.4",
-    "expo-secure-store": "^55.0.8",
+    "@expo/metro-runtime": "~55.0.7",
+    "@sentry/react-native": "^8.7.0",
+    "@tanstack/react-query": "catalog:",
+    "expo": "^55.0.9",
+    "expo-linking": "^55.0.9",
+    "expo-router": "^55.0.8",
+    "expo-secure-store": "^55.0.9",
     "expo-status-bar": "^55.0.4",
-    "react": "^19.2.0",
-    "react-native": "^0.83.2",
+    "posthog-react-native": "^4.41.1",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "react-native": "^0.83.4",
     "react-native-safe-area-context": "^5.6.2",
     "react-native-screens": "^4.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:node24",
+    "@types/react": "catalog:react19",
+    "typescript": "catalog:"
   }
 }

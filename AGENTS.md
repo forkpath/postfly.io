@@ -20,7 +20,7 @@ Central orientation for contributors working inside the neo Nx monorepo. Follow 
 
 ## Tooling & Commands
 
-- Install deps: `pnpm install` (Node >= 22.19.0, pnpm >= 10.8.1).
+- Install deps: `pnpm install` (Node >= 24.0.0, pnpm >= 10.25.0).
 - Dev servers: `pnpm dev:web | dev:desktop | dev:engine`
 - Build: `pnpm build:web | build:desktop | build:engine`.
 - Tests: `nx test <project>` (Jest/Vitest); `nx e2e <project-e2e>` (Playwright).

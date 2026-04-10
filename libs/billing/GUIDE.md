@@ -617,7 +617,7 @@ flowchart TB
         Utils["utils.ts<br>工具函数"]
         StripeLib["stripe.ts<br>Stripe 封装"]
         ServerLib["server.ts<br>Prisma Helper"]
-        MobileAdapter["mobile-adapter.tsx<br>适配器"]
+        MobileAdapter["mobile-registry.tsx<br>注册表 / 运行时桥接"]
     end
 
     subgraph External["外部服务"]

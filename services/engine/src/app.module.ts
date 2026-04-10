@@ -4,6 +4,7 @@ import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE, Reflector } from '@nestjs/core'
 import { CqrsModule } from '@nestjs/cqrs'
 import { ScheduleModule } from '@nestjs/schedule'
 
+import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup'
 import { I18nService } from 'nestjs-i18n'
 import { createZodValidationPipe } from 'nestjs-zod'
 import { ZodError } from 'zod'
@@ -24,6 +25,9 @@ import { UserModule } from './presentation/http/user/user.module'
 
 @Module({
   imports: [
+    // Sentry 性能追踪 & 异常上报（需在其他业务模块之前）
+    SentryModule.forRoot(),
+
     // Config，需要保证全局可用，且需要优先于其他模块加载
     ConfigModule.forRoot({
       isGlobal: true,
@@ -139,6 +143,10 @@ import { UserModule } from './presentation/http/user/user.module'
      * ]
      * 最终执行顺序是 FilterB -> FilterA
      */
+    {
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter
+    },
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter

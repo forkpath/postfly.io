@@ -1,6 +1,5 @@
 import type { PropsWithChildren } from 'react'
 import type { BillingMobileEntitlement, PaywallCallbacks, PaywallResult } from '@libs/billing'
-import type { MonitoringIdentity } from '@libs/monitoring'
 
 import { createContext, useContext, useMemo, useState } from 'react'
 
@@ -8,7 +7,8 @@ import { Alert, Linking } from 'react-native'
 
 import { AnalyticsProvider as AnalyticsProviderName, registerMobileAnalyticsAdapter } from '@libs/analytics'
 import { BillingProvider as BillingProviderName, registerMobileBillingAdapter } from '@libs/billing'
-import { MonitoringProvider as MonitoringProviderName, registerMobileMonitoringAdapter } from '@libs/monitoring'
+
+import { posthogMobileAnalyticsAdapter } from './analytics/posthog'
 
 interface BillingStateValue {
   entitlements: BillingMobileEntitlement[]
@@ -68,39 +68,7 @@ function MockBillingProvider({ children }: PropsWithChildren) {
 }
 
 function registerAnalyticsAdapters() {
-  const adapter = {
-    Provider: ({ children }: PropsWithChildren) => children,
-    track: (event: string, data?: Record<string, string | number | boolean>) => {
-      console.log('[mobile-analytics]', event, data)
-    },
-    identify: (userId: string, traits?: Record<string, string | number | boolean>) => {
-      console.log('[mobile-analytics] identify', userId, traits)
-    },
-    reset: () => {
-      console.log('[mobile-analytics] reset')
-    }
-  }
-
-  registerMobileAnalyticsAdapter(AnalyticsProviderName.POSTHOG, adapter)
-  registerMobileAnalyticsAdapter(AnalyticsProviderName.GOOGLE_ANALYTICS, adapter)
-}
-
-function registerMonitoringAdapters() {
-  const adapter = {
-    Provider: ({ children }: PropsWithChildren) => children,
-    initialize: () => {
-      console.log('[mobile-monitoring] initialize')
-    },
-    identify: (user: MonitoringIdentity | null) => {
-      console.log('[mobile-monitoring] identify', user)
-    },
-    captureException: (error: unknown) => {
-      console.error('[mobile-monitoring] capture', error)
-    }
-  }
-
-  registerMobileMonitoringAdapter(MonitoringProviderName.POSTHOG, adapter)
-  registerMobileMonitoringAdapter(MonitoringProviderName.SENTRY, adapter)
+  registerMobileAnalyticsAdapter(AnalyticsProviderName.POSTHOG, posthogMobileAnalyticsAdapter)
 }
 
 function registerBillingAdapters() {
@@ -142,13 +110,12 @@ function registerBillingAdapters() {
 
 let registered = false
 
-export function ensureMobileAdaptersRegistered() {
+export function ensureMobileIntegrationsRegistered() {
   if (registered) {
     return
   }
 
   registerAnalyticsAdapters()
-  registerMonitoringAdapters()
   registerBillingAdapters()
   registered = true
 }

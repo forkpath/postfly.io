@@ -1,3 +1,5 @@
+import './instrument'
+
 import path from 'node:path'
 
 import { app, BrowserWindow } from 'electron'
