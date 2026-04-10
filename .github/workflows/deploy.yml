@@ -38,10 +38,12 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ vars.DEPLOY_PORT || 22 }}
-          script_stop: true
           command_timeout: 30m
           script: |
             set -euxo pipefail
+
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
             DEPLOY_PATH="${{ vars.DEPLOY_PATH || '/opt/ray' }}"
             RELEASE_TAG="${{ github.ref_name }}"
@@ -49,14 +51,9 @@ jobs:
             echo "== Runtime context =="
             whoami
             echo "HOME=$HOME"
+            echo "node=$(node -v 2>/dev/null || echo 'NOT FOUND')"
+            echo "pnpm=$(pnpm -v 2>/dev/null || echo 'NOT FOUND')"
             pwd
-
-            echo "== SSH directory =="
-            ls -la "$HOME/.ssh" || true
-            test -f "$HOME/.ssh/known_hosts" && tail -n 5 "$HOME/.ssh/known_hosts" || true
-
-            echo "== GitHub SSH test =="
-            ssh -o StrictHostKeyChecking=accept-new -T git@github.com || true
 
             cd "$DEPLOY_PATH"
 
