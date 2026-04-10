@@ -55,6 +55,24 @@ check_env() {
 }
 
 # ── Commands ─────────────────────────────────────────────────────
+sync_vite_env() {
+  if [ ! -f "$ENV_FILE" ]; then return; fi
+
+  info "Syncing VITE_* variables from $ENV_FILE"
+  local ext_env="$PROJECT_ROOT/apps/extension/.env"
+
+  # Extract VITE_* lines into apps/extension/.env so wxt prepare can resolve them
+  grep -E '^VITE_[A-Za-z0-9_]+=' "$ENV_FILE" > "$ext_env" 2>/dev/null || true
+
+  # Also export into current shell for Nx build
+  while IFS= read -r line || [ -n "$line" ]; do
+    [[ "$line" =~ ^[[:space:]]*#|^[[:space:]]*$ ]] && continue
+    if [[ "$line" =~ ^(VITE_[A-Za-z0-9_]+)=(.*) ]]; then
+      export "${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
+    fi
+  done < "$ENV_FILE"
+}
+
 cmd_install() {
   local hash_file="node_modules/.lockfile-hash"
   local current_hash
@@ -71,19 +89,10 @@ cmd_install() {
 }
 
 cmd_nx_build() {
-  cmd_install
+  # Sync VITE_* env BEFORE install — wxt prepare (postinstall) needs them to resolve manifest URLs
+  sync_vite_env
 
-  # Load VITE_* variables from docker/.env so Vite inlines them at build time.
-  # Only export VITE_* lines — sourcing the full .env is unsafe (special chars).
-  if [ -f "$ENV_FILE" ]; then
-    info "Loading VITE_* variables from $ENV_FILE"
-    while IFS= read -r line || [ -n "$line" ]; do
-      [[ "$line" =~ ^[[:space:]]*#|^[[:space:]]*$ ]] && continue
-      if [[ "$line" =~ ^(VITE_[A-Za-z0-9_]+)=(.*) ]]; then
-        export "${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
-      fi
-    done < "$ENV_FILE"
-  fi
+  cmd_install
 
   info "Building web + engine in parallel..."
   NODE_ENV=production pnpm exec nx run-many --targets=build --projects=web,engine --parallel=2
