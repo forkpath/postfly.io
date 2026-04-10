@@ -4,6 +4,9 @@ on:
   push:
     tags: ['v*']
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 permissions:
   contents: read
 
@@ -17,8 +20,9 @@ jobs:
 
       - name: Ensure tag is on main
         run: |
+          git fetch origin main --depth=1
           TAG_COMMIT=$(git rev-list -n 1 "$GITHUB_REF")
-          if ! git merge-base --is-ancestor "$TAG_COMMIT" origin/main; then
+          if ! git merge-base --is-ancestor "$TAG_COMMIT" FETCH_HEAD; then
             echo "::error::Tag must be on main branch"
             exit 1
           fi
