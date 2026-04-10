@@ -1,0 +1,96 @@
+name: Release Extension
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release-extension:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate required extension variables
+        env:
+          VITE_PRODUCT_NAME: ${{ vars.VITE_PRODUCT_NAME }}
+          VITE_URL: ${{ vars.VITE_URL }}
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+        run: |
+          set -euo pipefail
+
+          required=(
+            VITE_PRODUCT_NAME
+            VITE_URL
+            VITE_API_BASE_URL
+          )
+
+          missing=()
+          for key in "${required[@]}"; do
+            if [ -z "${!key:-}" ]; then
+              missing+=("$key")
+            fi
+          done
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error::Missing required repository variables: ${missing[*]}"
+            exit 1
+          fi
+
+      - name: Create apps/extension/.env.production
+        run: |
+          cat > apps/extension/.env.production <<EOF
+          VITE_PRODUCT_NAME=${{ vars.VITE_PRODUCT_NAME }}
+          VITE_URL=${{ vars.VITE_URL }}
+          VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
+          VITE_DEFAULT_LOCALE=${{ vars.VITE_DEFAULT_LOCALE }}
+          VITE_THEME_MODE=${{ vars.VITE_THEME_MODE }}
+          VITE_THEME_COLOR=${{ vars.VITE_THEME_COLOR }}
+          VITE_ANALYTICS_PROVIDER=${{ vars.VITE_ANALYTICS_PROVIDER }}
+          VITE_POSTHOG_KEY=${{ vars.VITE_POSTHOG_KEY }}
+          VITE_POSTHOG_HOST=${{ vars.VITE_POSTHOG_HOST }}
+          VITE_MONITORING_PROVIDER=${{ vars.VITE_MONITORING_PROVIDER }}
+          VITE_SENTRY_EXTENSION_DSN=${{ vars.VITE_SENTRY_EXTENSION_DSN }}
+          VITE_SENTRY_ENVIRONMENT=production
+          EOF
+
+      - name: Build extension packages
+        run: |
+          pnpm nx run extension:build-chrome
+          pnpm nx run extension:build-firefox
+
+      - name: Collect release artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          find apps/extension -type f -name '*.zip' -print -exec cp {} artifacts/ \;
+          if [ -z "$(ls -A artifacts)" ]; then
+            echo '::error::No extension zip artifacts found after build'
+            exit 1
+          fi
+          ls -la artifacts
+
+      - name: Upload assets to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*.zip
+          generate_release_notes: true

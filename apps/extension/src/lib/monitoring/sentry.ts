@@ -10,7 +10,7 @@ export const sentryMonitoringAdapter: MonitoringExtensionAdapter = {
     Sentry.setUser(user)
   },
   initialize: () => {
-    const dsn = import.meta.env.VITE_SENTRY_DSN as string | undefined
+    const dsn = import.meta.env.VITE_SENTRY_EXTENSION_DSN as string | undefined
     if (!dsn) return
 
     Sentry.init({

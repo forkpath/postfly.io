@@ -170,7 +170,7 @@ apps/mobile/
         ├── auth.ts        # 认证客户端
         ├── providers.tsx  # 全局 Provider 组合
         ├── env.ts         # 环境变量
-        └── mobile-adapters.tsx  # 平台适配器
+        └── mobile-integrations.tsx  # 平台集成与适配器注册
 ```
 
 ---

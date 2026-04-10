@@ -8,6 +8,9 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { ThemeProvider, Toaster } from '@libs/studio'
 import { cn } from '@libs/ui-shared/common'
 
+import { AnalyticsProvider } from '../lib/providers/analytics'
+import { MonitoringProvider } from '../lib/providers/monitoring'
+
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
 }>()({
@@ -26,20 +29,24 @@ export const Route = createRootRouteWithContext<{
 
 function RootComponent() {
   return (
-    <ThemeProvider>
-      <div className={cn('bg-background text-foreground flex min-h-screen flex-col font-sans antialiased')}>
-        <Outlet />
-        <Toaster />
-      </div>
-      <TanStackDevtools
-        config={{
-          position: 'bottom-right'
-        }}
-        plugins={[
-          { name: 'TanStack Router', render: <TanStackRouterDevtoolsPanel /> },
-          { name: 'TanStack Query', render: <ReactQueryDevtoolsPanel /> }
-        ]}
-      />
-    </ThemeProvider>
+    <MonitoringProvider>
+      <AnalyticsProvider>
+        <ThemeProvider>
+          <div className={cn('bg-background text-foreground flex min-h-screen flex-col font-sans antialiased')}>
+            <Outlet />
+            <Toaster />
+          </div>
+          <TanStackDevtools
+            config={{
+              position: 'bottom-right'
+            }}
+            plugins={[
+              { name: 'TanStack Router', render: <TanStackRouterDevtoolsPanel /> },
+              { name: 'TanStack Query', render: <ReactQueryDevtoolsPanel /> }
+            ]}
+          />
+        </ThemeProvider>
+      </AnalyticsProvider>
+    </MonitoringProvider>
   )
 }

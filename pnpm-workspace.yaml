@@ -21,6 +21,7 @@ catalog:
   '@tanstack/react-router-devtools': ^1.149.0
   '@tanstack/router-plugin': ^1.157.16
   '@vitejs/plugin-react': ^4.2.0
+  '@sentry/react': 10.47.0
   axios: ^1.13.2
   envin: ^1.1.13
   posthog-js: ^1.359.1

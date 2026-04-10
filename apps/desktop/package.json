@@ -15,6 +15,8 @@
     "forge": "./forge.config.ts"
   },
   "dependencies": {
+    "@sentry/electron": "^7.11.0",
+    "@sentry/react": "catalog:",
     "@tanstack/react-devtools": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-query-devtools": "catalog:",

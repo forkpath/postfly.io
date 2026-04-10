@@ -1,14 +1,55 @@
 # `@libs/analytics`
 
-`ray` 的统一埋点库，参考 `core/packages/analytics` 迁移而来，当前只保留 `web` / `mobile` 两个平台能力，以及 `PostHog`、`Google Analytics` 两个 provider。
+`ray` 的统一埋点库，支持 `web` / `server` / `mobile` / `desktop` / `extension` 五端，以及 `PostHog`、`Google Analytics` 两个 provider。
+
+## 架构
+
+```
+src/
+  index.ts              ← 公共 API：类型、provider 工具、env preset、adapter 注册
+  env.ts                ← 所有平台的环境变量 preset
+  web.tsx               ← web 端入口
+  server.ts             ← 服务端入口
+  mobile.tsx            ← mobile 端入口（adapter 模式）
+  desktop.tsx           ← desktop 端入口（adapter 模式）
+  extension.tsx         ← extension 端入口（adapter 模式）
+  lib/
+    types.ts            ← 共享类型
+    provider.ts         ← strategy 选择工具
+    adapter.tsx         ← 泛化 adapter 工厂 + 各平台注册表
+  providers/
+    web/                ← web 直接实现（GA、PostHog、page-view hook）
+    server/             ← 服务端直接实现（GA Measurement Protocol、PostHog Node）
+    mobile/             ← mobile adapter 代理
+    desktop/            ← desktop adapter 代理
+    extension/          ← extension adapter 代理
+```
+
+**设计原则：**
+
+- **PostHog**：`posthog-js`、`@posthog/react` 和 `posthog-node` 是跨框架通用的（PostHog 不提供框架级 SDK），web 和 server 直接内联实现
+- **Google Analytics**：web 使用 `gtag.js`（内联），server 使用 Measurement Protocol（内联）
+- `mobile`、`desktop`、`extension` 使用 **adapter 模式**，由各 app 在启动时注册平台原生 SDK，避免 analytics 库硬绑定 Expo / Electron / WXT 等依赖
+- 所有 adapter 通过 `lib/adapter.tsx` 中的泛化工厂创建，无重复代码
+
+**依赖说明：**
+
+| 包 | 用途 |
+|---|---|
+| `posthog-js` | 浏览器端 PostHog SDK |
+| `@posthog/react` | React 封装（`PostHogProvider`、`usePostHog` 等），支持 `@posthog/react/slim` tree-shaking |
+| `posthog-node` | 服务端 PostHog SDK |
 
 ## 导出入口
 
-- `@libs/analytics`: 公共类型、provider 选择工具、env preset、mobile adapter 注册能力
-- `@libs/analytics/web`: web 端 `Provider`、`track`、`identify`、`reset`
-- `@libs/analytics/server`: 服务端 `track`
-- `@libs/analytics/mobile`: mobile 端 `Provider`、`track`、`identify`、`reset`
-- `@libs/analytics/env`: `webPreset`、`mobilePreset`、`serverPreset`
+| 入口 | 导出 |
+|---|---|
+| `@libs/analytics` | 公共类型、provider 工具、env preset、adapter 注册函数 |
+| `@libs/analytics/web` | `Provider`、`track`、`identify`、`reset` |
+| `@libs/analytics/server` | `track` |
+| `@libs/analytics/mobile` | `Provider`、`track`、`identify`、`reset` |
+| `@libs/analytics/desktop` | `Provider`、`track`、`identify`、`reset` |
+| `@libs/analytics/extension` | `Provider`、`track`、`identify`、`reset` |
 
 ## Web 使用方式
 
@@ -54,23 +95,40 @@ track('billing_checkout_created', {
 })
 ```
 
-## Mobile 使用方式
+## Mobile / Desktop / Extension 使用方式
 
-当前阶段先提供与 `apps/mobile` 解耦的 adapter 注册机制，方便在 Expo App 真正落地时接入原生 SDK，而不会让 `analytics` 库在没有 mobile app 的阶段就强绑 Expo/React Native 依赖。
+三端均使用 adapter 模式，在 app 启动时注册原生 SDK 实现，analytics 库不会引入平台特定依赖。
+
+### 1. 注册 adapter（在 app 入口）
 
 ```tsx
+// apps/mobile — Expo / React Native
 import { AnalyticsProvider, registerMobileAnalyticsAdapter } from '@libs/analytics'
-import { Provider } from '@libs/analytics/mobile'
+registerMobileAnalyticsAdapter(AnalyticsProvider.POSTHOG, { ... })
 
-registerMobileAnalyticsAdapter('posthog', {
-  Provider: ({ children }) => children,
-  track: (event, data) => console.log(event, data),
-  identify: (userId, traits) => console.log(userId, traits),
-  reset: () => undefined
-})
+// apps/desktop — Electron
+import { AnalyticsProvider, registerDesktopAnalyticsAdapter } from '@libs/analytics'
+registerDesktopAnalyticsAdapter(AnalyticsProvider.POSTHOG, { ... })
+
+// apps/extension — WXT / Browser Extension
+import { AnalyticsProvider, registerExtensionAnalyticsAdapter } from '@libs/analytics'
+registerExtensionAnalyticsAdapter(AnalyticsProvider.POSTHOG, { ... })
 ```
 
-`apps/mobile` 阶段会把真实的 Expo / React Native provider 绑定到这个 adapter 层上。
+### 2. 使用埋点
+
+```tsx
+import { Provider, track, identify, reset } from '@libs/analytics/mobile'
+// 或 '@libs/analytics/desktop' / '@libs/analytics/extension'
+
+// 挂载 Provider
+<Provider>{children}</Provider>
+
+// 埋点
+track('button_clicked', { button: 'upgrade' })
+identify(user.id, { email: user.email })
+reset()
+```
 
 ## 验证
 

@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
+import './monitoring/sentry'
+
 import {
   Provider as AnalyticsProviderRoot,
   identify as identifyAnalytics,
@@ -18,7 +20,7 @@ import {
 } from '@libs/monitoring/mobile'
 
 import { authClient } from './auth'
-import { ensureMobileAdaptersRegistered } from './mobile-adapters'
+import { ensureMobileIntegrationsRegistered } from './mobile-integrations'
 
 const queryClient = new QueryClient()
 
@@ -91,7 +93,7 @@ function BillingProvider({ children }: PropsWithChildren) {
 }
 
 export function Providers({ children }: PropsWithChildren) {
-  ensureMobileAdaptersRegistered()
+  ensureMobileIntegrationsRegistered()
 
   return (
     <QueryClientProvider client={queryClient}>

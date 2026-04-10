@@ -16,6 +16,8 @@
       "@libs/studio": ["libs/studio/src/index.ts"],
       "@libs/i18n": ["libs/i18n/src/index.ts"],
       "@libs/api-core": ["libs/api-core/src/index.ts"],
+      "@libs/monitoring": ["libs/monitoring/src/index.ts"],
+      "@libs/monitoring/*": ["libs/monitoring/src/*"],
       "@libs/api-client": ["libs/api-client/src/index.ts"]
     }
   },

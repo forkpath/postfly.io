@@ -45,7 +45,7 @@ EXPO_PUBLIC_BILLING_MOBILE_PROVIDER=revenuecat
 说明：
 
 - 当前阶段为了优先打通 app 壳层与业务路由，analytics / monitoring / billing 默认接入的是 app 内 mock adapter。
-- 后续如果需要切到真实 PostHog / Sentry / RevenueCat / Superwall SDK，只需要替换 `src/lib/mobile-adapters.tsx` 中的注册实现。
+- 后续如果需要切到真实 PostHog / Sentry / RevenueCat / Superwall SDK，只需要替换 `src/lib/mobile-integrations.tsx` 中的注册实现。
 
 ## 验证
 

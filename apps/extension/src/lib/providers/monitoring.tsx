@@ -1,12 +1,12 @@
 import { useEffect } from 'react'
 
+import '~/lib/monitoring'
+
 import { authClient } from '~/lib/auth'
 
-import { createExtensionMonitoringStrategy, MonitoringProvider as MonitoringProviderEnum } from '@libs/monitoring'
+import { identify, initialize, Provider } from '@libs/monitoring/extension'
 
-const strategy = createExtensionMonitoringStrategy(MonitoringProviderEnum.POSTHOG)
-
-strategy.initialize()
+initialize()
 
 export const MonitoringProvider = ({ children }: { children: React.ReactNode }) => {
   const session = authClient.useSession()
@@ -15,8 +15,8 @@ export const MonitoringProvider = ({ children }: { children: React.ReactNode }) 
     if (session.isPending) return
 
     const user = session.data?.user
-    strategy.identify(user ? { id: user.id, email: user.email ?? undefined, name: user.name ?? undefined } : null)
+    identify(user ? { id: user.id, email: user.email ?? undefined, name: user.name ?? undefined } : null)
   }, [session])
 
-  return <>{children}</>
+  return <Provider>{children}</Provider>
 }
