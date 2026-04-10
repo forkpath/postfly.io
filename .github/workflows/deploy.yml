@@ -38,8 +38,41 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ vars.DEPLOY_PORT || 22 }}
+          script_stop: true
+          command_timeout: 30m
           script: |
-            cd ${{ vars.DEPLOY_PATH || '/opt/ray' }}
-            git fetch --tags
-            git checkout ${{ github.ref_name }}
-            ./scripts/deploy.sh update
+            set -euxo pipefail
+
+            DEPLOY_PATH="${{ vars.DEPLOY_PATH || '/opt/ray' }}"
+            RELEASE_TAG="${{ github.ref_name }}"
+
+            echo "== Runtime context =="
+            whoami
+            echo "HOME=$HOME"
+            pwd
+
+            echo "== SSH directory =="
+            ls -la "$HOME/.ssh" || true
+            test -f "$HOME/.ssh/known_hosts" && tail -n 5 "$HOME/.ssh/known_hosts" || true
+
+            echo "== GitHub SSH test =="
+            ssh -o StrictHostKeyChecking=accept-new -T git@github.com || true
+
+            cd "$DEPLOY_PATH"
+
+            echo "== Repository info =="
+            git remote -v
+            git status --short --branch || true
+
+            echo "== Fetching tags =="
+            git fetch --tags origin
+
+            echo "== Verifying tag exists locally =="
+            git rev-parse -q --verify "refs/tags/$RELEASE_TAG"
+
+            echo "== Checking out release tag =="
+            git checkout -B "release-$RELEASE_TAG" "refs/tags/$RELEASE_TAG"
+
+            echo "== Building and restarting services =="
+            ./scripts/deploy.sh build
+            ./scripts/deploy.sh restart
