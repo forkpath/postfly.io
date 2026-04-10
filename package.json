@@ -2,6 +2,7 @@
   "name": "ray",
   "version": "0.1.0",
   "license": "UNLICENSED",
+  "packageManager": "pnpm@10.25.0",
   "scripts": {
     "clean": "node scripts/clean.mjs",
     "clean:dry-run": "node scripts/clean.mjs --dry-run",
