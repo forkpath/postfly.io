@@ -3,6 +3,8 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Injec
 import { Request, Response } from 'express'
 import { I18nService } from 'nestjs-i18n'
 
+import { captureException } from '@libs/monitoring/server'
+
 import { ExceptionResponse } from '../exception'
 
 @Catch()
@@ -35,13 +37,34 @@ export class AllExceptionsFilter implements ExceptionFilter {
       stackTrace = exception.stack
     }
 
+    const is5xx = status >= HttpStatus.INTERNAL_SERVER_ERROR && status < 600
+
+    const report5xxToMonitoring = () => {
+      if (!is5xx) {
+        return
+      }
+      try {
+        captureException(exception, {
+          scope: 'srv-core-all-exceptions-filter',
+          httpStatus: status,
+          method: request.method,
+          path: request.url
+        })
+      } catch {
+        /* monitoring must never break the HTTP error path */
+      }
+    }
+
     // 检查响应是否已经发送
     if (response.headersSent) {
       this.logger.error(`Response already sent, unable to write error response`)
       this.logger.error(`Error Message: ${message}`)
       if (stackTrace) this.logger.error(`Stack Trace:\n${stackTrace}`)
+      report5xxToMonitoring()
       return
     }
+
+    report5xxToMonitoring()
 
     // 输出到日志
     this.logger.error(`HTTP Status: ${status}, Message: ${message}`)

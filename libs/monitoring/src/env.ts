@@ -10,7 +10,11 @@ const monitoringProviderSchema = z
   .default(MonitoringProvider.POSTHOG)
 
 function getEnvVar(key: string): string | undefined {
-  if (typeof process !== 'undefined' && process.env) {
+  // Browser bundles often define `process.env` as `{}` or `{ NODE_ENV: '...' }`.
+  // If we return `process.env[key]` when the key is missing, we never fall through
+  // to `import.meta.env`, and Zod defaults (e.g. monitoring provider → posthog) win —
+  // so Sentry `initialize()` never runs on web.
+  if (typeof process !== 'undefined' && process.env && Object.prototype.hasOwnProperty.call(process.env, key)) {
     return process.env[key]
   }
 
