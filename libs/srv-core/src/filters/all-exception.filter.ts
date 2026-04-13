@@ -3,7 +3,7 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Injec
 import { Request, Response } from 'express'
 import { I18nService } from 'nestjs-i18n'
 
-import { captureException } from '@libs/monitoring/server'
+import { captureException } from '@libs/monitoring'
 
 import { ExceptionResponse } from '../exception'
 
