@@ -15,13 +15,6 @@ export interface MonitoringPlatformAdapter {
   initialize: () => void | Promise<void>
 }
 
-const clientNoop: MonitoringProviderStrategy = {
-  Provider: ({ children }) => children,
-  captureException: () => undefined,
-  identify: () => undefined,
-  initialize: () => undefined
-}
-
 export function createAdapterRegistry() {
   const adapters: Partial<Record<MonitoringProviderName, MonitoringPlatformAdapter>> = {}
 
@@ -36,17 +29,20 @@ export function createAdapterRegistry() {
   }
 
   function createStrategy(provider: MonitoringProviderName): MonitoringProviderStrategy {
-    const adapter = adapters[provider]
-
-    if (!adapter) {
-      return clientNoop
-    }
-
     return {
-      Provider: ({ children }) => (adapter.Provider ? <adapter.Provider>{children}</adapter.Provider> : children),
-      captureException: adapter.captureException,
-      identify: adapter.identify,
-      initialize: adapter.initialize
+      Provider: ({ children }) => {
+        const adapter = adapters[provider]
+        return adapter?.Provider ? <adapter.Provider>{children}</adapter.Provider> : <>{children}</>
+      },
+      captureException: (error, extra) => {
+        adapters[provider]?.captureException(error, extra)
+      },
+      identify: info => {
+        adapters[provider]?.identify(info)
+      },
+      initialize: () => {
+        return adapters[provider]?.initialize()
+      }
     }
   }
 
@@ -58,11 +54,6 @@ export function createAdapterRegistry() {
 export interface MonitoringServerPlatformAdapter {
   captureException: <Extra extends Record<string, unknown>>(error: unknown, extra?: Extra) => void
   initialize: () => void | Promise<void>
-}
-
-const serverNoop: MonitoringServerStrategy = {
-  captureException: () => undefined,
-  initialize: () => undefined
 }
 
 export function createServerAdapterRegistry() {
@@ -79,15 +70,13 @@ export function createServerAdapterRegistry() {
   }
 
   function createStrategy(provider: MonitoringProviderName): MonitoringServerStrategy {
-    const adapter = adapters[provider]
-
-    if (!adapter) {
-      return serverNoop
-    }
-
     return {
-      captureException: adapter.captureException,
-      initialize: adapter.initialize
+      captureException: (error, extra) => {
+        adapters[provider]?.captureException(error, extra)
+      },
+      initialize: () => {
+        return adapters[provider]?.initialize()
+      }
     }
   }
 

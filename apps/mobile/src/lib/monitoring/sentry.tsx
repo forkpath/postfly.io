@@ -7,6 +7,8 @@ import { registerMobileMonitoringAdapter } from '@libs/monitoring'
 const adapter: MonitoringMobileAdapter = {
   Provider: ({ children }) => children,
   initialize: () => {
+    if (Sentry.getClient()) return
+
     const dsn = process.env['EXPO_PUBLIC_SENTRY_DSN']
     if (!dsn) return
 

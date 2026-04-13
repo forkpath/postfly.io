@@ -9,6 +9,8 @@ const adapter: MonitoringWebAdapter = {
     <Sentry.ErrorBoundary fallback={<p>An error has occurred</p>}>{children}</Sentry.ErrorBoundary>
   ),
   initialize: () => {
+    if (Sentry.getClient()) return
+
     const dsn = import.meta.env.VITE_SENTRY_DSN as string | undefined
     if (!dsn) return
 

@@ -7,7 +7,7 @@ import { MonitoringProvider } from './lib/types'
 
 const monitoringProviderSchema = z
   .enum([MonitoringProvider.POSTHOG, MonitoringProvider.SENTRY] as const)
-  .default(MonitoringProvider.POSTHOG)
+  .default(MonitoringProvider.SENTRY)
 
 function getEnvVar(key: string): string | undefined {
   // Browser bundles often define `process.env` as `{}` or `{ NODE_ENV: '...' }`.
