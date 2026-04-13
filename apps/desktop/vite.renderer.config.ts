@@ -12,6 +12,7 @@ import svgr from 'vite-plugin-svgr'
 
 export default defineConfig({
   root: path.resolve(__dirname, 'src/renderer'),
+  envDir: path.resolve(__dirname, '../..'),
   base: './',
   server: {
     port: parseInt(process.env.DESKTOP_PORT as string, 10) || 4200,

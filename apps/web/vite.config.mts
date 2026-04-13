@@ -39,6 +39,7 @@ export default defineConfig(async ({ command }) => {
 
   return {
     root: import.meta.dirname,
+    envDir: '../../',
     cacheDir: '../../node_modules/.vite/apps/web',
     server: {
       port: parseInt(process.env.WEB_PORT as string, 10) || 3000,

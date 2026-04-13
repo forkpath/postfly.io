@@ -94,6 +94,12 @@ cmd_nx_build() {
 
   cmd_install
 
+  if [ -n "${VITE_SENTRY_DSN:-}" ]; then
+    info "Web client build: VITE_MONITORING_PROVIDER=${VITE_MONITORING_PROVIDER:-<unset>}, VITE_SENTRY_DSN is set (${#VITE_SENTRY_DSN} chars)"
+  else
+    info "Web client build: VITE_SENTRY_DSN is empty — Sentry will not be inlined into the browser bundle (check $ENV_FILE and sync_vite_env)"
+  fi
+
   info "Building web + engine in parallel..."
   NODE_ENV=production pnpm exec nx run-many --targets=build --projects=web,engine --parallel=2
 
