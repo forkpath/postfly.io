@@ -15,6 +15,7 @@
       "@libs/srv-shared": ["libs/srv-shared/src/index.ts"],
       "@libs/mongo-dao": ["libs/mongo-dao/src/index.ts"],
       "@libs/monitoring": ["libs/monitoring/src/index.ts"],
+      "@libs/monitoring/*": ["libs/monitoring/src/*"],
       "@libs/analytics": ["libs/analytics/src/index.ts"],
       "@libs/analytics/*": ["libs/analytics/src/*"],
       "@libs/pg-dao": ["libs/pg-dao/src/index.ts"],
