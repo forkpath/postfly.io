@@ -18,7 +18,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundleIdentifier: 'com.ray.mobile'
   },
   android: {
-    package: 'com.ray.mobile',
+    package: 'com.mist.mobile',
     edgeToEdgeEnabled: true
   },
   plugins: ['expo-router', 'expo-secure-store']
