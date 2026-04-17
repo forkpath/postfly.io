@@ -1,5 +1,6 @@
 // Client
 export { createClient, detectRuntime } from './lib/client'
+export type { ApiClient } from './lib/client'
 
 // Context & Hooks
 export { ApiClientProvider, useApiClient, useApiClientContext, useApiRuntime } from './lib/context'
@@ -31,7 +32,21 @@ export type { ApiClientProviderProps } from './lib/context'
 export type { MutationErrorContext, QueryClientOptions, QueryErrorContext } from './lib/query-client'
 
 // Domains
-export { authKeys, authMutations, billingKeys, billingMutations, billingQueries, orgKeys, userKeys } from './domains'
+export {
+  aiEndpoints,
+  aiKeys,
+  getAIChatUrl,
+  authKeys,
+  authMutations,
+  billingKeys,
+  billingMutations,
+  billingQueries,
+  orgKeys,
+  userKeys
+} from './domains'
+
+// Utils (Hono compatibility)
+export { handle } from './utils'
 
 // Admin Domains
 export {

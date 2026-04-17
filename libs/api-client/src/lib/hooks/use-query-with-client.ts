@@ -23,7 +23,7 @@ import type {
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query'
-import type { AxiosInstance } from 'axios'
+import type { ApiClient } from '../client'
 
 import { useQuery } from '@tanstack/react-query'
 
@@ -34,7 +34,7 @@ import { useApiClient } from '../context'
  */
 export interface QueryFunctionContextWithClient<TQueryKey extends QueryKey = QueryKey>
   extends QueryFunctionContext<TQueryKey> {
-  api: AxiosInstance
+  api: ApiClient
 }
 
 type QueryOptionsWithClient<TQueryFnData, TError, TData, TQueryKey extends QueryKey> = Omit<

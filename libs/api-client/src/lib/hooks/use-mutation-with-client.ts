@@ -13,7 +13,7 @@
  * 注意：如果某个 mutation 在多处使用，建议提取到 domains/ 中作为工厂函数复用
  */
 import type { DefaultError, UseMutationOptions, UseMutationResult } from '@tanstack/react-query'
-import type { AxiosInstance } from 'axios'
+import type { ApiClient } from '../client'
 
 import { useMutation } from '@tanstack/react-query'
 
@@ -23,7 +23,7 @@ type MutationOptionsWithClient<TData, TError, TVariables, TContext> = Omit<
   UseMutationOptions<TData, TError, TVariables, TContext>,
   'mutationFn'
 > & {
-  mutationFn: (api: AxiosInstance, variables: TVariables) => Promise<TData>
+  mutationFn: (api: ApiClient, variables: TVariables) => Promise<TData>
 }
 
 /**

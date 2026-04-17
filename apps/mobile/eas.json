@@ -5,8 +5,20 @@
   "build": {
     "base": {
       "env": {
+        "APP_ENV": "development",
         "EXPO_PUBLIC_API_BASE_URL": "http://localhost:8000",
-        "EXPO_PUBLIC_DEFAULT_LOCALE": "zh"
+        "EXPO_PUBLIC_SITE_URL": "http://localhost:3000",
+        "EXPO_PUBLIC_DEFAULT_LOCALE": "zh",
+        "EXPO_PUBLIC_THEME_MODE": "system",
+        "EXPO_PUBLIC_THEME_COLOR": "orange",
+        "EXPO_PUBLIC_AUTH_PASSWORD": "true",
+        "EXPO_PUBLIC_AUTH_MAGIC_LINK": "false",
+        "EXPO_PUBLIC_AUTH_EMAIL_OTP": "false",
+        "EXPO_PUBLIC_AUTH_ANONYMOUS": "true",
+        "EXPO_PUBLIC_ANALYTICS_PROVIDER": "posthog",
+        "EXPO_PUBLIC_MONITORING_PROVIDER": "sentry",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com",
+        "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "development"
       }
     },
     "development": {

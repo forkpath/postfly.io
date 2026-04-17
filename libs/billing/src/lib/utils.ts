@@ -9,10 +9,42 @@ import type {
 import { billingConfig } from './config'
 import { BillingModel, BillingPlan, BillingSubscriptionStatus } from './types'
 
-const ACTIVE_SUBSCRIPTION_STATUSES: BillingSubscriptionRecord['status'][] = [
+export const ACTIVE_SUBSCRIPTION_STATUSES: BillingSubscriptionRecord['status'][] = [
   BillingSubscriptionStatus.ACTIVE,
   BillingSubscriptionStatus.TRIALING
 ]
+
+export const getBillingPeriod = <
+  T extends {
+    status: BillingSubscriptionRecord['status']
+    periodStartsAt: Date | string
+    periodEndsAt: Date | string
+    trialStartsAt?: Date | string | null
+    trialEndsAt?: Date | string | null
+  }
+>(
+  subscription: T
+) => {
+  const now = Date.now()
+  const trialing = subscription.status === BillingSubscriptionStatus.TRIALING
+  const startsAt = trialing ? (subscription.trialStartsAt ?? subscription.periodStartsAt) : subscription.periodStartsAt
+  const endsAt = trialing ? (subscription.trialEndsAt ?? subscription.periodEndsAt) : subscription.periodEndsAt
+
+  const startMs = new Date(startsAt as Date | string).getTime()
+  const endMs = new Date(endsAt as Date | string).getTime()
+  const total = Math.max(1, endMs - startMs)
+  const elapsed = now - startMs
+  const progress = Math.max(0, Math.min(100, Math.round((elapsed / total) * 100)))
+  const daysRemaining = Math.max(0, Math.ceil((endMs - now) / (1000 * 60 * 60 * 24)))
+
+  return {
+    startsAt,
+    endsAt,
+    progress,
+    daysRemaining,
+    trial: trialing
+  }
+}
 
 export function getBillingPlans(includeHidden = false): BillingPlanConfig[] {
   if (includeHidden) {
@@ -27,6 +59,22 @@ export function getBillingPlans(includeHidden = false): BillingPlanConfig[] {
 
 export function findBillingPlan(planId: BillingPlan): BillingPlanConfig | undefined {
   return billingConfig.plans.find(plan => plan.id === planId)
+}
+
+export const findPlanById = findBillingPlan
+
+export const findPlanByVariantId = (variantId: string) => {
+  const plan = billingConfig.plans.find(p => p.variants.some(v => v.id === variantId))
+  const variant = plan?.variants.find(v => v.id === variantId)
+  return { plan, variant }
+}
+
+export const findPlanIndexById = (id: string) => billingConfig.plans.findIndex(p => p.id === id)
+
+export const getPlanFeatures = (id: string): string[] => {
+  const idx = findPlanIndexById(id)
+  if (idx === -1) return []
+  return Array.from(new Set(billingConfig.plans.slice(0, idx + 1).flatMap(p => p.features ?? [])))
 }
 
 export function findBillingVariant(variantId: string): (BillingVariant & { planId: BillingPlan }) | undefined {
@@ -92,33 +140,48 @@ export function isRecurringVariant(variant: BillingVariant): boolean {
   return variant.model === BillingModel.RECURRING
 }
 
-export function getActivePlan(summary?: {
-  subscriptions?: { status: BillingSubscriptionRecord['status']; variantId: string }[]
-  orders?: { status: string; variantId: string; updatedAt: string | Date }[]
-}): BillingPlan {
+export function getActivePlan<
+  Entitlement extends { id: string; active: boolean; variantId?: string },
+  Subscription extends { status: BillingSubscriptionRecord['status']; variantId: string },
+  Order extends { status: string; variantId: string; updatedAt?: string | Date },
+  Summary extends {
+    entitlements?: Entitlement[]
+    subscriptions?: Subscription[]
+    orders?: Order[]
+  }
+>(summary?: Summary | Summary[] | undefined): BillingPlan {
   if (!summary) {
     return BillingPlan.FREE
   }
 
-  const activeSubscription = summary.subscriptions?.find(sub => ACTIVE_SUBSCRIPTION_STATUSES.includes(sub.status))
+  const data = Array.isArray(summary) ? summary : [summary]
 
-  if (activeSubscription) {
-    const variant = findBillingVariant(activeSubscription.variantId)
-    if (variant) {
-      return variant.planId
-    }
-  }
+  const activeEntitlements = data
+    .flatMap(customer => customer?.entitlements ?? [])
+    .filter(entitlement => entitlement?.active)
 
-  const successfulOrder = summary.orders
-    ?.filter(order => order.status === 'succeeded')
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0]
+  const activeSubscriptions = data
+    .flatMap(customer => customer?.subscriptions ?? [])
+    .filter(s => s?.status && ACTIVE_SUBSCRIPTION_STATUSES.includes(s.status))
+    .map(s => s.variantId)
+    .filter(Boolean) as string[]
 
-  if (successfulOrder) {
-    const variant = findBillingVariant(successfulOrder.variantId)
-    if (variant) {
-      return variant.planId
-    }
-  }
+  const successfulOrders = data
+    .flatMap(customer => customer?.orders ?? [])
+    .filter(order => order?.status === 'succeeded')
+    .map(order => order.variantId)
+    .filter(Boolean) as string[]
 
-  return BillingPlan.FREE
+  const availablePlans = [
+    ...activeEntitlements.map(e =>
+      e.variantId ? findPlanByVariantId(e.variantId).plan : e.id ? findPlanById(e.id as BillingPlan) : null
+    ),
+    ...activeSubscriptions.map(id => findPlanByVariantId(id).plan),
+    ...successfulOrders.map(id => findPlanByVariantId(id).plan)
+  ].filter(Boolean) as { id: BillingPlan }[]
+
+  if (!availablePlans.length) return BillingPlan.FREE
+
+  const sorted = availablePlans.sort((a, b) => findPlanIndexById(a.id) - findPlanIndexById(b.id))
+  return sorted[sorted.length - 1]?.id ?? BillingPlan.FREE
 }

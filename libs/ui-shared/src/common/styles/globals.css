@@ -52,3 +52,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 }
+
+@theme {
+  --spacing: 0.25rem;
+}

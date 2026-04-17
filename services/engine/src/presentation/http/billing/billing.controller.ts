@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Get, Headers, Post, Req } from '@nestjs/common'
 
-import { getBillingSummaryByReferenceId } from '@libs/billing/server'
+import { getBillingSummaryByReferenceId, handleRevenueCatWebhook } from '@libs/billing/server'
 import {
   billingPortalSchema,
   checkoutSchema,
@@ -8,7 +8,7 @@ import {
   createStripeCheckoutSession,
   handleStripeWebhook
 } from '@libs/billing/web'
-import { Session } from '@libs/srv-shared'
+import { AllowAnonymous, Session } from '@libs/srv-shared'
 
 interface SessionUser {
   id: string
@@ -53,6 +53,7 @@ export class BillingController {
   }
 
   @Post('webhook/stripe')
+  @AllowAnonymous()
   async handleStripeWebhookRequest(
     @Req() req: { body: Buffer | string },
     @Headers('stripe-signature') signature?: string
@@ -68,6 +69,18 @@ export class BillingController {
     return handleStripeWebhook({
       payload: req.body,
       signature
+    })
+  }
+
+  @Post('webhook/revenuecat')
+  @AllowAnonymous()
+  async handleRevenueCatWebhookRequest(
+    @Req() req: { body: Buffer | string | Record<string, unknown> },
+    @Headers('authorization') authorization?: string
+  ) {
+    return handleRevenueCatWebhook({
+      payload: req.body,
+      authorization
     })
   }
 }

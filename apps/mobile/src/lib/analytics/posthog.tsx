@@ -1,44 +1,92 @@
-import type { PropsWithChildren } from 'react'
+import type { ReactNode } from 'react'
 import type { AnalyticsMobileAdapter } from '@libs/analytics'
 
+import { useCallback, useEffect, useState } from 'react'
+
+import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency'
 import PostHog, { PostHogProvider } from 'posthog-react-native'
+import { AppState } from 'react-native'
 
-import { mobileEnv } from '@libs/analytics'
+import { AnalyticsProvider, registerMobileAnalyticsAdapter } from '@libs/analytics'
+import { mobileEnv } from '@libs/analytics/env'
 
-const apiKey = mobileEnv.EXPO_PUBLIC_POSTHOG_KEY
-const host = mobileEnv.EXPO_PUBLIC_POSTHOG_HOST
+let client: PostHog | null = null
 
-let clientPromise: Promise<PostHog> | null = null
+function getClient(): PostHog | null {
+  const key = mobileEnv.EXPO_PUBLIC_POSTHOG_KEY
+  if (!key) return null
 
-function ensureClient(): Promise<PostHog> | null {
-  if (!apiKey) return null
-  if (clientPromise) return clientPromise
+  client ??= new PostHog(key, {
+    host: mobileEnv.EXPO_PUBLIC_POSTHOG_HOST,
+    defaultOptIn: false
+  })
 
-  clientPromise = PostHog.initAsync(apiKey, { host })
-  return clientPromise
+  return client
 }
 
-function Provider({ children }: PropsWithChildren) {
-  if (!apiKey) {
-    return <>{children}</>
-  }
+function useTrackingPermissions() {
+  const [granted, setGranted] = useState(false)
 
-  return (
-    <PostHogProvider apiKey={apiKey} options={{ host }} autocapture>
-      {children}
-    </PostHogProvider>
-  )
+  const checkPermission = useCallback(async () => {
+    const { granted: isGranted } = await requestTrackingPermissionsAsync()
+    setGranted(isGranted)
+  }, [])
+
+  useEffect(() => {
+    void checkPermission()
+  }, [checkPermission])
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', status => {
+      if (status !== 'active') return
+      void checkPermission()
+    })
+    return () => subscription.remove()
+  }, [checkPermission])
+
+  return granted
 }
 
-export const posthogMobileAnalyticsAdapter: AnalyticsMobileAdapter = {
-  Provider,
+function TrackingOptIn({ children }: { children: ReactNode }) {
+  const ph = getClient()
+  const granted = useTrackingPermissions()
+
+  useEffect(() => {
+    if (!ph) return
+    if (granted) void ph.optIn()
+    else void ph.optOut()
+  }, [granted, ph])
+
+  return <>{children}</>
+}
+
+const adapter: AnalyticsMobileAdapter = {
+  Provider: ({ children }) => {
+    const key = mobileEnv.EXPO_PUBLIC_POSTHOG_KEY
+    if (!key) {
+      return <>{children}</>
+    }
+
+    const ph = getClient()
+    if (!ph) {
+      return <>{children}</>
+    }
+
+    return (
+      <PostHogProvider client={ph} autocapture>
+        <TrackingOptIn>{children}</TrackingOptIn>
+      </PostHogProvider>
+    )
+  },
   track: (event, data) => {
-    void ensureClient()?.then(c => c.capture(event, data))
+    getClient()?.capture(event, data)
   },
   identify: (userId, traits) => {
-    void ensureClient()?.then(c => c.identify(userId, traits))
+    getClient()?.identify(userId, traits)
   },
   reset: () => {
-    void ensureClient()?.then(c => c.reset())
+    getClient()?.reset()
   }
 }
+
+registerMobileAnalyticsAdapter(AnalyticsProvider.POSTHOG, adapter)

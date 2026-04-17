@@ -1,4 +1,5 @@
-import type { AxiosAdapter, AxiosInstance } from 'axios'
+import type { ApiClient } from './client'
+import type { AxiosAdapter } from 'axios'
 
 /**
  * API 客户端运行时环境
@@ -116,7 +117,7 @@ export interface ApiClientContextValue {
   /**
    * Axios 实例
    */
-  client: AxiosInstance
+  client: ApiClient
 
   /**
    * 当前运行时环境

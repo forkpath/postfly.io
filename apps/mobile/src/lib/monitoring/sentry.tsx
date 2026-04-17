@@ -1,23 +1,29 @@
 import type { MonitoringMobileAdapter } from '@libs/monitoring'
 
 import * as Sentry from '@sentry/react-native'
+import { isRunningInExpoGo } from 'expo'
 
-import { registerMobileMonitoringAdapter } from '@libs/monitoring'
+import { MonitoringProvider, registerMobileMonitoringAdapter } from '@libs/monitoring'
+import { mobileEnv } from '@libs/monitoring/env'
+
+export const navigationIntegration = Sentry.reactNavigationIntegration({
+  enableTimeToInitialDisplay: !isRunningInExpoGo()
+})
 
 const adapter: MonitoringMobileAdapter = {
-  Provider: ({ children }) => children,
+  Provider: ({ children }) => <>{children}</>,
   initialize: () => {
     if (Sentry.getClient()) return
 
-    const dsn = process.env['EXPO_PUBLIC_SENTRY_DSN']
+    const dsn = mobileEnv.EXPO_PUBLIC_SENTRY_DSN
     if (!dsn) return
 
     Sentry.init({
       dsn,
-      environment: process.env['EXPO_PUBLIC_SENTRY_ENVIRONMENT'] ?? 'development',
+      environment: mobileEnv.EXPO_PUBLIC_SENTRY_ENVIRONMENT,
+      integrations: [navigationIntegration],
       tracesSampleRate: 1.0,
-      enableAutoSessionTracking: true,
-      attachScreenshot: true
+      enableNativeFramesTracking: !isRunningInExpoGo()
     })
   },
   identify: info => {
@@ -28,4 +34,4 @@ const adapter: MonitoringMobileAdapter = {
   }
 }
 
-registerMobileMonitoringAdapter('sentry', adapter)
+registerMobileMonitoringAdapter(MonitoringProvider.SENTRY, adapter)

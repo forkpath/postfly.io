@@ -25,6 +25,7 @@
       "@libs/payload": ["libs/payload/src/index.ts"],
       "@libs/ui-shared/*": ["libs/ui-shared/src/*"],
       "@libs/common": ["libs/common/src/index.ts"],
+      "@libs/common/*": ["libs/common/src/*"],
       "@libs/analytics": ["libs/analytics/src/index.ts"],
       "@libs/analytics/*": ["libs/analytics/src/*"],
       "@libs/billing": ["libs/billing/src/index.ts"],

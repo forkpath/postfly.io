@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from 'react'
+import type { ApiClient } from './client'
 import type { ApiClientContextValue, ApiClientOptions, ApiRuntime } from './types'
-import type { AxiosInstance } from 'axios'
 
 import { createContext, useContext, useRef } from 'react'
 
@@ -21,7 +21,7 @@ export interface ApiClientProviderProps extends PropsWithChildren {
    *
    * 当此 prop 变化时，会使用新的 client 实例
    */
-  client?: AxiosInstance
+  client?: ApiClient
 
   /**
    * 运行时环境（如果未提供 client，会自动检测）
@@ -65,13 +65,13 @@ export function ApiClientProvider({ children, options, client, runtime }: ApiCli
   const initialRuntimeRef = useRef(runtime)
 
   // 使用 ref 存储内部创建的 client，确保只创建一次
-  const internalClientRef = useRef<AxiosInstance | null>(null)
+  const internalClientRef = useRef<ApiClient | null>(null)
 
   // 计算最终的 runtime
   const resolvedRuntime = runtime ?? initialRuntimeRef.current ?? initialOptionsRef.current?.runtime ?? detectRuntime()
 
   // 确定使用的 client：优先使用外部传入的，否则使用内部创建的
-  let resolvedClient: AxiosInstance
+  let resolvedClient: ApiClient
   if (client) {
     // 外部传入的 client，直接使用（支持动态变化）
     resolvedClient = client
@@ -123,7 +123,7 @@ export function useApiClientContext(): ApiClientContextValue {
  * }
  * ```
  */
-export function useApiClient(): AxiosInstance {
+export function useApiClient(): ApiClient {
   return useApiClientContext().client
 }
 

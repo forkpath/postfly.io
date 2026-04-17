@@ -5,6 +5,7 @@ export interface CommonEmailProps {
 const AuthEmailTemplate = {
   RESET_PASSWORD: 'reset-password',
   MAGIC_LINK: 'magic-link',
+  SIGN_IN_OTP: 'sign-in-otp',
   CONFIRM_EMAIL: 'confirm-email',
   DELETE_ACCOUNT: 'delete-account',
   CHANGE_EMAIL: 'change-email',
@@ -13,8 +14,13 @@ const AuthEmailTemplate = {
 
 type AuthEmailTemplate = (typeof AuthEmailTemplate)[keyof typeof AuthEmailTemplate]
 
+type AuthEmailUrlTemplate = Exclude<
+  AuthEmailTemplate,
+  typeof EmailTemplate.ORGANIZATION_INVITATION | typeof EmailTemplate.SIGN_IN_OTP
+>
+
 type AuthEmailVariables = Record<
-  Exclude<AuthEmailTemplate, typeof EmailTemplate.ORGANIZATION_INVITATION>,
+  AuthEmailUrlTemplate,
   {
     url: string
   }
@@ -31,6 +37,9 @@ export type EmailVariables = AuthEmailVariables & {
   [EmailTemplate.CHANGE_EMAIL]: {
     url: string
     newEmail: string
+  }
+  [EmailTemplate.SIGN_IN_OTP]: {
+    otp: string
   }
   [EmailTemplate.ORGANIZATION_INVITATION]: {
     url: string

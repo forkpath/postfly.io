@@ -1,5 +1,5 @@
 import type { QueryFunction, QueryKey, UseMutationOptions, UseQueryOptions } from '@tanstack/react-query'
-import type { AxiosInstance } from 'axios'
+import type { ApiClient } from '../client'
 
 import { queryOptions as tanstackQueryOptions } from '@tanstack/react-query'
 
@@ -46,7 +46,7 @@ export type MutationOptionsWithoutFn<TData, TError, TVariables, TContext> = Omit
  * ```
  */
 export function createMutationFactory<TData = unknown, TError = Error, TVariables = void>(
-  mutationFn: (api: AxiosInstance, variables: TVariables) => Promise<TData>
+  mutationFn: (api: ApiClient, variables: TVariables) => Promise<TData>
 ) {
   return {
     /** 原始 mutation 函数，用于自定义场景 */
@@ -54,7 +54,7 @@ export function createMutationFactory<TData = unknown, TError = Error, TVariable
 
     /** 生成完整的 mutation options，TContext 可通过泛型指定以支持乐观更新 */
     options: <TContext = unknown>(
-      api: AxiosInstance,
+      api: ApiClient,
       opts?: MutationOptionsWithoutFn<TData, TError, TVariables, TContext>
     ): UseMutationOptions<TData, TError, TVariables, TContext> => ({
       ...opts,
@@ -100,7 +100,7 @@ export function createMutationFactory<TData = unknown, TError = Error, TVariable
  * ```
  */
 export function createMutationWithParamsFactory<TData = unknown, TError = Error, TVariables = void, TParams = unknown>(
-  mutationFn: (api: AxiosInstance, variables: TVariables, params: TParams) => Promise<TData>
+  mutationFn: (api: ApiClient, variables: TVariables, params: TParams) => Promise<TData>
 ) {
   return {
     /** 原始 mutation 函数 */
@@ -108,7 +108,7 @@ export function createMutationWithParamsFactory<TData = unknown, TError = Error,
 
     /** 生成完整的 mutation options，TContext 可通过泛型指定以支持乐观更新 */
     options: <TContext = unknown>(
-      api: AxiosInstance,
+      api: ApiClient,
       params: TParams,
       opts?: MutationOptionsWithoutFn<TData, TError, TVariables, TContext>
     ): UseMutationOptions<TData, TError, TVariables, TContext> => ({
@@ -152,12 +152,12 @@ export function createQueryOptionsFactory<
   TData = TQueryFnData,
   TQueryKey extends QueryKey = QueryKey
 >(
-  factory: (api: AxiosInstance) => {
+  factory: (api: ApiClient) => {
     queryKey: TQueryKey
     queryFn: QueryFunction<TQueryFnData, TQueryKey>
   } & Omit<UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>, 'queryKey' | 'queryFn'>
 ) {
-  return (api: AxiosInstance) => tanstackQueryOptions(factory(api))
+  return (api: ApiClient) => tanstackQueryOptions(factory(api))
 }
 
 /**
@@ -187,12 +187,12 @@ export function createQueryOptionsWithParams<
   TQueryKey extends QueryKey = QueryKey
 >(
   factory: (
-    api: AxiosInstance,
+    api: ApiClient,
     params: TParams
   ) => {
     queryKey: TQueryKey
     queryFn: QueryFunction<TQueryFnData, TQueryKey>
   } & Omit<UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>, 'queryKey' | 'queryFn'>
 ) {
-  return (api: AxiosInstance, params: TParams) => tanstackQueryOptions(factory(api, params))
+  return (api: ApiClient, params: TParams) => tanstackQueryOptions(factory(api, params))
 }

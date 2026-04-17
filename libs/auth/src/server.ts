@@ -2,7 +2,7 @@ import { expo } from '@better-auth/expo'
 import { passkey } from '@better-auth/passkey'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { betterAuth } from 'better-auth/minimal'
-import { admin, anonymous, lastLoginMethod, magicLink, organization, twoFactor } from 'better-auth/plugins'
+import { admin, anonymous, emailOTP, lastLoginMethod, magicLink, organization, twoFactor } from 'better-auth/plugins'
 
 import { NodeEnv } from '@libs/common'
 import { EmailTemplate } from '@libs/email'
@@ -114,6 +114,15 @@ export const auth = betterAuth({
           }
         })
     }),
+    emailOTP({
+      sendVerificationOTP: async ({ email, otp }, ctx) =>
+        sendEmail({
+          to: email,
+          template: EmailTemplate.SIGN_IN_OTP,
+          locale: getLocaleFromRequest(ctx?.request),
+          variables: { otp }
+        })
+    }),
     passkey(),
     twoFactor(),
     anonymous(),
@@ -165,6 +174,11 @@ export const auth = betterAuth({
     [SocialProvider.GITHUB]: {
       clientId: env.GITHUB_CLIENT_ID,
       clientSecret: env.GITHUB_CLIENT_SECRET
+    },
+    [SocialProvider.APPLE]: {
+      clientId: env.AUTH_APPLE_CLIENT_ID,
+      clientSecret: env.AUTH_APPLE_CLIENT_SECRET,
+      appBundleIdentifier: env.AUTH_APPLE_APP_BUNDLE_IDENTIFIER
     }
   },
   advanced: {

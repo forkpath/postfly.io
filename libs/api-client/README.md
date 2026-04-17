@@ -625,33 +625,34 @@ const mutation = useMutation(
 
 ### 6. 嵌套资源的 Mutation
 
-对于需要父级 ID 的操作（如组织成员），使用 `createMutationWithParamsFactory`：
+对于需要父级 ID 的操作（如"某个项目下新建任务"），使用 `createMutationWithParamsFactory`：
 
 ```typescript
 // 定义
-export const orgMutations = {
-  inviteMember: createMutationWithParamsFactory<Invitation, Error, InviteInput, { orgId: string }>(
-    (api, data, { orgId }) => api.post(`/organizations/${orgId}/invitations`, data)
+export const taskMutations = {
+  create: createMutationWithParamsFactory<Task, Error, CreateTaskInput, { projectId: string }>(
+    (api, data, { projectId }) => api.post(`/projects/${projectId}/tasks`, data)
   )
 }
 
 // 使用
-const orgId = 'org-123'
-const inviteMutation = useMutation(
-  orgMutations.inviteMember.options(
+const projectId = 'proj-123'
+const createTask = useMutation(
+  taskMutations.create.options(
     api,
-    { orgId },
+    { projectId },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: orgKeys.members(orgId) })
-        queryClient.invalidateQueries({ queryKey: orgKeys.invitations(orgId) })
+        queryClient.invalidateQueries({ queryKey: ['projects', 'detail', projectId, 'tasks'] })
       }
     }
   )
 )
 
-inviteMutation.mutate({ email: 'user@example.com', role: 'member' })
+createTask.mutate({ title: 'Write tests', priority: 'high' })
 ```
+
+> 组织相关的成员 / 邀请写操作已统一走 Better Auth 客户端（`authClient.organization.inviteMember` / `removeMember` / `updateMemberRole` / `cancelInvitation` 等），因此本仓库未再导出 `orgMutations`。
 
 ### 7. `use-query-with-client` / `use-mutation-with-client` 的价值
 

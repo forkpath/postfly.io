@@ -41,8 +41,7 @@ export const billingConfig: BillingConfig = {
           stripePriceId: webEnv.VITE_BILLING_STRIPE_PRICE_PREMIUM_LIFETIME,
           revenueCatProductIds: {
             ios: mobileEnv.EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_LIFETIME
-          },
-          superwallPlacement: mobileEnv.EXPO_PUBLIC_SUPERWALL_PLACEMENT_PREMIUM
+          }
         },
         {
           id: PREMIUM_MONTHLY_VARIANT_ID,
@@ -54,8 +53,7 @@ export const billingConfig: BillingConfig = {
           revenueCatProductIds: {
             ios: mobileEnv.EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_MONTHLY,
             android: mobileEnv.EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_MONTHLY
-          },
-          superwallPlacement: mobileEnv.EXPO_PUBLIC_SUPERWALL_PLACEMENT_PREMIUM
+          }
         },
         {
           id: PREMIUM_YEARLY_VARIANT_ID,
@@ -67,8 +65,7 @@ export const billingConfig: BillingConfig = {
           revenueCatProductIds: {
             ios: mobileEnv.EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_YEARLY,
             android: mobileEnv.EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_YEARLY
-          },
-          superwallPlacement: mobileEnv.EXPO_PUBLIC_SUPERWALL_PLACEMENT_PREMIUM
+          }
         }
       ]
     },

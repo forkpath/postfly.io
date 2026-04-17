@@ -1,45 +1,17 @@
+import type {
+  BillingCustomerRecord,
+  BillingOrderRecord,
+  BillingSubscriptionRecord,
+  BillingSummaryCustomer as SharedBillingSummaryCustomer
+} from '@libs/billing'
+
 import { createMutationFactory, createQueryOptionsFactory } from '../lib/queries/factory'
 
-export interface BillingCustomer {
-  id: string
-  referenceId: string
-  externalId: string
-  provider: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface BillingSubscription {
-  id: string
-  customerId: string
-  externalId: string
-  variantId: string
-  status: 'trialing' | 'active' | 'past_due' | 'unpaid' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'paused'
-  store: string
-  periodStartsAt: string
-  periodEndsAt: string
-  trialStartsAt: string | null
-  trialEndsAt: string | null
-  createdAt: string
-  updatedAt: string
-}
-
-export interface BillingOrder {
-  id: string
-  customerId: string
-  externalId: string
-  variantId: string
-  status: 'pending' | 'succeeded' | 'failed'
-  store: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface BillingSummary {
-  customers: BillingCustomer[]
-  subscriptions: BillingSubscription[]
-  orders: BillingOrder[]
-}
+export type BillingCustomer = BillingCustomerRecord
+export type BillingSubscription = BillingSubscriptionRecord
+export type BillingOrder = BillingOrderRecord
+export type BillingSummaryCustomer = SharedBillingSummaryCustomer
+export type BillingSummary = BillingSummaryCustomer[]
 
 export interface BillingCheckoutInput {
   variantId: string

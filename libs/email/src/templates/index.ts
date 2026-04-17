@@ -8,6 +8,7 @@ import DeleteAccount from './auth/delete-account'
 import { MagicLink } from './auth/magic-link'
 import { OrganizationInvitation } from './auth/organization-invitation'
 import { ResetPassword } from './auth/reset-password'
+import { SignInOtp } from './auth/sign-in-otp'
 import ContactForm from './contact-form'
 import { EmailTemplate } from './types'
 
@@ -21,6 +22,7 @@ export const templates: {
 } = {
   [EmailTemplate.RESET_PASSWORD]: ResetPassword,
   [EmailTemplate.MAGIC_LINK]: MagicLink,
+  [EmailTemplate.SIGN_IN_OTP]: SignInOtp,
   [EmailTemplate.CONFIRM_EMAIL]: ConfirmEmail,
   [EmailTemplate.DELETE_ACCOUNT]: DeleteAccount,
   [EmailTemplate.CHANGE_EMAIL]: ChangeEmail,

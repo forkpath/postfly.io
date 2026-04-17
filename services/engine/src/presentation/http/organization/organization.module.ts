@@ -13,6 +13,7 @@ import { ListOrganizationsHandler } from '../../../application/queries/organizat
 import { ORGANIZATION_REPOSITORY } from '../../../domain/repositories/organization.repository.interface'
 import { OrganizationRepository } from '../../../infrastructure/repositories/organization.repository'
 import { OrganizationController } from './organization.controller'
+import { UserOrganizationController } from './user-organization.controller'
 
 const QueryHandlers = [ListOrganizationsHandler, GetOrganizationHandler, ListMembersHandler, ListInvitationsHandler]
 
@@ -26,7 +27,7 @@ const CommandHandlers = [
 
 @Module({
   imports: [CqrsModule],
-  controllers: [OrganizationController],
+  controllers: [OrganizationController, UserOrganizationController],
   providers: [
     {
       provide: ORGANIZATION_REPOSITORY,

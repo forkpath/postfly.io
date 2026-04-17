@@ -1,7 +1,6 @@
 export const BillingProviderEnum = {
   STRIPE: 'stripe',
-  REVENUECAT: 'revenuecat',
-  SUPERWALL: 'superwall'
+  REVENUECAT: 'revenuecat'
 } as const
 
 export type BillingProviderValue = (typeof BillingProviderEnum)[keyof typeof BillingProviderEnum]

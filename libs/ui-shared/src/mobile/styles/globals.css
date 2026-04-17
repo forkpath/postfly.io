@@ -1,0 +1,14 @@
+@import '../../common/styles/globals.css';
+@import './uniwind-patched.css';
+
+@source '../../../../../apps/mobile/src/app';
+@source '../../../../../apps/mobile/src/modules';
+@source '../';
+
+@theme {
+  --font-sans: 'Geist_400Regular';
+  --font-sans-medium: 'Geist_500Medium';
+  --font-sans-semibold: 'Geist_600SemiBold';
+  --font-sans-bold: 'Geist_700Bold';
+  --font-mono: 'GeistMono_400Regular';
+}

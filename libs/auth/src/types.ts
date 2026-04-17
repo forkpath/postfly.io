@@ -13,6 +13,7 @@ const AuthProvider = {
   ...SocialProvider,
   PASSWORD: 'password',
   MAGIC_LINK: 'magicLink',
+  EMAIL_OTP: 'emailOtp',
   ANONYMOUS: 'anonymous',
   PASSKEY: 'passkey'
 } as const
@@ -30,6 +31,7 @@ const authConfigSchema = z.object({
   providers: z.object({
     [AuthProvider.PASSWORD]: z.boolean(),
     [AuthProvider.MAGIC_LINK]: z.boolean(),
+    [AuthProvider.EMAIL_OTP]: z.boolean(),
     [AuthProvider.ANONYMOUS]: z.boolean(),
     [AuthProvider.PASSKEY]: z.boolean().optional(),
     oAuth: z.array(z.enum(SocialProvider))
@@ -186,7 +188,10 @@ const ERROR_MESSAGES: Record<AuthErrorCode, TranslationKey> = {
   INVALID_REDIRECT_URL: 'auth:error.url.invalidRedirectUrl',
   INVALID_ERROR_CALLBACK_URL: 'auth:error.url.invalidErrorCallbackUrl',
   INVALID_NEW_USER_CALLBACK_URL: 'auth:error.url.invalidNewUserCallbackUrl',
-  CALLBACK_URL_REQUIRED: 'auth:error.url.callbackUrlRequired'
+  CALLBACK_URL_REQUIRED: 'auth:error.url.callbackUrlRequired',
+  OTP_EXPIRED: 'auth:error.otp.expired',
+  INVALID_OTP: 'auth:error.otp.invalid',
+  TOO_MANY_ATTEMPTS: 'auth:error.otp.tooManyAttempts'
 } as const
 
 export type {

@@ -380,6 +380,20 @@ export type I18nTranslations = {
                     "disclaimer": string;
                 };
             };
+            "emailOtp": {
+                "label": string;
+                "cta": string;
+                "success": {
+                    "title": string;
+                    "description": string;
+                };
+                "email": {
+                    "preview": string;
+                    "subject": string;
+                    "body": string;
+                    "disclaimer": string;
+                };
+            };
             "twoFactor": {
                 "totp": {
                     "header": {
@@ -502,6 +516,8 @@ export type I18nTranslations = {
             "otp": {
                 "notEnabled": string;
                 "expired": string;
+                "invalid": string;
+                "tooManyAttempts": string;
             };
             "totp": {
                 "notEnabled": string;

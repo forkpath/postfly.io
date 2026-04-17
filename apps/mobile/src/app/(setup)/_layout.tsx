@@ -3,13 +3,12 @@ import { Stack } from 'expo-router'
 export default function SetupLayout() {
   return (
     <Stack
+      initialRouteName="welcome"
       screenOptions={{
-        headerTitleAlign: 'center'
+        headerShown: false,
+        animation: 'fade',
+        animationDuration: 200
       }}
-    >
-      <Stack.Screen name="welcome" options={{ title: '欢迎' }} />
-      <Stack.Screen name="auth/login" options={{ title: '登录' }} />
-      <Stack.Screen name="auth/register" options={{ title: '注册' }} />
-    </Stack>
+    />
   )
 }

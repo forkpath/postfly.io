@@ -236,9 +236,9 @@ export async function getBillingSummaryByReferenceId(referenceId: string) {
     }
   })
 
-  return {
-    customers: customers.map(mapCustomer),
-    subscriptions: customers.flatMap(customer => customer.subscriptions.map(mapSubscription)),
-    orders: customers.flatMap(customer => customer.orders.map(mapOrder))
-  }
+  return customers.map(customer => ({
+    ...mapCustomer(customer),
+    subscriptions: customer.subscriptions.map(mapSubscription),
+    orders: customer.orders.map(mapOrder)
+  }))
 }

@@ -8,6 +8,7 @@ import { lastLoginMethodClient } from '@better-auth/expo/plugins'
 import {
   adminClient,
   anonymousClient,
+  emailOTPClient,
   inferAdditionalFields,
   magicLinkClient,
   organizationClient,
@@ -32,6 +33,7 @@ export const createClient = ({
       ...(options.plugins ?? []),
       anonymousClient(),
       magicLinkClient(),
+      emailOTPClient(),
       twoFactorClient(),
       adminClient(),
       organizationClient({

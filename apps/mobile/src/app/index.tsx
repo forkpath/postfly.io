@@ -1,16 +1,28 @@
+import { useSetupSteps } from '~/app/(setup)/steps/_layout'
+import { pathsConfig } from '~/config/paths'
 import { authClient } from '~/lib/auth'
+import { Spinner } from '~/modules/common/spinner'
 import { Redirect } from 'expo-router'
 
-export default function IndexRoute() {
-  const session = authClient.useSession()
+export default function Index() {
+  const { data, isPending } = authClient.useSession()
+  const { step } = useSetupSteps()
 
-  if (session.isPending) {
-    return null
+  if (isPending) {
+    return <Spinner modal={false} />
   }
 
-  if (!session.data) {
-    return <Redirect href="/welcome" />
+  if (!data) {
+    return <Redirect href={pathsConfig.setup.welcome} />
   }
 
-  return <Redirect href="/dashboard" />
+  if (step) {
+    return <Redirect href={step} />
+  }
+
+  if (data.session.activeOrganizationId) {
+    return <Redirect href={pathsConfig.dashboard.organization.index} />
+  }
+
+  return <Redirect href={pathsConfig.dashboard.user.index} />
 }

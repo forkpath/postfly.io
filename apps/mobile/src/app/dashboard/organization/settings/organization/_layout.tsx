@@ -1,0 +1,31 @@
+import { BaseHeader } from '~/modules/common/layout/header'
+import { router, Stack } from 'expo-router'
+
+import { capitalize } from '@libs/common/utils'
+import { isKey, useTranslation } from '@libs/i18n'
+
+export default function GeneralLayout() {
+  const { t, i18n } = useTranslation('common')
+
+  return (
+    <Stack
+      initialRouteName="index"
+      screenOptions={({ route }) => {
+        const name = route.name === 'index' ? 'organization' : route.name
+
+        return {
+          header: () => (
+            <BaseHeader
+              title={isKey(name, i18n, 'common') ? t(name) : capitalize(name)}
+              {...(router.canGoBack() && {
+                onBack: () => router.back()
+              })}
+            />
+          ),
+          animation: 'fade',
+          animationDuration: 200
+        }
+      }}
+    />
+  )
+}

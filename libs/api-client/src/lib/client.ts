@@ -1,7 +1,23 @@
 import type { ApiClientOptions, ApiRuntime } from './types'
+import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 
 import { createApiClient } from '@libs/api-core'
 import { Platform } from '@libs/common'
+
+/**
+ * Axios 封装客户端：由于 response 拦截器已解包 data，这里重新声明方法以返回 `Promise<T>`
+ * 便于在类型层面消费真实业务数据，不再需要手动访问 `.data`。
+ */
+export interface ApiClient
+  extends Omit<AxiosInstance, 'get' | 'delete' | 'head' | 'options' | 'post' | 'put' | 'patch'> {
+  get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>
+  delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>
+  head<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>
+  options<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>
+  post<T = unknown, D = unknown>(url: string, data?: D, config?: AxiosRequestConfig): Promise<T>
+  put<T = unknown, D = unknown>(url: string, data?: D, config?: AxiosRequestConfig): Promise<T>
+  patch<T = unknown, D = unknown>(url: string, data?: D, config?: AxiosRequestConfig): Promise<T>
+}
 
 /**
  * 检测当前运行时环境
@@ -91,7 +107,7 @@ function getDefaultBaseURL(runtime: ApiRuntime): string {
  * })
  * ```
  */
-export function createClient(options: ApiClientOptions = {}) {
+export function createClient(options: ApiClientOptions = {}): ApiClient {
   const runtime = options.runtime ?? detectRuntime()
   const baseURL = options.baseURL ?? getDefaultBaseURL(runtime)
 
@@ -103,5 +119,5 @@ export function createClient(options: ApiClientOptions = {}) {
     headers: options.headers,
     authBasePath: options.authBasePath ?? '/api/auth',
     auth: options.auth
-  })
+  }) as unknown as ApiClient
 }

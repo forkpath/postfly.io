@@ -28,11 +28,14 @@ function BillingPage() {
   const summaryQuery = useQuery(billing.queries.summary.get)
   const summary = summaryQuery.data as BillingSummary | undefined
 
-  const activeSubscription = summary?.subscriptions.find(sub =>
+  const subscriptions = summary?.flatMap(c => c.subscriptions) ?? []
+  const orders = summary?.flatMap(c => c.orders) ?? []
+
+  const activeSubscription = subscriptions.find(sub =>
     [BillingSubscriptionStatus.ACTIVE, BillingSubscriptionStatus.TRIALING].includes(sub.status)
   )
 
-  const hasData = (summary?.subscriptions.length ?? 0) > 0 || (summary?.orders.length ?? 0) > 0
+  const hasData = subscriptions.length > 0 || orders.length > 0
 
   return (
     <div className="flex w-full flex-col gap-8">
@@ -52,8 +55,8 @@ function BillingPage() {
           <ActivePlanCard subscription={activeSubscription} />
         )}
 
-        {!summaryQuery.isLoading && hasData && (summary?.subscriptions.length ?? 0) > 0 && (
-          <SubscriptionsList subscriptions={summary!.subscriptions} />
+        {!summaryQuery.isLoading && hasData && subscriptions.length > 0 && (
+          <SubscriptionsList subscriptions={subscriptions} />
         )}
 
         {!summaryQuery.isLoading && hasData && <PortalCard />}

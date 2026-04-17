@@ -19,7 +19,7 @@ export const Route = createFileRoute('/_app/user/security')({
 })
 
 function SecurityPage() {
-  const { t } = useTranslation('settings')
+  const { t } = useTranslation('auth')
   const session = authClient.useSession()
   const sessionData = session as unknown as {
     data?: {
@@ -37,8 +37,8 @@ function SecurityPage() {
     <div className="flex w-full flex-col gap-8">
       <PageHeader>
         <div className="flex flex-col gap-1.5">
-          <PageHeaderTitle>{t('security.title')}</PageHeaderTitle>
-          <PageHeaderDescription>{t('security.description')}</PageHeaderDescription>
+          <PageHeaderTitle>{t('account.settings.security.title')}</PageHeaderTitle>
+          <PageHeaderDescription>{t('account.settings.security.description')}</PageHeaderDescription>
         </div>
       </PageHeader>
 

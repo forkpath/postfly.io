@@ -24,11 +24,13 @@
 `@libs/billing` 采用分层架构，通过 4 个子路径为不同运行环境提供精确的 API 边界：
 
 ```
-@libs/billing          → 公共类型、套餐配置、env preset、工具函数、mobile adapter 注册
-@libs/billing/server   → Prisma 持久化 helper（customer/subscription/order/webhook CRUD）
+@libs/billing          → 公共类型、套餐配置、env preset、工具函数
+@libs/billing/server   → Prisma 持久化 helper（customer/subscription/order/webhook CRUD）+ RevenueCat webhook
 @libs/billing/web      → Stripe checkout/portal/webhook + Zod 校验 schema
-@libs/billing/mobile   → Provider、useCustomer、usePaywall（适配器模式）
+@libs/billing/mobile   → RevenueCat Provider、useCustomer、usePaywall
 ```
+
+`ray` 的 provider 策略是**确定性的**：Web 固定 Stripe、Mobile 固定 RevenueCat，不做运行时多 provider 适配，保证调用链简单、类型收敛。
 
 各端的依赖关系：
 
@@ -42,14 +44,14 @@
               ┌────────────────┼────────────────┐
               ▼                ▼                 ▼
    @libs/billing/web   @libs/billing/server  @libs/billing/mobile
-   (Stripe SDK)        (Prisma ORM)          (Adapter 注入)
+   (Stripe SDK)        (Prisma ORM)          (RevenueCat SDK)
               │                │                 │
               ▼                ▼                 ▼
-   ┌──────────────┐  ┌──────────────┐  ┌───────────────┐
-   │ Engine/Web   │  │ Engine       │  │ apps/mobile   │
-   │ (调用 Stripe │  │ (数据库读写) │  │ (RevenueCat / │
-   │  API)        │  │              │  │  Superwall)   │
-   └──────────────┘  └──────────────┘  └───────────────┘
+   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+   │ Engine/Web   │  │ Engine       │  │ apps/mobile  │
+   │ (调用 Stripe │  │ (数据库读写) │  │ (RevenueCat) │
+   │  API)        │  │              │  │              │
+   └──────────────┘  └──────────────┘  └──────────────┘
 ```
 
 ---
@@ -68,7 +70,7 @@
 | **折扣码** | 支持 Stripe Promotion Code 查询与应用 | 配置中有 `discounts` 字段但当前为空数组，Stripe checkout 未实现折扣码传递 |
 | **日志** | 全链路 `logger.info/error` | 无日志输出 |
 | **错误处理** | 统一 `HttpException` + i18n 错误码 | 直接 `throw new Error()`，部分场景静默返回 |
-| **Mobile 服务端** | RevenueCat/Superwall 完整的 webhook handler + API 客户端 | 仅定义 adapter 接口，实际实现在第 4 阶段注入 |
+| **Mobile 服务端** | RevenueCat/Superwall 完整的 webhook handler + API 客户端 | 固定 RevenueCat；`POST /api/v1/billing/webhook/revenuecat` + `handleRevenueCatWebhook` 同步订阅/一次性购买 |
 
 ### 2.2 Stripe 封装对比
 
@@ -119,7 +121,7 @@ erDiagram
         string id PK
         string referenceId "用户ID 或 组织ID"
         BillingReferenceType referenceType "user | organization"
-        BillingProvider provider "stripe | revenuecat | superwall"
+        BillingProvider provider "stripe | revenuecat"
         string externalId "Stripe Customer ID"
         string email
         json metadata
@@ -374,26 +376,26 @@ flowchart TB
 sequenceDiagram
     actor User
     participant App as Mobile App
-    participant Adapter as Billing Adapter<br>(RevenueCat / Superwall)
+    participant RC as RevenueCat SDK<br>(@libs/billing/mobile)
     participant Store as App Store / Play Store
     participant Engine as Engine (NestJS)
     participant DB as PostgreSQL
 
-    Note over App: 启动时注册适配器<br>registerMobileBillingAdapter()
+    Note over App: 启动时初始化 Purchases.configure()
 
-    App->>Adapter: useCustomer().identify(userId)
-    Adapter->>Store: SDK.logIn(userId)
+    App->>RC: useCustomer().identify(userId)
+    RC->>Store: Purchases.logIn(userId)
 
     User->>App: 触发付费墙
-    App->>Adapter: usePaywall().present({ trigger })
-    Adapter->>Store: 展示原生付费界面
+    App->>RC: usePaywall().present({ trigger })
+    RC->>Store: 展示原生付费界面
     User->>Store: 完成应用内购买
 
-    Store-->>Adapter: 购买成功回调
-    Adapter-->>App: result = 'purchased'
+    Store-->>RC: 购买成功回调
+    RC-->>App: result = 'purchased'
 
-    Store->>Engine: Webhook (RevenueCat / Superwall)
-    Note over Engine: POST /api/billing/webhook/revenuecat<br>或 /api/billing/webhook/superwall
+    Store->>Engine: RevenueCat S2S Webhook
+    Note over Engine: POST /api/v1/billing/webhook/revenuecat
 
     Engine->>DB: upsertBillingCustomer()
     Engine->>DB: upsertBillingSubscription()<br>或 upsertBillingOrder()
@@ -517,76 +519,72 @@ function getUserPlanLevel(summary: BillingSummary): BillingPlan {
 
 ### 7.1 架构设计
 
-Mobile 端采用 **适配器注入模式**，`@libs/billing` 不直接依赖 React Native / Expo SDK。实际的 RevenueCat / Superwall 集成由 `apps/mobile` 在启动时注册：
+Mobile 端直接绑定 **RevenueCat**。`@libs/billing/mobile` 内部封装 `react-native-purchases` + `react-native-purchases-ui`，对外仅暴露 `Provider` / `useCustomer` / `usePaywall` 三个符号。**没有运行时适配器、没有 provider 选择逻辑**。
 
 ```
-@libs/billing/mobile          apps/mobile
-┌─────────────────────┐      ┌──────────────────────────┐
-│  BillingMobileAdapter │◄────│  RevenueCat 适配器实现     │
-│  (接口定义)          │      │  或 Superwall 适配器实现   │
-└─────────────────────┘      └──────────────────────────┘
+apps/mobile
+   │
+   ▼
+@libs/billing/mobile  →  react-native-purchases (SDK)
+  Provider                react-native-purchases-ui (Paywall UI)
+  useCustomer
+  usePaywall
 ```
 
-### 7.2 注册适配器
+### 7.2 初始化
 
-在 `apps/mobile` 的入口文件中：
+`Provider` 内部已处理 `Purchases.configure`，只需在 Root 层挂一次即可：
 
 ```tsx
-import { registerMobileBillingAdapter } from '@libs/billing'
-import Purchases from 'react-native-purchases'
+import { Provider as BillingRevenueCatProvider, useCustomer } from '@libs/billing/mobile'
 
-registerMobileBillingAdapter('revenuecat', {
-  Provider: ({ children }) => {
-    useEffect(() => {
-      Purchases.configure({
-        apiKey: Platform.OS === 'ios'
-          ? env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY
-          : env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY
-      })
-    }, [])
-    return <>{children}</>
-  },
-  useCustomer: () => {
-    // 使用 RevenueCat SDK 获取客户信息和权益
-    // 返回 BillingMobileCustomerState
-  },
-  usePaywall: (callbacks) => {
-    // 使用 RevenueCat Paywall UI
-    // 返回 BillingMobilePaywallState
-  }
-})
-```
+export const BillingProvider = ({ children }: { children: React.ReactNode }) => {
+  const { locale } = useI18nConfig(state => state.config)
 
-### 7.3 Mobile 端使用
-
-```tsx
-import { Provider, useCustomer, usePaywall } from '@libs/billing/mobile'
-
-function App() {
   return (
-    <Provider>
-      <AppContent />
-    </Provider>
+    <BillingRevenueCatProvider locale={locale}>
+      {children}
+      <Identity />
+    </BillingRevenueCatProvider>
   )
 }
 
-function UpgradeButton() {
-  const { present, result } = usePaywall({
-    onPurchase: () => console.log('购买成功'),
-    onDismiss: () => console.log('用户关闭付费墙')
-  })
+const Identity = () => {
+  const { identify, reset } = useCustomer()
+  const session = authClient.useSession()
+  useEffect(() => {
+    if (session.isPending) return
+    session.data?.user ? identify(session.data.user.id) : reset()
+  }, [session, identify, reset])
+  return null
+}
+```
 
-  return (
-    <Button onPress={() => present({ trigger: 'premium' })}>
-      升级到 Premium
-    </Button>
-  )
+环境变量：`EXPO_PUBLIC_REVENUECAT_IOS_API_KEY` / `EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY`（`mobileEnv` 中也兼容 `_APPLE_API_KEY` / `_GOOGLE_API_KEY` 命名）。
+
+### 7.3 Paywall 与权益
+
+```tsx
+import { usePaywall, useCustomer } from '@libs/billing/mobile'
+
+const Upgrade = () => {
+  const { present, result } = usePaywall({
+    onPurchase: () => console.log('purchased'),
+    onDismiss: () => console.log('dismissed')
+  })
+  return <Button onPress={() => present({ trigger: 'premium' })}>升级</Button>
+}
+
+const Badge = () => {
+  const { entitlements } = useCustomer()
+  const active = entitlements.find(item => item.active)
+  return <Text>{active ? active.id : 'free'}</Text>
 }
 ```
 
 ### 7.4 Mobile Webhook 数据同步
 
-Mobile 端的购买由 App Store / Play Store 处理，数据同步通过 RevenueCat / Superwall 的 Server-to-Server Webhook 完成。Engine 端需要添加对应的 webhook 端点来接收和处理这些事件。
+Mobile 端的购买由 App Store / Play Store 处理，数据同步通过 **RevenueCat Server-to-Server Webhook** 完成。Engine 端 `POST /api/v1/billing/webhook/revenuecat` 已接入 `handleRevenueCatWebhook`，使用 `REVENUECAT_WEBHOOK_SECRET` 校验 `Authorization` 头，使用 `REVENUECAT_API_KEY` 拉取 subscriber 快照写回数据库。
 
 ---
 
@@ -617,7 +615,7 @@ flowchart TB
         Utils["utils.ts<br>工具函数"]
         StripeLib["stripe.ts<br>Stripe 封装"]
         ServerLib["server.ts<br>Prisma Helper"]
-        MobileAdapter["mobile-registry.tsx<br>注册表 / 运行时桥接"]
+        MobileLib["mobile.tsx<br>RevenueCat Provider / Hooks"]
     end
 
     subgraph External["外部服务"]
@@ -638,7 +636,7 @@ flowchart TB
 
     W -.->|"读取配置/类型"| Config
     W -.->|"读取配置/类型"| Utils
-    M -.->|"适配器注入"| MobileAdapter
+    M -.->|"RevenueCat SDK 封装"| MobileLib
     D -.->|"读取配置/类型"| Config
 
     BC --> BC_ME
@@ -668,7 +666,7 @@ flowchart TB
 | 层 | 职责 | 可访问的 billing 子路径 |
 |---|---|---|
 | **Web 前端** | UI 展示、发起请求、处理重定向 | `@libs/billing`（types/config/utils） |
-| **Mobile 前端** | Paywall 展示、IAP 触发、适配器注入 | `@libs/billing`、`@libs/billing/mobile` |
+| **Mobile 前端** | Paywall 展示、IAP 触发（直接使用 RevenueCat） | `@libs/billing`、`@libs/billing/mobile` |
 | **Desktop 前端** | 同 Web（通过 Electron 加载 Web 内容） | `@libs/billing`（types/config/utils） |
 | **Engine 后端** | Stripe API 调用、Webhook 处理、DB 读写 | 全部（`@libs/billing/*`） |
 
@@ -723,19 +721,19 @@ VITE_BILLING_STRIPE_PRICE_PREMIUM_YEARLY=price_xxx
 ### 9.3 Mobile 端必需变量
 
 ```bash
-# 选择 mobile 支付 provider
-EXPO_PUBLIC_BILLING_MOBILE_PROVIDER=revenuecat
-
-# RevenueCat
+# RevenueCat（移动端唯一支付 provider）
 EXPO_PUBLIC_REVENUECAT_IOS_API_KEY=appl_xxx
 EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY=goog_xxx
 EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_LIFETIME=ray_premium_lifetime
 EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_MONTHLY=ray_premium_monthly
 EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_YEARLY=ray_premium_yearly
+```
 
-# Superwall（备选）
-EXPO_PUBLIC_SUPERWALL_API_KEY=sw_xxx
-EXPO_PUBLIC_SUPERWALL_PLACEMENT_PREMIUM=premium
+Engine 端补充的 RevenueCat 变量：
+
+```bash
+REVENUECAT_API_KEY=rcb_xxx              # Public API key，用于拉取 subscriber 快照
+REVENUECAT_WEBHOOK_SECRET=whsec_rc_xxx  # Authorization 头校验共享密钥
 ```
 
 ### 9.4 Stripe Webhook 配置
@@ -804,12 +802,9 @@ interface BillingWebhookCallbacks {
 - 在 `createStripeCheckoutSession` 中调用 `stripe.promotionCodes.list({ code })` 查询
 - 将有效的 promotion code 传入 checkout session 的 `discounts` 参数
 
-#### 6. 添加 Mobile Provider Webhook 端点
+#### 6. Mobile Provider Webhook 端点
 
-当前 Engine 只有 Stripe webhook 端点。当 Mobile 端集成 RevenueCat / Superwall 后，需要添加：
-
-- `POST /api/billing/webhook/revenuecat` — RevenueCat Server-to-Server 通知
-- `POST /api/billing/webhook/superwall` — Superwall Svix webhook
+- **RevenueCat**：已实现 `POST /api/v1/billing/webhook/revenuecat`（请求体为 raw JSON；`Authorization` 与 `REVENUECAT_WEBHOOK_SECRET` 一致；服务端可用 `REVENUECAT_API_KEY` 拉取 subscriber 同步账单数据）。
 
 #### 7. Stripe API 版本兼容
 

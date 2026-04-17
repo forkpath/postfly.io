@@ -17,7 +17,7 @@ export const Route = createFileRoute('/_app/user/profile')({
 })
 
 function ProfilePage() {
-  const { t } = useTranslation('settings')
+  const { t } = useTranslation('auth')
   const session = authClient.useSession()
   const sessionData = session as unknown as {
     data?: {
@@ -37,8 +37,8 @@ function ProfilePage() {
     <div className="flex w-full flex-col gap-8">
       <PageHeader>
         <div className="flex flex-col gap-1.5">
-          <PageHeaderTitle>{t('general.title')}</PageHeaderTitle>
-          <PageHeaderDescription>{t('general.description')}</PageHeaderDescription>
+          <PageHeaderTitle>{t('account.settings.header.title')}</PageHeaderTitle>
+          <PageHeaderDescription>{t('account.settings.header.description')}</PageHeaderDescription>
         </div>
       </PageHeader>
 

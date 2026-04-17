@@ -1,6 +1,7 @@
 export const SocialProvider = {
   GOOGLE: 'google',
-  GITHUB: 'github'
+  GITHUB: 'github',
+  APPLE: 'apple'
 } as const
 
 export type SocialProvider = (typeof SocialProvider)[keyof typeof SocialProvider]

@@ -1,11 +1,11 @@
 # `apps/mobile`
 
-`ray` 的精简版 Expo / React Native 客户端，参考 `core/apps/mobile` 迁移，但只保留当前阶段最需要的能力：
+`ray` 的 Expo / React Native 客户端，完整覆盖 setup / dashboard 业务链路：
 
-- `setup`：欢迎、登录、注册
-- `dashboard`：基础登录后首页
-- `billing`：基于 `@libs/billing/mobile` 的移动端账单与升级入口
-- `analytics` / `monitoring` / `billing`：通过 mobile adapter 注册到 app
+- `setup`：欢迎、登录、注册、多步引导
+- `dashboard`：用户与组织双 Tab 体系
+- `billing`：基于 `@libs/billing/mobile` 的 RevenueCat 订阅/一次性购买与 Paywall
+- `analytics` / `monitoring`：PostHog + Sentry 真实 SDK 集成
 
 ## 运行方式
 
@@ -35,17 +35,23 @@ pnpm --filter mobile dev:android
 
 ```bash
 EXPO_PUBLIC_API_BASE_URL=http://localhost:8000
+EXPO_PUBLIC_SITE_URL=http://localhost:3000
 EXPO_PUBLIC_DEFAULT_LOCALE=zh
 
 EXPO_PUBLIC_ANALYTICS_PROVIDER=posthog
 EXPO_PUBLIC_MONITORING_PROVIDER=sentry
-EXPO_PUBLIC_BILLING_MOBILE_PROVIDER=revenuecat
+
+EXPO_PUBLIC_REVENUECAT_IOS_API_KEY=appl_xxx
+EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY=goog_xxx
+EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_LIFETIME=ray_premium_lifetime
+EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_MONTHLY=ray_premium_monthly
+EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_YEARLY=ray_premium_yearly
 ```
 
 说明：
 
-- 当前阶段为了优先打通 app 壳层与业务路由，analytics / monitoring / billing 默认接入的是 app 内 mock adapter。
-- 后续如果需要切到真实 PostHog / Sentry / RevenueCat / Superwall SDK，只需要替换 `src/lib/mobile-integrations.tsx` 中的注册实现。
+- 计费在移动端固定使用 RevenueCat（`@libs/billing/mobile`），无需运行时切换 provider。
+- PostHog / Sentry / RevenueCat 的 provider 在 `src/lib/{analytics,monitoring,providers/billing}.tsx` 中直接注册对应 SDK。
 
 ## 验证
 

@@ -36,6 +36,7 @@ async function bootstrap() {
   app.setGlobalPrefix(globalPrefix)
 
   app.use(`/${globalPrefix}/billing/webhook/stripe`, express.raw({ type: 'application/json' }))
+  app.use(`/${globalPrefix}/billing/webhook/revenuecat`, express.raw({ type: 'application/json' }))
   app.use(express.json())
   app.use(express.urlencoded({ extended: true }))
 

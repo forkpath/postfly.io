@@ -1,7 +1,6 @@
 export const BillingProvider = {
   STRIPE: 'stripe',
-  REVENUECAT: 'revenuecat',
-  SUPERWALL: 'superwall'
+  REVENUECAT: 'revenuecat'
 } as const
 
 export type BillingProvider = (typeof BillingProvider)[keyof typeof BillingProvider]

@@ -2,6 +2,11 @@ import { BillingOrderStatus, BillingProvider, BillingSubscriptionStatus } from '
 
 export { BillingOrderStatus, BillingProvider, BillingSubscriptionStatus }
 
+export const SubscriptionStatus = BillingSubscriptionStatus
+export type SubscriptionStatus = BillingSubscriptionStatus
+export const PaymentStatus = BillingOrderStatus
+export type PaymentStatus = BillingOrderStatus
+
 export const BillingPlan = {
   FREE: 'free',
   PREMIUM: 'premium',
@@ -41,7 +46,6 @@ export interface BillingVariant {
     ios?: string
     android?: string
   }
-  superwallPlacement?: string
 }
 
 export interface BillingPlanConfig {
@@ -100,11 +104,16 @@ export interface BillingOrderRecord {
   updatedAt: Date
 }
 
-export interface BillingSummary {
-  customers: BillingCustomerRecord[]
+export interface BillingSummaryCustomer extends BillingCustomerRecord {
   subscriptions: BillingSubscriptionRecord[]
   orders: BillingOrderRecord[]
+  entitlements?: BillingMobileEntitlement[]
 }
+
+export type BillingSummary = BillingSummaryCustomer[]
+
+export type Subscription = BillingSubscriptionRecord
+export type Order = BillingOrderRecord
 
 export interface BillingCheckoutInput {
   referenceId: string
@@ -125,6 +134,18 @@ export interface BillingMobileEntitlement {
   active: boolean
   variantId?: string
 }
+
+export const MobileStore = {
+  APP_STORE: 'app_store',
+  PLAY_STORE: 'play_store'
+} as const
+
+export type MobileStore = (typeof MobileStore)[keyof typeof MobileStore]
+
+export const MOBILE_STORE_LINKS = {
+  [MobileStore.APP_STORE]: 'https://apps.apple.com/account/subscriptions',
+  [MobileStore.PLAY_STORE]: 'https://play.google.com/store/account/subscriptions'
+} as const satisfies Record<MobileStore, string>
 
 export const PaywallResult = {
   IDLE: 'idle',

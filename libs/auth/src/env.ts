@@ -15,6 +15,9 @@ export const preset = {
     GOOGLE_CLIENT_SECRET: z.string().optional().default(''),
     GITHUB_CLIENT_ID: z.string().optional().default(''),
     GITHUB_CLIENT_SECRET: z.string().optional().default(''),
+    AUTH_APPLE_CLIENT_ID: z.string().optional().default(''),
+    AUTH_APPLE_CLIENT_SECRET: z.string().optional().default(''),
+    AUTH_APPLE_APP_BUNDLE_IDENTIFIER: z.string().optional().default(''),
 
     SEED_EMAIL: z.email().optional().default('forkpath@ray.com'),
     SEED_PASSWORD: z.string().optional().default('Pa$$w0rd')

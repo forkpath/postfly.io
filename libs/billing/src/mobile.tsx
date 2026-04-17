@@ -1,5 +1,3 @@
-export {
-  MobileBillingProvider as Provider,
-  useMobileBillingCustomer as useCustomer,
-  useMobilePaywall as usePaywall
-} from './mobile-registry'
+export { RevenueCatProvider as Provider } from './mobile/provider'
+export { useCustomer } from './mobile/use-customer'
+export { usePaywall } from './mobile/use-paywall'
