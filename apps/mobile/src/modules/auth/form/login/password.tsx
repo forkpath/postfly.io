@@ -44,9 +44,10 @@ export const PasswordLoginForm = memo<PasswordLoginFormProps>(
       ...auth.mutations.signIn.email,
       onSuccess: ctx => {
         if ('twoFactorRedirect' in ctx) {
+          console.log('twoFactorRedirect')
           return onTwoFactorRedirect?.()
         }
-
+        console.log('redirectTo', redirectTo)
         router.navigate(redirectTo)
       }
     })

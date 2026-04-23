@@ -37,7 +37,14 @@ export const UpdatePasswordForm = memo<UpdatePasswordFormProps>(({ token }) => {
   const resetPassword = useMutation({
     ...auth.mutations.password.reset,
     onSuccess: () => {
-      navigate({ to: pathsConfig.auth.login })
+      void navigate({
+        to: pathsConfig.auth.login,
+        search: {
+          redirectTo: undefined,
+          invitationId: undefined,
+          email: undefined
+        }
+      })
     }
   })
 

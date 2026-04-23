@@ -72,7 +72,7 @@ export function UpdateMemberRoleModal({ member, open, onOpenChange }: UpdateMemb
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="py-4">
-          <Select value={selectedRole} onValueChange={setSelectedRole}>
+          <Select value={selectedRole} onValueChange={value => setSelectedRole(value as typeof selectedRole)}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder={t('role')} />
             </SelectTrigger>

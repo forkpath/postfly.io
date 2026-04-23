@@ -8,6 +8,7 @@ import {
   UserRole
 } from '../../shared/constants'
 import {
+  banUserReqSchema,
   getUserAccountsReqSchema,
   getUserAccountsResSchema,
   getUserInvitationsReqSchema,
@@ -16,10 +17,13 @@ import {
   getUserMembershipsResSchema,
   getUserOrdersReqSchema,
   getUserOrdersResSchema,
+  revokeUserSessionReqSchema,
+  setUserPasswordReqSchema,
   getUsersReqSchema,
   getUsersResSchema,
   getUserSubscriptionsReqSchema,
-  getUserSubscriptionsResSchema
+  getUserSubscriptionsResSchema,
+  updateAdminUserReqSchema
 } from '../users.schema'
 
 const sortQuery = (value: unknown) => encodeURIComponent(JSON.stringify(value))
@@ -157,6 +161,43 @@ describe('getUsersResSchema', () => {
       list: [{ ...baseUser, createdAt: 'not-a-date', updatedAt: new Date() }],
       total: 1
     })
+
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('admin user mutation schemas', () => {
+  it('parses update user payload', () => {
+    const parsed = updateAdminUserReqSchema.parse({
+      name: 'Alice',
+      image: 'https://example.com/avatar.png',
+      role: UserRole.ADMIN
+    })
+
+    expect(parsed.name).toBe('Alice')
+    expect(parsed.role).toBe(UserRole.ADMIN)
+  })
+
+  it('parses ban payload with coerced date', () => {
+    const parsed = banUserReqSchema.parse({
+      reason: 'policy violation',
+      expiresAt: '2026-01-01T00:00:00.000Z'
+    })
+
+    expect(parsed.reason).toBe('policy violation')
+    expect(parsed.expiresAt).toBeInstanceOf(Date)
+  })
+
+  it('rejects too-short password', () => {
+    const result = setUserPasswordReqSchema.safeParse({
+      newPassword: 'short'
+    })
+
+    expect(result.success).toBe(false)
+  })
+
+  it('requires revoke session token', () => {
+    const result = revokeUserSessionReqSchema.safeParse({})
 
     expect(result.success).toBe(false)
   })

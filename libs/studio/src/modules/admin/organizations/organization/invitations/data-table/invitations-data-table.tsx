@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from '@tanstack/react-query'
 import type { GetInvitationsRes } from '@libs/payload'
 
 import { adminOrgQueries, useApiClient } from '@libs/api-client'
@@ -21,7 +22,13 @@ export function OrgInvitationsDataTable({ orgId }: InvitationsDataTableProps) {
   >({
     persistance: 'local',
     columns,
-    query: ({ page, perPage }) => adminOrgQueries.invitations(api, { id: orgId, page, limit: perPage }),
+    query: ({ page, perPage }) =>
+      adminOrgQueries.invitations(api, { id: orgId, page, perPage }) as UseQueryOptions<
+        GetInvitationsRes,
+        Error,
+        GetInvitationsRes,
+        ReturnType<typeof adminOrgQueries.invitations>['queryKey']
+      >,
     initialState: {
       pagination: { pageSize: 10, pageIndex: 0 }
     },

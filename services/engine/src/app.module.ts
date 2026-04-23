@@ -17,7 +17,6 @@ import { AuthModule, CacheModule, I18nModule, LoggerModule, RedisModule, Throttl
 
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
-import { AiModule } from './presentation/http/ai/ai.module'
 import { BillingModule } from './presentation/http/billing/billing.module'
 import { CustomerModule } from './presentation/http/customer/customer.module'
 import { OrganizationModule } from './presentation/http/organization/organization.module'
@@ -84,8 +83,7 @@ import { UserModule } from './presentation/http/user/user.module'
     UserModule,
     OrganizationModule,
     CustomerModule,
-    StorageModule,
-    AiModule
+    StorageModule
   ],
   controllers: [AppController],
   providers: [

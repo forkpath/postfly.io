@@ -38,6 +38,13 @@ export function useSearchParamsDataTable<TData>(props: UseSearchParamsDataTableP
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as Record<string, unknown>
 
+  const updateSearch = useCallback((updater: (prev: Record<string, unknown>) => Record<string, unknown>) => {
+    void navigate({
+      search: updater as never,
+      replace: true
+    } as never)
+  }, [navigate])
+
   const [rowSelection, setRowSelection] = useState<RowSelectionState>(initialState?.rowSelection ?? {})
 
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(initialState?.columnVisibility ?? {})
@@ -49,35 +56,26 @@ export function useSearchParamsDataTable<TData>(props: UseSearchParamsDataTableP
 
   const setPage = useCallback(
     (newPage: number) => {
-      void navigate({
-        search: prev => ({ ...prev, [PAGE_KEY]: newPage === 1 ? undefined : newPage }),
-        replace: true
-      })
+      updateSearch(prev => ({ ...prev, [PAGE_KEY]: newPage === 1 ? undefined : newPage }))
     },
-    [navigate]
+    [updateSearch]
   )
 
   const setPerPage = useCallback(
     (newPerPage: number) => {
-      void navigate({
-        search: prev => ({ ...prev, [PER_PAGE_KEY]: newPerPage === 10 ? undefined : newPerPage }),
-        replace: true
-      })
+      updateSearch(prev => ({ ...prev, [PER_PAGE_KEY]: newPerPage === 10 ? undefined : newPerPage }))
     },
-    [navigate]
+    [updateSearch]
   )
 
   const setSorting = useCallback(
     (newSorting: SortingState) => {
-      void navigate({
-        search: prev => ({
-          ...prev,
-          [SORT_KEY]: newSorting.length === 0 ? undefined : JSON.stringify(newSorting)
-        }),
-        replace: true
-      })
+      updateSearch(prev => ({
+        ...prev,
+        [SORT_KEY]: newSorting.length === 0 ? undefined : JSON.stringify(newSorting)
+      }))
     },
-    [navigate]
+    [updateSearch]
   )
 
   const pagination: PaginationState = useMemo(() => {
@@ -123,19 +121,16 @@ export function useSearchParamsDataTable<TData>(props: UseSearchParamsDataTableP
 
   const debouncedSetFilters = useDebounceCallback((values: Record<string, string | string[] | null>) => {
     setPage(1)
-    void navigate({
-      search: prev => {
-        const newSearch = { ...prev }
-        for (const [key, value] of Object.entries(values)) {
-          if (value === null || (Array.isArray(value) && value.length === 0)) {
-            delete newSearch[key]
-          } else {
-            newSearch[key] = value
-          }
+    updateSearch(prev => {
+      const newSearch: Record<string, unknown> = { ...prev }
+      for (const [key, value] of Object.entries(values)) {
+        if (value === null || (Array.isArray(value) && value.length === 0)) {
+          delete newSearch[key]
+        } else {
+          newSearch[key] = value
         }
-        return newSearch
-      },
-      replace: true
+      }
+      return newSearch
     })
   }, debounceMs)
 

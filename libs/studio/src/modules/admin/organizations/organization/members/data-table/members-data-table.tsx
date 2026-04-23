@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from '@tanstack/react-query'
 import type { GetMembersRes } from '@libs/payload'
 
 import { adminOrgQueries, useApiClient } from '@libs/api-client'
@@ -21,7 +22,13 @@ export function MembersDataTable({ orgId }: MembersDataTableProps) {
   >({
     persistance: 'local',
     columns,
-    query: ({ page, perPage }) => adminOrgQueries.members(api, { id: orgId, page, limit: perPage }),
+    query: ({ page, perPage }) =>
+      adminOrgQueries.members(api, { id: orgId, page, perPage }) as UseQueryOptions<
+        GetMembersRes,
+        Error,
+        GetMembersRes,
+        ReturnType<typeof adminOrgQueries.members>['queryKey']
+      >,
     initialState: {
       pagination: { pageSize: 10, pageIndex: 0 }
     },

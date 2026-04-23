@@ -26,7 +26,7 @@
 ```
 @libs/billing          → 公共类型、套餐配置、env preset、工具函数
 @libs/billing/server   → Prisma 持久化 helper（customer/subscription/order/webhook CRUD）+ RevenueCat webhook
-@libs/billing/web      → Stripe checkout/portal/webhook + Zod 校验 schema
+@libs/billing/web      → Stripe checkout/portal/webhook 实现
 @libs/billing/mobile   → RevenueCat Provider、useCustomer、usePaywall
 ```
 
@@ -860,20 +860,6 @@ const periodStart = subscription.items.data[0]?.current_period_start
 
 > **注意**：Prisma Client 中的访问方式为 `prisma.billingCustomer`、`prisma.billingSubscription` 等（因为 Prisma 在 `billing` schema 下的模型名前缀会被保留）。当前 `server.ts` 使用的正是这些名称。
 
-### C. Zod 校验 Schema
+### C. Request 校验来源
 
-`@libs/billing/web` 导出两个 Zod schema 供 Controller 使用：
-
-```ts
-// Checkout 请求体
-const checkoutSchema = z.object({
-  variantId: z.string(),
-  successUrl: z.url(),
-  cancelUrl: z.url()
-})
-
-// Billing Portal 请求体
-const billingPortalSchema = z.object({
-  returnUrl: z.url()
-})
-```
+`billing/checkout` 与 `billing/portal` 的 request 校验统一由 `@libs/payload` 提供，`@libs/billing/web` 只保留 Stripe checkout / portal / webhook 实现。

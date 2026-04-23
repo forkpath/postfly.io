@@ -26,9 +26,6 @@ import { useLocation, useNavigate } from '@tanstack/react-router'
 import { isKey, useTranslation } from '@libs/i18n'
 import { cn } from '@libs/ui-shared/common'
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -37,9 +34,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
   Icons,
   Sidebar,
@@ -56,8 +50,7 @@ import {
 } from '@libs/ui-shared/web'
 
 import { pathsConfig } from '../../../../config/paths'
-import { authClient } from '../../../../lib/auth/client'
-import { useWorkspaceSwitcherData } from '../../../../modules/workspace'
+import { AccountSwitcher } from '../../../../modules/organization/account-switcher'
 import { GoLink } from '../../go-link'
 import { AppHeader } from './app-header'
 import { useNavigationStore } from './navigation-store'
@@ -122,8 +115,6 @@ interface AppShellProps {
   readonly children: ReactNode
   /** Header 右侧的自定义操作按钮 */
   readonly headerActions?: ReactNode
-  /** 自定义 Logo */
-  readonly logo?: ReactNode
 }
 
 // ============================================================================
@@ -141,7 +132,7 @@ const USER_NAV_PATHS = ['/user']
 // 内部组件：AppShellInner
 // ============================================================================
 
-const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions, logo }) => {
+const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions }) => {
   const { t, i18n } = useTranslation('common')
   const { setOpenMobile } = useSidebar()
   const location = useLocation()
@@ -153,25 +144,6 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
   const setUserNavExpanded = useNavigationStore(state => state.setUserNavExpanded)
   const setLastVisitedRoute = useNavigationStore(state => state.setLastVisitedRoute)
   const getLastVisitedRoute = useNavigationStore(state => state.getLastVisitedRoute)
-
-  // 预取组织数据（避免点击用户头像时才请求导致的白屏）
-  const { organizations, activeOrg, hasOrganizations } = useWorkspaceSwitcherData()
-
-  const resetNavigation = useNavigationStore(state => state.resetNavigation)
-
-  /**
-   * 切换组织/工作空间
-   * setActive 更新 session cookie 后，使用硬导航确保页面完全重载，
-   * 避免 TanStack Router 的 beforeLoad 在 cookie 未同步时读取到无效 session
-   */
-  const handleSwitchOrganization = useCallback(
-    async (organizationId: string | null) => {
-      await authClient.organization.setActive({ organizationId })
-      resetNavigation()
-      window.location.href = organizationId ? pathsConfig.crm.index : pathsConfig.user.profile
-    },
-    [resetNavigation]
-  )
 
   // 本地状态
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null)
@@ -412,19 +384,9 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
     <>
       {/* ========== 一级导航 Sidebar ========== */}
       <Sidebar collapsible="icon" className="**:data-[slot=sidebar-inner]:bg-card">
-        {/* Logo 区域 */}
+        {/* 账户切换器（个人 / 组织） */}
         <SidebarHeader>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                size="lg"
-                className="gap-3 bg-transparent! group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:p-1! [&>svg]:size-8"
-              >
-                {logo || <Icons.Logo className="text-primary h-8 shrink-0 transition-[width,height]" />}
-                <span className="text-xl font-semibold group-data-[collapsible=icon]:hidden">Ray</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          <AccountSwitcher user={user} />
         </SidebarHeader>
 
         {/* 主菜单区域 */}
@@ -573,10 +535,9 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                     }
                   }}
                 >
-                  <Avatar className="size-8 shrink-0">
-                    <AvatarImage src={user.image ?? undefined} alt={user.name ?? ''} />
-                    <AvatarFallback className="text-sm">{user.name?.slice(0, 2).toUpperCase() || 'U'}</AvatarFallback>
-                  </Avatar>
+                  <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-md">
+                    <Icons.UserRound className="size-5" />
+                  </span>
                   <div className="flex flex-1 flex-col items-start overflow-hidden group-data-[collapsible=icon]:hidden">
                     <span className="truncate text-sm font-medium">{user.name}</span>
                     <span className="text-muted-foreground truncate text-xs">{user.email}</span>
@@ -607,12 +568,9 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                         }
                       }}
                     >
-                      <Avatar className="size-8 shrink-0">
-                        <AvatarImage src={user.image ?? undefined} alt={user.name ?? ''} />
-                        <AvatarFallback className="text-sm">
-                          {user.name?.slice(0, 2).toUpperCase() || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
+                      <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-md">
+                        <Icons.UserRound className="size-5" />
+                      </span>
                     </SidebarMenuButton>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
@@ -637,54 +595,6 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                         </GoLink>
                       </DropdownMenuItem>
                     ))}
-                    {/* 切换身份子菜单 */}
-                    {hasOrganizations && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuSub>
-                          <DropdownMenuSubTrigger className="flex items-center gap-2">
-                            <Icons.ArrowLeftRight className="size-4" />
-                            <span>{t('workspace.switch')}</span>
-                          </DropdownMenuSubTrigger>
-                          <DropdownMenuSubContent className="w-48">
-                            {/* 个人空间 */}
-                            <DropdownMenuItem
-                              onClick={() => void handleSwitchOrganization(null)}
-                              className={cn(!activeOrg && 'bg-accent font-medium')}
-                            >
-                              <div className="flex items-center gap-2">
-                                <Avatar className="size-5">
-                                  <AvatarFallback className="bg-muted text-xs">
-                                    <Icons.User className="text-muted-foreground size-3" />
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span>{t('workspace.personal')}</span>
-                                {!activeOrg && <Icons.Check className="text-primary ml-auto size-4" />}
-                              </div>
-                            </DropdownMenuItem>
-                            {/* 组织列表 */}
-                            {organizations.map(org => (
-                              <DropdownMenuItem
-                                key={org.id}
-                                onClick={() => void handleSwitchOrganization(org.id)}
-                                className={cn(activeOrg?.id === org.id && 'bg-accent font-medium')}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="size-5">
-                                    <AvatarImage src={org.logo ?? undefined} alt="" />
-                                    <AvatarFallback className="bg-muted text-xs">
-                                      {org.name.charAt(0).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <span className="truncate">{org.name}</span>
-                                  {activeOrg?.id === org.id && <Icons.Check className="text-primary ml-auto size-4" />}
-                                </div>
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuSubContent>
-                        </DropdownMenuSub>
-                      </>
-                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
@@ -697,10 +607,9 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
               >
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton isActive={isUserNavActive()} className="h-auto py-2 [&>svg]:size-6">
-                    <Avatar className="size-8 shrink-0">
-                      <AvatarImage src={user.image ?? undefined} alt={user.name ?? ''} />
-                      <AvatarFallback className="text-sm">{user.name?.slice(0, 2).toUpperCase() || 'U'}</AvatarFallback>
-                    </Avatar>
+                    <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-md">
+                      <Icons.UserRound className="size-5" />
+                    </span>
                     <div className="flex flex-1 flex-col items-start overflow-hidden">
                       <span className="truncate text-sm font-medium">{user.name}</span>
                       <span className="text-muted-foreground truncate text-xs">{user.email}</span>
@@ -727,17 +636,6 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
                         <span>{translateLabel(item.label)}</span>
                       </GoLink>
                     ))}
-                    {/* 切换身份链接 */}
-                    {hasOrganizations && (
-                      <GoLink
-                        href={pathsConfig.workspace.select}
-                        onClick={() => setOpenMobile(false)}
-                        className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm"
-                      >
-                        <Icons.ArrowLeftRight className="size-4" />
-                        <span>{t('workspace.switch')}</span>
-                      </GoLink>
-                    )}
                   </div>
                 </CollapsibleContent>
               </Collapsible>
@@ -752,7 +650,7 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
           {/* 用户二级导航 */}
           {showUserSecondaryNav && (
             <div className="bg-muted sticky top-0 flex h-dvh w-65 flex-col border-r max-md:hidden">
-              <UserSecondaryNav user={user} organizations={organizations} activeOrg={activeOrg} />
+              <UserSecondaryNav user={user} />
             </div>
           )}
 

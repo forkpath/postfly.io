@@ -1,4 +1,3 @@
-import type { PaginatedResult, UserEntity, UserListParams, UserSessionEntity } from '../../domain/entities/user.entity'
 import type {
   AccountEntity,
   IUserRepository,
@@ -8,17 +7,20 @@ import type {
   UserSubscriptionEntity
 } from '../../domain/repositories/user.repository.interface'
 import type {
+  GetUsersReq,
+  GetUsersRes,
   GetUserAccountsReq,
   GetUserInvitationsReq,
   GetUserMembershipsReq,
   GetUserOrdersReq,
   GetUserSubscriptionsReq
 } from '@libs/payload'
+import type { UserEntity, UserSessionEntity } from '../../domain/entities/user.entity'
 
-import { Injectable } from '@nestjs/common'
+import { Injectable, InternalServerErrorException } from '@nestjs/common'
 
 import { auth } from '@libs/auth/server'
-import { prisma } from '@libs/pg-dao'
+import { Prisma, prisma } from '@libs/pg-dao'
 
 /**
  * 用户仓储实现
@@ -41,46 +43,67 @@ export class UserRepository implements IUserRepository {
     return user ? this.mapToEntity(user) : null
   }
 
-  async findMany(params: UserListParams): Promise<PaginatedResult<UserEntity>> {
+  async findMany(params: GetUsersReq): Promise<GetUsersRes> {
     const {
       page: rawPage = 1,
-      limit: rawLimit = 20,
-      search,
+      perPage: rawPerPage = 10,
+      q,
       role,
+      twoFactorEnabled,
       banned,
-      sortBy = 'createdAt',
-      sortOrder = 'desc'
+      createdAt,
+      sort
     } = params
     const page = Number(rawPage)
-    const limit = Number(rawLimit)
+    const perPage = Number(rawPerPage)
 
-    const where = {
-      ...(search && {
-        OR: [
-          { name: { contains: search, mode: 'insensitive' as const } },
-          { email: { contains: search, mode: 'insensitive' as const } }
-        ]
-      }),
-      ...(role && { role }),
-      ...(banned !== undefined && { banned })
+    const where: Prisma.UserWhereInput = {
+      AND: [
+        ...(q
+          ? [
+              {
+                OR: [
+                  { name: { contains: q, mode: 'insensitive' as const } },
+                  { email: { contains: q, mode: 'insensitive' as const } }
+                ]
+              }
+            ]
+          : []),
+        ...(role?.length ? [{ role: { in: role } }] : []),
+        ...(twoFactorEnabled?.length
+          ? [{ OR: twoFactorEnabled.map(value => ({ twoFactorEnabled: value })) }]
+          : []),
+        ...(banned?.length ? [{ OR: banned.map(value => ({ banned: value })) }] : []),
+        ...(createdAt
+          ? [
+              {
+                createdAt: {
+                  gte: new Date(createdAt[0]),
+                  lte: new Date(createdAt[1])
+                }
+              }
+            ]
+          : [])
+      ]
     }
+
+    const orderBy = sort?.length
+      ? sort.map(item => ({ [item.id]: item.desc ? 'desc' : 'asc' }))
+      : [{ createdAt: 'desc' as const }]
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         where,
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: { [sortBy]: sortOrder }
+        skip: (page - 1) * perPage,
+        take: perPage,
+        orderBy
       }),
       prisma.user.count({ where })
     ])
 
     return {
       list: users.map(u => this.mapToEntity(u)),
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit)
+      total
     }
   }
 
@@ -103,7 +126,10 @@ export class UserRepository implements IUserRepository {
     })
     // 重新获取更新后的用户
     const user = await this.findById(id)
-    return user!
+    if (!user) {
+      throw new InternalServerErrorException('User not found after ban operation')
+    }
+    return user
   }
 
   async unban(id: string): Promise<UserEntity> {
@@ -112,7 +138,10 @@ export class UserRepository implements IUserRepository {
       body: { userId: id }
     })
     const user = await this.findById(id)
-    return user!
+    if (!user) {
+      throw new InternalServerErrorException('User not found after unban operation')
+    }
+    return user
   }
 
   async delete(id: string): Promise<void> {
@@ -432,6 +461,8 @@ export class UserRepository implements IUserRepository {
     email: string
     emailVerified: boolean
     image: string | null
+    twoFactorEnabled: boolean | null
+    isAnonymous: boolean | null
     role: string | null
     banned: boolean | null
     banReason: string | null
@@ -445,6 +476,8 @@ export class UserRepository implements IUserRepository {
       email: user.email,
       emailVerified: user.emailVerified,
       image: user.image,
+      twoFactorEnabled: user.twoFactorEnabled,
+      isAnonymous: user.isAnonymous ?? false,
       role: (user.role ?? 'user') as UserEntity['role'],
       banned: user.banned ?? false,
       banReason: user.banReason,

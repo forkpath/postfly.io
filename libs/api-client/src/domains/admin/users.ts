@@ -25,12 +25,21 @@
  * ```
  */
 import type {
+  BanUserReq,
+  GetUsersReq,
   GetUserAccountsRes,
+  GetUserAccountsReq,
   GetUserInvitationsRes,
+  GetUserInvitationsReq,
   GetUserMembershipsRes,
+  GetUserMembershipsReq,
   GetUserOrdersRes,
+  GetUserOrdersReq,
   GetUsersRes,
-  GetUserSubscriptionsRes
+  GetUserSubscriptionsReq,
+  GetUserSubscriptionsRes,
+  RevokeUserSessionReq,
+  UpdateAdminUserReq
 } from '@libs/payload'
 
 import { createMutationFactory, createQueryOptionsWithParams } from '../../lib/queries/factory'
@@ -43,6 +52,8 @@ export interface AdminUser {
   email: string
   emailVerified: boolean
   image: string | null
+  twoFactorEnabled: boolean | null
+  isAnonymous: boolean
   role: 'user' | 'admin'
   banned: boolean
   banReason: string | null
@@ -63,28 +74,39 @@ export interface AdminUserSession {
 }
 
 export interface AdminUserListParams {
-  page?: number
-  limit?: number
-  search?: string
-  role?: 'user' | 'admin'
-  banned?: boolean
-  sortBy?: 'createdAt' | 'updatedAt' | 'name' | 'email'
-  sortOrder?: 'asc' | 'desc'
+  page?: GetUsersReq['page']
+  perPage?: GetUsersReq['perPage']
+  q?: GetUsersReq['q']
+  role?: GetUsersReq['role']
+  twoFactorEnabled?: GetUsersReq['twoFactorEnabled']
+  banned?: GetUsersReq['banned']
+  createdAt?: GetUsersReq['createdAt']
+  sort?: GetUsersReq['sort']
 }
 
-export interface UpdateAdminUserInput {
-  name?: string
-  image?: string | null
-  role?: 'user' | 'admin'
+type AdminUserAccountsParams = { id: string } & GetUserAccountsReq
+type AdminUserSubscriptionsParams = { id: string } & GetUserSubscriptionsReq
+type AdminUserOrdersParams = { id: string } & GetUserOrdersReq
+type AdminUserMembershipsParams = { id: string } & GetUserMembershipsReq
+type AdminUserInvitationsParams = { id: string } & GetUserInvitationsReq
+
+function serializeSort(sort?: { id: string; desc?: boolean }[]) {
+  return sort?.length ? encodeURIComponent(JSON.stringify(sort)) : undefined
 }
 
-export interface BanUserInput {
-  reason?: string
-  expiresAt?: string
-}
+function serializeQueryParams<T extends object | undefined>(params: T) {
+  if (!params) {
+    return params
+  }
 
-export interface SetPasswordInput {
-  newPassword: string
+  const rawParams = params as Record<string, unknown>
+
+  return {
+    ...rawParams,
+    sort: Array.isArray(rawParams['sort'])
+      ? serializeSort(rawParams['sort'] as { id: string; desc?: boolean }[])
+      : rawParams['sort']
+  }
 }
 
 // ==================== Keys ====================
@@ -108,10 +130,10 @@ export type AdminUserKeys = typeof adminUserKeys
 // ==================== Queries ====================
 
 export const adminUserQueries = {
-  list: createQueryOptionsWithParams<GetUsersRes, Error, GetUsersRes, Record<string, unknown> | undefined>(
+  list: createQueryOptionsWithParams<GetUsersRes, Error, GetUsersRes, AdminUserListParams | undefined>(
     (api, params) => ({
-      queryKey: adminUserKeys.list(params),
-      queryFn: () => api.get('/admin/users', { params })
+      queryKey: adminUserKeys.list(params ? ({ ...params } as Record<string, unknown>) : undefined),
+      queryFn: () => api.get('/admin/users', { params: serializeQueryParams(params) })
     })
   ),
 
@@ -131,50 +153,47 @@ export const adminUserQueries = {
     GetUserAccountsRes,
     Error,
     GetUserAccountsRes,
-    { id: string } & Record<string, unknown>
+    AdminUserAccountsParams
   >((api, { id, ...params }) => ({
     queryKey: adminUserKeys.accounts(id),
-    queryFn: () => api.get(`/admin/users/${id}/accounts`, { params })
+    queryFn: () => api.get(`/admin/users/${id}/accounts`, { params: serializeQueryParams(params) })
   })),
 
   subscriptions: createQueryOptionsWithParams<
     GetUserSubscriptionsRes,
     Error,
     GetUserSubscriptionsRes,
-    { id: string } & Record<string, unknown>
+    AdminUserSubscriptionsParams
   >((api, { id, ...params }) => ({
     queryKey: adminUserKeys.subscriptions(id),
-    queryFn: () => api.get(`/admin/users/${id}/subscriptions`, { params })
+    queryFn: () => api.get(`/admin/users/${id}/subscriptions`, { params: serializeQueryParams(params) })
   })),
 
-  orders: createQueryOptionsWithParams<
-    GetUserOrdersRes,
-    Error,
-    GetUserOrdersRes,
-    { id: string } & Record<string, unknown>
-  >((api, { id, ...params }) => ({
-    queryKey: adminUserKeys.orders(id),
-    queryFn: () => api.get(`/admin/users/${id}/orders`, { params })
-  })),
+  orders: createQueryOptionsWithParams<GetUserOrdersRes, Error, GetUserOrdersRes, AdminUserOrdersParams>(
+    (api, { id, ...params }) => ({
+      queryKey: adminUserKeys.orders(id),
+      queryFn: () => api.get(`/admin/users/${id}/orders`, { params: serializeQueryParams(params) })
+    })
+  ),
 
   memberships: createQueryOptionsWithParams<
     GetUserMembershipsRes,
     Error,
     GetUserMembershipsRes,
-    { id: string } & Record<string, unknown>
+    AdminUserMembershipsParams
   >((api, { id, ...params }) => ({
     queryKey: adminUserKeys.memberships(id),
-    queryFn: () => api.get(`/admin/users/${id}/memberships`, { params })
+    queryFn: () => api.get(`/admin/users/${id}/memberships`, { params: serializeQueryParams(params) })
   })),
 
   invitations: createQueryOptionsWithParams<
     GetUserInvitationsRes,
     Error,
     GetUserInvitationsRes,
-    { id: string } & Record<string, unknown>
+    AdminUserInvitationsParams
   >((api, { id, ...params }) => ({
     queryKey: adminUserKeys.invitations(id),
-    queryFn: () => api.get(`/admin/users/${id}/invitations`, { params })
+    queryFn: () => api.get(`/admin/users/${id}/invitations`, { params: serializeQueryParams(params) })
   }))
 }
 
@@ -182,7 +201,7 @@ export const adminUserQueries = {
 
 export const adminUserMutations = {
   /** 更新用户 */
-  update: createMutationFactory<AdminUser, Error, { id: string; data: UpdateAdminUserInput }>((api, { id, data }) =>
+  update: createMutationFactory<AdminUser, Error, { id: string; data: UpdateAdminUserReq }>((api, { id, data }) =>
     api.patch(`/admin/users/${id}`, data)
   ),
 
@@ -190,7 +209,7 @@ export const adminUserMutations = {
   delete: createMutationFactory<void, Error, { id: string }>((api, { id }) => api.delete(`/admin/users/${id}`)),
 
   /** 封禁用户 */
-  ban: createMutationFactory<AdminUser, Error, { id: string; reason?: string; expiresAt?: string }>(
+  ban: createMutationFactory<AdminUser, Error, { id: string } & BanUserReq>(
     (api, { id, ...data }) => api.post(`/admin/users/${id}/ban`, data)
   ),
 
@@ -203,8 +222,8 @@ export const adminUserMutations = {
   ),
 
   /** 撤销单个会话 */
-  revokeSession: createMutationFactory<void, Error, { userId: string; token: string }>((api, { userId, token }) =>
-    api.delete(`/admin/users/${userId}/sessions`, { data: { token } })
+  revokeSession: createMutationFactory<void, Error, { userId: string } & RevokeUserSessionReq>(
+    (api, { userId, token }) => api.delete(`/admin/users/${userId}/sessions`, { data: { token } })
   ),
 
   revokeAllSessions: createMutationFactory<void, Error, { userId: string }>((api, { userId }) =>

@@ -63,7 +63,7 @@ export const auth = betterAuth({
   },
   trustedOrigins: [
     'chrome-extension://',
-    'ray://',
+    'ray://', // 基于Expo开发的mobile需要使用这个scheme
     ...(env.BETTER_AUTH_URL ? [env.BETTER_AUTH_URL.toString()] : []),
     ...(env.NODE_ENV === NodeEnv.DEVELOPMENT ? ['http://localhost*', 'https://localhost*'] : [])
   ],

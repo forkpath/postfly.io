@@ -37,12 +37,35 @@ const createOrganizationSchema = z.object({
 type CreateOrganizationFormValues = z.infer<typeof createOrganizationSchema>
 
 interface CreateOrganizationModalProps {
-  trigger: React.ReactNode
+  trigger?: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export const CreateOrganizationModal = ({ trigger }: CreateOrganizationModalProps) => {
+function slugify(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+export const CreateOrganizationModal = ({
+  trigger,
+  open: openProp,
+  onOpenChange
+}: CreateOrganizationModalProps) => {
   const { t } = useTranslation('organization')
-  const [open, setOpen] = React.useState(false)
+  const [internalOpen, setInternalOpen] = React.useState(false)
+  const isControlled = openProp !== undefined
+  const open = isControlled ? openProp : internalOpen
+  const setOpen = React.useCallback(
+    (next: boolean) => {
+      if (!isControlled) setInternalOpen(next)
+      onOpenChange?.(next)
+    },
+    [isControlled, onOpenChange]
+  )
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -69,13 +92,13 @@ export const CreateOrganizationModal = ({ trigger }: CreateOrganizationModalProp
   const onSubmit = (values: CreateOrganizationFormValues) => {
     mutation.mutate({
       name: values.name,
-      slug: values.slug || undefined
+      slug: values.slug?.trim() || slugify(values.name)
     })
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('create.title')}</DialogTitle>

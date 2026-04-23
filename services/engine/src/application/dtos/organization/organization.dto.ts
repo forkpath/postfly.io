@@ -1,6 +1,7 @@
 import { createZodDto } from 'nestjs-zod'
 
 import {
+  generateOrganizationSlugReqSchema,
   getInvitationsReqSchema,
   getMembersReqSchema,
   getOrganizationsReqSchema,
@@ -13,6 +14,8 @@ export class ListOrganizationsQueryDto extends createZodDto(getOrganizationsReqS
 export class ListMembersQueryDto extends createZodDto(getMembersReqSchema) {}
 
 export class ListInvitationsQueryDto extends createZodDto(getInvitationsReqSchema) {}
+
+export class GenerateOrganizationSlugQueryDto extends createZodDto(generateOrganizationSlugReqSchema) {}
 
 export class UpdateOrganizationDto extends createZodDto(updateOrganizationSchema) {}
 

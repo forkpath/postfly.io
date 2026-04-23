@@ -26,7 +26,7 @@ export function AccountsDataTable({ id }: AccountsDataTableProps) {
       adminUserQueries.accounts(api, {
         id,
         page,
-        limit: perPage
+        perPage
       }) as UseQueryOptions<
         GetUserAccountsRes,
         Error,

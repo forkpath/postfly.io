@@ -1,5 +1,10 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config'
 
+/** Expo 55+ 支持；`@expo/config-types` 的 `Android` 类型可能尚未收录 */
+type AndroidConfig = NonNullable<ExpoConfig['android']> & {
+  edgeToEdgeEnabled?: boolean
+}
+
 const SPLASH = {
   imageWidth: 150,
   image: './public/images/splash/splash.png',
@@ -11,9 +16,9 @@ const SPLASH = {
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: 'Ray Mobile',
-  slug: 'ray-mobile',
-  scheme: 'ray-mobile',
+  name: 'Ray',
+  slug: 'ray',
+  scheme: 'ray',
   version: '0.1.0',
   orientation: 'portrait',
   icon: './public/images/icon/ios.png',
@@ -31,7 +36,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       ITSAppUsesNonExemptEncryption: false
     }
   },
-  android: {
+  android: ((): AndroidConfig => ({
     package: 'com.ray.mobile',
     edgeToEdgeEnabled: true,
     adaptiveIcon: {
@@ -39,7 +44,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       foregroundImage: './public/images/icon/android/adaptive.png',
       backgroundColor: '#0D121C'
     }
-  },
+  }))(),
   extra: {
     eas: {
       projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID ?? ''

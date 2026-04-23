@@ -1,6 +1,25 @@
-import type { GetCustomersRes } from '@libs/payload'
+import type { GetCustomersReq, GetCustomersRes } from '@libs/payload'
 
 import { createQueryOptionsWithParams } from '../../lib/queries/factory'
+
+function serializeSort(sort?: { id: string; desc?: boolean }[]) {
+  return sort?.length ? encodeURIComponent(JSON.stringify(sort)) : undefined
+}
+
+function serializeQueryParams<T extends object | undefined>(params: T) {
+  if (!params) {
+    return params
+  }
+
+  const rawParams = params as Record<string, unknown>
+
+  return {
+    ...rawParams,
+    sort: Array.isArray(rawParams['sort'])
+      ? serializeSort(rawParams['sort'] as { id: string; desc?: boolean }[])
+      : rawParams['sort']
+  }
+}
 
 // ==================== Keys ====================
 
@@ -15,10 +34,10 @@ export type AdminCustomerKeys = typeof adminCustomerKeys
 // ==================== Queries ====================
 
 export const adminCustomerQueries = {
-  list: createQueryOptionsWithParams<GetCustomersRes, Error, GetCustomersRes, Record<string, unknown> | undefined>(
+  list: createQueryOptionsWithParams<GetCustomersRes, Error, GetCustomersRes, GetCustomersReq | undefined>(
     (api, params) => ({
-      queryKey: adminCustomerKeys.list(params),
-      queryFn: () => api.get('/admin/customers', { params })
+      queryKey: adminCustomerKeys.list(params ? ({ ...params } as Record<string, unknown>) : undefined),
+      queryFn: () => api.get('/admin/customers', { params: serializeQueryParams(params) })
     })
   )
 }

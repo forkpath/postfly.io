@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { create } from 'zustand'
 
 import { auth } from '../../../../../auth/lib/api'
+import { authClient } from '../../../../../../lib/auth/client'
 
 const useBackupCodesStore = create<{
   codes: string[]
@@ -15,11 +16,21 @@ const useBackupCodesStore = create<{
 export const useBackupCodes = () => {
   const { codes, setCodes } = useBackupCodesStore()
 
-  const generate = useMutation({
-    ...auth.mutations.twoFactor.backupCodes.generate,
-    onSuccess: (data: unknown) => {
-      const result = data as { backupCodes: string[] }
-      setCodes(result.backupCodes)
+  const generate = useMutation<
+    { backupCodes: string[] },
+    Error,
+    Parameters<typeof authClient.twoFactor.generateBackupCodes>[0]
+  >({
+    mutationKey: auth.mutations.twoFactor.backupCodes.generate.mutationKey,
+    mutationFn: params =>
+      authClient.twoFactor.generateBackupCodes({
+        ...params,
+        fetchOptions: {
+          throw: true
+        }
+      }) as Promise<{ backupCodes: string[] }>,
+    onSuccess: data => {
+      setCodes(data.backupCodes)
     }
   })
 

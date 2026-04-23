@@ -1,6 +1,33 @@
-import type { GetInvitationsRes, GetMembersRes, GetOrganizationRes, GetOrganizationsRes } from '@libs/payload'
+import type {
+  GetInvitationsReq,
+  GetInvitationsRes,
+  GetMembersReq,
+  GetMembersRes,
+  GetOrganizationRes,
+  GetOrganizationsReq,
+  GetOrganizationsRes
+} from '@libs/payload'
 
 import { createMutationFactory, createQueryOptionsWithParams } from '../../lib/queries/factory'
+
+function serializeSort(sort?: { id: string; desc?: boolean }[]) {
+  return sort?.length ? encodeURIComponent(JSON.stringify(sort)) : undefined
+}
+
+function serializeQueryParams<T extends object | undefined>(params: T) {
+  if (!params) {
+    return params
+  }
+
+  const rawParams = params as Record<string, unknown>
+
+  return {
+    ...rawParams,
+    sort: Array.isArray(rawParams['sort'])
+      ? serializeSort(rawParams['sort'] as { id: string; desc?: boolean }[])
+      : rawParams['sort']
+  }
+}
 
 // ==================== Keys ====================
 
@@ -23,10 +50,10 @@ export const adminOrgQueries = {
     GetOrganizationsRes,
     Error,
     GetOrganizationsRes,
-    Record<string, unknown> | undefined
+    GetOrganizationsReq | undefined
   >((api, params) => ({
-    queryKey: adminOrgKeys.list(params),
-    queryFn: () => api.get('/admin/organizations', { params })
+    queryKey: adminOrgKeys.list(params ? ({ ...params } as Record<string, unknown>) : undefined),
+    queryFn: () => api.get('/admin/organizations', { params: serializeQueryParams(params) })
   })),
 
   detail: createQueryOptionsWithParams<GetOrganizationRes, Error, GetOrganizationRes, { id: string }>(
@@ -36,10 +63,10 @@ export const adminOrgQueries = {
     })
   ),
 
-  members: createQueryOptionsWithParams<GetMembersRes, Error, GetMembersRes, { id: string } & Record<string, unknown>>(
+  members: createQueryOptionsWithParams<GetMembersRes, Error, GetMembersRes, { id: string } & GetMembersReq>(
     (api, { id, ...params }) => ({
       queryKey: adminOrgKeys.members(id),
-      queryFn: () => api.get(`/admin/organizations/${id}/members`, { params })
+      queryFn: () => api.get(`/admin/organizations/${id}/members`, { params: serializeQueryParams(params) })
     })
   ),
 
@@ -47,10 +74,10 @@ export const adminOrgQueries = {
     GetInvitationsRes,
     Error,
     GetInvitationsRes,
-    { id: string } & Record<string, unknown>
+    { id: string } & GetInvitationsReq
   >((api, { id, ...params }) => ({
     queryKey: adminOrgKeys.invitations(id),
-    queryFn: () => api.get(`/admin/organizations/${id}/invitations`, { params })
+    queryFn: () => api.get(`/admin/organizations/${id}/invitations`, { params: serializeQueryParams(params) })
   }))
 }
 

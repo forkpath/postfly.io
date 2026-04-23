@@ -33,15 +33,17 @@ export type { MutationErrorContext, QueryClientOptions, QueryErrorContext } from
 
 // Domains
 export {
-  aiEndpoints,
-  aiKeys,
-  getAIChatUrl,
   authKeys,
   authMutations,
   billingKeys,
   billingMutations,
   billingQueries,
+  orgMutations,
+  orgQueries,
+  orgRequests,
   orgKeys,
+  storageKeys,
+  storageMutations,
   userKeys
 } from './domains'
 

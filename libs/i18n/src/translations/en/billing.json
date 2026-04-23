@@ -35,6 +35,10 @@
     "specialOffer": "SPECIAL OFFER: <bold>-{{discount}} off</bold>"
   },
   "plan": {
+    "free": {
+      "name": "Free",
+      "description": "Best for individuals and trials"
+    },
     "starter": {
       "name": "Starter",
       "description": "For small projects just getting started",

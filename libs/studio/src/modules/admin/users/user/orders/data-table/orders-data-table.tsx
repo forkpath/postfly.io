@@ -26,7 +26,7 @@ export function OrdersDataTable({ userId }: OrdersDataTableProps) {
       adminUserQueries.orders(api, {
         id: userId,
         page,
-        limit: perPage
+        perPage
       }) as UseQueryOptions<
         GetUserOrdersRes,
         Error,

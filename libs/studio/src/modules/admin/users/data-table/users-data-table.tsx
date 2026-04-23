@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from '@tanstack/react-query'
 import type { GetUsersRes } from '@libs/payload'
 
 import { adminUserQueries, useApiClient } from '@libs/api-client'
@@ -17,13 +18,32 @@ export function UsersDataTable() {
   >({
     persistance: 'local',
     columns,
-    query: ({ page, perPage, sorting, filters }) =>
-      adminUserQueries.list(api, {
+    query: ({ page, perPage, sorting, filters }) => {
+      const qValue = Array.isArray(filters.q) ? filters.q[0] : filters.q
+
+      return adminUserQueries.list(api, {
         page,
-        limit: perPage,
-        sort: sorting[0] ? `${sorting[0].id}:${sorting[0].desc ? 'desc' : 'asc'}` : undefined,
-        ...filters
-      }),
+        perPage,
+        sort: sorting,
+        q: typeof qValue === 'string' ? qValue : undefined,
+        role: Array.isArray(filters.role)
+          ? filters.role.filter((value): value is 'user' | 'admin' => value === 'user' || value === 'admin')
+          : undefined,
+        twoFactorEnabled: Array.isArray(filters.twoFactorEnabled)
+          ? filters.twoFactorEnabled.filter(Boolean).map(value => value === 'true')
+          : undefined,
+        banned: Array.isArray(filters.banned) ? filters.banned.filter(Boolean).map(value => value === 'true') : undefined,
+        createdAt:
+          Array.isArray(filters.createdAt) && filters.createdAt.length === 2
+            ? [Number(filters.createdAt[0]), Number(filters.createdAt[1])]
+            : undefined
+      }) as UseQueryOptions<
+        GetUsersRes,
+        Error,
+        GetUsersRes,
+        ReturnType<typeof adminUserQueries.list>['queryKey']
+      >
+    },
     initialState: {
       sorting: [{ id: 'name', desc: false }],
       columnVisibility: { q: false }

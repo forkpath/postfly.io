@@ -26,7 +26,7 @@ export function SubscriptionsDataTable({ userId }: SubscriptionsDataTableProps) 
       adminUserQueries.subscriptions(api, {
         id: userId,
         page,
-        limit: perPage
+        perPage
       }) as UseQueryOptions<
         GetUserSubscriptionsRes,
         Error,

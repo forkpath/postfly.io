@@ -26,7 +26,7 @@ export const UseCases = () => {
     },
     { key: 'dataops', icon: <DatabaseIcon className="text-primary size-6" /> },
     { key: 'finops', icon: <WalletIcon className="text-primary size-6" /> }
-  ]
+  ] as const
   const [active, setActive] = useState<number | null>(null)
 
   return (
@@ -53,8 +53,10 @@ export const UseCases = () => {
               )}
               <div className="relative z-10 rounded-lg bg-gray-50 p-4 transition duration-200 hover:bg-transparent md:p-5 dark:bg-neutral-800">
                 <div className="flex items-center gap-2">{uc.icon}</div>
-                <h3 className="mt-4 mb-2 text-lg font-medium">{t(`useCases.items.${uc.key}.title`)}</h3>
-                <p className="text-gray-600">{t(`useCases.items.${uc.key}.description`)}</p>
+                <h3 className="mt-4 mb-2 text-lg font-medium">
+                  {t(`useCases.items.${uc.key}.title` as const)}
+                </h3>
+                <p className="text-gray-600">{t(`useCases.items.${uc.key}.description` as const)}</p>
               </div>
             </div>
           ))}

@@ -1,39 +1,22 @@
-import type { IOrganizationRepository } from '../../../domain/repositories/organization.repository.interface'
 import type { GetInvitationsRes, GetMembersRes } from '@libs/payload'
 
-import { BadRequestException, Controller, ForbiddenException, Get, Inject, Param, Query } from '@nestjs/common'
+import { Controller, Get, Param, Query } from '@nestjs/common'
 import { QueryBus } from '@nestjs/cqrs'
 
-import { MemberRole } from '@libs/common'
-import { prisma } from '@libs/pg-dao'
 import { Session } from '@libs/srv-shared'
 
-import { ListInvitationsQueryDto, ListMembersQueryDto } from '../../../application/dtos/organization/organization.dto'
-import { ListInvitationsQuery } from '../../../application/queries/organization/list-invitations.query'
-import { ListMembersQuery } from '../../../application/queries/organization/list-members.query'
-import { ORGANIZATION_REPOSITORY } from '../../../domain/repositories/organization.repository.interface'
+import {
+  GenerateOrganizationSlugQueryDto,
+  ListInvitationsQueryDto,
+  ListMembersQueryDto
+} from '../../../application/dtos/organization/organization.dto'
+import { GenerateOrganizationSlugQuery } from '../../../application/queries/organization/generate-organization-slug.query'
+import { GetIsOnlyOwnerQuery } from '../../../application/queries/organization/get-is-only-owner.query'
+import { ListUserOrganizationInvitationsQuery } from '../../../application/queries/organization/list-user-organization-invitations.query'
+import { ListUserOrganizationMembersQuery } from '../../../application/queries/organization/list-user-organization-members.query'
 
 interface AuthSession {
   user: { id: string; email: string; role?: string }
-}
-
-async function ensureMember(organizationId: string, userId: string): Promise<'owner' | 'admin' | 'member'> {
-  const member = await prisma.member.findFirst({
-    where: { organizationId, userId },
-    select: { role: true }
-  })
-  if (!member) throw new ForbiddenException('Not a member of this organization')
-  return member.role as 'owner' | 'admin' | 'member'
-}
-
-const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
-
-function toSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
 }
 
 /**
@@ -48,24 +31,11 @@ function toSlug(name: string): string {
  */
 @Controller('organizations')
 export class UserOrganizationController {
-  constructor(
-    private readonly queryBus: QueryBus,
-    @Inject(ORGANIZATION_REPOSITORY) private readonly orgRepository: IOrganizationRepository
-  ) {}
+  constructor(private readonly queryBus: QueryBus) {}
 
   @Get('slug')
-  async generateSlug(@Query('name') name?: string): Promise<{ slug: string; available: boolean }> {
-    if (!name) throw new BadRequestException('name is required')
-
-    let base = toSlug(name)
-    if (!base || !slugRegex.test(base)) base = 'organization'
-
-    let slug = base
-    let counter = 1
-    while (await this.orgRepository.findBySlug(slug)) {
-      slug = `${base}-${counter++}`
-    }
-    return { slug, available: true }
+  async generateSlug(@Query() query: GenerateOrganizationSlugQueryDto): Promise<{ slug: string; available: boolean }> {
+    return this.queryBus.execute(new GenerateOrganizationSlugQuery(query.name))
   }
 
   @Get(':id/members')
@@ -74,19 +44,12 @@ export class UserOrganizationController {
     @Query() query: ListMembersQueryDto,
     @Session() session: AuthSession
   ): Promise<GetMembersRes> {
-    await ensureMember(id, session.user.id)
-    return this.queryBus.execute(new ListMembersQuery(id, query))
+    return this.queryBus.execute(new ListUserOrganizationMembersQuery(id, session.user.id, query))
   }
 
   @Get(':id/members/is-only-owner')
   async isOnlyOwner(@Param('id') id: string, @Session() session: AuthSession): Promise<{ isOnlyOwner: boolean }> {
-    const role = await ensureMember(id, session.user.id)
-    if (role !== MemberRole.OWNER) return { isOnlyOwner: false }
-
-    const ownerCount = await prisma.member.count({
-      where: { organizationId: id, role: MemberRole.OWNER }
-    })
-    return { isOnlyOwner: ownerCount <= 1 }
+    return this.queryBus.execute(new GetIsOnlyOwnerQuery(id, session.user.id))
   }
 
   @Get(':id/invitations')
@@ -95,10 +58,6 @@ export class UserOrganizationController {
     @Query() query: ListInvitationsQueryDto,
     @Session() session: AuthSession
   ): Promise<GetInvitationsRes> {
-    const role = await ensureMember(id, session.user.id)
-    if (role !== MemberRole.OWNER && role !== MemberRole.ADMIN) {
-      throw new ForbiddenException('Only admins can list invitations')
-    }
-    return this.queryBus.execute(new ListInvitationsQuery(id, query))
+    return this.queryBus.execute(new ListUserOrganizationInvitationsQuery(id, session.user.id, query))
   }
 }

@@ -13,14 +13,11 @@ import { Text } from '@libs/ui-shared/mobile/components/text'
 
 import '~/assets/styles/globals.css'
 
+import type { ErrorBoundaryProps } from 'expo-router'
+
 import { pathsConfig } from '~/config/paths'
 import { authClient } from '~/lib/auth'
 import { navigationIntegration } from '~/lib/monitoring/sentry'
-
-import '~/lib/polyfills'
-
-import type { ErrorBoundaryProps } from 'expo-router'
-
 import { Providers } from '~/lib/providers/providers'
 import { useTheme } from '~/modules/common/hooks/use-theme'
 import { Updates } from '~/modules/common/updates'

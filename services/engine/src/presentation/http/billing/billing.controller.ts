@@ -1,14 +1,14 @@
 import { BadRequestException, Body, Controller, Get, Headers, Post, Req } from '@nestjs/common'
+import { CommandBus, QueryBus } from '@nestjs/cqrs'
 
-import { getBillingSummaryByReferenceId, handleRevenueCatWebhook } from '@libs/billing/server'
-import {
-  billingPortalSchema,
-  checkoutSchema,
-  createStripeBillingPortalSession,
-  createStripeCheckoutSession,
-  handleStripeWebhook
-} from '@libs/billing/web'
 import { AllowAnonymous, Session } from '@libs/srv-shared'
+
+import { CreateBillingPortalCommand } from '../../../application/commands/billing/create-billing-portal.command'
+import { CreateCheckoutSessionCommand } from '../../../application/commands/billing/create-checkout-session.command'
+import { HandleRevenueCatWebhookCommand } from '../../../application/commands/billing/handle-revenuecat-webhook.command'
+import { HandleStripeWebhookCommand } from '../../../application/commands/billing/handle-stripe-webhook.command'
+import { BillingPortalDto, CheckoutDto } from '../../../application/dtos/billing/billing.dto'
+import { GetBillingSummaryQuery } from '../../../application/queries/billing/get-billing-summary.query'
 
 interface SessionUser {
   id: string
@@ -23,33 +23,38 @@ interface AuthSession {
 
 @Controller('billing')
 export class BillingController {
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus
+  ) {}
+
   @Get('me')
   async getSummary(@Session() session: AuthSession) {
-    return getBillingSummaryByReferenceId(session.user.id)
+    return this.queryBus.execute(new GetBillingSummaryQuery(session.user.id))
   }
 
   @Post('checkout')
-  async createCheckoutSession(@Session() session: AuthSession, @Body() body: unknown) {
-    const input = checkoutSchema.parse(body)
-
-    return createStripeCheckoutSession({
-      referenceId: session.user.id,
-      email: session.user.email,
-      variantId: input.variantId,
-      successUrl: input.successUrl,
-      cancelUrl: input.cancelUrl
-    })
+  async createCheckoutSession(@Session() session: AuthSession, @Body() dto: CheckoutDto) {
+    return this.commandBus.execute(
+      new CreateCheckoutSessionCommand({
+        referenceId: session.user.id,
+        email: session.user.email,
+        variantId: dto.variantId,
+        successUrl: dto.successUrl,
+        cancelUrl: dto.cancelUrl
+      })
+    )
   }
 
   @Post('portal')
-  async createBillingPortal(@Session() session: AuthSession, @Body() body: unknown) {
-    const input = billingPortalSchema.parse(body)
-
-    return createStripeBillingPortalSession({
-      referenceId: session.user.id,
-      email: session.user.email,
-      returnUrl: input.returnUrl
-    })
+  async createBillingPortal(@Session() session: AuthSession, @Body() dto: BillingPortalDto) {
+    return this.commandBus.execute(
+      new CreateBillingPortalCommand({
+        referenceId: session.user.id,
+        email: session.user.email,
+        returnUrl: dto.returnUrl
+      })
+    )
   }
 
   @Post('webhook/stripe')
@@ -66,10 +71,12 @@ export class BillingController {
       throw new BadRequestException('Webhook payload must be raw')
     }
 
-    return handleStripeWebhook({
-      payload: req.body,
-      signature
-    })
+    return this.commandBus.execute(
+      new HandleStripeWebhookCommand({
+        payload: req.body,
+        signature
+      })
+    )
   }
 
   @Post('webhook/revenuecat')
@@ -78,9 +85,11 @@ export class BillingController {
     @Req() req: { body: Buffer | string | Record<string, unknown> },
     @Headers('authorization') authorization?: string
   ) {
-    return handleRevenueCatWebhook({
-      payload: req.body,
-      authorization
-    })
+    return this.commandBus.execute(
+      new HandleRevenueCatWebhookCommand({
+        payload: req.body,
+        authorization
+      })
+    )
   }
 }

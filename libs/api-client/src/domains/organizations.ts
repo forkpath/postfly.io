@@ -1,3 +1,14 @@
+import type { ApiClient } from '../lib/client'
+import type {
+  GenerateOrganizationSlugReq,
+  GenerateOrganizationSlugRes,
+  GetInvitationsRes,
+  GetMembersRes,
+  IsOnlyOwnerRes
+} from '@libs/payload'
+
+import { createMutationFactory, createQueryOptionsWithParams } from '../lib/queries/factory'
+
 /**
  * 组织域 React Query cache keys
  *
@@ -16,3 +27,46 @@ export const orgKeys = {
 } as const
 
 export type OrgKeys = typeof orgKeys
+
+export const orgRequests = {
+  members: (api: ApiClient, params: { id: string } & Record<string, unknown>) => {
+    const { id, ...query } = params
+    return api.get<GetMembersRes>(`/organizations/${id}/members`, { params: query })
+  },
+  invitations: (api: ApiClient, params: { id: string } & Record<string, unknown>) => {
+    const { id, ...query } = params
+    return api.get<GetInvitationsRes>(`/organizations/${id}/invitations`, { params: query })
+  },
+  isOnlyOwner: (api: ApiClient, params: { id: string }) =>
+    api.get<IsOnlyOwnerRes>(`/organizations/${params.id}/members/is-only-owner`),
+  getSlug: (api: ApiClient, params: GenerateOrganizationSlugReq) =>
+    api.get<GenerateOrganizationSlugRes>('/organizations/slug', { params })
+}
+
+export const orgQueries = {
+  members: createQueryOptionsWithParams<GetMembersRes, Error, GetMembersRes, { id: string } & Record<string, unknown>>(
+    (api, { id, ...params }) => ({
+      queryKey: orgKeys.members(id, params),
+      queryFn: () => api.get(`/organizations/${id}/members`, { params })
+    })
+  ),
+  invitations: createQueryOptionsWithParams<
+    GetInvitationsRes,
+    Error,
+    GetInvitationsRes,
+    { id: string } & Record<string, unknown>
+  >((api, { id, ...params }) => ({
+    queryKey: orgKeys.invitations(id, params),
+    queryFn: () => api.get(`/organizations/${id}/invitations`, { params })
+  })),
+  isOnlyOwner: createQueryOptionsWithParams<IsOnlyOwnerRes, Error, IsOnlyOwnerRes, { id: string }>((api, { id }) => ({
+    queryKey: orgKeys.isOnlyOwner(id),
+    queryFn: () => api.get(`/organizations/${id}/members/is-only-owner`)
+  }))
+}
+
+export const orgMutations = {
+  getSlug: createMutationFactory<GenerateOrganizationSlugRes, Error, GenerateOrganizationSlugReq>((api, params) =>
+    orgRequests.getSlug(api, params)
+  )
+}

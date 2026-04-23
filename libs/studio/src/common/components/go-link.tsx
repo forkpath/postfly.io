@@ -23,7 +23,7 @@ export interface GoLinkProps extends Omit<LinkProps, 'to'> {
 export const GoLink = forwardRef<HTMLAnchorElement, GoLinkProps>(
   ({ href, children, className, onClick, ...props }, ref) => {
     return (
-      <Link ref={ref} to={href} className={className} onClick={onClick} {...props}>
+      <Link ref={ref} to={href as never} className={className} onClick={onClick} {...props}>
         {children}
       </Link>
     )

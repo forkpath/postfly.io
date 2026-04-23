@@ -26,7 +26,9 @@ export const authClient = createClient({
   },
   mobile: {
     storage: SecureStore,
-    cookiePrefix: 'ray-mobile'
+    // 须与 `libs/auth` 服务端 `advanced.cookiePrefix`（`ray`）一致，否则 `expo` 插件在
+    // `hasBetterAuthCookies` 中不会把 Set-Cookie 写入 SecureStore，useSession 会永远为 null
+    cookiePrefix: 'ray'
   },
   lastLoginMethod: {
     storage: SecureStore

@@ -52,7 +52,6 @@ function ProfilePage() {
         />
         <EditName
           user={{
-            id: userData.id,
             name: userData.name ?? ''
           }}
         />

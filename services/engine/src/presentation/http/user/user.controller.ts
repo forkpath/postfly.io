@@ -1,11 +1,12 @@
-import type { PaginatedUsersResponse, UserResponse, UserSessionResponse } from '../../../application/dtos/user/user.dto'
 import type {
+  GetUsersRes,
   GetUserAccountsRes,
   GetUserInvitationsRes,
   GetUserMembershipsRes,
   GetUserOrdersRes,
   GetUserSubscriptionsRes
 } from '@libs/payload'
+import type { UserResponse, UserSessionResponse } from '../../../application/dtos/user/user.dto'
 
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
 import { CommandBus, QueryBus } from '@nestjs/cqrs'
@@ -24,6 +25,11 @@ import { UnbanUserCommand } from '../../../application/commands/user/unban-user.
 import { UpdateUserCommand } from '../../../application/commands/user/update-user.command'
 import {
   BanUserDto,
+  ListUserAccountsQueryDto,
+  ListUserInvitationsQueryDto,
+  ListUserMembershipsQueryDto,
+  ListUserOrdersQueryDto,
+  ListUserSubscriptionsQueryDto,
   ListUsersQueryDto,
   RevokeSessionDto,
   SetUserPasswordDto,
@@ -69,7 +75,7 @@ export class UserController {
    * 获取用户列表
    */
   @Get()
-  async list(@Query() query: ListUsersQueryDto): Promise<PaginatedUsersResponse> {
+  async list(@Query() query: ListUsersQueryDto): Promise<GetUsersRes> {
     return this.queryBus.execute(new ListUsersQuery(query))
   }
 
@@ -143,8 +149,8 @@ export class UserController {
   }
 
   @Get(':id/accounts')
-  async listAccounts(@Param('id') id: string, @Query() query: Record<string, unknown>): Promise<GetUserAccountsRes> {
-    return this.queryBus.execute(new ListUserAccountsQuery(id, query as never))
+  async listAccounts(@Param('id') id: string, @Query() query: ListUserAccountsQueryDto): Promise<GetUserAccountsRes> {
+    return this.queryBus.execute(new ListUserAccountsQuery(id, query))
   }
 
   @Delete(':id/accounts/:accountId')
@@ -155,29 +161,29 @@ export class UserController {
   @Get(':id/subscriptions')
   async listSubscriptions(
     @Param('id') id: string,
-    @Query() query: Record<string, unknown>
+    @Query() query: ListUserSubscriptionsQueryDto
   ): Promise<GetUserSubscriptionsRes> {
-    return this.queryBus.execute(new ListUserSubscriptionsQuery(id, query as never))
+    return this.queryBus.execute(new ListUserSubscriptionsQuery(id, query))
   }
 
   @Get(':id/orders')
-  async listOrders(@Param('id') id: string, @Query() query: Record<string, unknown>): Promise<GetUserOrdersRes> {
-    return this.queryBus.execute(new ListUserOrdersQuery(id, query as never))
+  async listOrders(@Param('id') id: string, @Query() query: ListUserOrdersQueryDto): Promise<GetUserOrdersRes> {
+    return this.queryBus.execute(new ListUserOrdersQuery(id, query))
   }
 
   @Get(':id/memberships')
   async listMemberships(
     @Param('id') id: string,
-    @Query() query: Record<string, unknown>
+    @Query() query: ListUserMembershipsQueryDto
   ): Promise<GetUserMembershipsRes> {
-    return this.queryBus.execute(new ListUserMembershipsQuery(id, query as never))
+    return this.queryBus.execute(new ListUserMembershipsQuery(id, query))
   }
 
   @Get(':id/invitations')
   async listInvitations(
     @Param('id') id: string,
-    @Query() query: Record<string, unknown>
+    @Query() query: ListUserInvitationsQueryDto
   ): Promise<GetUserInvitationsRes> {
-    return this.queryBus.execute(new ListUserInvitationsQuery(id, query as never))
+    return this.queryBus.execute(new ListUserInvitationsQuery(id, query))
   }
 }

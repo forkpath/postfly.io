@@ -15,8 +15,7 @@ import {
   getCrmNavConfig,
   getDefaultSubRoute,
   ImpersonatingBanner,
-  pathsConfig,
-  useWorkspaceStore
+  pathsConfig
 } from '@libs/studio'
 import { Icons } from '@libs/ui-shared/web'
 
@@ -43,17 +42,6 @@ export const Route = createFileRoute('/_app')({
       name: string
       slug: string
     }> | null
-
-    // 如果用户有组织成员身份，检查是否已选择工作空间
-    if (organizations && organizations.length > 0) {
-      const { hasSelected } = useWorkspaceStore.getState()
-
-      if (!hasSelected) {
-        throw redirect({
-          to: pathsConfig.workspace.select
-        })
-      }
-    }
 
     // 获取当前活跃组织中的成员信息（包含角色）
     // 在 beforeLoad 中同步获取，避免组件挂载后 hook 异步加载导致菜单闪烁

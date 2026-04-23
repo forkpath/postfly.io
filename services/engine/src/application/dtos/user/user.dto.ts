@@ -1,6 +1,19 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
+import {
+  banUserReqSchema,
+  getUsersReqSchema,
+  getUserAccountsReqSchema,
+  getUserInvitationsReqSchema,
+  getUserMembershipsReqSchema,
+  getUserOrdersReqSchema,
+  getUserSubscriptionsReqSchema,
+  revokeUserSessionReqSchema,
+  setUserPasswordReqSchema,
+  updateAdminUserReqSchema
+} from '@libs/payload'
+
 import { UserRole } from '../../../domain/entities/user.entity'
 
 // ==================== Response DTOs ====================
@@ -14,6 +27,8 @@ export const userResponseSchema = z.object({
   email: z.string().email(),
   emailVerified: z.boolean(),
   image: z.string().nullable(),
+  twoFactorEnabled: z.boolean().nullable(),
+  isAnonymous: z.boolean(),
   role: z.enum([UserRole.USER, UserRole.ADMIN]),
   banned: z.boolean(),
   banReason: z.string().nullable(),
@@ -40,74 +55,24 @@ export const userSessionResponseSchema = z.object({
 
 export type UserSessionResponse = z.infer<typeof userSessionResponseSchema>
 
-/**
- * 分页用户列表响应 Schema
- */
-export const paginatedUsersResponseSchema = z.object({
-  list: z.array(userResponseSchema),
-  total: z.number(),
-  page: z.number(),
-  limit: z.number(),
-  totalPages: z.number()
-})
-
-export type PaginatedUsersResponse = z.infer<typeof paginatedUsersResponseSchema>
-
 // ==================== Request DTOs ====================
 
-/**
- * 用户列表查询参数 Schema
- */
-export const listUsersQuerySchema = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(20),
-  search: z.string().optional(),
-  role: z.enum([UserRole.USER, UserRole.ADMIN]).optional(),
-  banned: z
-    .string()
-    .transform(v => v === 'true')
-    .optional(),
-  sortBy: z.enum(['createdAt', 'updatedAt', 'name', 'email']).default('createdAt'),
-  sortOrder: z.enum(['asc', 'desc']).default('desc')
-})
+export class ListUsersQueryDto extends createZodDto(getUsersReqSchema) {}
 
-export class ListUsersQueryDto extends createZodDto(listUsersQuerySchema) {}
+export class UpdateUserDto extends createZodDto(updateAdminUserReqSchema) {}
 
-/**
- * 更新用户 Schema
- */
-export const updateUserSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
-  image: z.string().url().nullable().optional(),
-  role: z.enum([UserRole.USER, UserRole.ADMIN]).optional()
-})
+export class BanUserDto extends createZodDto(banUserReqSchema) {}
 
-export class UpdateUserDto extends createZodDto(updateUserSchema) {}
+export class SetUserPasswordDto extends createZodDto(setUserPasswordReqSchema) {}
 
-/**
- * 封禁用户 Schema
- */
-export const banUserSchema = z.object({
-  reason: z.string().max(500).optional(),
-  expiresAt: z.coerce.date().optional()
-})
+export class RevokeSessionDto extends createZodDto(revokeUserSessionReqSchema) {}
 
-export class BanUserDto extends createZodDto(banUserSchema) {}
+export class ListUserAccountsQueryDto extends createZodDto(getUserAccountsReqSchema) {}
 
-/**
- * 设置用户密码 Schema
- */
-export const setUserPasswordSchema = z.object({
-  newPassword: z.string().min(8).max(100)
-})
+export class ListUserSubscriptionsQueryDto extends createZodDto(getUserSubscriptionsReqSchema) {}
 
-export class SetUserPasswordDto extends createZodDto(setUserPasswordSchema) {}
+export class ListUserOrdersQueryDto extends createZodDto(getUserOrdersReqSchema) {}
 
-/**
- * 撤销会话 Schema
- */
-export const revokeSessionSchema = z.object({
-  token: z.string()
-})
+export class ListUserMembershipsQueryDto extends createZodDto(getUserMembershipsReqSchema) {}
 
-export class RevokeSessionDto extends createZodDto(revokeSessionSchema) {}
+export class ListUserInvitationsQueryDto extends createZodDto(getUserInvitationsReqSchema) {}

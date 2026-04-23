@@ -26,7 +26,7 @@ export function MembershipsDataTable({ userId }: MembershipsDataTableProps) {
       adminUserQueries.memberships(api, {
         id: userId,
         page,
-        limit: perPage
+        perPage
       }) as UseQueryOptions<
         GetUserMembershipsRes,
         Error,

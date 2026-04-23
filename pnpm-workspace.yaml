@@ -8,6 +8,7 @@ autoInstallPeers: true
 onlyBuiltDependencies:
   - '@nestjs/core'
   - '@prisma/engines'
+  - '@shopify/react-native-skia'
   - prisma
 
 catalog:

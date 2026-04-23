@@ -14,6 +14,10 @@ export interface UserEntity {
   readonly emailVerified: boolean
   /** 头像 URL */
   readonly image: string | null
+  /** 是否启用双重认证 */
+  readonly twoFactorEnabled: boolean | null
+  /** 是否匿名用户 */
+  readonly isAnonymous: boolean
   /** 用户角色 */
   readonly role: UserRole
   /** 是否被封禁 */
@@ -50,35 +54,4 @@ export interface UserSessionEntity {
   readonly updatedAt: Date
   readonly ipAddress: string | null
   readonly userAgent: string | null
-}
-
-/**
- * 用户列表查询参数
- */
-export interface UserListParams {
-  /** 页码，从 1 开始 */
-  readonly page?: number
-  /** 每页数量 */
-  readonly limit?: number
-  /** 搜索关键词（name 或 email） */
-  readonly search?: string
-  /** 角色过滤 */
-  readonly role?: UserRole
-  /** 是否被封禁 */
-  readonly banned?: boolean
-  /** 排序字段 */
-  readonly sortBy?: 'createdAt' | 'updatedAt' | 'name' | 'email'
-  /** 排序方向 */
-  readonly sortOrder?: 'asc' | 'desc'
-}
-
-/**
- * 分页结果
- */
-export interface PaginatedResult<T> {
-  readonly list: T[]
-  readonly total: number
-  readonly page: number
-  readonly limit: number
-  readonly totalPages: number
 }

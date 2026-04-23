@@ -1,11 +1,13 @@
-import type { PaginatedResult, UserEntity, UserListParams, UserSessionEntity } from '../entities/user.entity'
 import type {
+  GetUsersReq,
+  GetUsersRes,
   GetUserAccountsReq,
   GetUserInvitationsReq,
   GetUserMembershipsReq,
   GetUserOrdersReq,
   GetUserSubscriptionsReq
 } from '@libs/payload'
+import type { UserEntity, UserSessionEntity } from '../entities/user.entity'
 
 export interface AccountEntity {
   readonly id: string
@@ -87,7 +89,7 @@ export interface IUserRepository {
 
   findByEmail(email: string): Promise<UserEntity | null>
 
-  findMany(params: UserListParams): Promise<PaginatedResult<UserEntity>>
+  findMany(params: GetUsersReq): Promise<GetUsersRes>
 
   update(id: string, data: Partial<Pick<UserEntity, 'name' | 'image' | 'role'>>): Promise<UserEntity>
 

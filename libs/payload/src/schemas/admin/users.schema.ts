@@ -47,6 +47,41 @@ export const getUsersResSchema = z.object({
 
 export type GetUsersRes = z.infer<typeof getUsersResSchema>
 
+// ==================== Update User ====================
+
+export const updateAdminUserReqSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  image: z.string().url().nullable().optional(),
+  role: z.enum(UserRole).optional()
+})
+
+export type UpdateAdminUserReq = z.infer<typeof updateAdminUserReqSchema>
+
+// ==================== Ban User ====================
+
+export const banUserReqSchema = z.object({
+  reason: z.string().max(500).optional(),
+  expiresAt: z.coerce.date().optional()
+})
+
+export type BanUserReq = z.infer<typeof banUserReqSchema>
+
+// ==================== Set Password ====================
+
+export const setUserPasswordReqSchema = z.object({
+  newPassword: z.string().min(8).max(100)
+})
+
+export type SetUserPasswordReq = z.infer<typeof setUserPasswordReqSchema>
+
+// ==================== Revoke Session ====================
+
+export const revokeUserSessionReqSchema = z.object({
+  token: z.string()
+})
+
+export type RevokeUserSessionReq = z.infer<typeof revokeUserSessionReqSchema>
+
 // ==================== User Accounts ====================
 
 export const getUserAccountsReqSchema = offsetPaginationSchema.extend({

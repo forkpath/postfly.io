@@ -1,0 +1,47 @@
+import type { IQueryHandler } from '@nestjs/cqrs'
+import type { IOrganizationRepository } from '../../../domain/repositories/organization.repository.interface'
+import type { GenerateOrganizationSlugRes } from '@libs/payload'
+
+import { Inject } from '@nestjs/common'
+import { QueryHandler } from '@nestjs/cqrs'
+
+import { ORGANIZATION_REPOSITORY } from '../../../domain/repositories/organization.repository.interface'
+
+const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
+function toSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+export class GenerateOrganizationSlugQuery {
+  constructor(public readonly name: string) {}
+}
+
+@QueryHandler(GenerateOrganizationSlugQuery)
+export class GenerateOrganizationSlugHandler
+  implements IQueryHandler<GenerateOrganizationSlugQuery, GenerateOrganizationSlugRes>
+{
+  constructor(
+    @Inject(ORGANIZATION_REPOSITORY)
+    private readonly orgRepository: IOrganizationRepository
+  ) {}
+
+  async execute(query: GenerateOrganizationSlugQuery): Promise<GenerateOrganizationSlugRes> {
+    let base = toSlug(query.name)
+    if (!base || !slugRegex.test(base)) {
+      base = 'organization'
+    }
+
+    let slug = base
+    let counter = 1
+    while (await this.orgRepository.findBySlug(slug)) {
+      slug = `${base}-${counter++}`
+    }
+
+    return { slug, available: true }
+  }
+}

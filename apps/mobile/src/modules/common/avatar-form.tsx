@@ -9,6 +9,7 @@ import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import { Alert, Text, View } from 'react-native'
 import * as z from 'zod'
 
+import { storageMutations } from '@libs/api-client'
 import { useTranslation } from '@libs/i18n'
 import { cn } from '@libs/ui-shared/common'
 import { Avatar, AvatarFallback, AvatarImage } from '@libs/ui-shared/mobile/components/avatar'
@@ -39,9 +40,7 @@ const mutations = {
 
       const blob = await fetch(avatar.uri).then(r => r.blob())
 
-      const { url: uploadUrl } = await api.get<{ url: string }>('/storage/upload', {
-        params: { path }
-      })
+      const { url: uploadUrl } = await storageMutations.uploadUrl.fn(api, { path })
 
       const response = await fetch(uploadUrl, {
         method: 'PUT',
@@ -55,9 +54,7 @@ const mutations = {
         throw new Error()
       }
 
-      const { url: publicUrl } = await api.get<{ url: string }>('/storage/public', {
-        params: { path }
-      })
+      const { url: publicUrl } = await storageMutations.publicUrl.fn(api, { path })
 
       await update(publicUrl)
 
@@ -70,9 +67,7 @@ const mutations = {
       const path = image?.split('/').pop()
       if (!path) return
 
-      const { url: deleteUrl } = await api.get<{ url: string }>('/storage/delete', {
-        params: { path: `avatars/${path}` }
-      })
+      const { url: deleteUrl } = await storageMutations.deleteUrl.fn(api, { path: `avatars/${path}` })
 
       await update(null)
 
@@ -161,9 +156,7 @@ const AvatarFormUploadButton = ({
       if (oldImage) {
         const oldPath = oldImage.split('/').pop()
         if (oldPath) {
-          const { url: deleteUrl } = await api.get<{ url: string }>('/storage/delete', {
-            params: { path: `avatars/${oldPath}` }
-          })
+          const { url: deleteUrl } = await storageMutations.deleteUrl.fn(api, { path: `avatars/${oldPath}` })
           void fetch(deleteUrl, { method: 'DELETE' })
         }
       }

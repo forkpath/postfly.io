@@ -3,5 +3,44 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/mobile/src",
   "projectType": "application",
-  "tags": ["scope:frontend", "type:app", "platform:mobile"]
+  "tags": ["scope:frontend", "type:app", "platform:mobile"],
+  "targets": {
+    "run-ios": {
+      "command": "expo run:ios",
+      "continuous": true,
+      "options": {
+        "cwd": "apps/mobile",
+        "args": ["--device"]
+      },
+      "configurations": {
+        "release": {
+          "args": ["--device", "--configuration", "Release"]
+        }
+      }
+    },
+    "run-android": {
+      "command": "expo run:android",
+      "continuous": true,
+      "options": {
+        "cwd": "apps/mobile",
+        "args": ["--device"]
+      },
+      "configurations": {
+        "release": {
+          "args": ["--device", "--variant", "release"]
+        }
+      }
+    },
+    "build": {
+      "executor": "@nx/expo:build",
+      "options": {
+        "profile": "production",
+        "interactive": false
+      },
+      "configurations": {
+        "ios": { "platform": "ios" },
+        "android": { "platform": "android" }
+      }
+    }
+  }
 }

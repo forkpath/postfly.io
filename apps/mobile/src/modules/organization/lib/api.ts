@@ -5,7 +5,7 @@ import { api } from '~/lib/api'
 import { authClient } from '~/lib/auth'
 import * as Linking from 'expo-linking'
 
-import { orgKeys } from '@libs/api-client'
+import { orgKeys, orgMutations, orgQueries, orgRequests } from '@libs/api-client'
 
 const KEY = 'organizations'
 
@@ -20,18 +20,11 @@ const queries = {
         })
     }),
   members: {
-    getIsOnlyOwner: ({ id }: { id: string }) =>
-      queryOptions({
-        queryKey: orgKeys.isOnlyOwner(id),
-        queryFn: () => api.get<{ isOnlyOwner: boolean }>(`/organizations/${id}/members/is-only-owner`)
-      }),
+    getIsOnlyOwner: ({ id }: { id: string }) => orgQueries.isOnlyOwner(api, { id }),
     getAll: ({ id, ...query }: { id: string; page?: string; perPage?: string; q?: string; role?: string[] }) =>
       infiniteQueryOptions({
         queryKey: orgKeys.members(id, query),
-        queryFn: ({ pageParam }) =>
-          api.get<{ list: unknown[]; total: number }>(`/organizations/${id}/members`, {
-            params: { ...query, page: pageParam.toString() }
-          }),
+        queryFn: ({ pageParam }) => orgRequests.members(api, { id, ...query, page: pageParam.toString() }),
         initialPageParam: 1,
         getNextPageParam: ({ total }, pages) =>
           total > pages.length * Number(query.perPage ?? 10) ? pages.length + 1 : undefined
@@ -50,10 +43,7 @@ const queries = {
     getAll: ({ id, ...query }: { id: string; page?: string; perPage?: string; q?: string; status?: string[] }) =>
       infiniteQueryOptions({
         queryKey: orgKeys.invitations(id, query),
-        queryFn: ({ pageParam }) =>
-          api.get<{ list: unknown[]; total: number }>(`/organizations/${id}/invitations`, {
-            params: { ...query, page: pageParam.toString() }
-          }),
+        queryFn: ({ pageParam }) => orgRequests.invitations(api, { id, ...query, page: pageParam.toString() }),
         initialPageParam: 1,
         getNextPageParam: ({ total }, pages) =>
           total > pages.length * Number(query.perPage ?? 10) ? pages.length + 1 : undefined
@@ -62,11 +52,10 @@ const queries = {
 }
 
 const mutations = {
-  getSlug: mutationOptions({
-    mutationKey: [KEY, 'slug'],
-    mutationFn: (data: { query: { name: string } }) =>
-      api.get<{ slug: string; available: boolean }>('/organizations/slug', { params: data.query })
-  }),
+  getSlug: {
+    ...orgMutations.getSlug.options(api),
+    mutationKey: [KEY, 'slug']
+  },
   setActive: mutationOptions({
     mutationKey: [KEY, 'active'],
     mutationFn: (params: Parameters<typeof authClient.organization.setActive>[0]) =>

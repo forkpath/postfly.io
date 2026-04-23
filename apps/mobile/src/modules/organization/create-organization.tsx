@@ -63,9 +63,7 @@ export const CreateOrganizationBottomSheet = ({
   const create = useMutation(organization.mutations.create)
 
   const onSubmit = async (data: CreateOrganizationPayload) => {
-    const { slug } = await getSlug.mutateAsync({
-      query: data
-    })
+    const { slug } = await getSlug.mutateAsync(data)
 
     const organization = await create.mutateAsync({
       ...data,

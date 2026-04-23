@@ -3,7 +3,9 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { NodeEnv } from '@libs/common'
 
 import { env } from './env'
-import { PrismaClient } from './generated/prisma/client'
+import { Prisma, PrismaClient } from './generated/prisma/client'
+
+export { Prisma }
 
 const databaseUrl = env.POSGTRES_DATABASE_URL
 const adapter = new PrismaPg({ connectionString: databaseUrl })

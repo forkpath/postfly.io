@@ -3,9 +3,10 @@ import type { BillingPlanConfig, BillingSubscriptionRecord, BillingSummary } fro
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 
+import { billingMutations, billingQueries, useApiClient } from '@libs/api-client'
 import { billingConfig, BillingPlan, BillingSubscriptionStatus } from '@libs/billing'
 import { useTranslation } from '@libs/i18n'
-import { billing, PageHeader, PageHeaderDescription, PageHeaderTitle } from '@libs/studio'
+import { PageHeader, PageHeaderDescription, PageHeaderTitle } from '@libs/studio'
 import {
   Badge,
   Button,
@@ -25,14 +26,15 @@ export const Route = createFileRoute('/_app/user/billing')({
 
 function BillingPage() {
   const { t } = useTranslation('billing')
-  const summaryQuery = useQuery(billing.queries.summary.get)
+  const api = useApiClient()
+  const summaryQuery = useQuery(billingQueries.summary(api))
   const summary = summaryQuery.data as BillingSummary | undefined
 
   const subscriptions = summary?.flatMap(c => c.subscriptions) ?? []
   const orders = summary?.flatMap(c => c.orders) ?? []
 
-  const activeSubscription = subscriptions.find(sub =>
-    [BillingSubscriptionStatus.ACTIVE, BillingSubscriptionStatus.TRIALING].includes(sub.status)
+  const activeSubscription = subscriptions.find(
+    sub => sub.status === BillingSubscriptionStatus.ACTIVE || sub.status === BillingSubscriptionStatus.TRIALING
   )
 
   const hasData = subscriptions.length > 0 || orders.length > 0
@@ -193,10 +195,11 @@ function SubscriptionsList({ subscriptions }: { subscriptions: BillingSubscripti
 
 function PortalCard() {
   const { t } = useTranslation('billing')
+  const api = useApiClient()
   const currentUrl = typeof window === 'undefined' ? 'http://localhost:3000/user/billing' : window.location.href
 
   const portalMutation = useMutation({
-    ...billing.mutations.portal,
+    ...billingMutations.portal.options(api),
     onSuccess: result => {
       window.location.assign(result.url)
     }
@@ -234,13 +237,14 @@ function PortalCard() {
 
 function UpgradeButton() {
   const { t } = useTranslation('billing')
+  const api = useApiClient()
   const currentUrl = typeof window === 'undefined' ? 'http://localhost:3000/user/billing' : window.location.href
 
   const premiumPlan = billingConfig.plans.find(p => p.id === BillingPlan.PREMIUM)
   const defaultVariant = premiumPlan?.variants.find(v => v.stripePriceId)
 
   const checkoutMutation = useMutation({
-    ...billing.mutations.checkout,
+    ...billingMutations.checkout.options(api),
     onSuccess: result => {
       if (result.url) {
         window.location.assign(result.url)

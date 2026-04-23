@@ -1,14 +1,11 @@
 import { BadRequestException, Controller, Get, Query } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
+import { CommandBus, QueryBus } from '@nestjs/cqrs'
 
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-
-import { Session } from '@libs/srv-shared'
-
-interface AuthSession {
-  user: { id: string }
-}
+import { GetDeleteUrlCommand } from '../../../application/commands/storage/get-delete-url.command'
+import { GetUploadUrlCommand } from '../../../application/commands/storage/get-upload-url.command'
+import { StoragePathQueryDto } from '../../../application/dtos/storage/storage.dto'
+import { GetPublicUrlQuery } from '../../../application/queries/storage/get-public-url.query'
+import { GetSignedUrlQuery } from '../../../application/queries/storage/get-signed-url.query'
 
 const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'webp'])
 
@@ -25,63 +22,35 @@ function validateImagePath(path: string): void {
 
 @Controller('storage')
 export class StorageController {
-  private readonly client: S3Client
-  private readonly bucket: string
-  private readonly endpoint: string
-
-  constructor(private readonly config: ConfigService) {
-    const accessKeyId = this.config.get<string>('storage.accessKeyId', '')
-    const secretAccessKey = this.config.get<string>('storage.accessKeySecret', '')
-    const region = this.config.get<string>('storage.region', 'us-east-1')
-    const endpoint = this.config.get<string>('storage.endpoint', '')
-    this.bucket = this.config.get<string>('storage.bucket', 'ray')
-    this.endpoint = endpoint
-
-    const isCustomEndpoint = !!endpoint && !endpoint.includes('.amazonaws.com')
-
-    this.client = new S3Client({
-      region,
-      credentials: { accessKeyId, secretAccessKey },
-      ...(endpoint ? { endpoint } : {}),
-      ...(isCustomEndpoint ? { forcePathStyle: true } : {})
-    })
-  }
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus
+  ) {}
 
   @Get('upload-url')
-  async getUploadUrl(@Query('path') path: string, @Session() session: AuthSession) {
+  async getUploadUrl(@Query() query: StoragePathQueryDto) {
+    const { path } = query
     validateImagePath(path)
-
-    const url = await getSignedUrl(this.client, new PutObjectCommand({ Bucket: this.bucket, Key: path }), {
-      expiresIn: 300
-    })
-    return { url }
+    return this.commandBus.execute(new GetUploadUrlCommand(path))
   }
 
   @Get('public-url')
-  getPublicUrl(@Query('path') path: string) {
-    const url = this.endpoint
-      ? `${this.endpoint}/${this.bucket}/${path}`
-      : `https://${this.bucket}.s3.amazonaws.com/${path}`
-    return { url }
+  getPublicUrl(@Query() query: StoragePathQueryDto) {
+    const { path } = query
+    return this.queryBus.execute(new GetPublicUrlQuery(path))
   }
 
   @Get('delete-url')
-  async getDeleteUrl(@Query('path') path: string, @Session() session: AuthSession) {
+  async getDeleteUrl(@Query() query: StoragePathQueryDto) {
+    const { path } = query
     validateImagePath(path)
-
-    const url = await getSignedUrl(this.client, new DeleteObjectCommand({ Bucket: this.bucket, Key: path }), {
-      expiresIn: 300
-    })
-    return { url }
+    return this.commandBus.execute(new GetDeleteUrlCommand(path))
   }
 
   @Get('signed-url')
-  async getSignedUrl_(@Query('path') path: string, @Session() session: AuthSession) {
+  async getSignedUrl_(@Query() query: StoragePathQueryDto) {
+    const { path } = query
     validateImagePath(path)
-
-    const url = await getSignedUrl(this.client, new GetObjectCommand({ Bucket: this.bucket, Key: path }), {
-      expiresIn: 3600
-    })
-    return { url }
+    return this.queryBus.execute(new GetSignedUrlQuery(path))
   }
 }

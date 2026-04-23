@@ -51,8 +51,9 @@ export const Sessions = () => {
       userAgent: string
     }[]) ?? []
 
-  const revoke = useMutation({
-    ...auth.mutations.sessions.revoke,
+  const revoke = useMutation<unknown, Error, string>({
+    mutationKey: auth.mutations.sessions.revoke.mutationKey,
+    mutationFn: token => authClient.revokeSession({ token }),
     onSuccess: async (_: unknown, token: string) => {
       toast.success(
         t('auth:account.sessions.revoke.success', {

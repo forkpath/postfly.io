@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from '@tanstack/react-query'
 import type { GetOrganizationsRes } from '@libs/payload'
 
 import { adminOrgQueries, useApiClient } from '@libs/api-client'
@@ -17,13 +18,30 @@ export function OrganizationsDataTable() {
   >({
     persistance: 'local',
     columns,
-    query: ({ page, perPage, sorting, filters }) =>
-      adminOrgQueries.list(api, {
+    query: ({ page, perPage, sorting, filters }) => {
+      const qValue = Array.isArray(filters.q) ? filters.q[0] : filters.q
+      const q = typeof qValue === 'string' ? qValue : undefined
+
+      return adminOrgQueries.list(api, {
         page,
-        limit: perPage,
-        sort: sorting[0] ? `${sorting[0].id}:${sorting[0].desc ? 'desc' : 'asc'}` : undefined,
-        ...filters
-      }),
+        perPage,
+        sort: sorting,
+        q,
+        createdAt:
+          Array.isArray(filters.createdAt) && filters.createdAt.length === 2
+            ? [Number(filters.createdAt[0]), Number(filters.createdAt[1])]
+            : undefined,
+        members:
+          Array.isArray(filters.members) && filters.members.length === 2
+            ? [Number(filters.members[0]), Number(filters.members[1])]
+            : undefined
+      }) as UseQueryOptions<
+        GetOrganizationsRes,
+        Error,
+        GetOrganizationsRes,
+        ReturnType<typeof adminOrgQueries.list>['queryKey']
+      >
+    },
     initialState: {
       sorting: [{ id: 'name', desc: false }],
       columnVisibility: { q: false }

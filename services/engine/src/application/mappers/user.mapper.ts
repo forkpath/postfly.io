@@ -17,6 +17,8 @@ export class UserMapper {
       email: entity.email,
       emailVerified: entity.emailVerified,
       image: entity.image,
+      twoFactorEnabled: entity.twoFactorEnabled,
+      isAnonymous: entity.isAnonymous,
       role: entity.role,
       banned: entity.banned,
       banReason: entity.banReason,

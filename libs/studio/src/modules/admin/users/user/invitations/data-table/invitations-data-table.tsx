@@ -26,7 +26,7 @@ export function InvitationsDataTable({ userId }: InvitationsDataTableProps) {
       adminUserQueries.invitations(api, {
         id: userId,
         page,
-        limit: perPage
+        perPage
       }) as UseQueryOptions<
         GetUserInvitationsRes,
         Error,

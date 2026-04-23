@@ -14,7 +14,7 @@
 | 入口 | 内容 |
 | --- | --- |
 | `@libs/billing` | 套餐配置、类型、env preset、工具函数（纯共享，不拉 RN/Stripe SDK） |
-| `@libs/billing/web` | `checkoutSchema`、`billingPortalSchema`、Stripe checkout / portal / webhook |
+| `@libs/billing/web` | Stripe checkout / portal / webhook 实现 |
 | `@libs/billing/server` | Prisma helper + `handleRevenueCatWebhook` |
 | `@libs/billing/mobile` | `Provider`、`useCustomer`、`usePaywall`（基于 RevenueCat SDK） |
 
@@ -72,6 +72,8 @@ await handleStripeWebhook({
   signature: request.headers['stripe-signature'] as string
 })
 ```
+
+`billing/checkout` 与 `billing/portal` 的 request 校验统一由 `@libs/payload` 提供。
 
 ## Mobile 使用方式
 

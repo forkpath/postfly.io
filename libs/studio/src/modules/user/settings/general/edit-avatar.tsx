@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import Cropper from 'react-easy-crop'
 import { toast } from 'sonner'
 
+import { storageMutations, useApiClient } from '@libs/api-client'
 import { useTranslation } from '@libs/i18n'
 import {
   Avatar,
@@ -36,16 +37,6 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024
 const ACCEPTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 const ACCEPTED_EXTENSIONS = '.jpg,.jpeg,.png,.webp'
 const OUTPUT_SIZE = 256
-
-async function storageRequest<T>(endpoint: string, path: string): Promise<T> {
-  const res = await fetch(`/api/v1/storage/${endpoint}?path=${encodeURIComponent(path)}`, { credentials: 'include' })
-  if (!res.ok) throw new Error(`Storage request failed: ${res.status}`)
-  const payload = (await res.json()) as { data?: T } | T
-  if (payload && typeof payload === 'object' && 'data' in payload) {
-    return (payload as { data: T }).data
-  }
-  return payload as T
-}
 
 function createImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -78,6 +69,7 @@ interface EditAvatarProps {
 }
 
 export const EditAvatar = memo<EditAvatarProps>(({ user: userData }) => {
+  const api = useApiClient()
   const { t } = useTranslation(['common', 'auth'])
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -103,7 +95,7 @@ export const EditAvatar = memo<EditAvatarProps>(({ user: userData }) => {
       const uuid = crypto.randomUUID()
       const path = `avatars/${userData.id}-${uuid}.webp`
 
-      const { url: uploadUrl } = await storageRequest<{ url: string }>('upload-url', path)
+      const { url: uploadUrl } = await storageMutations.uploadUrl.fn(api, { path })
 
       const uploadRes = await fetch(uploadUrl, {
         method: 'PUT',
@@ -113,7 +105,7 @@ export const EditAvatar = memo<EditAvatarProps>(({ user: userData }) => {
 
       if (!uploadRes.ok) throw new Error('Upload failed')
 
-      const { url: publicUrl } = await storageRequest<{ url: string }>('public-url', path)
+      const { url: publicUrl } = await storageMutations.publicUrl.fn(api, { path })
 
       return { publicUrl, oldImage: userData.image }
     },
@@ -124,9 +116,7 @@ export const EditAvatar = memo<EditAvatarProps>(({ user: userData }) => {
         const oldPath = oldImage.split('/').pop()
         if (oldPath) {
           try {
-            const { url: deleteUrl } = await storageRequest<{
-              url: string
-            }>('delete-url', `avatars/${oldPath}`)
+            const { url: deleteUrl } = await storageMutations.deleteUrl.fn(api, { path: `avatars/${oldPath}` })
             void fetch(deleteUrl, { method: 'DELETE' })
           } catch {
             /* best effort cleanup */
@@ -160,9 +150,7 @@ export const EditAvatar = memo<EditAvatarProps>(({ user: userData }) => {
         const oldPath = userData.image.split('/').pop()
         if (oldPath) {
           try {
-            const { url: deleteUrl } = await storageRequest<{
-              url: string
-            }>('delete-url', `avatars/${oldPath}`)
+            const { url: deleteUrl } = await storageMutations.deleteUrl.fn(api, { path: `avatars/${oldPath}` })
             void fetch(deleteUrl, { method: 'DELETE' })
           } catch {
             /* best effort cleanup */
