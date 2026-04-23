@@ -32,17 +32,14 @@ export function UsersDataTable() {
         twoFactorEnabled: Array.isArray(filters.twoFactorEnabled)
           ? filters.twoFactorEnabled.filter(Boolean).map(value => value === 'true')
           : undefined,
-        banned: Array.isArray(filters.banned) ? filters.banned.filter(Boolean).map(value => value === 'true') : undefined,
+        banned: Array.isArray(filters.banned)
+          ? filters.banned.filter(Boolean).map(value => value === 'true')
+          : undefined,
         createdAt:
           Array.isArray(filters.createdAt) && filters.createdAt.length === 2
             ? [Number(filters.createdAt[0]), Number(filters.createdAt[1])]
             : undefined
-      }) as UseQueryOptions<
-        GetUsersRes,
-        Error,
-        GetUsersRes,
-        ReturnType<typeof adminUserQueries.list>['queryKey']
-      >
+      }) as UseQueryOptions<GetUsersRes, Error, GetUsersRes, ReturnType<typeof adminUserQueries.list>['queryKey']>
     },
     initialState: {
       sorting: [{ id: 'name', desc: false }],

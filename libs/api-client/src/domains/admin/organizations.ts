@@ -46,15 +46,12 @@ export type AdminOrgKeys = typeof adminOrgKeys
 // ==================== Queries ====================
 
 export const adminOrgQueries = {
-  list: createQueryOptionsWithParams<
-    GetOrganizationsRes,
-    Error,
-    GetOrganizationsRes,
-    GetOrganizationsReq | undefined
-  >((api, params) => ({
-    queryKey: adminOrgKeys.list(params ? ({ ...params } as Record<string, unknown>) : undefined),
-    queryFn: () => api.get('/admin/organizations', { params: serializeQueryParams(params) })
-  })),
+  list: createQueryOptionsWithParams<GetOrganizationsRes, Error, GetOrganizationsRes, GetOrganizationsReq | undefined>(
+    (api, params) => ({
+      queryKey: adminOrgKeys.list(params ? ({ ...params } as Record<string, unknown>) : undefined),
+      queryFn: () => api.get('/admin/organizations', { params: serializeQueryParams(params) })
+    })
+  ),
 
   detail: createQueryOptionsWithParams<GetOrganizationRes, Error, GetOrganizationRes, { id: string }>(
     (api, { id }) => ({

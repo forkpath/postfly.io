@@ -26,15 +26,15 @@
  */
 import type {
   BanUserReq,
-  GetUsersReq,
-  GetUserAccountsRes,
   GetUserAccountsReq,
-  GetUserInvitationsRes,
+  GetUserAccountsRes,
   GetUserInvitationsReq,
-  GetUserMembershipsRes,
+  GetUserInvitationsRes,
   GetUserMembershipsReq,
-  GetUserOrdersRes,
+  GetUserMembershipsRes,
   GetUserOrdersReq,
+  GetUserOrdersRes,
+  GetUsersReq,
   GetUsersRes,
   GetUserSubscriptionsReq,
   GetUserSubscriptionsRes,
@@ -149,15 +149,12 @@ export const adminUserQueries = {
     })
   ),
 
-  accounts: createQueryOptionsWithParams<
-    GetUserAccountsRes,
-    Error,
-    GetUserAccountsRes,
-    AdminUserAccountsParams
-  >((api, { id, ...params }) => ({
-    queryKey: adminUserKeys.accounts(id),
-    queryFn: () => api.get(`/admin/users/${id}/accounts`, { params: serializeQueryParams(params) })
-  })),
+  accounts: createQueryOptionsWithParams<GetUserAccountsRes, Error, GetUserAccountsRes, AdminUserAccountsParams>(
+    (api, { id, ...params }) => ({
+      queryKey: adminUserKeys.accounts(id),
+      queryFn: () => api.get(`/admin/users/${id}/accounts`, { params: serializeQueryParams(params) })
+    })
+  ),
 
   subscriptions: createQueryOptionsWithParams<
     GetUserSubscriptionsRes,
@@ -209,8 +206,8 @@ export const adminUserMutations = {
   delete: createMutationFactory<void, Error, { id: string }>((api, { id }) => api.delete(`/admin/users/${id}`)),
 
   /** 封禁用户 */
-  ban: createMutationFactory<AdminUser, Error, { id: string } & BanUserReq>(
-    (api, { id, ...data }) => api.post(`/admin/users/${id}/ban`, data)
+  ban: createMutationFactory<AdminUser, Error, { id: string } & BanUserReq>((api, { id, ...data }) =>
+    api.post(`/admin/users/${id}/ban`, data)
   ),
 
   /** 解封用户 */

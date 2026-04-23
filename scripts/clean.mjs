@@ -50,7 +50,7 @@ const SKIP_DIRS = ['node_modules', '.git']
 function isUnderExplicitRemove(fullPath) {
   const rel = relative(ROOT_DIR, fullPath)
   if (rel.startsWith('..')) return false
-  return EXPLICIT_REL_PATHS.some((p) => rel === p || rel.startsWith(`${p}/`))
+  return EXPLICIT_REL_PATHS.some(p => rel === p || rel.startsWith(`${p}/`))
 }
 
 const isDryRun = process.argv.includes('--dry-run')

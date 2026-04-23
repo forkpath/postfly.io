@@ -27,8 +27,8 @@ export const billingQueries = {
 }
 
 export const billingMutations = {
-  checkout: createMutationFactory<{ provider: 'stripe'; url: string | null }, Error, CheckoutReq>(
-    (api, data) => api.post('/billing/checkout', data)
+  checkout: createMutationFactory<{ provider: 'stripe'; url: string | null }, Error, CheckoutReq>((api, data) =>
+    api.post('/billing/checkout', data)
   ),
   portal: createMutationFactory<{ provider: 'stripe'; url: string }, Error, BillingPortalReq>((api, data) =>
     api.post('/billing/portal', data)

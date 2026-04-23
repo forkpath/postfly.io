@@ -17,12 +17,12 @@ import {
   getUserMembershipsResSchema,
   getUserOrdersReqSchema,
   getUserOrdersResSchema,
-  revokeUserSessionReqSchema,
-  setUserPasswordReqSchema,
   getUsersReqSchema,
   getUsersResSchema,
   getUserSubscriptionsReqSchema,
   getUserSubscriptionsResSchema,
+  revokeUserSessionReqSchema,
+  setUserPasswordReqSchema,
   updateAdminUserReqSchema
 } from '../users.schema'
 

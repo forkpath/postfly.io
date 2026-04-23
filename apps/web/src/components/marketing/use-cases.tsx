@@ -53,9 +53,7 @@ export const UseCases = () => {
               )}
               <div className="relative z-10 rounded-lg bg-gray-50 p-4 transition duration-200 hover:bg-transparent md:p-5 dark:bg-neutral-800">
                 <div className="flex items-center gap-2">{uc.icon}</div>
-                <h3 className="mt-4 mb-2 text-lg font-medium">
-                  {t(`useCases.items.${uc.key}.title` as const)}
-                </h3>
+                <h3 className="mt-4 mb-2 text-lg font-medium">{t(`useCases.items.${uc.key}.title` as const)}</h3>
                 <p className="text-gray-600">{t(`useCases.items.${uc.key}.description` as const)}</p>
               </div>
             </div>

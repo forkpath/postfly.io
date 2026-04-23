@@ -1,3 +1,4 @@
+import type { UserEntity, UserSessionEntity } from '../../domain/entities/user.entity'
 import type {
   AccountEntity,
   IUserRepository,
@@ -7,15 +8,14 @@ import type {
   UserSubscriptionEntity
 } from '../../domain/repositories/user.repository.interface'
 import type {
-  GetUsersReq,
-  GetUsersRes,
   GetUserAccountsReq,
   GetUserInvitationsReq,
   GetUserMembershipsReq,
   GetUserOrdersReq,
+  GetUsersReq,
+  GetUsersRes,
   GetUserSubscriptionsReq
 } from '@libs/payload'
-import type { UserEntity, UserSessionEntity } from '../../domain/entities/user.entity'
 
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
 
@@ -44,16 +44,7 @@ export class UserRepository implements IUserRepository {
   }
 
   async findMany(params: GetUsersReq): Promise<GetUsersRes> {
-    const {
-      page: rawPage = 1,
-      perPage: rawPerPage = 10,
-      q,
-      role,
-      twoFactorEnabled,
-      banned,
-      createdAt,
-      sort
-    } = params
+    const { page: rawPage = 1, perPage: rawPerPage = 10, q, role, twoFactorEnabled, banned, createdAt, sort } = params
     const page = Number(rawPage)
     const perPage = Number(rawPerPage)
 
@@ -70,9 +61,7 @@ export class UserRepository implements IUserRepository {
             ]
           : []),
         ...(role?.length ? [{ role: { in: role } }] : []),
-        ...(twoFactorEnabled?.length
-          ? [{ OR: twoFactorEnabled.map(value => ({ twoFactorEnabled: value })) }]
-          : []),
+        ...(twoFactorEnabled?.length ? [{ OR: twoFactorEnabled.map(value => ({ twoFactorEnabled: value })) }] : []),
         ...(banned?.length ? [{ OR: banned.map(value => ({ banned: value })) }] : []),
         ...(createdAt
           ? [

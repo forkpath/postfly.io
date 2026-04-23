@@ -50,11 +50,7 @@ function slugify(value: string) {
     .replace(/^-+|-+$/g, '')
 }
 
-export const CreateOrganizationModal = ({
-  trigger,
-  open: openProp,
-  onOpenChange
-}: CreateOrganizationModalProps) => {
+export const CreateOrganizationModal = ({ trigger, open: openProp, onOpenChange }: CreateOrganizationModalProps) => {
   const { t } = useTranslation('organization')
   const [internalOpen, setInternalOpen] = React.useState(false)
   const isControlled = openProp !== undefined

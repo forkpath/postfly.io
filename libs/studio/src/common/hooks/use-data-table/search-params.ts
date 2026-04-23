@@ -38,12 +38,15 @@ export function useSearchParamsDataTable<TData>(props: UseSearchParamsDataTableP
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as Record<string, unknown>
 
-  const updateSearch = useCallback((updater: (prev: Record<string, unknown>) => Record<string, unknown>) => {
-    void navigate({
-      search: updater as never,
-      replace: true
-    } as never)
-  }, [navigate])
+  const updateSearch = useCallback(
+    (updater: (prev: Record<string, unknown>) => Record<string, unknown>) => {
+      void navigate({
+        search: updater as never,
+        replace: true
+      } as never)
+    },
+    [navigate]
+  )
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>(initialState?.rowSelection ?? {})
 
