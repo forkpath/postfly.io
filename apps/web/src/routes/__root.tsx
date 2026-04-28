@@ -2,6 +2,7 @@
 import type { QueryClient } from '@tanstack/react-query'
 
 import * as React from 'react'
+import { useEffect } from 'react'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from '@tanstack/react-router'
@@ -80,6 +81,11 @@ export const Route = createRootRouteWithContext<{
 })
 
 function RootComponent() {
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      void import('react-grab')
+    }
+  }, [])
   return (
     <I18nProvider locale={config.defaultLocale} defaultLocale={config.defaultLocale}>
       <MonitoringProvider>
@@ -100,6 +106,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
         <ThemeScript />
+        {import.meta.env.DEV && <script crossOrigin="anonymous" src="//unpkg.com/react-scan/dist/auto.global.js" />}
       </head>
       <body
         suppressHydrationWarning

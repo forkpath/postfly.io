@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 
+import { useEffect } from 'react'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
 import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router'
@@ -28,6 +29,11 @@ export const Route = createRootRouteWithContext<{
 })
 
 function RootComponent() {
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      void import('react-grab')
+    }
+  }, [])
   return (
     <MonitoringProvider>
       <AnalyticsProvider>

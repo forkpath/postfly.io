@@ -4,20 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ray Desktop</title>
+    <script type="module">
+      if (import.meta.env.DEV) {
+        import('//unpkg.com/react-scan/dist/auto.global.js')
+      }
+    </script>
     <!-- Theme Script: 防止主题闪烁 -->
     <script>
-      (function() {
+      ;(function () {
         try {
-          var mode = localStorage.getItem('theme-mode') || 'system';
-          var color = localStorage.getItem('theme-color') || 'orange';
-          var isDark = mode === 'dark' || 
-            (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-          
-          document.documentElement.classList.toggle('dark', isDark);
-          document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-          document.body.dataset.theme = color;
+          var mode = localStorage.getItem('theme-mode') || 'system'
+          var color = localStorage.getItem('theme-color') || 'orange'
+          var isDark =
+            mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+
+          document.documentElement.classList.toggle('dark', isDark)
+          document.documentElement.style.colorScheme = isDark ? 'dark' : 'light'
+          document.body.dataset.theme = color
         } catch (e) {}
-      })();
+      })()
     </script>
   </head>
   <body>
