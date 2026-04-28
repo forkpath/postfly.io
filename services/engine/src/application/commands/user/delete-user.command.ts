@@ -1,10 +1,10 @@
 import type { ICommandHandler } from '@nestjs/cqrs'
-import type { IUserRepository } from '../../../domain/repositories/user.repository.interface'
+import type { IUserRepository } from '#/domain/repositories/user.repository.interface'
 
 import { BadRequestException, Inject, NotFoundException } from '@nestjs/common'
 import { CommandHandler } from '@nestjs/cqrs'
 
-import { USER_REPOSITORY } from '../../../domain/repositories/user.repository.interface'
+import { USER_REPOSITORY } from '#/domain/repositories/user.repository.interface'
 
 /**
  * 删除用户命令

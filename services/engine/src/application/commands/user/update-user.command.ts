@@ -1,12 +1,12 @@
 import type { ICommandHandler } from '@nestjs/cqrs'
-import type { IUserRepository } from '../../../domain/repositories/user.repository.interface'
 import type { UserResponse } from '../../dtos/user/user.dto'
+import type { IUserRepository } from '#/domain/repositories/user.repository.interface'
 
 import { Inject, NotFoundException } from '@nestjs/common'
 import { CommandHandler } from '@nestjs/cqrs'
 
-import { UserRole } from '../../../domain/entities/user.entity'
-import { USER_REPOSITORY } from '../../../domain/repositories/user.repository.interface'
+import { UserRole } from '#/domain/entities/user.entity'
+import { USER_REPOSITORY } from '#/domain/repositories/user.repository.interface'
 
 export interface UpdateUserData {
   name?: string

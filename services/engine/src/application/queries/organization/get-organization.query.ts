@@ -1,12 +1,13 @@
 import type { IQueryHandler } from '@nestjs/cqrs'
-import type { IOrganizationRepository } from '../../../domain/repositories/organization.repository.interface'
 import type { GetOrganizationRes } from '@libs/payload'
+import type { IOrganizationRepository } from '#/domain/repositories/organization.repository.interface'
 
 import { Inject } from '@nestjs/common'
 import { QueryHandler } from '@nestjs/cqrs'
 
-import { OrganizationNotFoundException } from '../../../domain/exceptions/organization.exception'
-import { ORGANIZATION_REPOSITORY } from '../../../domain/repositories/organization.repository.interface'
+import { OrganizationNotFoundException } from '#/domain/exceptions/organization.exception'
+import { ORGANIZATION_REPOSITORY } from '#/domain/repositories/organization.repository.interface'
+
 import { OrganizationMapper } from '../../mappers/organization.mapper'
 
 export class GetOrganizationQuery {

@@ -2,7 +2,8 @@ import { Test } from '@nestjs/testing'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { USER_REPOSITORY } from '../../../../domain/repositories/user.repository.interface'
+import { USER_REPOSITORY } from '#/domain/repositories/user.repository.interface'
+
 import { ListUserMembershipsHandler, ListUserMembershipsQuery } from '../list-user-memberships.query'
 
 describe('ListUserMembershipsHandler', () => {

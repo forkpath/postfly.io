@@ -1,11 +1,11 @@
 import type { IQueryHandler } from '@nestjs/cqrs'
-import type { IOrganizationRepository } from '../../../domain/repositories/organization.repository.interface'
 import type { GenerateOrganizationSlugRes } from '@libs/payload'
+import type { IOrganizationRepository } from '#/domain/repositories/organization.repository.interface'
 
 import { Inject } from '@nestjs/common'
 import { QueryHandler } from '@nestjs/cqrs'
 
-import { ORGANIZATION_REPOSITORY } from '../../../domain/repositories/organization.repository.interface'
+import { ORGANIZATION_REPOSITORY } from '#/domain/repositories/organization.repository.interface'
 
 const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 

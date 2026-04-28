@@ -2,7 +2,8 @@ import { Test } from '@nestjs/testing'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ORGANIZATION_REPOSITORY } from '../../../../domain/repositories/organization.repository.interface'
+import { ORGANIZATION_REPOSITORY } from '#/domain/repositories/organization.repository.interface'
+
 import { ListOrganizationsHandler, ListOrganizationsQuery } from '../list-organizations.query'
 
 describe('ListOrganizationsHandler', () => {

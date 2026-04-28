@@ -2,7 +2,8 @@ import { Test } from '@nestjs/testing'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { CUSTOMER_REPOSITORY } from '../../../../domain/repositories/customer.repository.interface'
+import { CUSTOMER_REPOSITORY } from '#/domain/repositories/customer.repository.interface'
+
 import { ListCustomersHandler, ListCustomersQuery } from '../list-customers.query'
 
 describe('ListCustomersHandler', () => {

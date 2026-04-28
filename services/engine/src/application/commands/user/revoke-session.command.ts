@@ -1,10 +1,10 @@
 import type { ICommandHandler } from '@nestjs/cqrs'
-import type { IUserRepository } from '../../../domain/repositories/user.repository.interface'
+import type { IUserRepository } from '#/domain/repositories/user.repository.interface'
 
 import { Inject } from '@nestjs/common'
 import { CommandHandler } from '@nestjs/cqrs'
 
-import { USER_REPOSITORY } from '../../../domain/repositories/user.repository.interface'
+import { USER_REPOSITORY } from '#/domain/repositories/user.repository.interface'
 
 /**
  * 撤销单个会话命令

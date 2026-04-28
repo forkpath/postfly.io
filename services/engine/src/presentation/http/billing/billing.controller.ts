@@ -3,12 +3,12 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs'
 
 import { AllowAnonymous, Session } from '@libs/srv-shared'
 
-import { CreateBillingPortalCommand } from '../../../application/commands/billing/create-billing-portal.command'
-import { CreateCheckoutSessionCommand } from '../../../application/commands/billing/create-checkout-session.command'
-import { HandleRevenueCatWebhookCommand } from '../../../application/commands/billing/handle-revenuecat-webhook.command'
-import { HandleStripeWebhookCommand } from '../../../application/commands/billing/handle-stripe-webhook.command'
-import { BillingPortalDto, CheckoutDto } from '../../../application/dtos/billing/billing.dto'
-import { GetBillingSummaryQuery } from '../../../application/queries/billing/get-billing-summary.query'
+import { CreateBillingPortalCommand } from '#/application/commands/billing/create-billing-portal.command'
+import { CreateCheckoutSessionCommand } from '#/application/commands/billing/create-checkout-session.command'
+import { HandleRevenueCatWebhookCommand } from '#/application/commands/billing/handle-revenuecat-webhook.command'
+import { HandleStripeWebhookCommand } from '#/application/commands/billing/handle-stripe-webhook.command'
+import { BillingPortalDto, CheckoutDto } from '#/application/dtos/billing/billing.dto'
+import { GetBillingSummaryQuery } from '#/application/queries/billing/get-billing-summary.query'
 
 interface SessionUser {
   id: string

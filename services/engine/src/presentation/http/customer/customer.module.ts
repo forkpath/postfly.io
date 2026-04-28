@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common'
 import { CqrsModule } from '@nestjs/cqrs'
 
-import { ListCustomersHandler } from '../../../application/queries/customer/list-customers.query'
-import { CUSTOMER_REPOSITORY } from '../../../domain/repositories/customer.repository.interface'
-import { CustomerRepository } from '../../../infrastructure/repositories/customer.repository'
+import { ListCustomersHandler } from '#/application/queries/customer/list-customers.query'
+import { CUSTOMER_REPOSITORY } from '#/domain/repositories/customer.repository.interface'
+import { CustomerRepository } from '#/infrastructure/repositories/customer.repository'
+
 import { CustomerController } from './customer.controller'
 
 const QueryHandlers = [ListCustomersHandler]

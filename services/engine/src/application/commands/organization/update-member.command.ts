@@ -1,12 +1,13 @@
 import type { ICommandHandler } from '@nestjs/cqrs'
-import type { IOrganizationRepository } from '../../../domain/repositories/organization.repository.interface'
 import type { GetMembersRes } from '@libs/payload'
+import type { IOrganizationRepository } from '#/domain/repositories/organization.repository.interface'
 
 import { Inject } from '@nestjs/common'
 import { CommandHandler } from '@nestjs/cqrs'
 
-import { ORGANIZATION_REPOSITORY } from '../../../domain/repositories/organization.repository.interface'
-import { UpdateMemberRoleUseCase } from '../../../domain/use-cases/organization/update-member-role.usecase'
+import { ORGANIZATION_REPOSITORY } from '#/domain/repositories/organization.repository.interface'
+import { UpdateMemberRoleUseCase } from '#/domain/use-cases/organization/update-member-role.usecase'
+
 import { OrganizationMapper } from '../../mappers/organization.mapper'
 
 type MemberResponse = GetMembersRes['list'][number]

@@ -14,7 +14,7 @@ import {
   updateAdminUserReqSchema
 } from '@libs/payload'
 
-import { UserRole } from '../../../domain/entities/user.entity'
+import { UserRole } from '#/domain/entities/user.entity'
 
 // ==================== Response DTOs ====================
 
