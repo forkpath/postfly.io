@@ -6,9 +6,9 @@ import { Inject } from '@nestjs/common'
 import { CommandHandler } from '@nestjs/cqrs'
 
 import { ORGANIZATION_REPOSITORY } from '#/domain/repositories/organization.repository.interface'
-import { UpdateOrganizationUseCase } from '#/domain/use-cases/organization/update-organization.usecase'
 
 import { OrganizationMapper } from '../../mappers/organization.mapper'
+import { UpdateOrganizationUseCase } from '../../use-cases/organization/update-organization.usecase'
 
 export class UpdateOrganizationCommand {
   constructor(

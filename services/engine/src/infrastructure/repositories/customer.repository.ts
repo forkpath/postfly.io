@@ -1,22 +1,20 @@
 import type { BillingCustomerEntity } from '../../domain/entities/customer.entity'
-import type { ICustomerRepository } from '../../domain/repositories/customer.repository.interface'
-import type { GetCustomersReq } from '@libs/payload'
+import type {
+  ICustomerRepository,
+  ListCustomersCriteria,
+  PagedCustomerResult
+} from '../../domain/repositories/customer.repository.interface'
 
 import { Injectable } from '@nestjs/common'
 
 import { prisma } from '@libs/pg-dao'
 
+import { BillingCustomer } from '../../domain/entities/customer.entity'
+
 @Injectable()
 export class CustomerRepository implements ICustomerRepository {
-  async findAll(params: GetCustomersReq): Promise<{
-    list: BillingCustomerEntity[]
-    total: number
-    max: { subscriptions: number; orders: number }
-    options: { provider: string[] }
-  }> {
-    const { page: rp = 1, perPage: rpp = 10, sort, q, provider, subscriptions, orders, createdAt } = params
-    const page = Number(rp)
-    const perPage = Number(rpp)
+  async findAll(params: ListCustomersCriteria): Promise<PagedCustomerResult> {
+    const { page, perPage, sort, q, provider, subscriptions, orders, createdAt } = params
 
     const conditions: string[] = ['1=1']
     const values: unknown[] = []
@@ -36,30 +34,30 @@ export class CustomerRepository implements ICustomerRepository {
 
     if (createdAt) {
       conditions.push(`c.created_at >= $${paramIdx}::timestamptz AND c.created_at <= $${paramIdx + 1}::timestamptz`)
-      values.push(new Date(createdAt[0]), new Date(createdAt[1]))
+      values.push(createdAt.from, createdAt.to)
       paramIdx += 2
     }
 
     const havingConditions: string[] = []
     if (subscriptions) {
       havingConditions.push(
-        `COUNT(DISTINCT s.id) >= ${subscriptions[0]} AND COUNT(DISTINCT s.id) <= ${subscriptions[1]}`
+        `COUNT(DISTINCT s.id) >= ${subscriptions.from} AND COUNT(DISTINCT s.id) <= ${subscriptions.to}`
       )
     }
     if (orders) {
-      havingConditions.push(`COUNT(DISTINCT o.id) >= ${orders[0]} AND COUNT(DISTINCT o.id) <= ${orders[1]}`)
+      havingConditions.push(`COUNT(DISTINCT o.id) >= ${orders.from} AND COUNT(DISTINCT o.id) <= ${orders.to}`)
     }
 
     const whereClause = conditions.join(' AND ')
     const havingClause = havingConditions.length ? `HAVING ${havingConditions.join(' AND ')}` : ''
 
     const sortColumn =
-      sort?.[0]?.id === 'subscriptions'
+      sort?.[0]?.field === 'subscriptions'
         ? 'sub_count'
-        : sort?.[0]?.id === 'orders'
+        : sort?.[0]?.field === 'orders'
           ? 'ord_count'
-          : sort?.[0]?.id
-            ? `c.${this.toSnakeCase(sort[0].id)}`
+          : sort?.[0]?.field
+            ? `c.${this.toSnakeCase(sort[0].field)}`
             : 'c.created_at'
     const sortDir = sort?.[0]?.desc ? 'DESC' : 'ASC'
 
@@ -124,20 +122,22 @@ export class CustomerRepository implements ICustomerRepository {
     const providerRows = await prisma.$queryRawUnsafe<Array<{ provider: string }>>(providerQuery)
 
     return {
-      list: rows.map(r => ({
-        id: r.id,
-        referenceId: r.reference_id,
-        provider: r.provider,
-        externalId: r.external_id,
-        createdAt: r.created_at,
-        updatedAt: r.updated_at,
-        user: {
-          name: r.user_name,
-          image: r.user_image
-        },
-        subscriptionsCount: r.sub_count,
-        ordersCount: r.ord_count
-      })),
+      list: rows.map(r =>
+        this.mapToEntity({
+          id: r.id,
+          referenceId: r.reference_id,
+          provider: r.provider,
+          externalId: r.external_id,
+          createdAt: r.created_at,
+          updatedAt: r.updated_at,
+          user: {
+            name: r.user_name,
+            image: r.user_image
+          },
+          subscriptionsCount: r.sub_count,
+          ordersCount: r.ord_count
+        })
+      ),
       total,
       max: {
         subscriptions: maxResult[0]?.max_subscriptions ?? 0,
@@ -151,6 +151,23 @@ export class CustomerRepository implements ICustomerRepository {
 
   async count(): Promise<number> {
     return prisma.customer.count()
+  }
+
+  private mapToEntity(data: {
+    id: string
+    referenceId: string
+    provider: string
+    externalId: string
+    createdAt: Date
+    updatedAt: Date
+    user: {
+      name: string
+      image: string | null
+    }
+    subscriptionsCount: number
+    ordersCount: number
+  }): BillingCustomerEntity {
+    return BillingCustomer.fromPersistence(data)
   }
 
   private toSnakeCase(str: string): string {

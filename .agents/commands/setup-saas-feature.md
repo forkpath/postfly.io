@@ -59,6 +59,8 @@ Set up a new SaaS feature in the Ray monorepo following project conventions.
 
 Follow this bottom-up order strictly — each layer depends on the one before it.
 
+**Auth boundary**: login, registration, sessions, account linking, email verification, 2FA, and Better Auth organization membership primitives belong to `@libs/auth` / Better Auth. Engine modules may expose admin/business management endpoints, but their domain models must stay aligned with Better Auth fields and delegate auth persistence to infrastructure adapters.
+
 1. **Database model** (`libs/pg-dao/src/models/`)
    - Check if a `.prisma` file for this feature already exists; create one if not
    - Follow conventions: snake_case columns via `@map`, `@@map` for table names, `@@schema("public")`
@@ -67,28 +69,35 @@ Follow this bottom-up order strictly — each layer depends on the one before it
 2. **Domain layer** (`services/engine/src/domain/`)
    ```
    domain/
-     entities/          # Plain interfaces — no framework deps
-     value-objects/     # Typed wrappers for IDs, emails, etc.
+     entities/          # Classes with private state, factory methods, and behaviour
+     value-objects/     # Typed wrappers used in entity fields and repository signatures
      repositories/      # Abstract interfaces (e.g. I{Feature}Repository)
-     use-cases/         # Complex business orchestration (only when a single handler is not enough)
-     exceptions/        # Domain-specific error classes
+     services/          # Pure domain services only when entity methods are insufficient
+     specifications/    # Reusable pure business predicates when rules become composable
+     exceptions/        # DomainException subclasses with i18nKey + httpStatus
    ```
-   - Define the entity interface first; it is the contract every other layer references
-   - Repository interface must only use domain types — never Prisma or DTO types
-   - Use-cases are optional; skip when the command/query handler alone covers the logic
+   - Define entity classes first; interface-only entities are an anti-pattern in engine
+   - Entity fields should use value objects where they carry validation or identity semantics
+   - Value objects must be used beyond construction; do not create-and-discard them as validation helpers
+   - Repository interfaces must only use domain types — never Prisma, NestJS, or `@libs/payload` types
+   - Domain code must not import `@nestjs/*`, `@libs/payload`, Prisma, or infrastructure adapters
 
 3. **Application layer** (`services/engine/src/application/`)
    ```
    application/
+     use-cases/{feature}/ # Framework-free application orchestration
      commands/{feature}/   # Write operations — one file per command + handler
      queries/{feature}/    # Read operations — one file per query + handler
-     dtos/{feature}/       # Request/Response DTOs using nestjs-zod
-     mappers/              # Static entity ↔ DTO mapping methods
+     dtos/{feature}/       # Request DTOs via nestjs-zod + @libs/payload schemas
+     mappers/              # Payload Req → criteria, entity/result → Payload Res
    ```
    - Each command/query file exports both the message class and its `@CommandHandler`/`@QueryHandler`
    - Handlers receive dependencies via `@Inject(FEATURE_REPOSITORY)` — never import infrastructure directly
-   - **Payload schemas first**: define Zod request/response schemas in `libs/payload/src/schemas/{feature}.schema.ts` using `*ReqSchema` / `*ResSchema` naming. Then DTOs extend them via `createZodDto(schema)` so validation is shared with the frontend
-   - Mappers are static classes with `toResponse` / `toEntity` / `toResponseList` methods
+   - Command handlers are thin adapters: construct/call application use cases, then map results
+   - Application use cases orchestrate repository IO and entity behaviour; they do not contain framework decorators
+   - **Payload schemas first**: define Zod request/response schemas in `libs/payload/src/schemas/{feature}.schema.ts` using `*ReqSchema` / `*ResSchema` naming. DTOs extend request schemas via `createZodDto(schema)` so validation is shared with the frontend
+   - Do not redefine response Zod schemas in engine DTO files; import response types from `@libs/payload`
+   - Mappers are static classes with `toCriteria` / `toResponse` / `toResponseList` methods
 
 4. **Infrastructure layer** (`services/engine/src/infrastructure/`)
    ```
@@ -147,10 +156,15 @@ If the feature needs shared logic across apps:
 
 **Backend (services/engine)**
 - [ ] Domain entities, repository interfaces, and exceptions defined
+- [ ] Domain entities are classes with behaviour, not plain interfaces
+- [ ] Value objects are used in entity fields or repository signatures
+- [ ] Repository interfaces do not import `@libs/payload`, Prisma, or NestJS types
+- [ ] Domain exceptions extend `DomainException` and define `i18nKey` + `httpStatus`
 - [ ] Payload schemas created in `libs/payload/src/schemas/` with `*ReqSchema` / `*ResSchema`
 - [ ] Application DTOs extend payload schemas via `createZodDto`
-- [ ] Command and query handlers implemented with proper repository injection
-- [ ] Mappers convert between entities and DTOs
+- [ ] Application use cases orchestrate write operations and call entity behaviour
+- [ ] Command/query handlers implemented as thin adapters with proper repository injection
+- [ ] Mappers convert payload requests to criteria and domain results to payload responses
 - [ ] Infrastructure repository implements domain interface using Prisma
 - [ ] Controller dispatches via `CommandBus` / `QueryBus` — no direct repository calls
 - [ ] NestJS feature module wires all providers and imports `CqrsModule`

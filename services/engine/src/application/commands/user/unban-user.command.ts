@@ -2,10 +2,14 @@ import type { ICommandHandler } from '@nestjs/cqrs'
 import type { UserResponse } from '../../dtos/user/user.dto'
 import type { IUserRepository } from '#/domain/repositories/user.repository.interface'
 
-import { Inject, NotFoundException } from '@nestjs/common'
+import { Inject } from '@nestjs/common'
 import { CommandHandler } from '@nestjs/cqrs'
 
+import { UserNotFoundException } from '#/domain/exceptions/user.exception'
 import { USER_REPOSITORY } from '#/domain/repositories/user.repository.interface'
+import { UserId } from '#/domain/value-objects/user-id.vo'
+
+import { UserMapper } from '../../mappers/user.mapper'
 
 /**
  * 解封用户命令
@@ -22,10 +26,12 @@ export class UnbanUserHandler implements ICommandHandler<UnbanUserCommand, UserR
   ) {}
 
   async execute(command: UnbanUserCommand): Promise<UserResponse> {
-    const user = await this.userRepository.findById(command.id)
+    const userId = UserId.create(command.id)
+    const user = await this.userRepository.findById(userId)
     if (!user) {
-      throw new NotFoundException('User not found')
+      throw new UserNotFoundException(command.id)
     }
-    return this.userRepository.unban(command.id)
+    const unbannedUser = await this.userRepository.unban(userId)
+    return UserMapper.toResponse(unbannedUser)
   }
 }

@@ -1,26 +1,28 @@
-import type { UserEntity, UserSessionEntity } from '../../domain/entities/user.entity'
+import type { User, UserSessionEntity } from '../../domain/entities/user.entity'
 import type {
   AccountEntity,
   IUserRepository,
+  ListUserAccountsCriteria,
+  ListUserInvitationsCriteria,
+  ListUserMembershipsCriteria,
+  ListUserOrdersCriteria,
+  ListUsersCriteria,
+  ListUserSubscriptionsCriteria,
+  PagedResult,
   UserInvitationEntity,
   UserMembershipEntity,
   UserOrderEntity,
   UserSubscriptionEntity
 } from '../../domain/repositories/user.repository.interface'
-import type {
-  GetUserAccountsReq,
-  GetUserInvitationsReq,
-  GetUserMembershipsReq,
-  GetUserOrdersReq,
-  GetUsersReq,
-  GetUsersRes,
-  GetUserSubscriptionsReq
-} from '@libs/payload'
 
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
 
 import { auth } from '@libs/auth/server'
 import { Prisma, prisma } from '@libs/pg-dao'
+
+import { User as UserEntity, UserRole } from '../../domain/entities/user.entity'
+import { Email } from '../../domain/value-objects/email.vo'
+import { UserId } from '../../domain/value-objects/user-id.vo'
 
 /**
  * 用户仓储实现
@@ -29,24 +31,22 @@ import { Prisma, prisma } from '@libs/pg-dao'
  */
 @Injectable()
 export class UserRepository implements IUserRepository {
-  async findById(id: string): Promise<UserEntity | null> {
+  async findById(id: UserId): Promise<User | null> {
     const user = await prisma.user.findUnique({
-      where: { id }
+      where: { id: id.getValue() }
     })
     return user ? this.mapToEntity(user) : null
   }
 
-  async findByEmail(email: string): Promise<UserEntity | null> {
+  async findByEmail(email: Email): Promise<User | null> {
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email: email.getValue() }
     })
     return user ? this.mapToEntity(user) : null
   }
 
-  async findMany(params: GetUsersReq): Promise<GetUsersRes> {
-    const { page: rawPage = 1, perPage: rawPerPage = 10, q, role, twoFactorEnabled, banned, createdAt, sort } = params
-    const page = Number(rawPage)
-    const perPage = Number(rawPerPage)
+  async findMany(params: ListUsersCriteria): Promise<PagedResult<User>> {
+    const { page, perPage, q, role, twoFactorEnabled, banned, createdAt, sort } = params
 
     const where: Prisma.UserWhereInput = {
       AND: [
@@ -67,8 +67,8 @@ export class UserRepository implements IUserRepository {
           ? [
               {
                 createdAt: {
-                  gte: new Date(createdAt[0]),
-                  lte: new Date(createdAt[1])
+                  gte: createdAt.from,
+                  lte: createdAt.to
                 }
               }
             ]
@@ -77,7 +77,7 @@ export class UserRepository implements IUserRepository {
     }
 
     const orderBy = sort?.length
-      ? sort.map(item => ({ [item.id]: item.desc ? 'desc' : 'asc' }))
+      ? sort.map(item => ({ [item.field]: item.desc ? 'desc' : 'asc' }))
       : [{ createdAt: 'desc' as const }]
 
     const [users, total] = await Promise.all([
@@ -96,19 +96,19 @@ export class UserRepository implements IUserRepository {
     }
   }
 
-  async update(id: string, data: Partial<Pick<UserEntity, 'name' | 'image' | 'role'>>): Promise<UserEntity> {
+  async update(id: UserId, data: Partial<Pick<User, 'name' | 'image' | 'role'>>): Promise<User> {
     const user = await prisma.user.update({
-      where: { id },
+      where: { id: id.getValue() },
       data
     })
     return this.mapToEntity(user)
   }
 
-  async ban(id: string, reason?: string, expiresAt?: Date): Promise<UserEntity> {
+  async ban(id: UserId, reason?: string, expiresAt?: Date): Promise<User> {
     // 使用 Better Auth 的 admin API 进行封禁
     await auth.api.banUser({
       body: {
-        userId: id,
+        userId: id.getValue(),
         banReason: reason,
         banExpiresIn: expiresAt ? Math.floor((expiresAt.getTime() - Date.now()) / 1000) : undefined
       }
@@ -121,10 +121,10 @@ export class UserRepository implements IUserRepository {
     return user
   }
 
-  async unban(id: string): Promise<UserEntity> {
+  async unban(id: UserId): Promise<User> {
     // 使用 Better Auth 的 admin API 进行解封
     await auth.api.unbanUser({
-      body: { userId: id }
+      body: { userId: id.getValue() }
     })
     const user = await this.findById(id)
     if (!user) {
@@ -133,18 +133,18 @@ export class UserRepository implements IUserRepository {
     return user
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: UserId): Promise<void> {
     // 使用 Better Auth 的 admin API 删除用户
     // 这会级联删除所有关联数据（sessions, accounts 等）
     await auth.api.removeUser({
-      body: { userId: id }
+      body: { userId: id.getValue() }
     })
   }
 
-  async getSessions(userId: string): Promise<UserSessionEntity[]> {
+  async getSessions(userId: UserId): Promise<UserSessionEntity[]> {
     // 使用 Better Auth 的 admin API 获取用户会话
     const result = await auth.api.listUserSessions({
-      body: { userId }
+      body: { userId: userId.getValue() }
     })
     const sessions = result?.sessions ?? []
     return sessions.map(s => this.mapSessionToEntity(s))
@@ -157,42 +157,40 @@ export class UserRepository implements IUserRepository {
     })
   }
 
-  async revokeAllSessions(userId: string): Promise<void> {
+  async revokeAllSessions(userId: UserId): Promise<void> {
     // 使用 Better Auth 的 admin API 撤销所有会话
     await auth.api.revokeUserSessions({
-      body: { userId }
+      body: { userId: userId.getValue() }
     })
   }
 
-  async setPassword(userId: string, newPassword: string): Promise<void> {
+  async setPassword(userId: UserId, newPassword: string): Promise<void> {
     // 使用 Better Auth 的 admin API 设置密码
     await auth.api.setUserPassword({
-      body: { userId, newPassword }
+      body: { userId: userId.getValue(), newPassword }
     })
   }
 
-  async findAccounts(userId: string, params: GetUserAccountsReq): Promise<{ list: AccountEntity[]; total: number }> {
-    const { page: rp = 1, perPage: rpp = 10, sort, providerId, createdAt, updatedAt } = params
-    const page = Number(rp)
-    const perPage = Number(rpp)
+  async findAccounts(userId: UserId, params: ListUserAccountsCriteria): Promise<PagedResult<AccountEntity>> {
+    const { page, perPage, sort, providerId, createdAt, updatedAt } = params
 
-    const where: Record<string, unknown> = { userId }
+    const where: Record<string, unknown> = { userId: userId.getValue() }
     if (providerId) where.providerId = { in: providerId }
     if (createdAt) {
       where.createdAt = {
-        gte: new Date(createdAt[0]),
-        lte: new Date(createdAt[1])
+        gte: createdAt.from,
+        lte: createdAt.to
       }
     }
     if (updatedAt) {
       where.updatedAt = {
-        gte: new Date(updatedAt[0]),
-        lte: new Date(updatedAt[1])
+        gte: updatedAt.from,
+        lte: updatedAt.to
       }
     }
 
     const orderBy = sort?.length
-      ? sort.map(s => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
+      ? sort.map(s => ({ [s.field]: s.desc ? 'desc' : 'asc' }))
       : [{ createdAt: 'desc' as const }]
 
     const [data, total] = await Promise.all([
@@ -218,37 +216,36 @@ export class UserRepository implements IUserRepository {
     }
   }
 
-  async countAccounts(userId: string): Promise<number> {
-    return prisma.account.count({ where: { userId } })
+  async countAccounts(userId: UserId): Promise<number> {
+    return prisma.account.count({ where: { userId: userId.getValue() } })
   }
 
-  async deleteAccount(userId: string, accountId: string): Promise<void> {
-    await prisma.account.delete({
-      where: { id: accountId, userId }
+  async deleteAccount(userId: UserId, accountId: string): Promise<boolean> {
+    const result = await prisma.account.deleteMany({
+      where: { id: accountId, userId: userId.getValue() }
     })
+    return result.count > 0
   }
 
   async findSubscriptions(
-    userId: string,
-    params: GetUserSubscriptionsReq
-  ): Promise<{ list: UserSubscriptionEntity[]; total: number }> {
-    const { page: rp = 1, perPage: rpp = 10, sort, status, createdAt } = params
-    const page = Number(rp)
-    const perPage = Number(rpp)
+    userId: UserId,
+    params: ListUserSubscriptionsCriteria
+  ): Promise<PagedResult<UserSubscriptionEntity>> {
+    const { page, perPage, sort, status, createdAt } = params
 
     const where: Record<string, unknown> = {
-      customer: { referenceId: userId }
+      customer: { referenceId: userId.getValue() }
     }
     if (status) where.status = { in: status }
     if (createdAt) {
       where.createdAt = {
-        gte: new Date(createdAt[0]),
-        lte: new Date(createdAt[1])
+        gte: createdAt.from,
+        lte: createdAt.to
       }
     }
 
     const orderBy = sort?.length
-      ? sort.map(s => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
+      ? sort.map(s => ({ [s.field]: s.desc ? 'desc' : 'asc' }))
       : [{ createdAt: 'desc' as const }]
 
     const [data, total] = await Promise.all([
@@ -280,24 +277,23 @@ export class UserRepository implements IUserRepository {
     }
   }
 
-  async findOrders(userId: string, params: GetUserOrdersReq): Promise<{ list: UserOrderEntity[]; total: number }> {
-    const { page: rp = 1, perPage: rpp = 10, sort, status, createdAt } = params
-    const page = Number(rp)
-    const perPage = Number(rpp)
+  async findOrders(userId: UserId, params: ListUserOrdersCriteria): Promise<PagedResult<UserOrderEntity>> {
+    const { page, perPage, sort, status, store, createdAt } = params
 
     const where: Record<string, unknown> = {
-      customer: { referenceId: userId }
+      customer: { referenceId: userId.getValue() }
     }
     if (status) where.status = { in: status }
+    if (store) where.store = { in: store }
     if (createdAt) {
       where.createdAt = {
-        gte: new Date(createdAt[0]),
-        lte: new Date(createdAt[1])
+        gte: createdAt.from,
+        lte: createdAt.to
       }
     }
 
     const orderBy = sort?.length
-      ? sort.map(s => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
+      ? sort.map(s => ({ [s.field]: s.desc ? 'desc' : 'asc' }))
       : [{ createdAt: 'desc' as const }]
 
     const [data, total] = await Promise.all([
@@ -326,24 +322,22 @@ export class UserRepository implements IUserRepository {
   }
 
   async findMemberships(
-    userId: string,
-    params: GetUserMembershipsReq
-  ): Promise<{ list: UserMembershipEntity[]; total: number }> {
-    const { page: rp = 1, perPage: rpp = 10, sort, role, createdAt } = params
-    const page = Number(rp)
-    const perPage = Number(rpp)
+    userId: UserId,
+    params: ListUserMembershipsCriteria
+  ): Promise<PagedResult<UserMembershipEntity>> {
+    const { page, perPage, sort, role, createdAt } = params
 
-    const where: Record<string, unknown> = { userId }
+    const where: Record<string, unknown> = { userId: userId.getValue() }
     if (role) where.role = { in: role }
     if (createdAt) {
       where.createdAt = {
-        gte: new Date(createdAt[0]),
-        lte: new Date(createdAt[1])
+        gte: createdAt.from,
+        lte: createdAt.to
       }
     }
 
     const orderBy = sort?.length
-      ? sort.map(s => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
+      ? sort.map(s => ({ [s.field]: s.desc ? 'desc' : 'asc' }))
       : [{ createdAt: 'desc' as const }]
 
     const [data, total] = await Promise.all([
@@ -384,31 +378,29 @@ export class UserRepository implements IUserRepository {
   }
 
   async findInvitations(
-    userId: string,
-    params: GetUserInvitationsReq
-  ): Promise<{ list: UserInvitationEntity[]; total: number }> {
+    userId: UserId,
+    params: ListUserInvitationsCriteria
+  ): Promise<PagedResult<UserInvitationEntity>> {
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: userId.getValue() },
       select: { email: true }
     })
     if (!user) return { list: [], total: 0 }
 
-    const { page: rp = 1, perPage: rpp = 10, sort, role, status, expiresAt } = params
-    const page = Number(rp)
-    const perPage = Number(rpp)
+    const { page, perPage, sort, role, status, expiresAt } = params
 
     const where: Record<string, unknown> = { email: user.email }
     if (role) where.role = { in: role }
     if (status) where.status = { in: status }
     if (expiresAt) {
       where.expiresAt = {
-        gte: new Date(expiresAt[0]),
-        lte: new Date(expiresAt[1])
+        gte: expiresAt.from,
+        lte: expiresAt.to
       }
     }
 
     const orderBy = sort?.length
-      ? sort.map(s => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
+      ? sort.map(s => ({ [s.field]: s.desc ? 'desc' : 'asc' }))
       : [{ createdAt: 'desc' as const }]
 
     const [data, total] = await Promise.all([
@@ -458,22 +450,22 @@ export class UserRepository implements IUserRepository {
     banExpires: Date | null
     createdAt: Date
     updatedAt: Date
-  }): UserEntity {
-    return {
+  }): User {
+    return UserEntity.fromPersistence({
       id: user.id,
       name: user.name,
       email: user.email,
       emailVerified: user.emailVerified,
       image: user.image,
       twoFactorEnabled: user.twoFactorEnabled,
-      isAnonymous: user.isAnonymous ?? false,
-      role: (user.role ?? 'user') as UserEntity['role'],
-      banned: user.banned ?? false,
+      isAnonymous: user.isAnonymous,
+      role: (user.role ?? UserRole.USER) as UserRole,
+      banned: user.banned,
       banReason: user.banReason,
       banExpires: user.banExpires,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt
-    }
+    })
   }
 
   /**

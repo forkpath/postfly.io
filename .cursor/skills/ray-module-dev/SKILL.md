@@ -60,13 +60,15 @@ Define API contracts first — they drive the types across the entire stack.
 
 The domain layer has zero framework dependencies. Build it inside `services/engine/src/domain/`:
 
-**Order: Entity → Value Objects → Repository Interface → Exceptions → Use Cases**
+**Order: Entity → Value Objects → Repository Interface → Exceptions → Domain Services/Specifications (only when needed)**
 
-1. **Entity** (`entities/<name>.entity.ts`): Pure `interface` with `readonly` fields
+1. **Entity** (`entities/<name>.entity.ts`): Class with private state, factory methods, getters, and business behaviour
 2. **Value Objects** (`value-objects/<name>.vo.ts`): Private constructor + static `create()` factory + validation + `equals()`
-3. **Repository Interface** (`repositories/<name>.repository.interface.ts`): Interface + `Symbol` injection token
-4. **Exceptions** (`exceptions/<name>.exception.ts`): Abstract base + concrete subclasses with error codes
-5. **Use Cases** (`use-cases/<name>/`): Pure class with constructor-injected repository interface, typed Input/Output
+3. **Repository Interface** (`repositories/<name>.repository.interface.ts`): Interface + `Symbol` injection token using domain VO/entity/criteria types only
+4. **Exceptions** (`exceptions/<name>.exception.ts`): `DomainException` subclasses with error codes, `i18nKey`, and `httpStatus`
+5. **Domain Services/Specifications**: Optional pure business rules with no repository IO
+
+Never put repository-injected use cases in domain. A class that loads data, calls repositories, delegates to Better Auth, or coordinates persistence belongs in `application/use-cases`.
 
 > Read `references/backend-patterns.md` → "Domain Layer" section for all templates.
 
@@ -74,13 +76,16 @@ The domain layer has zero framework dependencies. Build it inside `services/engi
 
 The application layer bridges domain and infrastructure via CQRS. Build it inside `services/engine/src/application/`:
 
-**Order: DTOs → Mappers → Query Handlers → Command Handlers**
+**Order: DTOs → Mappers → Use Cases → Query Handlers → Command Handlers**
 
 1. **DTOs** (`dtos/<name>/<name>.dto.ts`): Use `createZodDto()` from `nestjs-zod` wrapping payload schemas
-2. **Mappers** (`mappers/<name>.mapper.ts`): Static methods converting Entity → Response type (from `@libs/payload`)
-3. **Queries** (`queries/<name>/<action>.query.ts`): Query class + `@QueryHandler` with `@Inject(SYMBOL)` repository
-4. **Commands** (`commands/<name>/<action>.command.ts`): Command class + `@CommandHandler` with injected repository
-5. Collect handlers into arrays: `const QueryHandlers = [...]` and `const CommandHandlers = [...]`
+2. **Mappers** (`mappers/<name>.mapper.ts`): Static methods converting payload request → domain criteria and domain result → response type (from `@libs/payload`)
+3. **Use Cases** (`use-cases/<name>/<action>.usecase.ts`): Framework-free application orchestration for write operations and complex reads
+4. **Queries** (`queries/<name>/<action>.query.ts`): Query class + `@QueryHandler` with `@Inject(SYMBOL)` repository or use case
+5. **Commands** (`commands/<name>/<action>.command.ts`): Command class + `@CommandHandler` that delegates to a use case
+6. Collect handlers into arrays: `const QueryHandlers = [...]` and `const CommandHandlers = [...]`
+
+DTO files should not redefine response schemas. Response types come from `@libs/payload`; engine mappers shape domain results into those response types.
 
 > Read `references/backend-patterns.md` → "Application Layer" section for templates.
 
@@ -152,9 +157,9 @@ Build inside `apps/web/src/routes/_app/<domain>/`:
 
 | Artifact | File Name | Class/Type Name |
 |---|---|---|
-| Entity | `foo.entity.ts` | `FooEntity` (interface) |
+| Entity | `foo.entity.ts` | `Foo` (class) |
 | Value Object | `foo-bar.vo.ts` | `FooBar` (class) |
-| Use Case | `verb-noun.usecase.ts` | `VerbNounUseCase` |
+| Application Use Case | `application/use-cases/foo/verb-noun.usecase.ts` | `VerbNounUseCase` |
 | Repository Interface | `foo.repository.interface.ts` | `IFooRepository` |
 | Repository Implementation | `foo.repository.ts` | `FooRepository` |
 | Injection Token | in repository interface file | `FOO_REPOSITORY = Symbol('FOO_REPOSITORY')` |

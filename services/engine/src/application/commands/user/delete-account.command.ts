@@ -5,7 +5,8 @@ import { Inject } from '@nestjs/common'
 import { CommandHandler } from '@nestjs/cqrs'
 
 import { USER_REPOSITORY } from '#/domain/repositories/user.repository.interface'
-import { DeleteAccountUseCase } from '#/domain/use-cases/user/delete-account.usecase'
+
+import { DeleteAccountUseCase } from '../../use-cases/user/delete-account.usecase'
 
 export class DeleteAccountCommand {
   constructor(

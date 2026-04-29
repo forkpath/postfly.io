@@ -6,9 +6,9 @@ import { Inject } from '@nestjs/common'
 import { CommandHandler } from '@nestjs/cqrs'
 
 import { ORGANIZATION_REPOSITORY } from '#/domain/repositories/organization.repository.interface'
-import { UpdateMemberRoleUseCase } from '#/domain/use-cases/organization/update-member-role.usecase'
 
 import { OrganizationMapper } from '../../mappers/organization.mapper'
+import { UpdateMemberRoleUseCase } from '../../use-cases/organization/update-member-role.usecase'
 
 type MemberResponse = GetMembersRes['list'][number]
 

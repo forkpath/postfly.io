@@ -21,12 +21,7 @@ export class ListCustomersHandler implements IQueryHandler<ListCustomersQuery, G
   ) {}
 
   async execute(query: ListCustomersQuery): Promise<GetCustomersRes> {
-    const result = await this.customerRepository.findAll(query.params)
-    return {
-      list: result.list.map(CustomerMapper.toCustomerListItem),
-      total: result.total,
-      max: result.max,
-      options: result.options
-    }
+    const result = await this.customerRepository.findAll(CustomerMapper.toListCustomersCriteria(query.params))
+    return CustomerMapper.toCustomersResponse(result)
   }
 }

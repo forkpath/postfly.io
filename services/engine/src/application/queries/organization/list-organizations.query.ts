@@ -21,11 +21,7 @@ export class ListOrganizationsHandler implements IQueryHandler<ListOrganizations
   ) {}
 
   async execute(query: ListOrganizationsQuery): Promise<GetOrganizationsRes> {
-    const result = await this.orgRepository.findAll(query.params)
-    return {
-      list: result.list.map(OrganizationMapper.toOrganizationListItem),
-      total: result.total,
-      max: result.max
-    }
+    const result = await this.orgRepository.findAll(OrganizationMapper.toListOrganizationsCriteria(query.params))
+    return OrganizationMapper.toOrganizationsResponse(result)
   }
 }

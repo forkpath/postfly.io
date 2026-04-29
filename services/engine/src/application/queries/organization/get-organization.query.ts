@@ -7,6 +7,7 @@ import { QueryHandler } from '@nestjs/cqrs'
 
 import { OrganizationNotFoundException } from '#/domain/exceptions/organization.exception'
 import { ORGANIZATION_REPOSITORY } from '#/domain/repositories/organization.repository.interface'
+import { OrganizationId } from '#/domain/value-objects/organization-id.vo'
 
 import { OrganizationMapper } from '../../mappers/organization.mapper'
 
@@ -22,7 +23,7 @@ export class GetOrganizationHandler implements IQueryHandler<GetOrganizationQuer
   ) {}
 
   async execute(query: GetOrganizationQuery): Promise<GetOrganizationRes> {
-    const org = await this.orgRepository.findById(query.id)
+    const org = await this.orgRepository.findById(OrganizationId.create(query.id))
     if (!org) {
       throw new OrganizationNotFoundException(query.id)
     }

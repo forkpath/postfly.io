@@ -7,6 +7,20 @@ import { captureException } from '@libs/monitoring/server'
 
 import { ExceptionResponse } from '../exception'
 
+interface DomainExceptionLike {
+  readonly i18nKey: string
+  readonly httpStatus: number
+  readonly args?: Record<string, unknown>
+  readonly stack?: string
+}
+
+function isDomainExceptionLike(exception: unknown): exception is DomainExceptionLike {
+  if (!(exception instanceof Error)) {
+    return false
+  }
+  return 'i18nKey' in exception && 'httpStatus' in exception
+}
+
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name)
@@ -17,13 +31,21 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp()
     const response = ctx.getResponse<Response>()
     const request = ctx.getRequest<Request>()
-    const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR
+    const status = isDomainExceptionLike(exception)
+      ? exception.httpStatus
+      : exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR
     // const errorResponse = exception instanceof HttpException ? exception.getResponse() : 'Internal Server Error'
 
     let message: string | object = 'Internal Server Error'
     let stackTrace = undefined
 
-    if (exception instanceof ExceptionResponse) {
+    if (isDomainExceptionLike(exception)) {
+      const lang = request.headers['accept-language'] || 'zh'
+      message = this.i18n.t(exception.i18nKey, { lang, args: exception.args ?? {} })
+      stackTrace = exception.stack
+    } else if (exception instanceof ExceptionResponse) {
       // 自定义异常：ExceptionResponse 中存了翻译 key 和参数
       const lang = request.headers['accept-language'] || 'zh'
       message = this.i18n.t(exception.key, { lang, args: exception.args })

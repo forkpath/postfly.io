@@ -1,10 +1,12 @@
 import type { ICommandHandler } from '@nestjs/cqrs'
 import type { IUserRepository } from '#/domain/repositories/user.repository.interface'
 
-import { Inject, NotFoundException } from '@nestjs/common'
+import { Inject } from '@nestjs/common'
 import { CommandHandler } from '@nestjs/cqrs'
 
+import { UserNotFoundException } from '#/domain/exceptions/user.exception'
 import { USER_REPOSITORY } from '#/domain/repositories/user.repository.interface'
+import { UserId } from '#/domain/value-objects/user-id.vo'
 
 /**
  * 设置用户密码命令（管理员操作）
@@ -24,10 +26,11 @@ export class SetUserPasswordHandler implements ICommandHandler<SetUserPasswordCo
   ) {}
 
   async execute(command: SetUserPasswordCommand): Promise<void> {
-    const user = await this.userRepository.findById(command.userId)
+    const userId = UserId.create(command.userId)
+    const user = await this.userRepository.findById(userId)
     if (!user) {
-      throw new NotFoundException('User not found')
+      throw new UserNotFoundException(command.userId)
     }
-    await this.userRepository.setPassword(command.userId, command.newPassword)
+    await this.userRepository.setPassword(userId, command.newPassword)
   }
 }

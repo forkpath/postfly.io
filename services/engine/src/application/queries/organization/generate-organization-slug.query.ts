@@ -6,6 +6,7 @@ import { Inject } from '@nestjs/common'
 import { QueryHandler } from '@nestjs/cqrs'
 
 import { ORGANIZATION_REPOSITORY } from '#/domain/repositories/organization.repository.interface'
+import { OrganizationSlug } from '#/domain/value-objects/organization-slug.vo'
 
 const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
@@ -38,7 +39,7 @@ export class GenerateOrganizationSlugHandler
 
     let slug = base
     let counter = 1
-    while (await this.orgRepository.findBySlug(slug)) {
+    while (await this.orgRepository.findBySlug(OrganizationSlug.create(slug))) {
       slug = `${base}-${counter++}`
     }
 
