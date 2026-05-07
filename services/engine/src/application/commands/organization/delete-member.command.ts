@@ -5,7 +5,8 @@ import { Inject } from '@nestjs/common'
 import { CommandHandler } from '@nestjs/cqrs'
 
 import { ORGANIZATION_REPOSITORY } from '#/domain/repositories/organization.repository.interface'
-import { RemoveMemberUseCase } from '#/domain/use-cases/organization/remove-member.usecase'
+
+import { RemoveMemberUseCase } from '../../use-cases/organization/remove-member.usecase'
 
 export class DeleteMemberCommand {
   constructor(

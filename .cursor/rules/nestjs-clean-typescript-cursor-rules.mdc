@@ -96,12 +96,19 @@ Generate code, corrections, and refactorings that comply with the basic principl
 
 ## Specific to NestJS
 
+### 0 · Better Auth Boundary
+
+- Engine does not implement login, registration, session creation, account linking, email verification, or 2FA flows.
+- Those behaviours are owned by `@libs/auth` and Better Auth. Engine may expose admin/business management endpoints that delegate persistence to Better Auth through infrastructure repositories.
+- User, organization, member, invitation, and role domain models must stay aligned with Better Auth fields and `libs/pg-dao/src/models/auth.prisma`.
+- Shared enum-like values must come from `@libs/common`; do not redefine them independently in payload, auth, or engine.
+
 ### 1 · High‑Level Architectural Rings
 
 | Ring               | Directory (root → backends/portal/src) | Purpose                                                                                                         | Allowed Dependencies                                                                    |
 | ------------------ | -------------------------------------- | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| **Domain**         | `domain/**`                            | Pure business logic: entities, value‑objects, exceptions, repository _interfaces_, use‑cases.                   | **None** (only other domain files, stdlib) – **No NestJS, no framework, no DB**         |
-| **Application**    | `application/**`                       | Orchestrates use‑cases via **CQRS** (commands + queries), maps DTO ⇄ Domain, contains mappers & validators.     | `domain/*` only. No PrismaORM or HTTP artifacts.                                        |
+| **Domain**         | `domain/**`                            | Pure business logic: entities, value‑objects, domain services, specifications, exceptions, repository interfaces. | **None** (only other domain files, stdlib) – **No NestJS, no framework, no DB**         |
+| **Application**    | `application/**`                       | Orchestrates use-cases via **CQRS** (commands + queries), maps payload contracts ⇄ Domain, contains mappers.     | `domain/*`, `@libs/payload` at the boundary, Nest CQRS decorators in handlers only.     |
 | **Infrastructure** | `infrastructure/**`                    | Framework & IO implementations: PrismaORM entities & repositories, external service adapters, config providers. | `domain/*` (to implement interfaces) + external libs. No reference to `presentation/*`. |
 | **Presentation**   | `presentation/**`                      | HTTP layer: NestJS modules, controllers, filters, guards, interceptors. Purely delegates to **Application**.    | `application/*`, NestJS decorators, class‑validator, etc.                               |
 
@@ -117,12 +124,14 @@ portal/src/
     entities/   → foo.entity.ts
     value-objects/ → bar.vo.ts
     repositories/  → foo.repository.interface.ts
-    use-cases/     → foo.usecase.ts
+    services/      → foo-policy.service.ts (pure domain service only)
+    specifications/ → foo.specification.ts (optional)
     exceptions/
   application/
+    use-cases/<feature>/ → *.usecase.ts
     commands/<feature>/   → *.command.ts
     queries/<feature>/    → *.query.ts
-    dtos/<feature>/       → *.dto.ts (validation via class-validator)
+    dtos/<feature>/       → *.dto.ts (validation via nestjs-zod + @libs/payload)
     mappers/              → foo.mapper.ts
   infrastructure/
     repositories/   → foo.repository.ts (implements interface)
@@ -137,12 +146,14 @@ portal/src/
 
 ### 3 · Feature Slice Workflow
 
-1. **Domain** – Add/modify entity, VO, repository _interface_, and/or use‑case.
-2. **Application** – Create Command/Query + Handler using the domain use‑case; create DTOs & Mappers.
+1. **Domain** – Add/modify entity class, VO, repository interface, domain exception, and pure domain service/specification when needed.
+2. **Application** – Create use case, Command/Query + Handler, DTOs, and Mappers.
 3. **Infrastructure** – Implement repository interface with PrismaORM; register providers.
 4. **Presentation** – Expose endpoints in controller; wire module, guards, interceptors.
 
-> **Rule F1 – Handlers are thin.** Business decisions live in Domain use‑cases; handlers merely orchestrate.
+> **Rule F1 – Handlers are thin.** Command handlers call application use cases; application use cases load entities, call entity behaviour, and save through domain repository interfaces.
+
+> **Rule F2 – Domain stays pure.** A class that injects a repository, performs async IO, coordinates transactions, or delegates to Better Auth belongs in `application/use-cases`, not `domain`.
 
 ---
 
@@ -164,23 +175,35 @@ Run tests with **Jest**; keep _one test file per public class_.
 - One **Module** per feature folder. Re‑export providers when needed.
 - Controllers expose **primary** routes only; secondary routes → separate controller files in same folder.
 - Global concerns (exception filter, i18n middleware, logging, request‑ID, ACL guards, caching interceptors) live in `libs/srv-core` or `libs/srv-shared` and are bound in `AppModule`.
-- Validation: use `class-validator` on **DTOs**; never on entities.
+- Validation: use `nestjs-zod` DTOs extending request schemas from `@libs/payload`; never use class-validator on entities.
 - **NEVER** inject `EntityManager` directly into controllers – use repositories through application layer.
 
 ---
 
 ### 6 · Coding Conventions
 
-- **DTO ⇄ Entity mapping** goes through dedicated mapper classes in `application/mappers`.
+- **Payload Req → Criteria** and **Domain Result → Payload Res** mapping goes through dedicated mapper classes in `application/mappers`.
 - Use **async** interfaces everywhere (`Promise<...>`).
 - Prefer **constructor injection** with `@Injectable({ scope: Scope.DEFAULT })`.
-- Repository interfaces must use **Domain** value‑objects in signatures, not primitive strings.
+- Repository interfaces must use **Domain** value-objects in signatures, not primitive strings.
+- Repository interfaces must never import `@libs/payload`, Prisma, NestJS, or HTTP DTO types.
+- Entity files must export classes with private state, factory methods, and behaviour. Interface-only entities are an anti-pattern.
+- Value objects must appear in entity fields, method signatures, or repository interfaces; never create-and-discard a VO just to validate a primitive.
 - All files use **default export false**; export each class by name.
 - File naming: `kebab-case` for files, `PascalCase` for classes.
 
+### 7 · Anti-Patterns
+
+- `domain/entities/*.ts` containing only readonly interfaces.
+- `domain/value-objects/*.ts` that are never used outside their own file.
+- `SomeValueObject.create(input)` followed by discarding the result and passing the original primitive onward.
+- `domain/repositories/*.interface.ts` importing `@libs/payload`, Prisma, NestJS, or presentation DTOs.
+- Command/query handlers duplicating rules that already belong to entity methods or application use cases.
+- `domain/use-cases` classes that inject repositories or perform async IO; move them to `application/use-cases`.
+
 ---
 
-### 7 · How the AI Should Use These Rules
+### 8 · How the AI Should Use These Rules
 
 1. **Identify the layer** you are generating code for.
 2. Respect **dependency direction**; import only allowed modules.

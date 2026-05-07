@@ -1,5 +1,6 @@
+import type { GetUsersRes } from '@libs/payload'
+
 import { createZodDto } from 'nestjs-zod'
-import { z } from 'zod'
 
 import {
   banUserReqSchema,
@@ -14,46 +15,18 @@ import {
   updateAdminUserReqSchema
 } from '@libs/payload'
 
-import { UserRole } from '#/domain/entities/user.entity'
+export type UserResponse = GetUsersRes['list'][number]
 
-// ==================== Response DTOs ====================
-
-/**
- * 用户响应 Schema
- */
-export const userResponseSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  email: z.string().email(),
-  emailVerified: z.boolean(),
-  image: z.string().nullable(),
-  twoFactorEnabled: z.boolean().nullable(),
-  isAnonymous: z.boolean(),
-  role: z.enum([UserRole.USER, UserRole.ADMIN]),
-  banned: z.boolean(),
-  banReason: z.string().nullable(),
-  banExpires: z.coerce.date().nullable(),
-  createdAt: z.coerce.date(),
-  updatedAt: z.coerce.date()
-})
-
-export type UserResponse = z.infer<typeof userResponseSchema>
-
-/**
- * 用户会话响应 Schema
- */
-export const userSessionResponseSchema = z.object({
-  id: z.string(),
-  userId: z.string(),
-  token: z.string(),
-  expiresAt: z.coerce.date(),
-  createdAt: z.coerce.date(),
-  updatedAt: z.coerce.date(),
-  ipAddress: z.string().nullable(),
-  userAgent: z.string().nullable()
-})
-
-export type UserSessionResponse = z.infer<typeof userSessionResponseSchema>
+export interface UserSessionResponse {
+  readonly id: string
+  readonly userId: string
+  readonly token: string
+  readonly expiresAt: Date
+  readonly createdAt: Date
+  readonly updatedAt: Date
+  readonly ipAddress: string | null
+  readonly userAgent: string | null
+}
 
 // ==================== Request DTOs ====================
 

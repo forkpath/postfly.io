@@ -2,11 +2,15 @@ import type { ICommandHandler } from '@nestjs/cqrs'
 import type { UserResponse } from '../../dtos/user/user.dto'
 import type { IUserRepository } from '#/domain/repositories/user.repository.interface'
 
-import { Inject, NotFoundException } from '@nestjs/common'
+import { Inject } from '@nestjs/common'
 import { CommandHandler } from '@nestjs/cqrs'
 
 import { UserRole } from '#/domain/entities/user.entity'
+import { UserNotFoundException } from '#/domain/exceptions/user.exception'
 import { USER_REPOSITORY } from '#/domain/repositories/user.repository.interface'
+import { UserId } from '#/domain/value-objects/user-id.vo'
+
+import { UserMapper } from '../../mappers/user.mapper'
 
 export interface UpdateUserData {
   name?: string
@@ -32,10 +36,13 @@ export class UpdateUserHandler implements ICommandHandler<UpdateUserCommand, Use
   ) {}
 
   async execute(command: UpdateUserCommand): Promise<UserResponse> {
-    const user = await this.userRepository.findById(command.id)
+    const userId = UserId.create(command.id)
+    const user = await this.userRepository.findById(userId)
     if (!user) {
-      throw new NotFoundException('User not found')
+      throw new UserNotFoundException(command.id)
     }
-    return this.userRepository.update(command.id, command.data)
+    user.changeProfile({ name: command.data.name, image: command.data.image })
+    const updatedUser = await this.userRepository.update(userId, command.data)
+    return UserMapper.toResponse(updatedUser)
   }
 }

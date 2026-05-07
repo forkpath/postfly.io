@@ -5,6 +5,7 @@ import { Inject } from '@nestjs/common'
 import { CommandHandler } from '@nestjs/cqrs'
 
 import { USER_REPOSITORY } from '#/domain/repositories/user.repository.interface'
+import { UserId } from '#/domain/value-objects/user-id.vo'
 
 /**
  * 撤销单个会话命令
@@ -40,6 +41,6 @@ export class RevokeAllSessionsHandler implements ICommandHandler<RevokeAllSessio
   ) {}
 
   async execute(command: RevokeAllSessionsCommand): Promise<void> {
-    await this.userRepository.revokeAllSessions(command.userId)
+    await this.userRepository.revokeAllSessions(UserId.create(command.userId))
   }
 }

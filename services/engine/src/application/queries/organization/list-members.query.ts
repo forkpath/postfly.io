@@ -6,6 +6,7 @@ import { Inject } from '@nestjs/common'
 import { QueryHandler } from '@nestjs/cqrs'
 
 import { ORGANIZATION_REPOSITORY } from '#/domain/repositories/organization.repository.interface'
+import { OrganizationId } from '#/domain/value-objects/organization-id.vo'
 
 import { OrganizationMapper } from '../../mappers/organization.mapper'
 
@@ -24,7 +25,10 @@ export class ListMembersHandler implements IQueryHandler<ListMembersQuery, GetMe
   ) {}
 
   async execute(query: ListMembersQuery): Promise<GetMembersRes> {
-    const result = await this.orgRepository.findMembers(query.orgId, query.params)
+    const result = await this.orgRepository.findMembers(
+      OrganizationId.create(query.orgId),
+      OrganizationMapper.toListMembersCriteria(query.params)
+    )
     return {
       list: result.list.map(OrganizationMapper.toMemberResponse),
       total: result.total

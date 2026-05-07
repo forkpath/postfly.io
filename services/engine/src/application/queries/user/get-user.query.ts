@@ -2,10 +2,14 @@ import type { IQueryHandler } from '@nestjs/cqrs'
 import type { UserResponse } from '../../dtos/user/user.dto'
 import type { IUserRepository } from '#/domain/repositories/user.repository.interface'
 
-import { Inject, NotFoundException } from '@nestjs/common'
+import { Inject } from '@nestjs/common'
 import { QueryHandler } from '@nestjs/cqrs'
 
+import { UserNotFoundException } from '#/domain/exceptions/user.exception'
 import { USER_REPOSITORY } from '#/domain/repositories/user.repository.interface'
+import { UserId } from '#/domain/value-objects/user-id.vo'
+
+import { UserMapper } from '../../mappers/user.mapper'
 
 /**
  * 获取单个用户查询
@@ -22,10 +26,10 @@ export class GetUserHandler implements IQueryHandler<GetUserQuery, UserResponse>
   ) {}
 
   async execute(query: GetUserQuery): Promise<UserResponse> {
-    const user = await this.userRepository.findById(query.id)
+    const user = await this.userRepository.findById(UserId.create(query.id))
     if (!user) {
-      throw new NotFoundException('User not found')
+      throw new UserNotFoundException(query.id)
     }
-    return user
+    return UserMapper.toResponse(user)
   }
 }

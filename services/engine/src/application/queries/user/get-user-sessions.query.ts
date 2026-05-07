@@ -6,6 +6,7 @@ import { Inject } from '@nestjs/common'
 import { QueryHandler } from '@nestjs/cqrs'
 
 import { USER_REPOSITORY } from '#/domain/repositories/user.repository.interface'
+import { UserId } from '#/domain/value-objects/user-id.vo'
 
 /**
  * 获取用户会话列表查询
@@ -22,6 +23,6 @@ export class GetUserSessionsHandler implements IQueryHandler<GetUserSessionsQuer
   ) {}
 
   async execute(query: GetUserSessionsQuery): Promise<UserSessionResponse[]> {
-    return this.userRepository.getSessions(query.userId)
+    return this.userRepository.getSessions(UserId.create(query.userId))
   }
 }

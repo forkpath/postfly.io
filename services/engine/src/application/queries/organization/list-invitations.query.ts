@@ -6,6 +6,7 @@ import { Inject } from '@nestjs/common'
 import { QueryHandler } from '@nestjs/cqrs'
 
 import { ORGANIZATION_REPOSITORY } from '#/domain/repositories/organization.repository.interface'
+import { OrganizationId } from '#/domain/value-objects/organization-id.vo'
 
 import { OrganizationMapper } from '../../mappers/organization.mapper'
 
@@ -24,7 +25,10 @@ export class ListInvitationsHandler implements IQueryHandler<ListInvitationsQuer
   ) {}
 
   async execute(query: ListInvitationsQuery): Promise<GetInvitationsRes> {
-    const result = await this.orgRepository.findInvitations(query.orgId, query.params)
+    const result = await this.orgRepository.findInvitations(
+      OrganizationId.create(query.orgId),
+      OrganizationMapper.toListInvitationsCriteria(query.params)
+    )
     return {
       list: result.list.map(OrganizationMapper.toInvitationResponse),
       total: result.total

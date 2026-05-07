@@ -2,10 +2,13 @@ import type { ICommandHandler } from '@nestjs/cqrs'
 import type { UserResponse } from '../../dtos/user/user.dto'
 import type { IUserRepository } from '#/domain/repositories/user.repository.interface'
 
-import { BadRequestException, Inject, NotFoundException } from '@nestjs/common'
+import { Inject } from '@nestjs/common'
 import { CommandHandler } from '@nestjs/cqrs'
 
 import { USER_REPOSITORY } from '#/domain/repositories/user.repository.interface'
+
+import { UserMapper } from '../../mappers/user.mapper'
+import { BanUserUseCase } from '../../use-cases/user/ban-user.usecase'
 
 /**
  * 封禁用户命令
@@ -21,20 +24,22 @@ export class BanUserCommand {
 
 @CommandHandler(BanUserCommand)
 export class BanUserHandler implements ICommandHandler<BanUserCommand, UserResponse> {
+  private readonly useCase: BanUserUseCase
+
   constructor(
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository
-  ) {}
+  ) {
+    this.useCase = new BanUserUseCase(this.userRepository)
+  }
 
   async execute(command: BanUserCommand): Promise<UserResponse> {
-    // 不能封禁自己
-    if (command.id === command.operatorId) {
-      throw new BadRequestException('You cannot ban yourself')
-    }
-    const user = await this.userRepository.findById(command.id)
-    if (!user) {
-      throw new NotFoundException('User not found')
-    }
-    return this.userRepository.ban(command.id, command.reason, command.expiresAt)
+    const result = await this.useCase.execute({
+      userId: command.id,
+      operatorId: command.operatorId,
+      reason: command.reason,
+      expiresAt: command.expiresAt
+    })
+    return UserMapper.toResponse(result.user)
   }
 }

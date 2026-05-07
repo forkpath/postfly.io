@@ -1,13 +1,40 @@
 import type { BillingCustomerEntity } from '../entities/customer.entity'
-import type { GetCustomersReq } from '@libs/payload'
+
+export interface DateRangeCriteria {
+  readonly from: Date
+  readonly to: Date
+}
+
+export interface NumberRangeCriteria {
+  readonly from: number
+  readonly to: number
+}
+
+export interface SortCriteria {
+  readonly field: string
+  readonly desc: boolean
+}
+
+export interface ListCustomersCriteria {
+  readonly page: number
+  readonly perPage: number
+  readonly sort?: SortCriteria[]
+  readonly q?: string
+  readonly provider?: string[]
+  readonly subscriptions?: NumberRangeCriteria
+  readonly orders?: NumberRangeCriteria
+  readonly createdAt?: DateRangeCriteria
+}
+
+export interface PagedCustomerResult {
+  readonly list: BillingCustomerEntity[]
+  readonly total: number
+  readonly max: { subscriptions: number; orders: number }
+  readonly options: { provider: string[] }
+}
 
 export interface ICustomerRepository {
-  findAll(params: GetCustomersReq): Promise<{
-    list: BillingCustomerEntity[]
-    total: number
-    max: { subscriptions: number; orders: number }
-    options: { provider: string[] }
-  }>
+  findAll(params: ListCustomersCriteria): Promise<PagedCustomerResult>
 
   count(): Promise<number>
 }

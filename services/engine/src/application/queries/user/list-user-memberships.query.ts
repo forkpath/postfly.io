@@ -6,6 +6,9 @@ import { Inject } from '@nestjs/common'
 import { QueryHandler } from '@nestjs/cqrs'
 
 import { USER_REPOSITORY } from '#/domain/repositories/user.repository.interface'
+import { UserId } from '#/domain/value-objects/user-id.vo'
+
+import { UserMapper } from '../../mappers/user.mapper'
 
 export class ListUserMembershipsQuery {
   constructor(
@@ -22,7 +25,10 @@ export class ListUserMembershipsHandler implements IQueryHandler<ListUserMembers
   ) {}
 
   async execute(query: ListUserMembershipsQuery): Promise<GetUserMembershipsRes> {
-    const r = await this.userRepository.findMemberships(query.userId, query.params)
+    const r = await this.userRepository.findMemberships(
+      UserId.create(query.userId),
+      UserMapper.toListMembershipsCriteria(query.params)
+    )
     return { list: r.list, total: r.total } as unknown as GetUserMembershipsRes
   }
 }

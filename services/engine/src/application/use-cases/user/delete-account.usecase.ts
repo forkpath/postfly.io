@@ -1,33 +1,32 @@
-import type { IUserRepository } from '../../repositories/user.repository.interface'
+import type { IUserRepository } from '../../../domain/repositories/user.repository.interface'
 
 import {
   AccountNotFoundException,
   LastAccountCannotBeDeletedException,
   UserNotFoundException
-} from '../../exceptions/user.exception'
+} from '../../../domain/exceptions/user.exception'
+import { UserId } from '../../../domain/value-objects/user-id.vo'
 
 export interface DeleteAccountInput {
-  userId: string
-  accountId: string
+  readonly userId: string
+  readonly accountId: string
 }
 
 export class DeleteAccountUseCase {
   constructor(private readonly userRepository: IUserRepository) {}
 
   async execute(input: DeleteAccountInput): Promise<void> {
-    const user = await this.userRepository.findById(input.userId)
+    const userId = UserId.create(input.userId)
+    const user = await this.userRepository.findById(userId)
     if (!user) {
       throw new UserNotFoundException(input.userId)
     }
-
-    const accountCount = await this.userRepository.countAccounts(input.userId)
+    const accountCount = await this.userRepository.countAccounts(userId)
     if (accountCount <= 1) {
       throw new LastAccountCannotBeDeletedException(input.userId)
     }
-
-    try {
-      await this.userRepository.deleteAccount(input.userId, input.accountId)
-    } catch {
+    const deleted = await this.userRepository.deleteAccount(userId, input.accountId)
+    if (!deleted) {
       throw new AccountNotFoundException(input.accountId)
     }
   }

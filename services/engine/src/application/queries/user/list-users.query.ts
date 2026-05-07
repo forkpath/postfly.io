@@ -7,6 +7,8 @@ import { QueryHandler } from '@nestjs/cqrs'
 
 import { USER_REPOSITORY } from '#/domain/repositories/user.repository.interface'
 
+import { UserMapper } from '../../mappers/user.mapper'
+
 /**
  * 获取用户列表查询
  */
@@ -22,6 +24,7 @@ export class ListUsersHandler implements IQueryHandler<ListUsersQuery, GetUsersR
   ) {}
 
   async execute(query: ListUsersQuery): Promise<GetUsersRes> {
-    return this.userRepository.findMany(query.params)
+    const result = await this.userRepository.findMany(UserMapper.toListUsersCriteria(query.params))
+    return UserMapper.toUsersResponse(result)
   }
 }

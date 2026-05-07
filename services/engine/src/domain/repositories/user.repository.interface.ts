@@ -1,13 +1,6 @@
-import type { UserEntity, UserSessionEntity } from '../entities/user.entity'
-import type {
-  GetUserAccountsReq,
-  GetUserInvitationsReq,
-  GetUserMembershipsReq,
-  GetUserOrdersReq,
-  GetUsersReq,
-  GetUsersRes,
-  GetUserSubscriptionsReq
-} from '@libs/payload'
+import type { User, UserRole, UserSessionEntity } from '../entities/user.entity'
+import type { Email } from '../value-objects/email.vo'
+import type { UserId } from '../value-objects/user-id.vo'
 
 export interface AccountEntity {
   readonly id: string
@@ -79,56 +72,104 @@ export interface UserInvitationEntity {
   }
 }
 
+export interface DateRangeCriteria {
+  readonly from: Date
+  readonly to: Date
+}
+
+export interface SortCriteria {
+  readonly field: string
+  readonly desc: boolean
+}
+
+export interface PaginationCriteria {
+  readonly page: number
+  readonly perPage: number
+  readonly sort?: SortCriteria[]
+}
+
+export interface ListUsersCriteria extends PaginationCriteria {
+  readonly q?: string
+  readonly role?: UserRole[]
+  readonly twoFactorEnabled?: boolean[]
+  readonly banned?: boolean[]
+  readonly createdAt?: DateRangeCriteria
+}
+
+export interface ListUserAccountsCriteria extends PaginationCriteria {
+  readonly providerId?: string[]
+  readonly createdAt?: DateRangeCriteria
+  readonly updatedAt?: DateRangeCriteria
+}
+
+export interface ListUserSubscriptionsCriteria extends PaginationCriteria {
+  readonly status?: string[]
+  readonly createdAt?: DateRangeCriteria
+}
+
+export interface ListUserOrdersCriteria extends PaginationCriteria {
+  readonly status?: string[]
+  readonly store?: string[]
+  readonly createdAt?: DateRangeCriteria
+}
+
+export interface ListUserMembershipsCriteria extends PaginationCriteria {
+  readonly role?: string[]
+  readonly createdAt?: DateRangeCriteria
+}
+
+export interface ListUserInvitationsCriteria extends PaginationCriteria {
+  readonly role?: string[]
+  readonly status?: string[]
+  readonly expiresAt?: DateRangeCriteria
+}
+
+export interface PagedResult<T> {
+  readonly list: T[]
+  readonly total: number
+}
+
 /**
  * 用户仓储接口
  *
  * 领域层定义的抽象接口，由基础设施层实现
  */
 export interface IUserRepository {
-  findById(id: string): Promise<UserEntity | null>
+  findById(id: UserId): Promise<User | null>
 
-  findByEmail(email: string): Promise<UserEntity | null>
+  findByEmail(email: Email): Promise<User | null>
 
-  findMany(params: GetUsersReq): Promise<GetUsersRes>
+  findMany(params: ListUsersCriteria): Promise<PagedResult<User>>
 
-  update(id: string, data: Partial<Pick<UserEntity, 'name' | 'image' | 'role'>>): Promise<UserEntity>
+  update(id: UserId, data: Partial<Pick<User, 'name' | 'image' | 'role'>>): Promise<User>
 
-  ban(id: string, reason?: string, expiresAt?: Date): Promise<UserEntity>
+  ban(id: UserId, reason?: string, expiresAt?: Date): Promise<User>
 
-  unban(id: string): Promise<UserEntity>
+  unban(id: UserId): Promise<User>
 
-  delete(id: string): Promise<void>
+  delete(id: UserId): Promise<void>
 
-  getSessions(userId: string): Promise<UserSessionEntity[]>
+  getSessions(userId: UserId): Promise<UserSessionEntity[]>
 
   revokeSession(sessionToken: string): Promise<void>
 
-  revokeAllSessions(userId: string): Promise<void>
+  revokeAllSessions(userId: UserId): Promise<void>
 
-  setPassword(userId: string, newPassword: string): Promise<void>
+  setPassword(userId: UserId, newPassword: string): Promise<void>
 
-  findAccounts(userId: string, params: GetUserAccountsReq): Promise<{ list: AccountEntity[]; total: number }>
+  findAccounts(userId: UserId, params: ListUserAccountsCriteria): Promise<PagedResult<AccountEntity>>
 
-  countAccounts(userId: string): Promise<number>
+  countAccounts(userId: UserId): Promise<number>
 
-  deleteAccount(userId: string, accountId: string): Promise<void>
+  deleteAccount(userId: UserId, accountId: string): Promise<boolean>
 
-  findSubscriptions(
-    userId: string,
-    params: GetUserSubscriptionsReq
-  ): Promise<{ list: UserSubscriptionEntity[]; total: number }>
+  findSubscriptions(userId: UserId, params: ListUserSubscriptionsCriteria): Promise<PagedResult<UserSubscriptionEntity>>
 
-  findOrders(userId: string, params: GetUserOrdersReq): Promise<{ list: UserOrderEntity[]; total: number }>
+  findOrders(userId: UserId, params: ListUserOrdersCriteria): Promise<PagedResult<UserOrderEntity>>
 
-  findMemberships(
-    userId: string,
-    params: GetUserMembershipsReq
-  ): Promise<{ list: UserMembershipEntity[]; total: number }>
+  findMemberships(userId: UserId, params: ListUserMembershipsCriteria): Promise<PagedResult<UserMembershipEntity>>
 
-  findInvitations(
-    userId: string,
-    params: GetUserInvitationsReq
-  ): Promise<{ list: UserInvitationEntity[]; total: number }>
+  findInvitations(userId: UserId, params: ListUserInvitationsCriteria): Promise<PagedResult<UserInvitationEntity>>
 }
 
 /**
