@@ -502,7 +502,6 @@ export const AppHeader = memo<AppHeaderProps>(({ onToggleSidebar, showSidebarTog
       {/* 右侧区域：工具按钮 */}
       <div className="flex items-center gap-1.5 sm:gap-6">
         <div className="flex items-center gap-1.5">
-          <LanguageDropdown />
           <ActivitySheet />
           <NotificationDropdown />
         </div>
