@@ -1,4 +1,4 @@
-import type { ElectronWindowAPI } from './preload.d'
+import type { ElectronWindowAPI } from './ipc-api'
 
 import { contextBridge, ipcRenderer } from 'electron'
 

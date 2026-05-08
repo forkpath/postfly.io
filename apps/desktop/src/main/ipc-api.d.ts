@@ -14,5 +14,3 @@ declare global {
     electronAPI: ElectronWindowAPI
   }
 }
-
-export {}
