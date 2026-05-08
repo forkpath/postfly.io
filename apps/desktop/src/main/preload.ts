@@ -1,6 +1,14 @@
-import type { ElectronWindowAPI } from './preload.d'
-
 import { contextBridge, ipcRenderer } from 'electron'
+
+type ElectronWindowAPI = {
+  minimize: () => void
+  maximize: () => void
+  unmaximize: () => void
+  close: () => void
+  isMaximized: () => Promise<boolean>
+  onMaximizeChange: (callback: (isMaximized: boolean) => void) => () => void
+  platform: NodeJS.Platform
+}
 
 contextBridge.exposeInMainWorld('electronAPI', {
   minimize: () => ipcRenderer.send('window:minimize'),
