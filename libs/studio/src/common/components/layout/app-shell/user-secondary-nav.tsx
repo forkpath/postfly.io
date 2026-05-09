@@ -84,7 +84,7 @@ export const UserSecondaryNav = memo<UserSecondaryNavProps>(({ user }) => {
   const accountItems: UserNavItem[] = [
     {
       icon: <Icons.User className="size-4" />,
-      label: t('account.profile'),
+      label: t('account'),
       href: pathsConfig.user.profile
     },
     {

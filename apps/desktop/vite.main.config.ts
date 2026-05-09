@@ -11,6 +11,11 @@ const external = [
 ]
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@main': path.resolve(__dirname, 'src/main')
+    }
+  },
   build: {
     lib: {
       entry: path.resolve(__dirname, 'src/main/main.ts'),

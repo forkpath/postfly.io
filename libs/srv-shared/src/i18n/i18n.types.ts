@@ -3,6 +3,7 @@
 /* eslint-disable */
 /* prettier-ignore */
 import type { Path } from "nestjs-i18n";
+
 /* prettier-ignore */
 export type I18nTranslations = {
     "admin": {
@@ -705,6 +706,7 @@ export type I18nTranslations = {
         "disabled": string;
         "platform": string;
         "account": string;
+        "profile": string;
         "continue": string;
         "cancel": string;
         "save": string;
