@@ -1,8 +1,9 @@
 import type { ThemeColor, ThemeMode } from '@libs/ui-shared/common'
 
+import { APP_NAME } from '@libs/common'
+
 // 默认配置，用于 env 未加载或验证失败时
 const defaults = {
-  name: 'App',
   url: 'http://localhost:3000',
   locale: 'en',
   theme: {
@@ -21,7 +22,7 @@ function getViteEnv<T>(key: string, fallback: T): T {
 }
 
 export const appConfig = {
-  name: getViteEnv('VITE_PRODUCT_NAME', defaults.name),
+  name: APP_NAME,
   url: getViteEnv('VITE_URL', defaults.url),
   locale: getViteEnv('VITE_DEFAULT_LOCALE', defaults.locale),
   theme: {

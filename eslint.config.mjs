@@ -16,6 +16,8 @@ export default [
       '**/dist',
       '**/out-tsc',
       '**/.output',
+      '**/.vite',
+      '**/.vite/**',
       '**/vite.config.*.timestamp*',
       '**/vitest.config.*.timestamp*',
       '**/.expo',

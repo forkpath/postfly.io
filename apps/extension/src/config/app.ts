@@ -1,7 +1,9 @@
+import { APP_NAME } from '@libs/common'
+
 import env from '../../env'
 
 export const appConfig = {
-  name: env.VITE_PRODUCT_NAME,
+  name: APP_NAME,
   apiBaseUrl: env.VITE_API_BASE_URL,
   url: env.VITE_URL,
   locale: env.VITE_DEFAULT_LOCALE,

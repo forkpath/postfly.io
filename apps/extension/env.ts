@@ -7,7 +7,6 @@ const THEME_COLORS = ['orange', 'rose', 'red', 'yellow', 'gray', 'stone', 'green
 export default defineEnv({
   clientPrefix: 'VITE_',
   client: {
-    VITE_PRODUCT_NAME: z.string(),
     VITE_URL: z.url(),
     VITE_API_BASE_URL: z.url(),
     VITE_DEFAULT_LOCALE: z.string().optional().default('en'),
@@ -16,7 +15,6 @@ export default defineEnv({
   },
   env: {
     ...import.meta.env,
-    VITE_PRODUCT_NAME: import.meta.env.VITE_PRODUCT_NAME,
     VITE_URL: import.meta.env.VITE_URL,
     VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
     VITE_DEFAULT_LOCALE: import.meta.env.VITE_DEFAULT_LOCALE,

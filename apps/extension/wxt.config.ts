@@ -6,7 +6,11 @@ import { loadEnv } from 'vite'
 import svgr from 'vite-plugin-svgr'
 import { defineConfig } from 'wxt'
 
-const extensionRoot = fileURLToPath(new URL('./', import.meta.url))
+// config 文件在构建前由 WXT 加载器执行，不解析 tsconfig 的 @libs/* 别名。
+// brand.ts 是零依赖叶子模块，用相对路径直引最安全，不会牵连 barrel 的传递依赖。
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { APP_NAME } from '../../libs/common/src/constants/brand'
+
 const workspaceRoot = fileURLToPath(new URL('../../', import.meta.url))
 const srcRoot = fileURLToPath(new URL('./src', import.meta.url))
 
@@ -18,29 +22,25 @@ const getWxtMode = () => {
   return /\b(build|zip)\b/.test(argv) ? 'production' : 'development'
 }
 
-const loadExtensionEnv = (mode: string) => {
-  // 应用目录优先，根目录兜底：
-  // 1. apps/extension/.env.* 适合 extension 自己维护的环境变量
-  // 2. monorepo 根目录 .env.* 作为共享默认值
-  const workspaceEnv = loadEnv(mode, workspaceRoot, '')
-  const extensionEnv = loadEnv(mode, extensionRoot, '')
+/**
+ * 单根 .env 策略：环境变量统一放在 monorepo 根目录的唯一 .env 中。
+ * 因为不存在多个 .env.* 文件，所以没有"谁覆盖谁"的优先级问题，
+ * 直接用 Vite 的 loadEnv 从根目录加载即可（prefix 传 '' 表示加载全部变量）。
+ *
+ * extension 自身目录不放 .env —— 仅根目录一处，便于维护。
+ */
+const loadRootEnv = (mode: string) => loadEnv(mode, workspaceRoot, '')
 
-  return {
-    ...workspaceEnv,
-    ...extensionEnv
-  }
-}
-
-Object.assign(process.env, loadExtensionEnv(getWxtMode()))
+Object.assign(process.env, loadRootEnv(getWxtMode()))
 
 export default defineConfig({
   manifest: async () => {
     const mode = getWxtMode()
-    const env = loadExtensionEnv(mode)
+    const env = loadRootEnv(mode)
     const isDev = mode === 'development'
 
     const appConfig = {
-      name: env.VITE_PRODUCT_NAME,
+      name: APP_NAME,
       apiBaseUrl: env.VITE_API_BASE_URL,
       url: env.VITE_URL
     }

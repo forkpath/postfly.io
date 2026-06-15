@@ -4,7 +4,7 @@ import * as Linking from 'expo-linking'
 import * as SecureStore from 'expo-secure-store'
 
 import { createClient } from '@libs/auth/client/mobile'
-import { Platform } from '@libs/common'
+import { APP_SLUG, Platform } from '@libs/common'
 import { config as i18nConfig } from '@libs/i18n'
 
 export const authClient = createClient({
@@ -26,9 +26,10 @@ export const authClient = createClient({
   },
   mobile: {
     storage: SecureStore,
-    // 须与 `libs/auth` 服务端 `advanced.cookiePrefix`（`ray`）一致，否则 `expo` 插件在
-    // `hasBetterAuthCookies` 中不会把 Set-Cookie 写入 SecureStore，useSession 会永远为 null
-    cookiePrefix: 'ray'
+    // 与 `libs/auth` 服务端 `advanced.cookiePrefix` 共享同一个 @libs/common 常量，
+    // 否则 `expo` 插件在 `hasBetterAuthCookies` 中不会把 Set-Cookie 写入 SecureStore，
+    // useSession 会永远为 null
+    cookiePrefix: APP_SLUG
   },
   lastLoginMethod: {
     storage: SecureStore

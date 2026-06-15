@@ -4,7 +4,7 @@ import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { betterAuth } from 'better-auth/minimal'
 import { admin, anonymous, emailOTP, lastLoginMethod, magicLink, organization, twoFactor } from 'better-auth/plugins'
 
-import { NodeEnv } from '@libs/common'
+import { APP_NAME, APP_SLUG, NodeEnv } from '@libs/common'
 import { EmailTemplate } from '@libs/email'
 import { sendEmail } from '@libs/email/server'
 import { getLocaleFromRequest } from '@libs/i18n'
@@ -16,7 +16,7 @@ import { ac, roles } from './permissions'
 import { AuthProvider, SocialProvider, VerificationType } from './types'
 
 export const auth = betterAuth({
-  appName: 'Ray',
+  appName: APP_NAME,
   baseURL: env.BETTER_AUTH_URL || undefined,
   basePath: '/api/auth',
   session: {
@@ -182,7 +182,7 @@ export const auth = betterAuth({
     }
   },
   advanced: {
-    cookiePrefix: 'ray',
+    cookiePrefix: APP_SLUG,
     cookies: {
       state: {
         attributes: {

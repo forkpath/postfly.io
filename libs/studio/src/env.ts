@@ -37,7 +37,6 @@ export default defineEnv({
     VITE_AUTH_PASSKEY: castStringToBool.optional().default(true),
     VITE_AUTH_ANONYMOUS: castStringToBool.optional().default(true),
 
-    VITE_PRODUCT_NAME: z.string(),
     VITE_URL: z.url(),
     VITE_DEFAULT_LOCALE: z.string().optional().default('en'),
     VITE_THEME_MODE: z.enum(ThemeMode).optional().default(ThemeMode.SYSTEM),
@@ -48,7 +47,6 @@ export default defineEnv({
    */
   env: {
     ...process.env,
-    VITE_PRODUCT_NAME: process.env.VITE_PRODUCT_NAME,
     VITE_URL: process.env.VITE_URL,
     VITE_DEFAULT_LOCALE: process.env.VITE_DEFAULT_LOCALE,
     VITE_THEME_MODE: process.env.VITE_THEME_MODE,

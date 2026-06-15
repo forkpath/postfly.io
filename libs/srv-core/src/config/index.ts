@@ -1,5 +1,6 @@
 import { FileSize, Interval } from 'rotating-file-stream'
 
+import { APP_SLUG } from '@libs/common'
 import { MongoConfig } from '@libs/mongo-dao'
 import {
   CacheConfig,
@@ -89,7 +90,7 @@ const config: Config = {
   storage: {
     accessKeyId: process.env['STORAGE_ACCESS_KEY_ID'] || 'storage_access_key_id',
     accessKeySecret: process.env['STORAGE_ACCESS_KEY_SECRET'] || 'storage_access_key_secret',
-    bucket: process.env['STORAGE_BUCKET'] || 'ray',
+    bucket: process.env['STORAGE_BUCKET'] || APP_SLUG,
     region: process.env['STORAGE_REGION'] || 'us-east-1',
     endpoint: process.env['STORAGE_END_POINT'] || ''
   },

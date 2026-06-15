@@ -3,7 +3,7 @@ import Constants from 'expo-constants'
 import * as SecureStore from 'expo-secure-store'
 
 import { createClient } from '@libs/api-client'
-import { Platform } from '@libs/common'
+import { APP_SLUG, Platform } from '@libs/common'
 
 function normalizeOrigin(url: string): string {
   const trimmed = url.trim().replace(/\/$/, '')
@@ -24,7 +24,7 @@ export const getBaseUrl = () => {
 /** Engine REST 前缀（Nest `globalPrefix` = api/v1） */
 export const getApiBaseUrl = () => `${getBaseUrl()}/api/v1`
 
-const RAY_TOKEN_KEY = 'ray-mobile.auth-token'
+const AUTH_TOKEN_KEY = `${APP_SLUG}-mobile.auth-token`
 
 export const api = createClient({
   runtime: Platform.MOBILE,
@@ -36,7 +36,7 @@ export const api = createClient({
   auth: {
     getAccessToken: async () => {
       try {
-        const token = await SecureStore.getItemAsync(RAY_TOKEN_KEY)
+        const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY)
         return token ?? undefined
       } catch {
         return undefined
