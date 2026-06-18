@@ -13,7 +13,15 @@ import { auth } from '@libs/auth/server'
 import { MongoDaoModule } from '@libs/mongo-dao'
 import { PgDaoModule } from '@libs/pg-dao'
 import { AllExceptionsFilter, AppConfig, WrapResInterceptor } from '@libs/srv-core'
-import { AuthModule, CacheModule, I18nModule, LoggerModule, RedisModule, ThrottlerModule } from '@libs/srv-shared'
+import {
+  AuthModule,
+  CacheModule,
+  I18nModule,
+  LoggerModule,
+  RabbitmqModule,
+  RedisModule,
+  ThrottlerModule
+} from '@libs/srv-shared'
 
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
@@ -63,7 +71,7 @@ import { UserModule } from './presentation/http/user/user.module'
      * 邮件收发模块 EmailModule.register(),
      * 消息队列模块 RabbitmqModule.register(),
      * 限流模块 ThrottlerModule.register(),
-     * mongoDB模块 MongoDaoModule.register()
+     * mongoDB模块 MongoDaoModule.forRoot()
      */
 
     // ORM模块
@@ -72,8 +80,11 @@ import { UserModule } from './presentation/http/user/user.module'
     // 限流模块
     ThrottlerModule.register(),
 
-    // MongoDB模块
-    MongoDaoModule.register(),
+    // MongoDB 连接只在应用根层建立一次；具体 DAO provider 由业务模块按需导入 forFeature。
+    MongoDaoModule.forRoot(),
+
+    // RabbitMQ job dispatch；worker 消费消息，engine 只发布轻量引用。
+    RabbitmqModule.register(),
 
     // CQRS 模块
     CqrsModule,

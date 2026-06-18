@@ -20,6 +20,7 @@ module.exports = {
     { name: 'web' },
     { name: 'engine' },
     { name: 'pulse' },
+    { name: 'worker' },
     { name: 'studio' },
     { name: 'libs' },
     { name: 'docker' },

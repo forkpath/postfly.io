@@ -98,6 +98,7 @@ const ERROR_MESSAGES: Record<AuthErrorCode, TranslationKey> = {
   INVALID_RESOURCE: 'organization:error.ac.invalidResource',
   CANNOT_DELETE_A_PRE_DEFINED_ROLE: 'organization:error.ac.cannotDeletePreDefinedRole',
   ROLE_NAME_IS_ALREADY_TAKEN: 'organization:error.ac.roleNameAlreadyTaken',
+  ROLE_IS_ASSIGNED_TO_MEMBERS: 'organization:error.ac.cannotDeleteRole',
   YOU_ARE_NOT_ALLOWED_TO_CREATE_A_NEW_ORGANIZATION: 'organization:error.cannotCreateNew',
   YOU_HAVE_REACHED_THE_MAXIMUM_NUMBER_OF_ORGANIZATIONS: 'organization:error.maximumNumberOfOrganizations',
   ORGANIZATION_ALREADY_EXISTS: 'organization:error.alreadyExists',
@@ -143,6 +144,7 @@ const ERROR_MESSAGES: Record<AuthErrorCode, TranslationKey> = {
   ORGANIZATION_MEMBERSHIP_LIMIT_REACHED: 'organization:error.membershipLimitReached',
   YOU_ARE_NOT_THE_RECIPIENT_OF_THE_INVITATION: 'organization:error.invitation.notRecipient',
   USER_NOT_FOUND: 'auth:error.user.notFound',
+  INVALID_USER: 'auth:error.user.notFound',
   USER_ALREADY_HAS_PASSWORD: 'auth:error.user.alreadyHasPassword',
   AUTHENTICATION_FAILED: 'auth:error.authenticationFailed',
   FAILED_TO_CREATE_USER: 'auth:error.account.creation',
@@ -151,6 +153,7 @@ const ERROR_MESSAGES: Record<AuthErrorCode, TranslationKey> = {
   COULD_NOT_CREATE_SESSION: 'auth:error.session.creation',
   FAILED_TO_UPDATE_USER: 'auth:error.account.update',
   FAILED_TO_GET_SESSION: 'auth:error.session.retrieval',
+  SESSION_REQUIRED: 'auth:error.session.retrieval',
   INVALID_PASSWORD: 'auth:error.credentials.password.invalid',
   INVALID_EMAIL: 'auth:error.credentials.email.invalid',
   INVALID_EMAIL_OR_PASSWORD: 'auth:error.credentials.invalidEmailOrPassword',
@@ -167,6 +170,7 @@ const ERROR_MESSAGES: Record<AuthErrorCode, TranslationKey> = {
   EMAIL_CAN_NOT_BE_UPDATED: 'auth:error.credentials.email.cannotUpdate',
   CREDENTIAL_ACCOUNT_NOT_FOUND: 'auth:error.credentials.notFound',
   SESSION_EXPIRED: 'auth:error.session.expired',
+  TOKEN_EXPIRED: 'auth:error.session.expired',
   FAILED_TO_UNLINK_LAST_ACCOUNT: 'auth:error.social.unlinkLastAccount',
   ACCOUNT_NOT_FOUND: 'auth:error.user.accountNotFound',
   CHALLENGE_NOT_FOUND: 'auth:error.passkey.challengeNotFound',
@@ -174,6 +178,12 @@ const ERROR_MESSAGES: Record<AuthErrorCode, TranslationKey> = {
   FAILED_TO_VERIFY_REGISTRATION: 'auth:error.passkey.verificationFailed',
   PASSKEY_NOT_FOUND: 'auth:error.passkey.notFound',
   FAILED_TO_UPDATE_PASSKEY: 'auth:error.passkey.updateFailed',
+  PREVIOUSLY_REGISTERED: 'auth:error.passkey.notAllowed',
+  REGISTRATION_CANCELLED: 'auth:error.authenticationFailed',
+  AUTH_CANCELLED: 'auth:error.authenticationFailed',
+  UNKNOWN_ERROR: 'auth:error.authenticationFailed',
+  RESOLVE_USER_REQUIRED: 'auth:error.user.notFound',
+  RESOLVED_USER_INVALID: 'auth:error.user.notFound',
   ANONYMOUS_USERS_CANNOT_SIGN_IN_AGAIN_ANONYMOUSLY: 'auth:error.anonymous.cannotSignInAgain',
   OTP_NOT_ENABLED: 'auth:error.otp.notEnabled',
   OTP_HAS_EXPIRED: 'auth:error.otp.expired',
@@ -191,7 +201,10 @@ const ERROR_MESSAGES: Record<AuthErrorCode, TranslationKey> = {
   CALLBACK_URL_REQUIRED: 'auth:error.url.callbackUrlRequired',
   OTP_EXPIRED: 'auth:error.otp.expired',
   INVALID_OTP: 'auth:error.otp.invalid',
-  TOO_MANY_ATTEMPTS: 'auth:error.otp.tooManyAttempts'
+  TOO_MANY_ATTEMPTS: 'auth:error.otp.tooManyAttempts',
+  METHOD_NOT_ALLOWED_DEFER_SESSION_REQUIRED: 'auth:error.session.retrieval',
+  BODY_MUST_BE_AN_OBJECT: 'auth:error.validationError',
+  PASSWORD_ALREADY_SET: 'auth:error.user.alreadyHasPassword'
 } as const
 
 export type {

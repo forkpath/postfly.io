@@ -6,6 +6,12 @@ import { MessageHandlerErrorBehavior, RabbitMQConfig, RabbitMQModule } from '@go
 import { MsgPubService } from './msg-pub.service'
 import { RabbitmqConfig } from './rabbitmq.config'
 
+function parsePrefetchCount(value: string | undefined): number {
+  const parsed = Number(value ?? 5)
+  if (!Number.isInteger(parsed) || parsed < 1) return 5
+  return Math.min(parsed, 16)
+}
+
 @Global()
 @Module({})
 export class RabbitmqModule {
@@ -38,7 +44,7 @@ export class RabbitmqModule {
               defaultRpcTimeout: 10000, // rpc超时为10秒
               channels: {
                 default: {
-                  prefetchCount: 5,
+                  prefetchCount: parsePrefetchCount(process.env['WORKER_CONCURRENCY']),
                   default: true
                 }
               },

@@ -65,8 +65,8 @@ cd /opt/ray
 ### 步骤 2：配置环境变量（唯一需要手动编辑的环节）
 
 ```bash
-cp .env.example docker/.env
-vim docker/.env
+cp .env.example .env
+vim .env
 ```
 
 **必须修改的变量：**
@@ -95,12 +95,12 @@ vim docker/.env
 | `VITE_*`                                   | 宿主机 Nx 构建阶段 | Vite 在构建时读取 `process.env.VITE_*` 写入前端 JS         |
 | `VITE_*`                                   | 容器运行时         | envin (Zod) 在 SSR 服务器启动时通过 `process.env` 读取校验 |
 | `DOMAIN` / `ACME_EMAIL` / `REDIS_PASSWORD` | Kong 启动时        | `entrypoint.sh` 渲染 `kong.yml` 模板                       |
-| 其余所有变量                               | 容器运行时         | `env_file: .env` 注入到 engine 和 web 容器                 |
+| 其余所有变量                               | 容器运行时         | `env_file: ../.env` 从仓库根目录注入到容器                 |
 
 > **注意：** Web 容器也需要 `BETTER_AUTH_SECRET` 等服务端变量，因为 SSR 服务器执行
 > auth 逻辑时 envin 会校验这些值。如果缺失，SSR 服务器启动即崩溃
-> (`EnvError: Invalid environment variables`)。这就是 web 服务和 engine 共用同一份
-> `docker/.env` 的原因。
+> (`EnvError: Invalid environment variables`)。这就是 web 服务和 engine 共用仓库根目录
+> `.env` 的原因。
 
 ### 步骤 3：启动基础设施
 
@@ -333,9 +333,10 @@ Kong 使用内置的 **ACME 插件**自动申请和续期 Let's Encrypt 证书�
 ## 文件结构
 
 ```
+.env                            # 环境变量（本地开发与生产共用路径，不入 git）
 docker/
 ├── docker-compose.yml          # 服务编排
-├── .env                        # 生产环境变量（不入 git）
+├── docker-compose.dev.yml      # 本地基础设施（redis / postgres / mongo / rabbitmq）
 ├── web.Dockerfile              # Web 镜像构建
 ├── engine.Dockerfile           # Engine 镜像构建
 ├── kong/

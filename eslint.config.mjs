@@ -21,7 +21,8 @@ export default [
       '**/vite.config.*.timestamp*',
       '**/vitest.config.*.timestamp*',
       '**/.expo',
-      '**/.wxt'
+      '**/.wxt',
+      '**/libs/pg-dao/src/generated/**'
     ]
   },
   {

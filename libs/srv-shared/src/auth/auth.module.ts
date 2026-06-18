@@ -5,8 +5,8 @@ import type { Request, Response } from 'express'
 import { Inject, Logger, Module } from '@nestjs/common'
 import { APP_GUARD, DiscoveryModule, DiscoveryService, HttpAdapterHost, MetadataScanner } from '@nestjs/core'
 
+import { createAuthMiddleware } from 'better-auth/api'
 import { toNodeHandler } from 'better-auth/node'
-import { createAuthMiddleware } from 'better-auth/plugins'
 
 import {
   AFTER_HOOK_KEY,

@@ -14,9 +14,11 @@ info()  { printf '\033[1;34m[INFO]\033[0m  %s\n' "$*"; }
 ok()    { printf '\033[1;32m[OK]\033[0m    %s\n' "$*"; }
 err()   { printf '\033[1;31m[ERR]\033[0m   %s\n' "$*" >&2; }
 
-ENV_FILE="$PROJECT_ROOT/docker/.env"
+ENV_FILE="$PROJECT_ROOT/.env"
 
-dc() { docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" "$@"; }
+dc() {
+  docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" "$@"
+}
 
 usage() {
   cat <<EOF
@@ -46,10 +48,9 @@ EOF
 }
 
 check_env() {
-  local env_file="$PROJECT_ROOT/docker/.env"
-  if [ ! -f "$env_file" ]; then
-    err ".env file not found at $env_file"
-    info "Copy from template: cp $PROJECT_ROOT/.env.example $env_file"
+  if [ ! -f "$ENV_FILE" ]; then
+    err ".env file not found at $ENV_FILE"
+    info "Copy from template: cp $PROJECT_ROOT/.env.example $ENV_FILE"
     exit 1
   fi
 }
@@ -131,6 +132,7 @@ cmd_nx_build() {
 }
 
 cmd_build() {
+  check_env
   cmd_nx_build
   info "Packaging app images (engine, web)..."
   dc build --parallel "$@" "${APP_SERVICES[@]}"

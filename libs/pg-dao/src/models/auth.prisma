@@ -1,3 +1,4 @@
+
 model User {
   id               String       @id
   name             String
@@ -103,6 +104,8 @@ model TwoFactor {
   backupCodes String @map("backup_codes")
   userId      String @map("user_id")
   user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  verified Boolean? @default(true)
 
   @@index([secret])
   @@index([userId])
