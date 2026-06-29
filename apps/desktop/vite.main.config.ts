@@ -24,7 +24,7 @@ export default defineConfig({
     },
     outDir: path.resolve(__dirname, '.vite/main'),
     emptyOutDir: true,
-    rollupOptions: {
+    rolldownOptions: {
       external
     }
   },

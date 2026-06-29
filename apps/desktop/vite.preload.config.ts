@@ -15,7 +15,7 @@ export default defineConfig({
     },
     outDir: path.resolve(__dirname, '.vite/main'),
     emptyOutDir: false,
-    rollupOptions: {
+    rolldownOptions: {
       external,
       output: {
         // 强制使用 .cjs 扩展名
