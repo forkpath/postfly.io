@@ -1,6 +1,0 @@
-
-# AI agent mirrored dirs (symlinks; source of truth under .agents)
-.agents
-.claude
-.codex
-.cursor
