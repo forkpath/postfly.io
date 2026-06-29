@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -62,7 +61,6 @@ export const CreateOrganizationModal = ({ trigger, open: openProp, onOpenChange 
     },
     [isControlled, onOpenChange]
   )
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
 
   const form = useForm<CreateOrganizationFormValues>({
@@ -80,7 +78,7 @@ export const CreateOrganizationModal = ({ trigger, open: openProp, onOpenChange 
       setOpen(false)
       form.reset()
       if (data?.slug) {
-        void navigate({ to: pathsConfig.crm.index })
+        window.location.href = pathsConfig.crm.index
       }
     }
   })
