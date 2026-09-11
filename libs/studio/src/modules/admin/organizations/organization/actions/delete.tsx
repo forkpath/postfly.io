@@ -18,7 +18,7 @@ import {
   AlertDialogTrigger,
   Button,
   Icons
-} from '@libs/ui-shared/web'
+} from '@libs/ui-web'
 
 import { pathsConfig } from '../../../../../config/paths'
 
@@ -41,7 +41,7 @@ export function DeleteOrgAction({ id }: DeleteOrgActionProps) {
           })
         )
         void router.navigate({
-          to: pathsConfig.admin.organizations.index
+          to: pathsConfig.admin.organizations.index as never
         })
       }
     })

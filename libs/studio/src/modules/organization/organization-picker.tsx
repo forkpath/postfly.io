@@ -1,8 +1,8 @@
 'use client'
 
 import { useTranslation } from '@libs/i18n'
-import { cn } from '@libs/ui-shared/common'
-import { Avatar, AvatarFallback, AvatarImage, Button, buttonVariants, Icons, Skeleton } from '@libs/ui-shared/web'
+import { cn } from '@libs/ui-core'
+import { Avatar, AvatarFallback, AvatarImage, Button, buttonVariants, Icons, Skeleton } from '@libs/ui-web'
 
 import { GoLink, pathsConfig } from '../../index'
 import { authClient } from '../../lib/auth/client'

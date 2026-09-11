@@ -1,4 +1,4 @@
-import type { ThemeConfig } from '@libs/ui-shared/common'
+import type { ThemeConfig } from '@libs/ui-core'
 
 import { appConfig } from '~/config/app'
 import { useTheme } from '~/modules/common/hooks/use-theme'
@@ -6,7 +6,7 @@ import { SettingsTile } from '~/modules/common/settings-tile'
 import { View } from 'react-native'
 
 import { useTranslation } from '@libs/i18n'
-import { cn } from '@libs/ui-shared/common'
+import { cn } from '@libs/ui-core'
 import {
   BottomSheet,
   BottomSheetCloseTrigger,
@@ -15,12 +15,13 @@ import {
   BottomSheetHeader,
   BottomSheetOpenTrigger,
   BottomSheetTitle,
-  BottomSheetView
-} from '@libs/ui-shared/mobile/components/bottom-sheet'
-import { Button } from '@libs/ui-shared/mobile/components/button'
-import { Icons } from '@libs/ui-shared/mobile/components/icons'
-import { Text } from '@libs/ui-shared/mobile/components/text'
-import { MODE_ICONS, ThemeCustomizer } from '@libs/ui-shared/mobile/components/theme'
+  BottomSheetView,
+  Button,
+  Icons,
+  MODE_ICONS,
+  Text,
+  ThemeCustomizer
+} from '@libs/ui-native'
 
 export const ThemeSettings = () => {
   const { t } = useTranslation('common')

@@ -22,10 +22,10 @@ function getEnvVar(key: string): string | undefined {
   if (typeof process !== 'undefined' && process.env) {
     return process.env[key]
   }
-  // 浏览器/Vite 环境
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    return import.meta.env[key] as string | undefined
-  }
+  // 浏览器/Vite 环境。直接引用 import.meta.env，确保 Vite/WXT 能在
+  // IIFE content-script 构建中静态替换它，而不是把整个 import.meta 清空。
+  const viteEnv = (import.meta as { readonly env?: Record<string, string | undefined> }).env
+  if (viteEnv) return viteEnv[key]
   return undefined
 }
 

@@ -1,11 +1,10 @@
-import type { BillingPlan } from '@libs/billing'
+import type { BillingPlan } from '@libs/billing-contract'
 
 import { View } from 'react-native'
 
-import { findPlanById } from '@libs/billing'
+import { findPlanById } from '@libs/billing-contract'
 import { isKey, useTranslation } from '@libs/i18n'
-import { Icons } from '@libs/ui-shared/mobile/components/icons'
-import { Text } from '@libs/ui-shared/mobile/components/text'
+import { Icons, Text } from '@libs/ui-native'
 
 export const FeaturesList = ({ planId }: { planId: BillingPlan }) => {
   const { t, i18n } = useTranslation('billing')

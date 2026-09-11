@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { useForm } from 'react-hook-form'
 
-import { AuthProvider, passwordLoginSchema } from '@libs/auth'
+import { AuthProvider, passwordLoginSchema } from '@libs/auth-contract'
 import { useTranslation } from '@libs/i18n'
 import {
   Button,
@@ -18,7 +18,7 @@ import {
   Icons,
   Input,
   PasswordInput
-} from '@libs/ui-shared/web'
+} from '@libs/ui-web'
 
 import { GoLink } from '../../../../common/components/go-link'
 import { pathsConfig } from '../../../../config/paths'

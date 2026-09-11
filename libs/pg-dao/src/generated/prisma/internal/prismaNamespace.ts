@@ -397,7 +397,8 @@ export const ModelName = {
   WebhookEvent: 'WebhookEvent',
   Customer: 'Customer',
   Subscription: 'Subscription',
-  Order: 'Order'
+  Order: 'Order',
+  InboxMessage: 'InboxMessage'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -413,7 +414,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "passkey" | "twoFactor" | "organization" | "member" | "invitation" | "organizationRole" | "webhookEvent" | "customer" | "subscription" | "order"
+    modelProps: "user" | "session" | "account" | "verification" | "passkey" | "twoFactor" | "organization" | "member" | "invitation" | "organizationRole" | "webhookEvent" | "customer" | "subscription" | "order" | "inboxMessage"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1453,6 +1454,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    InboxMessage: {
+      payload: Prisma.$InboxMessagePayload<ExtArgs>
+      fields: Prisma.InboxMessageFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.InboxMessageFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InboxMessagePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.InboxMessageFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InboxMessagePayload>
+        }
+        findFirst: {
+          args: Prisma.InboxMessageFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InboxMessagePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.InboxMessageFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InboxMessagePayload>
+        }
+        findMany: {
+          args: Prisma.InboxMessageFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InboxMessagePayload>[]
+        }
+        create: {
+          args: Prisma.InboxMessageCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InboxMessagePayload>
+        }
+        createMany: {
+          args: Prisma.InboxMessageCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.InboxMessageCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InboxMessagePayload>[]
+        }
+        delete: {
+          args: Prisma.InboxMessageDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InboxMessagePayload>
+        }
+        update: {
+          args: Prisma.InboxMessageUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InboxMessagePayload>
+        }
+        deleteMany: {
+          args: Prisma.InboxMessageDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.InboxMessageUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.InboxMessageUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InboxMessagePayload>[]
+        }
+        upsert: {
+          args: Prisma.InboxMessageUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InboxMessagePayload>
+        }
+        aggregate: {
+          args: Prisma.InboxMessageAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateInboxMessage>
+        }
+        groupBy: {
+          args: Prisma.InboxMessageGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InboxMessageGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.InboxMessageCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InboxMessageCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1580,7 +1655,9 @@ export const TwoFactorScalarFieldEnum = {
   secret: 'secret',
   backupCodes: 'backupCodes',
   userId: 'userId',
-  verified: 'verified'
+  verified: 'verified',
+  failedVerificationCount: 'failedVerificationCount',
+  lockedUntil: 'lockedUntil'
 } as const
 
 export type TwoFactorScalarFieldEnum = (typeof TwoFactorScalarFieldEnum)[keyof typeof TwoFactorScalarFieldEnum]
@@ -1642,7 +1719,10 @@ export const WebhookEventScalarFieldEnum = {
   type: 'type',
   status: 'status',
   error: 'error',
-  processedAt: 'processedAt'
+  receivedAt: 'receivedAt',
+  processedAt: 'processedAt',
+  lastAttemptAt: 'lastAttemptAt',
+  attemptCount: 'attemptCount'
 } as const
 
 export type WebhookEventScalarFieldEnum = (typeof WebhookEventScalarFieldEnum)[keyof typeof WebhookEventScalarFieldEnum]
@@ -1651,6 +1731,8 @@ export type WebhookEventScalarFieldEnum = (typeof WebhookEventScalarFieldEnum)[k
 export const CustomerScalarFieldEnum = {
   id: 'id',
   referenceId: 'referenceId',
+  userId: 'userId',
+  organizationId: 'organizationId',
   externalId: 'externalId',
   provider: 'provider',
   createdAt: 'createdAt',
@@ -1690,6 +1772,24 @@ export const OrderScalarFieldEnum = {
 } as const
 
 export type OrderScalarFieldEnum = (typeof OrderScalarFieldEnum)[keyof typeof OrderScalarFieldEnum]
+
+
+export const InboxMessageScalarFieldEnum = {
+  id: 'id',
+  consumer: 'consumer',
+  messageId: 'messageId',
+  eventType: 'eventType',
+  version: 'version',
+  status: 'status',
+  attemptCount: 'attemptCount',
+  leaseUntil: 'leaseUntil',
+  lastError: 'lastError',
+  processedAt: 'processedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type InboxMessageScalarFieldEnum = (typeof InboxMessageScalarFieldEnum)[keyof typeof InboxMessageScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1950,6 +2050,7 @@ export type GlobalOmitConfig = {
   customer?: Prisma.CustomerOmit
   subscription?: Prisma.SubscriptionOmit
   order?: Prisma.OrderOmit
+  inboxMessage?: Prisma.InboxMessageOmit
 }
 
 /* Types for Logging */

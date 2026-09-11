@@ -10,7 +10,7 @@ const external = [
   ...builtinModules.map(module => `node:${module}`)
 ]
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       '@main': path.resolve(__dirname, 'src/main')
@@ -28,6 +28,13 @@ export default defineConfig({
       external
     }
   },
+  define:
+    mode === 'bundle'
+      ? {
+          MAIN_WINDOW_VITE_DEV_SERVER_URL: 'undefined',
+          MAIN_WINDOW_VITE_NAME: JSON.stringify('.')
+        }
+      : undefined,
   // do not remove logs when HMR
   clearScreen: false
-})
+}))

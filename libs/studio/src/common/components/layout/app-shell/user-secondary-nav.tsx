@@ -8,14 +8,14 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import type { User } from '@libs/auth'
+import type { User } from '@libs/auth-contract'
 
 import { memo, useCallback } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 
 import { useTranslation } from '@libs/i18n'
-import { cn } from '@libs/ui-shared/common'
-import { Avatar, AvatarFallback, AvatarImage, Button, Icons } from '@libs/ui-shared/web'
+import { cn } from '@libs/ui-core'
+import { Avatar, AvatarFallback, AvatarImage, Button, Icons } from '@libs/ui-web'
 
 import { pathsConfig } from '../../../../config/paths'
 import { authClient } from '../../../../lib/auth/client'

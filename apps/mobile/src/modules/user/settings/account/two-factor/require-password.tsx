@@ -1,5 +1,5 @@
-import type { PasswordPayload } from '@libs/auth'
-import type { BottomSheetContentRef } from '@libs/ui-shared/mobile/components/bottom-sheet'
+import type { PasswordPayload } from '@libs/auth-contract'
+import type { BottomSheetContentRef } from '@libs/ui-native'
 
 import { memo, useCallback } from 'react'
 
@@ -7,7 +7,7 @@ import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { Controller, useForm } from 'react-hook-form'
 import { View } from 'react-native'
 
-import { passwordSchema } from '@libs/auth'
+import { passwordSchema } from '@libs/auth-contract'
 import { useTranslation } from '@libs/i18n'
 import {
   BottomSheet,
@@ -18,14 +18,16 @@ import {
   BottomSheetOpenTrigger,
   BottomSheetScrollView,
   BottomSheetTitle,
+  Button,
+  Field,
+  FieldError,
+  FieldLabel,
+  Icons,
+  Input,
+  Spin,
+  Text,
   useBottomSheet
-} from '@libs/ui-shared/mobile/components/bottom-sheet'
-import { Button } from '@libs/ui-shared/mobile/components/button'
-import { Field, FieldError, FieldLabel } from '@libs/ui-shared/mobile/components/field'
-import { Icons } from '@libs/ui-shared/mobile/components/icons'
-import { Input } from '@libs/ui-shared/mobile/components/input'
-import { Spin } from '@libs/ui-shared/mobile/components/spin'
-import { Text } from '@libs/ui-shared/mobile/components/text'
+} from '@libs/ui-native'
 
 interface RequirePasswordProps {
   readonly title?: string

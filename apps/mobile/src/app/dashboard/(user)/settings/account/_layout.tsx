@@ -1,7 +1,7 @@
 import { BaseHeader } from '~/modules/common/layout/header'
 import { router, Stack } from 'expo-router'
 
-import { capitalize } from '@libs/common/utils'
+import { capitalize } from '@libs/common'
 import { isKey, useTranslation } from '@libs/i18n'
 
 export default function AccountLayout() {

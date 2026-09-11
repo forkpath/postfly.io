@@ -13,12 +13,13 @@ nx add @nx/react
 nx g @nx/react:app apps/web --bundler=vite --style=css --globalCss --linter eslint --port 3000 --unitTestRunner vitest --e2eTestRunner playwright--tags=scope:frontend,type:app
 ```
 
-计划将scope和type进行固定分类，方便后续根据tag来运行对应工作流
+项目使用 type/runtime/domain 三个正交 tag 维度，方便 Nx 执行依赖约束和 affected 工作流。
 
-| Tag   | 分类                                   |
-| ----- | -------------------------------------- |
-| Scope | `frontend` `backend` `client` `shared` |
-| Type  | `app` `lib`                            |
+| Tag | 分类 |
+| --- | --- |
+| Type | `app` `feature` `data-access` `contract` `ui` `util` `platform` |
+| Runtime | `node` `web` `native` `universal` |
+| Domain | `auth` `billing` `organization` `shared` `platform` `composition` |
 
 - 将engine移动到services中
 
@@ -44,11 +45,13 @@ npx lefthook install
 pnpm add -D @ianvs/prettier-plugin-sort-imports prettier-plugin-tailwindcss
 ```
 
-- 创建service等核心依赖core和共享模块shared
+- 创建服务端契约与平台 adapter
 
 ```shell
-nx g @nx/nest:lib libs/srv-core --linter=eslint --tags=scope:backend,type:lib --skipTsConfig
-nx g @nx/nest:lib libs/srv-shared --linter=eslint --tags=scope:backend,type:lib --skipTsConfig
+nx g @nx/js:lib libs/server-kernel --minimal --bundler=none --tags=type:contract,runtime:universal,domain:platform
+nx g @nx/js:lib libs/server-nest --minimal --bundler=none --tags=type:platform,runtime:node,domain:platform
+nx g @nx/js:lib libs/server-redis --minimal --bundler=none --tags=type:platform,runtime:node,domain:platform
+nx g @nx/js:lib libs/server-rabbitmq --minimal --bundler=none --tags=type:platform,runtime:node,domain:platform
 ```
 
 - 创建pg-dao，用prisma作为orm
@@ -88,11 +91,13 @@ nx g @nx/js:lib libs/api-client --minimal --bundler=none --tags=scope:shared,typ
 - 创建apps共用的ui组件库以及spa应用核心组件库studio
 
 ```shell
-nx g @nx/react:library libs/ui-shared --unitTestRunner=vitest --linter=eslint --tags=scope:frontend,type:lib --skipTsConfig
+nx g @nx/react:library libs/ui-core --unitTestRunner=vitest --linter=eslint --tags=type:util,runtime:universal,domain:shared --skipTsConfig
+nx g @nx/react:library libs/ui-web --unitTestRunner=vitest --linter=eslint --tags=type:ui,runtime:web,domain:shared --skipTsConfig
+nx g @nx/react:library libs/ui-native --unitTestRunner=vitest --linter=eslint --tags=type:ui,runtime:native,domain:shared --skipTsConfig
 nx g @nx/react:library libs/studio --unitTestRunner=vitest --linter=eslint --tags=scope:frontend,type:lib --skipTsConfig
 
 # 因为该lib不会打包输出，所以不需要babel，所以删除该目录下的.babelrc
-rm libs/ui-shared/.babelrc
+rm libs/ui-core/.babelrc libs/ui-web/.babelrc libs/ui-native/.babelrc
 rm libs/studio/.babelrc
 
 # 移除对应依赖
@@ -131,14 +136,14 @@ nx g @nx/js:lib libs/auth --minimal --bundler=none --tags=scope:shared,type:lib 
 nx g @nx/js:lib libs/billing --minimal --bundler=none --tags=scope:shared,type:lib --skipTsConfig
 ```
 
-- 利用shacdn构建ui-shared
+- 利用 shadcn 构建 ui-web，并把通用 token 放在 ui-core
 
 ```shell
 # 安装必须的依赖
 pnpm add class-variance-authority clsx tailwind-merge lucide-react tw-animate-css tailwindcss
 pnpm add -D @tailwindcss/postcss @tailwindcss/vite
 
-# 在根目录下创建components.json，并修改路径为ui-shared
+# 在根目录下创建 components.json，并指向 ui-web/ui-core
 {
     "$schema": "https://ui.shadcn.com/schema.json",
     "style": "new-york",
@@ -152,10 +157,10 @@ pnpm add -D @tailwindcss/postcss @tailwindcss/vite
         "prefix": ""
     },
     "aliases": {
-        "components": "libs/ui-shared/src/web/components",
-        "utils": "libs/ui-shared/src/common/lib/utils",
-        "lib": "libs/ui-shared/src/common/lib",
-        "hooks": "libs/ui-shared/src/common/hooks"
+        "components": "libs/ui-web/src/components",
+        "utils": "libs/ui-core/src/lib/utils",
+        "lib": "libs/ui-core/src/lib",
+        "hooks": "libs/ui-core/src/hooks"
     },
     "iconLibrary": "lucide"
 }
@@ -164,8 +169,8 @@ pnpm add -D @tailwindcss/postcss @tailwindcss/vite
 另外aliases只需要这四个即可
 
 # 在package.json中绑定脚本，我这里的思路是将其分科，通过路径的方式来实现样式添加
-"add:web-ui": "pnpx shadcn@latest add -p libs/ui-shared/src/web/components",
-"add:mobile-ui": "pnpx shadcn@latest add -p libs/ui-shared/src/mobile/components",
+"add:web-ui": "pnpx shadcn@latest add -p libs/ui-web/src/components",
+"add:mobile-ui": "pnpx shadcn@latest add -p libs/ui-native/src/components",
 ```
 
 - 构建desktop应用

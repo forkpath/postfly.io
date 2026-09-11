@@ -11,15 +11,20 @@ import { useFocusEffect } from 'expo-router'
 import { Controller, useForm } from 'react-hook-form'
 import { Alert, View } from 'react-native'
 
-import { emailSchema } from '@libs/auth'
+import { emailSchema } from '@libs/auth-contract'
 import { useTranslation } from '@libs/i18n'
-import { Badge } from '@libs/ui-shared/mobile/components/badge'
-import { Button } from '@libs/ui-shared/mobile/components/button'
-import { Field, FieldDescription, FieldError, FieldLabel } from '@libs/ui-shared/mobile/components/field'
-import { Icons } from '@libs/ui-shared/mobile/components/icons'
-import { Input } from '@libs/ui-shared/mobile/components/input'
-import { Spin } from '@libs/ui-shared/mobile/components/spin'
-import { Text } from '@libs/ui-shared/mobile/components/text'
+import {
+  Badge,
+  Button,
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  Icons,
+  Input,
+  Spin,
+  Text
+} from '@libs/ui-native'
 
 const EditEmail = () => {
   const { t } = useTranslation(['common', 'auth'])

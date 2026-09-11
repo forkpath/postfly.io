@@ -8,7 +8,7 @@ import PostHog, { PostHogProvider } from 'posthog-react-native'
 import { AppState } from 'react-native'
 
 import { AnalyticsProvider, registerMobileAnalyticsAdapter } from '@libs/analytics'
-import { mobileEnv } from '@libs/analytics/env'
+import { mobileEnv } from '@libs/analytics-native/env'
 
 let client: PostHog | null = null
 

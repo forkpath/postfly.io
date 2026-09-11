@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+{
+  printf 'curl'
+  printf ' %q' "$@"
+  printf '\n'
+} >> "${MOCK_RELEASE_LOG:?MOCK_RELEASE_LOG is required}"
+
+for argument in "$@"; do
+  case "$argument" in
+    config=@*)
+      config="${argument#config=@}"
+      if rg -q 'engine-blue:8000' "$config"; then
+        printf 'curl-color blue\n' >> "$MOCK_RELEASE_LOG"
+      elif rg -q 'engine-green:8000' "$config"; then
+        printf 'curl-color green\n' >> "$MOCK_RELEASE_LOG"
+      fi
+      ;;
+  esac
+done

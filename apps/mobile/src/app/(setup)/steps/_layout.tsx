@@ -8,9 +8,8 @@ import { Platform, View } from 'react-native'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
-import { cn } from '@libs/ui-shared/common'
-import { Button } from '@libs/ui-shared/mobile/components/button'
-import { Icons } from '@libs/ui-shared/mobile/components/icons'
+import { cn } from '@libs/ui-core'
+import { Button, Icons } from '@libs/ui-native'
 
 const steps = [
   pathsConfig.setup.steps.start,

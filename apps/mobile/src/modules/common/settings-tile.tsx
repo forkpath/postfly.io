@@ -2,10 +2,8 @@ import { useMemo } from 'react'
 
 import { Pressable } from 'react-native'
 
-import { cn } from '@libs/ui-shared/common'
-import { Icons } from '@libs/ui-shared/mobile/components/icons'
-import { Spin } from '@libs/ui-shared/mobile/components/spin'
-import { TextClassContext } from '@libs/ui-shared/mobile/components/text'
+import { cn } from '@libs/ui-core'
+import { Icons, Spin, TextClassContext } from '@libs/ui-native'
 
 interface SettingsTileProps {
   readonly icon: React.ElementType

@@ -1,0 +1,23 @@
+{
+  "name": "migration-tests",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "tools/migration-tests/src",
+  "projectType": "application",
+  "tags": ["type:app", "runtime:node", "domain:composition"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.app.json",
+        "cwd": "tools/migration-tests"
+      }
+    },
+    "billing-application-compatibility": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bash scripts/migrations/verify-billing-application-compatibility.sh"
+      }
+    }
+  }
+}

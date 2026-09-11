@@ -11,7 +11,7 @@ import type { UserResponse, UserSessionResponse } from '#/application/dtos/user/
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common'
 import { CommandBus, QueryBus } from '@nestjs/cqrs'
 
-import { Roles, Session } from '@libs/srv-shared'
+import { Roles, Session } from '@libs/auth-server/nest'
 
 import { BanUserCommand } from '#/application/commands/user/ban-user.command'
 import { DeleteAccountCommand } from '#/application/commands/user/delete-account.command'
@@ -42,7 +42,7 @@ import { ListUserSubscriptionsQuery } from '#/application/queries/user/list-user
 import { ListUsersQuery } from '#/application/queries/user/list-users.query'
 
 /**
- * 会话类型（来自 @libs/srv-shared AuthGuard）
+ * 会话类型（来自 @libs/auth-server/nest AuthGuard）
  */
 interface SessionUser {
   id: string

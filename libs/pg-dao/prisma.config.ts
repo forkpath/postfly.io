@@ -1,6 +1,12 @@
 import 'dotenv/config'
 
-import { defineConfig, env } from 'prisma/config'
+import { defineConfig } from 'prisma/config'
+
+const databaseUrl = process.env.POSTGRES_DATABASE_URL ?? process.env.POSGTRES_DATABASE_URL
+
+if (!databaseUrl) {
+  throw new Error('POSTGRES_DATABASE_URL is required')
+}
 
 export default defineConfig({
   schema: './src/schema.prisma',
@@ -9,6 +15,6 @@ export default defineConfig({
     seed: 'tsx ./src/seed.ts'
   },
   datasource: {
-    url: env('POSGTRES_DATABASE_URL')
+    url: databaseUrl
   }
 })

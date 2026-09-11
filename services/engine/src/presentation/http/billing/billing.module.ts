@@ -6,15 +6,19 @@ import { CreateCheckoutSessionHandler } from '#/application/commands/billing/cre
 import { HandleRevenueCatWebhookHandler } from '#/application/commands/billing/handle-revenuecat-webhook.command'
 import { HandleStripeWebhookHandler } from '#/application/commands/billing/handle-stripe-webhook.command'
 import { GetBillingSummaryHandler } from '#/application/queries/billing/get-billing-summary.query'
-import { BillingService } from '#/application/services/billing.service'
+import { BILLING_REPOSITORY } from '#/domain/repositories/billing.repository.interface'
+import { BillingRepository } from '#/infrastructure/repositories/billing.repository'
 
-import { BillingController } from './billing.controller'
+import { BillingController, OrganizationBillingController } from './billing.controller'
 
 @Module({
   imports: [CqrsModule],
-  controllers: [BillingController],
+  controllers: [BillingController, OrganizationBillingController],
   providers: [
-    BillingService,
+    {
+      provide: BILLING_REPOSITORY,
+      useClass: BillingRepository
+    },
     GetBillingSummaryHandler,
     CreateCheckoutSessionHandler,
     CreateBillingPortalHandler,

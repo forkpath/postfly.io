@@ -1,23 +1,23 @@
-import type { Order } from '@libs/billing'
+import type { Order } from '@libs/billing-contract'
 
 import { FeaturesList } from '~/modules/billing/features-list'
 import { NativePortalLink } from '~/modules/billing/portal/native-portal-link'
 import { WebPortalLink } from '~/modules/billing/portal/web-portal-link'
 import { View } from 'react-native'
 
-import { findPlanByVariantId, MobileStore, PaymentStatus } from '@libs/billing'
+import { findPlanByVariantId, MobileStore, PaymentStatus } from '@libs/billing-contract'
 import { isKey, useTranslation } from '@libs/i18n'
-import { Badge } from '@libs/ui-shared/mobile/components/badge'
 import {
+  Badge,
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle
-} from '@libs/ui-shared/mobile/components/card'
-import { Icons } from '@libs/ui-shared/mobile/components/icons'
-import { Text } from '@libs/ui-shared/mobile/components/text'
+  CardTitle,
+  Icons,
+  Text
+} from '@libs/ui-native'
 
 export const OrdersListItem = ({ order }: { order: Order }) => {
   const { t, i18n } = useTranslation(['common', 'billing'])

@@ -1,8 +1,11 @@
 import type { ICommandHandler } from '@nestjs/cqrs'
+import type { IBillingRepository } from '#/domain/repositories/billing.repository.interface'
 
+import { Inject } from '@nestjs/common'
 import { CommandHandler } from '@nestjs/cqrs'
 
-import { BillingService } from '../../services/billing.service'
+import { HandleRevenueCatWebhookUseCase } from '#/application/use-cases/billing/handle-billing-webhooks.use-case'
+import { BILLING_REPOSITORY } from '#/domain/repositories/billing.repository.interface'
 
 export class HandleRevenueCatWebhookCommand {
   constructor(
@@ -15,9 +18,12 @@ export class HandleRevenueCatWebhookCommand {
 
 @CommandHandler(HandleRevenueCatWebhookCommand)
 export class HandleRevenueCatWebhookHandler implements ICommandHandler<HandleRevenueCatWebhookCommand> {
-  constructor(private readonly billingService: BillingService) {}
+  constructor(
+    @Inject(BILLING_REPOSITORY)
+    private readonly repository: IBillingRepository
+  ) {}
 
   execute(command: HandleRevenueCatWebhookCommand) {
-    return this.billingService.handleRevenueCatWebhook(command.input)
+    return new HandleRevenueCatWebhookUseCase(this.repository).execute(command.input)
   }
 }

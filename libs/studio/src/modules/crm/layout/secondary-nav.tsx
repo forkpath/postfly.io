@@ -3,8 +3,8 @@ import type { ReactNode } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 
 import { useTranslation } from '@libs/i18n'
-import { cn } from '@libs/ui-shared/common'
-import { Icons } from '@libs/ui-shared/web'
+import { cn } from '@libs/ui-core'
+import { Icons } from '@libs/ui-web'
 
 import { pathsConfig } from '../../../config/paths'
 

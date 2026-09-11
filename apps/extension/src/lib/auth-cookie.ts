@@ -29,7 +29,7 @@ import { APP_SLUG } from '@libs/common'
  * 前置条件：'cookies' permission + host_permissions 覆盖 web URL（见 wxt.config.ts）。
  */
 
-const COOKIE_PREFIX = APP_SLUG // 与 libs/auth/src/server.ts 的 cookiePrefix 同源
+const COOKIE_PREFIX = APP_SLUG // 与 libs/auth-server/src/lib/auth-server.ts 的 cookiePrefix 同源
 
 /**
  * 读取浏览器中已写入的所有 better-auth cookies，序列化为标准 Cookie 请求头格式。

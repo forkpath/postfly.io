@@ -9,19 +9,13 @@ import { I18nService } from 'nestjs-i18n'
 import { createZodValidationPipe } from 'nestjs-zod'
 import { ZodError } from 'zod'
 
-import { auth } from '@libs/auth/server'
+import { auth } from '@libs/auth-server'
+import { AuthModule } from '@libs/auth-server/nest'
 import { MongoDaoModule } from '@libs/mongo-dao'
 import { PgDaoModule } from '@libs/pg-dao'
-import { AllExceptionsFilter, AppConfig, WrapResInterceptor } from '@libs/srv-core'
-import {
-  AuthModule,
-  CacheModule,
-  I18nModule,
-  LoggerModule,
-  RabbitmqModule,
-  RedisModule,
-  ThrottlerModule
-} from '@libs/srv-shared'
+import { AllExceptionsFilter, AppConfig, I18nModule, LoggerModule, WrapResInterceptor } from '@libs/server-nest'
+import { RabbitmqModule } from '@libs/server-rabbitmq'
+import { CacheModule, RedisModule, ThrottlerModule } from '@libs/server-redis'
 
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
@@ -66,9 +60,6 @@ import { UserModule } from './presentation/http/user/user.module'
 
     /*
      * 根据需要，建议在具体的应用中去加载这些模块
-     * 对象存储模块 StorageModule.register(),
-     * 短信发送模块 SmsModule.register(),
-     * 邮件收发模块 EmailModule.register(),
      * 消息队列模块 RabbitmqModule.register(),
      * 限流模块 ThrottlerModule.register(),
      * mongoDB模块 MongoDaoModule.forRoot()

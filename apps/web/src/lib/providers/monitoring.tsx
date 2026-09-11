@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 
 import '../monitoring/sentry'
 
-import { identify, initialize, Provider } from '@libs/monitoring/web'
+import { identify, initialize, Provider } from '@libs/monitoring-web'
 import { authClient } from '@libs/studio'
 
 export function MonitoringProvider({ children }: { children: ReactNode }) {

@@ -1,12 +1,12 @@
 'use client'
 
-import type { User } from '@libs/auth'
+import type { User } from '@libs/auth-contract'
 
 import { memo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import { billingQueries, useApiClient } from '@libs/api-client'
-import { getActivePlan } from '@libs/billing'
+import { getActivePlan } from '@libs/billing-contract'
 import { useTranslation } from '@libs/i18n'
 import {
   Avatar,
@@ -27,7 +27,7 @@ import {
   SidebarMenuItem,
   Skeleton,
   useSidebar
-} from '@libs/ui-shared/web'
+} from '@libs/ui-web'
 
 import { pathsConfig } from '../../config/paths'
 import { authClient } from '../../lib/auth/client'

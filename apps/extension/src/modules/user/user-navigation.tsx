@@ -1,4 +1,4 @@
-import type { ActiveOrganization, User } from '@libs/auth'
+import type { ActiveOrganization, User } from '@libs/auth-contract'
 
 import { memo } from 'react'
 import { useQuery } from '@tanstack/react-query'
@@ -7,10 +7,10 @@ import { appConfig } from '~/config/app'
 import { billingQueries } from '~/modules/billing/lib/api'
 
 import { useApiClient } from '@libs/api-client'
-import { hasAdminPermission } from '@libs/auth'
-import { getActivePlan } from '@libs/billing'
+import { hasAdminPermission } from '@libs/auth-contract'
+import { getActivePlan } from '@libs/billing-contract'
 import { useTranslation } from '@libs/i18n'
-import { cn } from '@libs/ui-shared/common'
+import { cn } from '@libs/ui-core'
 import {
   Avatar,
   AvatarFallback,
@@ -26,7 +26,7 @@ import {
   DropdownMenuTrigger,
   Icons,
   Skeleton
-} from '@libs/ui-shared/web'
+} from '@libs/ui-web'
 
 import { Logout } from './logout'
 

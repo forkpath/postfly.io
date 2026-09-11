@@ -109,3 +109,8 @@ export type Subscription = Prisma.SubscriptionModel
  * 
  */
 export type Order = Prisma.OrderModel
+/**
+ * Model InboxMessage
+ *
+ */
+export type InboxMessage = Prisma.InboxMessageModel

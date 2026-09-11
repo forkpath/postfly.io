@@ -265,7 +265,7 @@ export function useColumns(): ColumnDef<FooRow>[] {
 File: `foos/foo/foo-header.tsx`
 
 ```tsx
-import { PageHeader } from '@libs/ui-shared/web'
+import { PageHeader } from '@libs/studio'
 
 interface FooHeaderProps {
   foo: FooDetail

@@ -3,7 +3,7 @@ import type { GetInvitationsRes, GetMembersRes } from '@libs/payload'
 import { Controller, Get, Param, Query } from '@nestjs/common'
 import { QueryBus } from '@nestjs/cqrs'
 
-import { Session } from '@libs/srv-shared'
+import { Session } from '@libs/auth-server/nest'
 
 import {
   GenerateOrganizationSlugQueryDto,

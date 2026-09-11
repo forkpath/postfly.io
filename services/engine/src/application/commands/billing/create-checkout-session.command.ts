@@ -1,13 +1,18 @@
 import type { ICommandHandler } from '@nestjs/cqrs'
+import type { IBillingRepository } from '#/domain/repositories/billing.repository.interface'
+import type { BillingOwner } from '#/domain/value-objects/billing-owner.vo'
 
+import { Inject } from '@nestjs/common'
 import { CommandHandler } from '@nestjs/cqrs'
 
-import { BillingService } from '../../services/billing.service'
+import { CreateBillingCheckoutUseCase } from '#/application/use-cases/billing/create-billing-checkout.use-case'
+import { BILLING_REPOSITORY } from '#/domain/repositories/billing.repository.interface'
 
 export class CreateCheckoutSessionCommand {
   constructor(
     public readonly input: {
-      referenceId: string
+      actorUserId: string
+      owner: BillingOwner
       email: string
       variantId: string
       successUrl: string
@@ -18,9 +23,12 @@ export class CreateCheckoutSessionCommand {
 
 @CommandHandler(CreateCheckoutSessionCommand)
 export class CreateCheckoutSessionHandler implements ICommandHandler<CreateCheckoutSessionCommand> {
-  constructor(private readonly billingService: BillingService) {}
+  constructor(
+    @Inject(BILLING_REPOSITORY)
+    private readonly repository: IBillingRepository
+  ) {}
 
   execute(command: CreateCheckoutSessionCommand) {
-    return this.billingService.createCheckoutSession(command.input)
+    return new CreateBillingCheckoutUseCase(this.repository).execute(command.input)
   }
 }

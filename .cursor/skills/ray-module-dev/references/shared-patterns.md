@@ -41,17 +41,17 @@ Always:
 
 ```
 @libs/common/src/constants/auth.ts     ← DEFINES SocialProvider, UserRole, MemberRole, InvitationStatus
-@libs/auth/src/types.ts                ← import from @libs/common + re-export (public API unchanged)
+libs/auth-contract/src/lib/auth-contract.ts                ← import from @libs/common + re-export (public API unchanged)
 @libs/payload/src/schemas/shared/constants.ts ← re-export from @libs/common (for use in Zod schemas)
 ```
 
 ```
 @libs/common/src/constants/billing.ts  ← DEFINES BillingProvider, BillingSubscriptionStatus, BillingOrderStatus
-@libs/billing/src/lib/types.ts         ← import from @libs/common + re-export
+libs/billing-contract/src/lib/billing-contract.ts         ← import from @libs/common + re-export
 @libs/payload/src/schemas/shared/constants.ts ← re-export from @libs/common
 ```
 
-When a library (like `@libs/auth`) re-exports, use this pattern:
+When a library (like `@libs/auth-contract`) re-exports, use this pattern:
 
 ```typescript
 import { UserRole, MemberRole } from '@libs/common'
@@ -61,8 +61,8 @@ import { UserRole, MemberRole } from '@libs/common'
 export {
   UserRole,       // re-exported from @libs/common
   MemberRole,     // re-exported from @libs/common
-  AuthProvider,   // local to @libs/auth
-  SecondFactor    // local to @libs/auth
+  AuthProvider,   // local to @libs/auth-contract
+  SecondFactor    // local to @libs/auth-contract
 }
 ```
 

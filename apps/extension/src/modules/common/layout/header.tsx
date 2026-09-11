@@ -1,4 +1,4 @@
-import type { User } from '@libs/auth'
+import type { User } from '@libs/auth-contract'
 
 import { authClient } from '~/lib/auth'
 import { ThemeControls } from '~/modules/common/theme'

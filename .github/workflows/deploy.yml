@@ -1,4 +1,4 @@
-name: Deploy
+name: Immutable Production Release
 
 on:
   push:
@@ -6,70 +6,176 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository }}
 
 permissions:
   contents: read
+  packages: write
+
+concurrency:
+  group: production-release
+  cancel-in-progress: false
 
 jobs:
   verify-branch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-
-      - name: Ensure tag is on main
+      - name: Ensure production tag belongs to main
+        shell: bash
         run: |
+          set -euo pipefail
           git fetch origin main --depth=1
-          TAG_COMMIT=$(git rev-list -n 1 "$GITHUB_REF")
-          if ! git merge-base --is-ancestor "$TAG_COMMIT" FETCH_HEAD; then
-            echo "::error::Tag must be on main branch"
-            exit 1
-          fi
+          tag_commit="$(git rev-list -n 1 "$GITHUB_REF")"
+          git merge-base --is-ancestor "$tag_commit" FETCH_HEAD
 
-  deploy:
+  build-and-push:
     needs: verify-branch
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17@sha256:7958605b474b3d264a969cb3a123d6aa00ad1e1fe9da8a69984dabb704d93317
+        env:
+          POSTGRES_USER: ray_release
+          POSTGRES_PASSWORD: ray_release_password
+          POSTGRES_DB: ray_release
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ray_release -d ray_release"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      POSTGRES_DATABASE_URL: postgresql://ray_release:ray_release_password@127.0.0.1:5432/ray_release
+    outputs:
+      engine: ${{ steps.engine.outputs.digest }}
+      web: ${{ steps.web.outputs.digest }}
+      pulse: ${{ steps.pulse.outputs.digest }}
+      worker: ${{ steps.worker.outputs.digest }}
+      migrator: ${{ steps.migrator.outputs.digest }}
     steps:
-      - name: Deploy to server
-        uses: appleboy/ssh-action@v1
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 10.25.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.14.1
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install --yes postgresql-client
+      - name: Verify migrations from an empty PostgreSQL 17 database
+        run: pnpm nx run pg-dao:migration-test --skipNxCache
+      - name: Create disposable historical-upgrade database
+        env:
+          PGPASSWORD: ray_release_password
+        run: createdb --host 127.0.0.1 --username ray_release ray_release_history
+      - name: Verify historical schema upgrade and resumable backfill
+        env:
+          POSTGRES_DATABASE_URL: postgresql://ray_release:ray_release_password@127.0.0.1:5432/ray_release_history
+        run: pnpm nx run pg-dao:historical-migration-test --skipNxCache
+      - name: Full release verification
+        run: pnpm nx run-many -t lint,typecheck,test,build --all
+      - name: Validate database and auth contracts
+        run: pnpm nx run-many -t validate,schema-check -p pg-dao,auth-server --nxBail
+      - name: Prove Prisma generation does not mutate the auth contract
+        run: |
+          pnpm nx run pg-dao:generate
+          git diff --exit-code -- libs/pg-dao/src/models/auth.prisma
+      - name: Validate immutable release migration intent
+        run: |
+          node --test scripts/release/migration-policy.test.mjs
+          node scripts/release/check-migration-policy.mjs --mode=static
+      - name: Prepare server runtime artifacts
+        run: pnpm nx run-many -t package -p engine,pulse,worker
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: engine
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: docker/engine.Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/engine:${{ github.sha }}
+      - id: web
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: docker/web.Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/web:${{ github.sha }}
+      - id: pulse
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: docker/pulse.Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/pulse:${{ github.sha }}
+      - id: worker
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: docker/worker.Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/worker:${{ github.sha }}
+      - id: migrator
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: docker/migrator.Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/migrator:${{ github.sha }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Upload versioned deployment control files
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ vars.DEPLOY_PORT || 22 }}
+          source: .release/migration-class,docker/docker-compose.app.yml,docker/kong/kong.yml,scripts/release/deploy-blue-green.sh,scripts/release/smoke-test.mjs,scripts/release/pulse-smoke-test.mjs
+          target: ${{ vars.DEPLOY_PATH || '/opt/ray' }}
+      - name: Run migrator, probes, and blue-green switch
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1
+        env:
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/opt/ray' }}
+          RELEASE_SHA: ${{ github.sha }}
+          RELEASE_OPERATOR: ${{ github.actor }}
+          ENGINE_IMAGE: ${{ env.IMAGE_PREFIX }}/engine@${{ needs.build-and-push.outputs.engine }}
+          WEB_IMAGE: ${{ env.IMAGE_PREFIX }}/web@${{ needs.build-and-push.outputs.web }}
+          PULSE_IMAGE: ${{ env.IMAGE_PREFIX }}/pulse@${{ needs.build-and-push.outputs.pulse }}
+          WORKER_IMAGE: ${{ env.IMAGE_PREFIX }}/worker@${{ needs.build-and-push.outputs.worker }}
+          MIGRATOR_IMAGE: ${{ env.IMAGE_PREFIX }}/migrator@${{ needs.build-and-push.outputs.migrator }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+          SMOKE_EMAIL: ${{ secrets.PRODUCTION_SMOKE_EMAIL }}
+          SMOKE_PASSWORD: ${{ secrets.PRODUCTION_SMOKE_PASSWORD }}
+          SMOKE_ORGANIZATION_ID: ${{ vars.PRODUCTION_SMOKE_ORGANIZATION_ID }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ vars.DEPLOY_PORT || 22 }}
           command_timeout: 30m
+          envs: DEPLOY_PATH,RELEASE_SHA,RELEASE_OPERATOR,ENGINE_IMAGE,WEB_IMAGE,PULSE_IMAGE,WORKER_IMAGE,MIGRATOR_IMAGE,GHCR_USER,GHCR_TOKEN,SMOKE_EMAIL,SMOKE_PASSWORD,SMOKE_ORGANIZATION_ID
           script: |
-            set -euxo pipefail
-
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-
-            DEPLOY_PATH="${{ vars.DEPLOY_PATH || '/opt/ray' }}"
-            RELEASE_TAG="${{ github.ref_name }}"
-
-            echo "== Runtime context =="
-            whoami
-            echo "HOME=$HOME"
-            echo "node=$(node -v 2>/dev/null || echo 'NOT FOUND')"
-            echo "pnpm=$(pnpm -v 2>/dev/null || echo 'NOT FOUND')"
-            pwd
-
-            cd "$DEPLOY_PATH"
-
-            echo "== Repository info =="
-            git remote -v
-            git status --short --branch || true
-
-            echo "== Fetching tags =="
-            git fetch --tags origin
-
-            echo "== Verifying tag exists locally =="
-            git rev-parse -q --verify "refs/tags/$RELEASE_TAG"
-
-            echo "== Checking out release tag =="
-            git checkout -B "release-$RELEASE_TAG" "refs/tags/$RELEASE_TAG"
-
-            echo "== Building and restarting services =="
-            ./scripts/deploy.sh build
-            ./scripts/deploy.sh restart
+            set -euo pipefail
+            chmod +x "$DEPLOY_PATH/scripts/release/deploy-blue-green.sh"
+            "$DEPLOY_PATH/scripts/release/deploy-blue-green.sh" deploy

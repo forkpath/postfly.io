@@ -8,22 +8,22 @@ import { SubscriptionsList } from '~/modules/billing/subscriptions/list/subscrip
 import { ScrollView } from '~/modules/common/styled'
 import { View } from 'react-native'
 
-import { BillingPlan, findPlanById, SubscriptionStatus } from '@libs/billing'
-import { usePaywall } from '@libs/billing/mobile'
+import { usePaywall } from '@libs/billing-client-native'
+import { BillingPlan, findPlanById, SubscriptionStatus } from '@libs/billing-contract'
 import { useTranslation } from '@libs/i18n'
-import { Badge } from '@libs/ui-shared/mobile/components/badge'
-import { Button } from '@libs/ui-shared/mobile/components/button'
 import {
+  Badge,
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle
-} from '@libs/ui-shared/mobile/components/card'
-import { Icons } from '@libs/ui-shared/mobile/components/icons'
-import { Skeleton } from '@libs/ui-shared/mobile/components/skeleton'
-import { Text } from '@libs/ui-shared/mobile/components/text'
+  CardTitle,
+  Icons,
+  Skeleton,
+  Text
+} from '@libs/ui-native'
 
 /**
  * When there is no billing information available, we show an empty state

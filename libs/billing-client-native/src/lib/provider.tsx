@@ -1,0 +1,44 @@
+import type { ReactNode } from 'react'
+
+import { useEffect } from 'react'
+
+import { Platform } from 'react-native'
+import Purchases, { LOG_LEVEL } from 'react-native-purchases'
+
+import { mobileBillingEnv } from './env'
+
+interface ProviderProps {
+  children: ReactNode
+  locale?: string
+}
+
+export const RevenueCatProvider = ({ children, locale }: ProviderProps) => {
+  useEffect(() => {
+    if (__DEV__) {
+      void Purchases.setLogLevel(LOG_LEVEL.DEBUG)
+    }
+
+    const apiKey = Platform.select({
+      ios: mobileBillingEnv.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
+      android: mobileBillingEnv.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY
+    })
+
+    if (!apiKey) {
+      return
+    }
+
+    Purchases.configure({ apiKey })
+    if (locale) {
+      // overridePreferredLocale may not exist on all versions; guarded at runtime
+      const pc = Purchases as unknown as { overridePreferredLocale?: (value: string | null) => void }
+      pc.overridePreferredLocale?.(locale)
+    }
+  }, [])
+
+  useEffect(() => {
+    const pc = Purchases as unknown as { overridePreferredLocale?: (value: string | null) => void }
+    pc.overridePreferredLocale?.(locale ?? null)
+  }, [locale])
+
+  return <>{children}</>
+}

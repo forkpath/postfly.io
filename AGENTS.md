@@ -13,11 +13,15 @@ Central orientation for contributors working inside the neo Nx monorepo. Follow 
 - `service/workder` - Application Context Worker (Nextjs)
 - `libs/pg-dao` – Postgresql Database model (Prisma)
 - `libs/mongo-dao` - MongoDB model (Mongoose)
-- `libs/auth` - Auth module for app and service (Better-auth)
+- `libs/auth-contract`, `libs/auth-client-*`, `libs/auth-server` - Better Auth contract and runtime adapters
 - `libs/common` - Shared types/utils
 - `libs/email` - Email module for app and service
+- `libs/email-server` - Node-only email templates and delivery; `libs/email` is the universal contract
+- `libs/analytics`, `libs/monitoring` - environment-free strategy/registration cores; use their `-web`, `-native`, or `-server` projects for runtime implementations and configuration
 - `libs/i18n/src/translationns` - translation files for app and service
-- `libs/ui-shared/src/web` - react components and common styles (Tailwind v4 and Shadcn)
+- `libs/ui-core`, `libs/ui-web`, `libs/ui-native` - universal tokens plus Web/Native UI implementations
+- `libs/server-kernel`, `libs/server-nest`, `libs/server-redis`, `libs/server-rabbitmq` - server contracts and platform adapters
+- `libs/server-elasticsearch`, `libs/server-sms`, `libs/server-email`, `libs/server-storage` - optional framework integrations; enable explicitly from the consuming Nest module
 - `libs/payload/src/schemas` - req & res payload validator for app and service (Zod)
 - `libs/api-client/src/domains` - Api request based on payload validator (React-query)
 - `libs/studio` - page components for desktop and web
@@ -35,6 +39,13 @@ Central orientation for contributors working inside the neo Nx monorepo. Follow 
 Always prefer Nx commands (`nx run`, `nx run-many`, `nx affected`) so task graph caching stays effective.
 
 ## Coding Standards
+
+- Ray is a reusable framework. Do not remove an optional integration solely because current apps have no consumers. Preserve explicit opt-in configuration and testable public APIs; deleting a capability requires a documented deprecation or a verified replacement covering its contract. See `docs/architecture/ray-framework-nx-guide.md`.
+
+- Ray is a reusable business-development framework. An adapter with no current
+  application consumer may still be an intentional extension point. Preserve
+  supported capabilities with explicit configuration, public APIs, and tests;
+  do not delete them solely because the current sample business does not use them.
 
 - Prettier: 2 spaces, single quotes, no semicolons, width 80. Tailwind + import-sort plugins are enabled; avoid manual formatting changes outside your diff.
 - ESLint: respect `@nx/enforce-module-boundaries`. Only import from a project’s public API (lib `src/index.ts`).

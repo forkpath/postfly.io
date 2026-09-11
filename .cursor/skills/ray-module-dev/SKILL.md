@@ -38,7 +38,7 @@ If the new domain introduces enum-like values (roles, statuses, providers):
 
 1. Define them in `libs/common/src/constants/` using the `as const` + type pattern
 2. Re-export from `libs/common/src/constants/index.ts`
-3. If needed in `@libs/auth` or `@libs/billing`, those libs should import from `@libs/common` and re-export (never redefine)
+3. If needed in `@libs/auth-contract` or `@libs/billing-contract`, those libs should import from `@libs/common` and re-export (never redefine)
 4. `@libs/payload` references constants via `libs/payload/src/schemas/shared/constants.ts` which re-exports from `@libs/common`
 
 > Read `references/shared-patterns.md` → "Constants" section for the exact pattern.
@@ -205,7 +205,7 @@ The app uses **two separate HTTP channels**. Never mix them.
 | Channel | Transport | Auth | Response Format | Used For |
 |---|---|---|---|---|
 | **Engine** | `useApiClient()` → Axios via `@libs/api-client` | Cookie + `@Roles()` guard | `{ code, msg, data }` (auto-unwrapped) | All business CRUD, admin management |
-| **Better Auth** | `authClient.*` from `@libs/auth` | Cookie (Better Auth built-in) | Raw JSON (varies per endpoint) | Login, register, session, organization membership |
+| **Better Auth** | `authClient.*` from app-owned `createClient()` using `@libs/auth-client-web/native` | Cookie (Better Auth built-in) | Raw JSON (varies per endpoint) | Login, register, session, organization membership |
 
 ### Engine Channel Setup (Critical)
 
@@ -215,7 +215,7 @@ The Engine channel requires correct wiring across 4 layers:
 2. **Vite Proxy** (`apps/web/vite.config.mts`): `'/api'` → `http://localhost:8000` — dev server forwards `/api/*` to Engine (matches both `/api/v1/*` engine routes and `/api/auth/*` Better Auth routes)
 3. **ApiClientProvider** (`apps/web/src/routes/_app.tsx`): `options={{ baseURL: '/api/v1' }}` — Axios prepends `/api/v1` to all paths
 4. **API Client queries** (`libs/api-client/src/domains/`): paths are written **without** the `/api/v1` prefix (e.g., `api.get('/admin/users')` → actual request `/api/v1/admin/users`)
-5. **Better Auth** (`libs/auth/src/server.ts`): `basePath: '/api/auth'` — auth endpoints live under `/api/auth/*` (independent of engine `globalPrefix`, not versioned)
+5. **Better Auth** (`libs/auth-server/src/lib/auth-server.ts`): `basePath: '/api/auth'` — auth endpoints live under `/api/auth/*` (independent of engine `globalPrefix`, not versioned)
 
 > If `baseURL` is not set to `/api/v1`, requests bypass the Vite proxy and never reach the Engine.
 

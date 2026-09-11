@@ -1,5 +1,5 @@
 ---
-globs: services/engine/src/**/*.ts,libs/srv-core/src/**/*.ts,libs/srv-shared/src/**/*.ts
+globs: services/{engine,pulse,worker}/src/**/*.ts,libs/{auth-server,server-nest,server-redis,server-rabbitmq}/src/**/*.ts
 alwaysApply: false
 ---
 
@@ -174,7 +174,7 @@ Run tests with **Jest**; keep _one test file per public class_.
 
 - One **Module** per feature folder. Re‑export providers when needed.
 - Controllers expose **primary** routes only; secondary routes → separate controller files in same folder.
-- Global concerns (exception filter, i18n middleware, logging, request‑ID, ACL guards, caching interceptors) live in `libs/srv-core` or `libs/srv-shared` and are bound in `AppModule`.
+- Global Nest concerns (exception filters, i18n and logging) live in `libs/server-nest`; the Better Auth Nest bridge lives at `@libs/auth-server/nest`; Redis cache/throttling and RabbitMQ adapters live in `libs/server-redis` and `libs/server-rabbitmq`. Bind only the adapters an application needs in its `AppModule`.
 - Validation: use `nestjs-zod` DTOs extending request schemas from `@libs/payload`; never use class-validator on entities.
 - **NEVER** inject `EntityManager` directly into controllers – use repositories through application layer.
 

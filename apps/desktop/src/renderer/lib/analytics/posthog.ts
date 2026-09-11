@@ -2,7 +2,7 @@ import type { AnalyticsDesktopAdapter } from '@libs/analytics'
 
 import posthog from 'posthog-js'
 
-import { desktopEnv } from '@libs/analytics'
+import { desktopEnv } from '@libs/analytics-web/env'
 
 const key = desktopEnv.VITE_POSTHOG_KEY
 const host = desktopEnv.VITE_POSTHOG_HOST

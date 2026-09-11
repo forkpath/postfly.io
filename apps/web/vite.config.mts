@@ -1,9 +1,6 @@
-/// <reference types='vitest' />
 import { devtools } from '@tanstack/devtools-vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import tailwindcss from '@tailwindcss/vite'
 import viteReact from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
@@ -11,8 +8,6 @@ import svgr from 'vite-plugin-svgr'
 
 export default defineConfig(async ({ command }) => {
   const plugins = [
-    nxViteTsPaths(),
-    nxCopyAssetsPlugin(['*.md']),
     devtools(),
     svgr({
       svgrOptions: {
@@ -34,7 +29,7 @@ export default defineConfig(async ({ command }) => {
 
   if (command === 'build') {
     const { nitro } = await import('nitro/vite')
-    plugins.splice(5, 0, nitro({ preset: 'node-server' }))
+    plugins.splice(3, 0, nitro({ preset: 'node-server' }))
   }
 
   return {
@@ -57,12 +52,12 @@ export default defineConfig(async ({ command }) => {
       port: 3000,
       host: 'localhost'
     },
+    resolve: { tsconfigPaths: true },
     plugins,
     ssr: {
       noExternal: [
-        '@libs/ui-shared',
         '@libs/studio',
-        '@libs/auth',
+        '@libs/auth-contract',
         '@libs/i18n',
         '@libs/common',
         '@libs/api-client',
@@ -75,18 +70,6 @@ export default defineConfig(async ({ command }) => {
       reportCompressedSize: true,
       commonjsOptions: {
         transformMixedEsModules: true
-      }
-    },
-    test: {
-      name: 'web',
-      watch: false,
-      globals: true,
-      environment: 'jsdom',
-      include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-      reporters: ['default'],
-      coverage: {
-        reportsDirectory: '../../coverage/apps/web',
-        provider: 'v8'
       }
     }
   }

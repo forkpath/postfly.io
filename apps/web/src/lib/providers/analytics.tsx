@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 
 import { useEffect } from 'react'
 
-import { identify, Provider, reset } from '@libs/analytics/web'
+import { identify, Provider, reset } from '@libs/analytics-web'
 import { authClient } from '@libs/studio'
 
 export function AnalyticsProvider({ children }: { children: ReactNode }) {

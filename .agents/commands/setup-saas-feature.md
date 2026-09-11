@@ -59,7 +59,7 @@ Set up a new SaaS feature in the Ray monorepo following project conventions.
 
 Follow this bottom-up order strictly — each layer depends on the one before it.
 
-**Auth boundary**: login, registration, sessions, account linking, email verification, 2FA, and Better Auth organization membership primitives belong to `@libs/auth` / Better Auth. Engine modules may expose admin/business management endpoints, but their domain models must stay aligned with Better Auth fields and delegate auth persistence to infrastructure adapters.
+**Auth boundary**: login, registration, sessions, account linking, email verification, 2FA, and Better Auth organization membership primitives belong to `@libs/auth-server` / Better Auth（共享类型使用 `@libs/auth-contract`）. Engine modules may expose admin/business management endpoints, but their domain models must stay aligned with Better Auth fields and delegate auth persistence to infrastructure adapters.
 
 1. **Database model** (`libs/pg-dao/src/models/`)
    - Check if a `.prisma` file for this feature already exists; create one if not
@@ -138,11 +138,13 @@ If the feature needs shared logic across apps:
 | Request Payload Validator        | `libs/payload/src/schemas`              |
 | Relation Database schema         | `libs/pg-dao/src/models/`               |
 | Document Database Schema         | `libs/mongo-dao/src/schemas`            |
-| Auth logic                       | `libs/auth/src/`                        |
+| Auth logic                       | `libs/auth-contract/src/` + `libs/auth-server/src/` + runtime clients                        |
 | Shared types/utils               | `libs/common/src/`                      |
 | Translations                     | `libs/i18n/src/translations/`           |
-| Email templates                  | `libs/email/src/templates/`             |
-| Primitive Component and UI style | `libs/ui-shared/src`                    |
+| Email templates (Node runtime)   | `libs/email-server/src/templates/`      |
+| Universal UI assets and helpers  | `libs/ui-core/src`                      |
+| Web primitive components         | `libs/ui-web/src`                       |
+| Native primitive components      | `libs/ui-native/src`                    |
 
 ## Checklist
 

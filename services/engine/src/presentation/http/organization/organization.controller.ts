@@ -3,7 +3,7 @@ import type { GetInvitationsRes, GetMembersRes, GetOrganizationRes, GetOrganizat
 import { Body, Controller, Delete, Get, Param, Patch, Query } from '@nestjs/common'
 import { CommandBus, QueryBus } from '@nestjs/cqrs'
 
-import { Roles } from '@libs/srv-shared'
+import { Roles } from '@libs/auth-server/nest'
 
 import { DeleteInvitationCommand } from '#/application/commands/organization/delete-invitation.command'
 import { DeleteMemberCommand } from '#/application/commands/organization/delete-member.command'

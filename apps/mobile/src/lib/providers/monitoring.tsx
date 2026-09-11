@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 
 import { authClient } from '~/lib/auth'
 
-import { identify, initialize } from '@libs/monitoring/mobile'
+import { identify, initialize } from '@libs/monitoring-native'
 
 import '~/lib/monitoring/sentry'
 

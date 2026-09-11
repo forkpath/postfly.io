@@ -1,5 +1,5 @@
-import type { Member, UpdateMemberPayload } from '@libs/auth'
-import type { BottomSheetContentRef } from '@libs/ui-shared/mobile/components/bottom-sheet'
+import type { Member, UpdateMemberPayload } from '@libs/auth-contract'
+import type { BottomSheetContentRef } from '@libs/ui-native'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -10,7 +10,7 @@ import { WIDTH } from '~/utils/device'
 import { Controller, useForm } from 'react-hook-form'
 import { Alert, View } from 'react-native'
 
-import { getAllRolesAtOrBelow, MemberRole, toMemberRole, updateMemberSchema } from '@libs/auth'
+import { getAllRolesAtOrBelow, MemberRole, toMemberRole, updateMemberSchema } from '@libs/auth-contract'
 import { useTranslation } from '@libs/i18n'
 import {
   BottomSheet,
@@ -21,14 +21,21 @@ import {
   BottomSheetOpenTrigger,
   BottomSheetTitle,
   BottomSheetView,
+  Button,
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  Icons,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Spin,
+  Text,
   useBottomSheet
-} from '@libs/ui-shared/mobile/components/bottom-sheet'
-import { Button } from '@libs/ui-shared/mobile/components/button'
-import { Field, FieldDescription, FieldError, FieldLabel } from '@libs/ui-shared/mobile/components/field'
-import { Icons } from '@libs/ui-shared/mobile/components/icons'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@libs/ui-shared/mobile/components/select'
-import { Spin } from '@libs/ui-shared/mobile/components/spin'
-import { Text } from '@libs/ui-shared/mobile/components/text'
+} from '@libs/ui-native'
 
 interface UpdateMemberRoleBottomSheetProps {
   readonly member: Member

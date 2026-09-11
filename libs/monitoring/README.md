@@ -1,192 +1,43 @@
-# `@libs/monitoring`
+# monitoring
 
-`ray` 的统一监控库，支持 `web` / `server` / `mobile` / `desktop` / `extension` 五端，以及 `PostHog`、`Sentry` 两个 provider。
+## 用途
 
-## 架构
+环境无关的监控策略注册、React Provider 接口与策略选择逻辑；不从核心入口导入 Sentry/PostHog SDK。
 
-```
-src/
-  index.ts              ← 公共 API：类型、provider 工具、env preset、adapter 注册
-  env.ts                ← 所有平台的环境变量 preset
-  web.tsx               ← web 端入口
-  server.ts             ← 服务端入口
-  mobile.tsx            ← mobile 端入口（adapter 模式）
-  desktop.tsx           ← desktop 端入口（adapter 模式）
-  extension.tsx         ← extension 端入口（adapter 模式）
-  lib/
-    types.ts            ← 共享类型
-    provider.ts         ← strategy 选择工具
-    adapter.tsx         ← 泛化 adapter 工厂 + 各平台注册表
-  providers/
-    web/                ← PostHog 内联实现 + Sentry adapter 代理
-    server/             ← PostHog 内联实现 + Sentry adapter 代理
-    mobile/             ← adapter 代理
-    desktop/            ← adapter 代理
-    extension/          ← adapter 代理
-```
+## Tags、使用者与场景
 
-**设计原则：**
+`type:platform` · `runtime:universal` · `domain:platform`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
 
-- **PostHog**：`posthog-js` 和 `posthog-node` 是跨框架通用的，web 和 server 直接内联实现
-- **Sentry**：各框架有专属 SDK（`@sentry/nestjs`、`@sentry/react`、`@sentry/electron`、`@sentry/react-native` 等），泛化的 `@sentry/node` / `@sentry/react` 会丢失框架级集成能力。因此 **Sentry 全端走 adapter 模式**，由各 app 引入对应框架的 SDK 并注册
+跨端调用方需要公共接口时使用；实际 provider 从匹配 runtime 的 -web/-native/-server 选择。
 
-## 导出入口
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
-| 入口 | 导出 |
-|---|---|
-| `@libs/monitoring` | 公共类型、provider 工具、env preset、adapter 注册函数 |
-| `@libs/monitoring/web` | `Provider`、`initialize`、`identify`、`captureException` |
-| `@libs/monitoring/server` | `initialize`、`captureException` |
-| `@libs/monitoring/mobile` | `Provider`、`initialize`、`identify`、`captureException` |
-| `@libs/monitoring/desktop` | `Provider`、`initialize`、`identify`、`captureException` |
-| `@libs/monitoring/extension` | `Provider`、`initialize`、`identify`、`captureException` |
+## 环境变量与配置来源
 
-## PostHog（开箱即用）
+本项目不直接读取环境变量，也不自行加载 .env。配置由宿主通过参数/context 提供；若消费其他库，仍需遵守被调用库的配置契约。
 
-PostHog 无需注册 adapter，配置环境变量即可直接使用：
+加载时机、dotenv wrapper 和秘密管理见[环境指南](../../docs/development/environment.md)。本表未包含真实凭据。
 
-```bash
-VITE_MONITORING_PROVIDER=posthog
-VITE_POSTHOG_KEY=phc_xxx
-VITE_POSTHOG_HOST=https://us.i.posthog.com
+## 运行与构建
+
+所有命令从仓库根执行：
+
+```sh
+pnpm nx show project monitoring --json
+pnpm nx run monitoring:lint
+pnpm nx run monitoring:typecheck
 ```
 
-```tsx
-import { captureException, identify, initialize, Provider } from '@libs/monitoring/web'
+这是库，不启动独立 HTTP/前台进程。通过宿主应用调用 [src/index.ts](src/index.ts) 公共导出；没有标准 build target，源码随消费者构建，不要把 build-deps 当成本库编译产物。
 
-initialize()
-identify({ id: user.id, email: user.email, name: user.name })
-captureException(error, { feature: 'billing' })
+## 单元测试：运行与编写
 
-return <Provider>{children}</Provider>
+```sh
+pnpm nx run monitoring:test --run
 ```
 
-## Sentry（需要在 app 层注册 adapter）
+mock adapter，验证 provider 注册、调用转发、缺 provider/重复初始化、错误行为；不能在 core 的单测里初始化真实 SDK。
 
-Sentry 的价值在于**框架深度集成**（自动异常捕获、performance tracing、sourcemap 等），因此需要在各 app 中引入对应框架的 SDK 并注册 adapter。
+现有用例示例：[src/lib/provider.spec.tsx](src/lib/provider.spec.tsx)。
 
-### 各平台推荐 SDK
-
-| 平台 | 推荐 SDK | 说明 |
-|---|---|---|
-| Server (NestJS) | `@sentry/nestjs` | `SentryModule.forRoot()`、`SentryGlobalFilter`、`@SentryTraced()` |
-| Web (TanStack Start) | `@sentry/react` | ErrorBoundary、browserTracing、Replay |
-| Mobile (Expo/RN) | `@sentry/react-native` | 原生 crash 捕获、ANR 检测 |
-| Desktop (Electron) | `@sentry/electron` (main) + `@sentry/react` (renderer) | 主/渲染进程分别初始化 |
-| Extension (WXT) | `@sentry/browser` | 浏览器 extension 环境 |
-
-### 注册位置
-
-Adapter 注册必须在对应 `@libs/monitoring/<platform>` 被导入之前执行（策略在模块求值时创建），因此使用**副作用导入**（side-effect import）确保顺序。
-
-| App | 注册文件 | 导入位置 |
-|---|---|---|
-| `services/engine` | `src/instrument.ts` | `main.ts` 第一行 `import './instrument'` |
-| `apps/web` | `src/lib/monitoring/sentry.tsx` | `providers/monitoring.tsx` 顶部 `import '../monitoring/sentry'` |
-| `apps/mobile` | `src/lib/monitoring/sentry.tsx` | `providers.tsx` 顶部 `import './monitoring/sentry'` |
-| `apps/extension` | `src/lib/monitoring/index.ts` | `providers/monitoring.tsx` 顶部 `import '~/lib/monitoring'` |
-| `apps/desktop` | `src/main/instrument.ts` (main) + `src/renderer/lib/monitoring/sentry.tsx` (renderer) | `main.ts` + `providers/monitoring.tsx` |
-
-### 注册代码示例
-
-**Server（`services/engine/src/instrument.ts`）：**
-
-```ts
-import * as Sentry from '@sentry/nestjs'
-import { registerServerMonitoringAdapter } from '@libs/monitoring'
-
-if (process.env['SENTRY_DSN']) {
-  Sentry.init({ dsn: process.env['SENTRY_DSN'], tracesSampleRate: 1.0 })
-}
-
-registerServerMonitoringAdapter('sentry', {
-  initialize: () => { /* already initialized above */ },
-  captureException: (error, extra) => { Sentry.captureException(error, { extra }) }
-})
-```
-
-**Web（`apps/web/src/lib/monitoring/sentry.tsx`）：**
-
-```tsx
-import * as Sentry from '@sentry/react'
-import { registerWebMonitoringAdapter } from '@libs/monitoring'
-
-registerWebMonitoringAdapter('sentry', {
-  Provider: ({ children }) => <Sentry.ErrorBoundary fallback={...}>{children}</Sentry.ErrorBoundary>,
-  initialize: () => { Sentry.init({ dsn: import.meta.env.VITE_SENTRY_DSN, ... }) },
-  identify: (info) => { Sentry.setUser(info ? { id: info.id, email: info.email } : null) },
-  captureException: (error, extra) => { Sentry.captureException(error, { extra }) }
-})
-```
-
-**Mobile（`apps/mobile/src/lib/monitoring/sentry.tsx`）：**
-
-```tsx
-import * as Sentry from '@sentry/react-native'
-import { registerMobileMonitoringAdapter } from '@libs/monitoring'
-
-registerMobileMonitoringAdapter('sentry', {
-  initialize: () => { Sentry.init({ dsn: process.env['EXPO_PUBLIC_SENTRY_DSN'], ... }) },
-  identify: (info) => { Sentry.setUser(info ? { id: info.id, email: info.email } : null) },
-  captureException: (error, extra) => { Sentry.captureException(error, { extra }) }
-})
-```
-
-**Desktop（主进程 `src/main/instrument.ts` + 渲染进程 `src/renderer/lib/monitoring/sentry.tsx`）：**
-
-```ts
-// main process
-import * as Sentry from '@sentry/electron/main'
-Sentry.init({ dsn: process.env['VITE_SENTRY_DESKTOP_DSN'] })
-```
-
-```tsx
-// renderer process
-import * as Sentry from '@sentry/react'
-import { registerDesktopMonitoringAdapter } from '@libs/monitoring'
-registerDesktopMonitoringAdapter('sentry', { ... })
-```
-
-**Extension（`apps/extension/src/lib/monitoring/index.ts`）：**
-
-```ts
-import { registerExtensionMonitoringAdapter } from '@libs/monitoring'
-import { sentryMonitoringAdapter } from './sentry'  // uses @sentry/browser
-
-registerExtensionMonitoringAdapter('sentry', sentryMonitoringAdapter)
-```
-
-## 环境变量
-
-每个平台对应独立的 Sentry Project（DSN 不同），避免跨平台 Issue 混淆、Sourcemap 冲突和 Release 追踪错乱。`SENTRY_ENVIRONMENT` 可以共享（同一部署环境）。
-
-```bash
-# ── Provider 选择（所有平台）──
-MONITORING_PROVIDER=sentry
-VITE_MONITORING_PROVIDER=sentry
-EXPO_PUBLIC_MONITORING_PROVIDER=sentry
-
-# ── Sentry 环境标识（共享）──
-SENTRY_ENVIRONMENT=production
-VITE_SENTRY_ENVIRONMENT=production
-EXPO_PUBLIC_SENTRY_ENVIRONMENT=production
-
-# ── Sentry DSN（每个平台一个独立 Project）──
-SENTRY_DSN=https://xxx@sentry.io/server-project
-VITE_SENTRY_DSN=https://xxx@sentry.io/web-project
-VITE_SENTRY_DESKTOP_DSN=https://xxx@sentry.io/desktop-project
-VITE_SENTRY_EXTENSION_DSN=https://xxx@sentry.io/extension-project
-EXPO_PUBLIC_SENTRY_DSN=https://xxx@sentry.io/mobile-project
-
-# ── PostHog（web/server 内联）──
-VITE_POSTHOG_KEY=phc_xxx
-VITE_POSTHOG_HOST=https://us.i.posthog.com
-```
-
-## 验证
-
-```bash
-nx run monitoring:lint
-nx run monitoring:typecheck
-nx run monitoring:test
-```
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。

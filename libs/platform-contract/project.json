@@ -1,0 +1,14 @@
+{
+  "name": "platform-contract",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/platform-contract/src",
+  "projectType": "library",
+  "tags": ["type:contract", "runtime:universal", "domain:platform"],
+  "// targets": "to see all targets run: nx show project platform-contract --web",
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc --noEmit -p tsconfig.lib.json", "cwd": "libs/platform-contract" }
+    }
+  }
+}

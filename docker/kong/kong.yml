@@ -4,7 +4,7 @@ _transform: true
 services:
   # ─── Engine (NestJS API) ──────────────────────────────────────
   - name: engine-api
-    url: http://engine:8000
+    url: http://${ENGINE_UPSTREAM}
     routes:
       - name: engine-api-route
         paths:
@@ -36,7 +36,7 @@ services:
 
   # ─── Auth (Better Auth via Engine) ────────────────────────────
   - name: engine-auth
-    url: http://engine:8000
+    url: http://${ENGINE_UPSTREAM}
     routes:
       - name: engine-auth-route
         paths:
@@ -49,7 +49,7 @@ services:
 
   # ─── Web (TanStack Start SSR + SPA) ──────────────────────────
   - name: web-ssr
-    url: http://web:3000
+    url: http://${WEB_UPSTREAM}
     routes:
       - name: web-catch-all
         paths:

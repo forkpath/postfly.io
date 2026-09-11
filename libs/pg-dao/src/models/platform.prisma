@@ -1,0 +1,19 @@
+model InboxMessage {
+  id           String    @id
+  consumer     String
+  messageId    String    @map("message_id")
+  eventType    String    @map("event_type")
+  version      Int
+  status       String
+  attemptCount Int       @default(0) @map("attempt_count")
+  leaseUntil   DateTime? @map("lease_until")
+  lastError    String?   @map("last_error")
+  processedAt  DateTime? @map("processed_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@unique([consumer, messageId], map: "worker_inbox_consumer_message_unique")
+  @@index([status, leaseUntil], map: "worker_inbox_status_lease_idx")
+  @@map("worker_inbox")
+  @@schema("public")
+}

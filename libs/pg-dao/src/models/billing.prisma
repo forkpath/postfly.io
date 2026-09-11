@@ -20,6 +20,8 @@ enum PaymentStatus {
 }
 
 enum WebhookEventStatus {
+  received
+  processing
   processed
   failed
   skipped
@@ -34,11 +36,15 @@ model WebhookEvent {
   type        String
   status      WebhookEventStatus
   error       String?
-  processedAt DateTime           @default(now()) @map("processed_at")
+  receivedAt   DateTime           @default(now()) @map("received_at")
+  processedAt  DateTime?          @map("processed_at")
+  lastAttemptAt DateTime?         @map("last_attempt_at")
+  attemptCount Int                @default(0) @map("attempt_count")
 
   @@unique([eventId, provider])
   @@index([provider, type])
-  @@index([processedAt])
+  @@index([receivedAt])
+  @@index([status, lastAttemptAt], map: "webhook_event_status_attempt_idx")
   @@map("webhook_event")
   @@schema("billing")
 }
@@ -46,6 +52,10 @@ model WebhookEvent {
 model Customer {
   id            String         @id @default(cuid())
   referenceId   String         @map("reference_id")
+  userId        String?        @map("user_id")
+  user          User?          @relation("UserBillingCustomers", fields: [userId], references: [id])
+  organizationId String?       @map("organization_id")
+  organization  Organization?  @relation("OrganizationBillingCustomers", fields: [organizationId], references: [id])
   externalId    String         @map("external_id")
   provider      String
   createdAt     DateTime       @default(now()) @map("created_at")
@@ -55,6 +65,8 @@ model Customer {
 
   @@unique([referenceId, provider])
   @@unique([externalId, provider])
+  @@index([userId, provider], map: "customer_user_provider_idx")
+  @@index([organizationId, provider], map: "customer_organization_provider_idx")
   @@map("customer")
   @@schema("billing")
 }
@@ -75,6 +87,7 @@ model Subscription {
   updatedAt      DateTime           @updatedAt @map("updated_at")
 
   @@unique([externalId, store])
+  @@index([customerId, status, createdAt], map: "subscription_customer_status_created_idx")
   @@map("subscription")
   @@schema("billing")
 }
@@ -91,6 +104,7 @@ model Order {
   updatedAt  DateTime      @updatedAt @map("updated_at")
 
   @@unique([externalId, store])
+  @@index([customerId, status, createdAt], map: "order_customer_status_created_idx")
   @@map("order")
   @@schema("billing")
 }

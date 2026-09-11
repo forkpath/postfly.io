@@ -1,9 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 
-import { useCustomer } from '@libs/billing/mobile'
-import { Button, buttonTextVariants } from '@libs/ui-shared/mobile/components/button'
-import { Icons } from '@libs/ui-shared/mobile/components/icons'
-import { Spin } from '@libs/ui-shared/mobile/components/spin'
+import { useCustomer } from '@libs/billing-client-native'
+import { Button, buttonTextVariants, Icons, Spin } from '@libs/ui-native'
 
 export const NativePortalLink = ({
   children,

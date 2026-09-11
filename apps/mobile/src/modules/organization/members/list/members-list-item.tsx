@@ -1,4 +1,4 @@
-import type { Member } from '@libs/auth'
+import type { Member } from '@libs/auth-contract'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -9,24 +9,26 @@ import { UpdateMemberRoleBottomSheet } from '~/modules/organization/members/upda
 import { router } from 'expo-router'
 import { Alert, Pressable, View } from 'react-native'
 
-import { getAllRolesAtOrBelow, MemberRole, toMemberRole } from '@libs/auth'
+import { getAllRolesAtOrBelow, MemberRole, toMemberRole } from '@libs/auth-contract'
 import { useTranslation } from '@libs/i18n'
-import { cn } from '@libs/ui-shared/common'
-import { Avatar, AvatarFallback, AvatarImage } from '@libs/ui-shared/mobile/components/avatar'
-import { Badge } from '@libs/ui-shared/mobile/components/badge'
-import { useBottomSheet } from '@libs/ui-shared/mobile/components/bottom-sheet'
+import { cn } from '@libs/ui-core'
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Badge,
   ContextMenu,
   ContextMenuContent,
   ContextMenuGroup,
   ContextMenuItem,
   ContextMenuItemIcon,
   ContextMenuItemTitle,
-  ContextMenuTrigger
-} from '@libs/ui-shared/mobile/components/context-menu'
-import { Icons } from '@libs/ui-shared/mobile/components/icons'
-import { Skeleton } from '@libs/ui-shared/mobile/components/skeleton'
-import { Text } from '@libs/ui-shared/mobile/components/text'
+  ContextMenuTrigger,
+  Icons,
+  Skeleton,
+  Text,
+  useBottomSheet
+} from '@libs/ui-native'
 
 export const MembersListItem = ({ member }: { member: Member }) => {
   const { t } = useTranslation(['common', 'auth', 'organization'])

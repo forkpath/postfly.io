@@ -8,10 +8,9 @@ import { organization } from '~/modules/organization/lib/api'
 import { router } from 'expo-router'
 import { Alert } from 'react-native'
 
-import { toMemberRole } from '@libs/auth'
+import { toMemberRole } from '@libs/auth-contract'
 import { useTranslation } from '@libs/i18n'
-import { Icons } from '@libs/ui-shared/mobile/components/icons'
-import { Text } from '@libs/ui-shared/mobile/components/text'
+import { Icons, Text } from '@libs/ui-native'
 
 export const DeleteOrganization = () => {
   const { t } = useTranslation(['common', 'organization'])

@@ -9,25 +9,27 @@ import { organization } from '~/modules/organization/lib/api'
 import { router } from 'expo-router'
 import { View } from 'react-native'
 
-import { getActivePlan } from '@libs/billing'
-import { useCustomer } from '@libs/billing/mobile'
+import { useCustomer } from '@libs/billing-client-native'
+import { getActivePlan } from '@libs/billing-contract'
 import { useTranslation } from '@libs/i18n'
-import { cn } from '@libs/ui-shared/common'
-import { Avatar, AvatarFallback, AvatarImage } from '@libs/ui-shared/mobile/components/avatar'
-import { useBottomSheet } from '@libs/ui-shared/mobile/components/bottom-sheet'
-import { Button } from '@libs/ui-shared/mobile/components/button'
+import { cn } from '@libs/ui-core'
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from '@libs/ui-shared/mobile/components/dropdown-menu'
-import { Icons } from '@libs/ui-shared/mobile/components/icons'
-import { Skeleton } from '@libs/ui-shared/mobile/components/skeleton'
-import { Text } from '@libs/ui-shared/mobile/components/text'
+  DropdownMenuTrigger,
+  Icons,
+  Skeleton,
+  Text,
+  useBottomSheet
+} from '@libs/ui-native'
 
 import { CreateOrganizationBottomSheet } from './create-organization'
 

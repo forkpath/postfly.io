@@ -3,7 +3,12 @@ import { ConfigModule } from '@nestjs/config'
 
 import { MongoDaoModule } from '@libs/mongo-dao'
 import { PgDaoModule } from '@libs/pg-dao'
-import { RabbitmqModule } from '@libs/srv-shared/rabbitmq'
+import { RabbitmqModule } from '@libs/server-rabbitmq'
+
+import { InboxService } from './inbox.service'
+import { PlatformEventConsumer } from './platform-event.consumer'
+import { PlatformHandlerRegistry } from './platform-handler.registry'
+import { WorkerHealthController } from './worker-health.controller'
 
 const workerConfig = () => ({
   mongo: {
@@ -29,8 +34,9 @@ const workerConfig = () => ({
     PgDaoModule.register(),
     MongoDaoModule.forRoot(),
     MongoDaoModule.forFeature(),
-    RabbitmqModule.register()
+    RabbitmqModule.register({ workerQueues: true })
   ],
-  providers: []
+  controllers: [WorkerHealthController],
+  providers: [InboxService, PlatformHandlerRegistry, PlatformEventConsumer]
 })
 export class AppModule {}

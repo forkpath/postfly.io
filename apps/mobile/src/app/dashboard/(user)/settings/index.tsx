@@ -1,4 +1,4 @@
-import type { Session } from '@libs/auth'
+import type { Session } from '@libs/auth-contract'
 
 import { appConfig } from '~/config/app'
 import { pathsConfig } from '~/config/paths'
@@ -13,8 +13,7 @@ import * as StoreReview from 'expo-store-review'
 import { Share, View } from 'react-native'
 
 import { useTranslation } from '@libs/i18n'
-import { Icons } from '@libs/ui-shared/mobile/components/icons'
-import { Text } from '@libs/ui-shared/mobile/components/text'
+import { Icons, Text } from '@libs/ui-native'
 
 const getSections = (session?: Session | null) =>
   [

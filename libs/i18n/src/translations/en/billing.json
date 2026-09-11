@@ -79,6 +79,8 @@
     }
   },
   "error": {
+    "accessDenied": "You do not have permission to access this billing account.",
+    "organizationDisabled": "Organization billing is not enabled.",
     "checkout": "An error occurred while checking out.",
     "checkoutRetrieve": "An error occurred while retrieving the checkout session.",
     "portal": "An error occurred while getting the portal URL.",

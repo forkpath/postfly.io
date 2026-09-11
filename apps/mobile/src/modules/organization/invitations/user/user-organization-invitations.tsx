@@ -1,6 +1,6 @@
 'use client'
 
-import type { Invitation } from '@libs/auth'
+import type { Invitation } from '@libs/auth-contract'
 
 import { memo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -12,11 +12,13 @@ import { user } from '~/modules/user/lib/api'
 import dayjs from 'dayjs'
 import { Alert, Pressable, View } from 'react-native'
 
-import { handle } from '@libs/api-client/utils'
-import { InvitationStatus } from '@libs/auth'
+import { handle } from '@libs/api-client'
+import { InvitationStatus } from '@libs/auth-contract'
 import { useTranslation } from '@libs/i18n'
-import { Alert as AlertBox, AlertDescription, AlertTitle } from '@libs/ui-shared/mobile/components/alert'
 import {
+  Alert as AlertBox,
+  AlertDescription,
+  AlertTitle,
   BottomSheet,
   BottomSheetContent,
   BottomSheetDescription,
@@ -24,13 +26,13 @@ import {
   BottomSheetOpenTrigger,
   BottomSheetScrollView,
   BottomSheetTitle,
+  Button,
+  Icons,
+  Skeleton,
+  Spin,
+  Text,
   useBottomSheet
-} from '@libs/ui-shared/mobile/components/bottom-sheet'
-import { Button } from '@libs/ui-shared/mobile/components/button'
-import { Icons } from '@libs/ui-shared/mobile/components/icons'
-import { Skeleton } from '@libs/ui-shared/mobile/components/skeleton'
-import { Spin } from '@libs/ui-shared/mobile/components/spin'
-import { Text } from '@libs/ui-shared/mobile/components/text'
+} from '@libs/ui-native'
 
 import { InvitationSummaryCard } from '../invitation-summary-card'
 

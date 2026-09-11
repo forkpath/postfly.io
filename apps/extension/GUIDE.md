@@ -172,7 +172,7 @@ apps/extension/
     │       └── globals.css   # Tailwind + 全局样式
     ├── lib/
     │   ├── api/          # API 客户端（@libs/api-client + @libs/api-core）
-    │   ├── auth/         # 认证客户端（@libs/auth/client/web）
+    │   ├── auth/         # 认证客户端（@libs/auth-client-web）
     │   ├── i18n/         # 国际化（@libs/i18n + browser.cookies）
     │   ├── messaging/    # 扩展消息传递（@webext-core/messaging）
     │   ├── query.tsx     # React Query 客户端配置
@@ -202,12 +202,12 @@ apps/extension/
 扩展作为 Nx monorepo 中的一个 `application` 项目，通过以下方式与共享库集成：
 
 - **@libs/api-client + @libs/api-core**: Axios + React Query 工厂模式调用后端 API
-- **@libs/auth/client/web**: Better Auth 客户端，提供 `useSession`, `useActiveOrganization` 等 hooks
+- **@libs/auth-client-web**: Better Auth 客户端，提供 `useSession`, `useActiveOrganization` 等 hooks
 - **@libs/i18n**: i18next 国际化，支持中英文
 - **@libs/billing**: 账单工具函数（`getActivePlan` 等）
 - **@libs/analytics**: 扩展分析适配器（`extension-adapter`，基于 PostHog）
 - **@libs/monitoring**: 扩展监控适配器（`extension-adapter`，基于 PostHog/Sentry）
-- **@libs/ui-shared/web**: Shadcn UI 组件库
+- **@libs/ui-web**: Shadcn UI 组件库
 - **@libs/common**: 共享常量（`Platform.EXTENSION`）、工具函数、logger
 
 ### API 层架构差异
@@ -367,7 +367,7 @@ nx run extension:typecheck
 
 - 扩展的 `tsconfig.json` 显式列出了所有使用到的 `@libs/*` 路径
 - 如果新增了 `@libs` 依赖，需要同步更新 `tsconfig.json` 的 `paths`
-- WXT 通过 `@nx/vite` 的 `nxViteTsPaths` 插件在 Vite 构建时解析这些路径
+- WXT 通过 Vite 8 原生的 `resolve.tsconfigPaths` 在构建时解析这些路径
 
 ### 依赖安装失败
 

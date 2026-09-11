@@ -1,0 +1,17 @@
+{
+  "name": "@ray/auth-schema-tool",
+  "version": "0.0.0",
+  "private": true,
+  "nx": {
+    "tags": [
+      "type:platform",
+      "runtime:node",
+      "domain:auth"
+    ]
+  },
+  "devDependencies": {
+    "@better-auth/cli": "1.4.21",
+    "@better-fetch/fetch": "1.1.21",
+    "better-call": "1.1.8"
+  }
+}

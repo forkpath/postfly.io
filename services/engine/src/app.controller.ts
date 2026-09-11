@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common'
 
-import { AllowAnonymous } from '@libs/srv-shared'
+import { AllowAnonymous } from '@libs/auth-server/nest'
 
 import { AppService } from './app.service'
 

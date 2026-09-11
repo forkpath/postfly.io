@@ -17,7 +17,7 @@ import {
   AlertDialogTrigger,
   Button,
   Icons
-} from '@libs/ui-shared/web'
+} from '@libs/ui-web'
 
 import { pathsConfig } from '../../../../../config/paths'
 import { admin } from '../../../lib/api'
@@ -39,7 +39,7 @@ export function DeleteAction({ id }: DeleteActionProps) {
           defaultValue: 'User deleted'
         })
       )
-      void router.navigate({ to: pathsConfig.admin.users.index })
+      void router.navigate({ to: pathsConfig.admin.users.index as never })
     }
   })
 

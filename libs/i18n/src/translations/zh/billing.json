@@ -79,6 +79,8 @@
     }
   },
   "error": {
+    "accessDenied": "你没有权限访问此计费账户。",
+    "organizationDisabled": "组织计费尚未启用。",
     "checkout": "结账时发生错误。",
     "checkoutRetrieve": "获取结账会话时发生错误。",
     "portal": "获取门户 URL 时发生错误。",

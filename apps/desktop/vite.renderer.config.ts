@@ -3,8 +3,6 @@ import path from 'node:path'
 import { devtools } from '@tanstack/devtools-vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import tailwindcss from '@tailwindcss/vite'
 import viteReact from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
@@ -26,9 +24,8 @@ export default defineConfig({
       }
     }
   },
+  resolve: { tsconfigPaths: true },
   plugins: [
-    nxViteTsPaths({}),
-    nxCopyAssetsPlugin(['*.md']),
     devtools(),
     // SVG as React components - 使用 ?react 后缀
     svgr({

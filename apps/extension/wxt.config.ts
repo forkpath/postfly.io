@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'url'
+import type { UserConfig } from 'wxt'
 
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'
 import tailwindcss from '@tailwindcss/vite'
 import { loadEnv } from 'vite'
 import svgr from 'vite-plugin-svgr'
@@ -33,6 +33,9 @@ const loadRootEnv = (mode: string) => loadEnv(mode, workspaceRoot, '')
 
 Object.assign(process.env, loadRootEnv(getWxtMode()))
 
+// WXT 0.20.20 still declares Vite 7 plugin types while this workspace is on
+// Vite 8. Keep the incompatibility at the config boundary until WXT updates
+// its peer range; the returned object remains validated by WXT at runtime.
 export default defineConfig({
   manifest: async () => {
     const mode = getWxtMode()
@@ -81,7 +84,6 @@ export default defineConfig({
   vite: () => ({
     // 复用 monorepo 的路径别名、Tailwind 和 SVG React 组件能力
     plugins: [
-      nxViteTsPaths(),
       tailwindcss(),
       svgr({
         svgrOptions: {
@@ -97,6 +99,7 @@ export default defineConfig({
       exclude: ['*/build']
     },
     resolve: {
+      tsconfigPaths: true,
       // 保证整个扩展运行时只使用一份 React，避免 hooks/context 异常
       dedupe: ['react', 'react-dom']
     },
@@ -109,4 +112,4 @@ export default defineConfig({
       '~': srcRoot
     }
   })
-})
+} as UserConfig)

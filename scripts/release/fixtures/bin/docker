@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+{
+  printf 'docker'
+  printf ' %q' "$@"
+  printf '\n'
+} >> "${MOCK_RELEASE_LOG:?MOCK_RELEASE_LOG is required}"
+
+if test "${1:-}" = 'inspect' && test "${2:-}" = '--format'; then
+  printf 'healthy\n'
+fi
+
+if test "${1:-}" = 'run'; then
+  case " $* " in
+    *' /app/scripts/release/check-migration-policy.mjs '*)
+      printf '{"policySchemaVersion":1,"mode":"blue-green","expectedClass":"expand","pendingMigrations":[]}\n'
+      ;;
+  esac
+  for argument in "$@"; do
+    case "$argument" in
+      *'_prisma_migrations'*) printf '[]\n' ;;
+    esac
+  done
+fi
+
+if test "${1:-}" = 'stop' && test "${MOCK_STOP_DELAY_SECONDS:-0}" -gt 0; then
+  sleep "$MOCK_STOP_DELAY_SECONDS"
+fi

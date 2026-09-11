@@ -1,11 +1,11 @@
-import type { Member, User } from '@libs/auth'
+import type { Member, User } from '@libs/auth-contract'
 import type { AppShellMenuItem } from '@libs/studio'
 
 import { useEffect, useMemo, useRef } from 'react'
 import { createFileRoute, Outlet, redirect, useNavigate } from '@tanstack/react-router'
 
 import { ApiClientProvider } from '@libs/api-client'
-import { hasAdminPermission, hasOrgAdminPermission, MemberRole } from '@libs/auth'
+import { hasAdminPermission, hasOrgAdminPermission, MemberRole } from '@libs/auth-contract'
 import { useTranslation } from '@libs/i18n'
 import {
   AppShell,
@@ -17,7 +17,7 @@ import {
   ImpersonatingBanner,
   pathsConfig
 } from '@libs/studio'
-import { Icons } from '@libs/ui-shared/web'
+import { Icons } from '@libs/ui-web'
 
 // 应用内页共享布局 - pathless route (不添加到 URL)
 // 采用 SPA 模式，需要认证

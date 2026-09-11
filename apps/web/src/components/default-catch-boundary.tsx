@@ -3,7 +3,7 @@ import type { ErrorComponentProps } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { ErrorComponent, Link, rootRouteId, useMatch, useRouter } from '@tanstack/react-router'
 
-import { captureException } from '@libs/monitoring/web'
+import { captureException } from '@libs/monitoring-web'
 
 export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
   const router = useRouter()

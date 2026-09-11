@@ -1,10 +1,10 @@
-import type { BillingPlanConfig, BillingSubscriptionRecord, BillingSummary } from '@libs/billing'
+import type { BillingPlanConfig, BillingSubscriptionRecord, BillingSummary } from '@libs/billing-contract'
 
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { billingMutations, billingQueries, useApiClient } from '@libs/api-client'
-import { billingConfig, BillingPlan, BillingSubscriptionStatus } from '@libs/billing'
+import { billingConfig, BillingPlan, BillingSubscriptionStatus } from '@libs/billing-contract'
 import { useTranslation } from '@libs/i18n'
 import { PageHeader, PageHeaderDescription, PageHeaderTitle } from '@libs/studio'
 import {
@@ -18,7 +18,7 @@ import {
   CardTitle,
   Icons,
   Skeleton
-} from '@libs/ui-shared/web'
+} from '@libs/ui-web'
 
 export const Route = createFileRoute('/_app/user/billing')({
   component: BillingPage

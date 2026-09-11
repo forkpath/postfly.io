@@ -1,79 +1,41 @@
-# libs/i18n
+# i18n
 
-面向大型 monorepo 的国际化模块，支持多个应用共享翻译资源、按需加载、多语言校验（Zod）、日期本地化（dayjs），并兼容 @tanstack/react-start 的 SSR 场景。
+## 用途
 
-## 设计方案
+语言类型、翻译资源、React i18next 客户端和语言匹配工具。资源在 src/translations，不是 translationns。
 
-### 1) 统一配置与资源入口
-- `config.ts` 统一维护 locale、namespace、cookie 名称等基础配置。
-- `translations/**` 采用按 namespace 分文件的组织方式，减少单次加载体积。
-- `translations/index.ts` 通过动态 import 实现按需加载。
+## Tags、使用者与场景
 
-### 2) 客户端与服务端分层
-- `client/index.tsx`：用于 React 客户端，内置语言检测、动态加载、I18nProvider。
-- `server/index.ts`：用于 SSR 或服务端渲染场景，提供 `getTranslation()`，支持显式传入 `locale` 或从 `Request` 中解析。
+`type:util` · `runtime:universal` · `domain:shared`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
 
-### 3) 校验与日期本地化
-- `utils/validation.ts` 将 Zod 的错误映射为 i18n 文案。
-- `client` 和 `server` 都会在初始化时设置 dayjs 的 locale 与 Zod 的 i18n map。
+Web/Native/服务端翻译相关调用方；Nest 文件加载适配在 server-nest。
 
-## 使用场景
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
-### 1) React 客户端
-```tsx
-import { I18nProvider, useTranslation } from "@libs/i18n";
+## 环境变量与配置来源
 
-export function App() {
-  return (
-    <I18nProvider locale="en">
-      <Content />
-    </I18nProvider>
-  );
-}
+src/env.ts 读取宿主 DEFAULT_LOCALE（服务端）和 VITE_DEFAULT_LOCALE（公开客户端，默认 en），先 process.env，后 import.meta.env；值由产品语言策略决定。没有独立 .env。Mobile 自身 EXPO_PUBLIC_DEFAULT_LOCALE 不会自动变成本库变量，需在宿主初始化时传入语言。
 
-function Content() {
-  const { t } = useTranslation("common");
-  return <div>{t("welcome")}</div>;
-}
+读取/配置定义：[src/config.ts](src/config.ts)、[src/env.ts](src/env.ts)。
+
+加载时机、dotenv wrapper 和秘密管理见[环境指南](../../docs/development/environment.md)。本表未包含真实凭据。
+
+## 运行与构建
+
+所有命令从仓库根执行：
+
+```sh
+pnpm nx show project i18n --json
+pnpm nx run i18n:lint
+pnpm nx run i18n:typecheck
 ```
 
-### 2) SSR（@tanstack/react-start）
-```ts
-import { getTranslation } from "@libs/i18n";
+这是库，不启动独立 HTTP/前台进程。通过宿主应用调用 [src/index.ts](src/index.ts) 公共导出；没有标准 build target，源码随消费者构建，不要把 build-deps 当成本库编译产物。
 
-export async function loader({ request }: { request: Request }) {
-  const { t } = await getTranslation({ request, ns: "auth" });
-  return { title: t("login.title") };
-}
-```
+## 单元测试：运行与编写
 
-### 3) 邮件模板渲染（@react-email/render）
-```ts
-import { getTranslation } from "@libs/i18n";
+当前没有标准 `i18n:test` target，不能执行不存在的命令或用 lint/build 成功冒充单测。接入步骤见[测试开发指南](../../docs/development/testing.md#没有-test-target-怎么办)。
 
-export const ConfirmEmail = async ({ url, locale }: { url: string; locale?: string }) => {
-  const { t } = await getTranslation({ locale, ns: "auth" });
-  return (
-    <>
-      <h1>{t("account.email.confirm.email.subject")}</h1>
-      <p>{t("account.email.confirm.email.body")}</p>
-      <a href={url}>{t("account.email.confirm.email.cta")}</a>
-    </>
-  );
-};
-```
+补语言回退、资源 key 缺失、插值、复数和客户端 provider 的测试；文件路径和服务端加载另做集成检查。
 
-## 关键 API
-
-- `getTranslation({ locale?, request?, ns? })`：服务端获取 `t` 与 i18n 实例
-- `initializeI18nClient({ locale?, ns? })`：客户端初始化（通常由 `I18nProvider` 封装）
-- `I18nProvider`：React 客户端 Provider
-- `useTranslation(ns)`：React hooks
-
-## 环境变量
-
-支持 VITE_ 前缀：
-
-- `VITE_DEFAULT_LOCALE`：默认语言（可选）
-- `DEFAULT_LOCALE`：服务端默认语言（可选）
-
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。

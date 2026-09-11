@@ -1,4 +1,4 @@
-import type { User } from '@libs/auth'
+import type { User } from '@libs/auth-contract'
 
 import { mutationOptions, queryOptions } from '@tanstack/react-query'
 

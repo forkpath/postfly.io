@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+set -eu
+
+{
+  printf 'pnpm'
+  for argument in "$@"; do
+    printf ' %s' "$argument"
+  done
+  printf '\n'
+} >> "${MOCK_MIGRATOR_LOG:?MOCK_MIGRATOR_LOG is required}"

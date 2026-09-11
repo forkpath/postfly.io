@@ -18,13 +18,13 @@
  */
 
 import type { CSSProperties, ReactNode } from 'react'
-import type { User } from '@libs/auth'
+import type { User } from '@libs/auth-contract'
 
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from '@tanstack/react-router'
 
 import { isKey, useTranslation } from '@libs/i18n'
-import { cn } from '@libs/ui-shared/common'
+import { cn } from '@libs/ui-core'
 import {
   Collapsible,
   CollapsibleContent,
@@ -47,7 +47,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   useSidebar
-} from '@libs/ui-shared/web'
+} from '@libs/ui-web'
 
 import { pathsConfig } from '../../../../config/paths'
 import { AccountSwitcher } from '../../../../modules/organization/account-switcher'

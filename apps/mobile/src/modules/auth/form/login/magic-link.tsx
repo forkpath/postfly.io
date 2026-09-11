@@ -8,14 +8,9 @@ import { pathsConfig } from '~/config/paths'
 import { Controller, useForm } from 'react-hook-form'
 import { Alert, View } from 'react-native'
 
-import { generateName, magicLinkLoginSchema } from '@libs/auth'
+import { generateName, magicLinkLoginSchema } from '@libs/auth-contract'
 import { useTranslation } from '@libs/i18n'
-import { Button } from '@libs/ui-shared/mobile/components/button'
-import { Field, FieldError, FieldLabel } from '@libs/ui-shared/mobile/components/field'
-import { Icons } from '@libs/ui-shared/mobile/components/icons'
-import { Input } from '@libs/ui-shared/mobile/components/input'
-import { Spin } from '@libs/ui-shared/mobile/components/spin'
-import { Text } from '@libs/ui-shared/mobile/components/text'
+import { Button, Field, FieldError, FieldLabel, Icons, Input, Spin, Text } from '@libs/ui-native'
 
 import { auth } from '../../lib/api'
 

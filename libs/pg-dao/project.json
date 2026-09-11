@@ -3,49 +3,73 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/pg-dao/src",
   "projectType": "library",
-  "tags": ["scope:backend", "type:lib"],
+  "tags": ["type:data-access", "runtime:node", "domain:platform"],
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc --noEmit -p tsconfig.lib.json", "cwd": "libs/pg-dao" }
+    },
     "prisma": {
+      "cache": false,
       "command": "prisma",
       "options": {
         "cwd": "libs/pg-dao"
       }
     },
     "format": {
+      "cache": false,
       "command": "prisma format --schema ./src",
       "options": {
         "cwd": "libs/pg-dao"
       }
     },
     "seed": {
+      "cache": false,
       "command": "prisma db seed --config ./prisma.config.ts",
       "options": {
         "cwd": "libs/pg-dao"
       },
       "dependsOn": [
         {
-          "projects": "auth",
+          "projects": "auth-server",
           "target": "seed"
         }
       ]
     },
     "studio": {
+      "cache": false,
       "command": "prisma studio --config ./prisma.config.ts",
       "options": {
         "cwd": "libs/pg-dao"
       }
     },
     "generate": {
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/src/schema.prisma",
+        "{projectRoot}/src/models/**/*",
+        "{projectRoot}/prisma.config.ts",
+        "sharedGlobals",
+        { "externalDependencies": ["prisma", "@prisma/client"] }
+      ],
+      "outputs": ["{projectRoot}/src/generated"],
       "command": "prisma generate --schema ./src",
       "options": {
         "cwd": "libs/pg-dao"
       },
       "dependsOn": [
         {
-          "projects": "auth",
-          "target": "generate-auth-schema"
+          "projects": "auth-server",
+          "target": "schema-check"
         }
       ]
+    },
+    "backfill-billing-owner": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "tsx scripts/migrations/backfill-billing-owner.ts"
+      }
     },
     "migrate": {
       "executor": "nx:run-commands",
@@ -61,9 +85,24 @@
       }
     },
     "deploy": {
+      "cache": false,
       "command": "prisma migrate deploy --schema ./src",
       "options": {
         "cwd": "libs/pg-dao"
+      }
+    },
+    "migration-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bash scripts/migrations/verify-fresh-database.sh"
+      }
+    },
+    "historical-migration-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bash scripts/migrations/verify-historical-upgrade.sh"
       }
     },
     "push": {

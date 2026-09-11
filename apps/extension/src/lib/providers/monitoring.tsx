@@ -4,7 +4,7 @@ import '~/lib/monitoring'
 
 import { authClient } from '~/lib/auth'
 
-import { identify, initialize, Provider } from '@libs/monitoring/extension'
+import { identify, initialize, Provider } from '@libs/monitoring-web/extension'
 
 initialize()
 

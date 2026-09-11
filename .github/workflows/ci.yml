@@ -3,8 +3,22 @@ name: CI
 on:
   push:
     branches:
+      - dev
       - main
+    tags:
+      - 'v*'
   pull_request:
+    branches:
+      - dev
+      - main
+  schedule:
+    - cron: '23 18 * * *'
+  workflow_dispatch:
+    inputs:
+      ci_baseline_median_ms:
+        description: Optional Wave 0 median for the 14-day CI metrics audit
+        required: false
+        type: number
 
 permissions:
   actions: read
@@ -13,28 +27,190 @@ permissions:
 jobs:
   main:
     runs-on: ubuntu-latest
+    # GitHub resolves repository secrets to an empty string for fork PRs. This
+    # keeps fork validation local while internal branches can use Nx Cloud.
+    env:
+      NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+      NX_NO_CLOUD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           filter: tree:0
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         name: Install pnpm
         with:
           run_install: false
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 22
+          node-version: 24.14.1
           cache: 'pnpm'
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Validate CI metrics tooling
+        run: pnpm ci:metrics:test
+
+      - name: Validate Nx cache inputs and side-effect exclusions
+        run: pnpm ci:nx-cache-contracts
+
+      # v5.0.1, pinned to the signed commit instead of a mutable major tag.
+      - name: Resolve affected SHAs
+        id: set-shas
+        if: github.event_name != 'schedule'
+        continue-on-error: true
+        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1
+        with:
+          main-branch-name: dev
+
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
-      - run: pnpm exec nx run-many -t lint test build
+      - name: Validate all projects
+        if: github.event_name == 'schedule' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || steps.set-shas.outcome == 'failure'
+        run: node scripts/ci/run-nx-with-metrics.mjs --phase=validation -- pnpm exec nx run-many -t lint,typecheck,test,build --all --nxBail --outputStyle=static
+
+      - name: Validate affected projects
+        if: github.event_name != 'schedule' && github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/v') && steps.set-shas.outcome == 'success'
+        run: node scripts/ci/run-nx-with-metrics.mjs --phase=validation -- pnpm exec nx affected -t lint,typecheck,test,build --nxBail --outputStyle=static
+
+      - name: Validate database and auth contracts
+        run: pnpm exec nx run-many -t validate,schema-check -p pg-dao,auth-server --nxBail
+
+      - name: Prove Prisma generation does not mutate the auth contract
+        run: |
+          pnpm exec nx run pg-dao:generate
+          git diff --exit-code -- libs/pg-dao/src/models/auth.prisma
+
+      # Container parsing, Compose rendering, and entrypoint syntax are
+      # deliberately outside Nx Cache because they protect release inputs.
+      - name: Validate container contracts
+        run: pnpm ci:container-contracts
+
+      - name: Validate packaged runtime artifacts
+        if: github.event_name == 'schedule' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || steps.set-shas.outcome == 'failure'
+        run: |
+          pnpm exec nx run-many -t package -p engine,pulse,worker --nxBail --skipNxCache
+          bash scripts/ci/check-container-contracts.sh --require-artifacts
+
+      - name: Install Playwright browsers for production smoke
+        if: github.event_name == 'schedule' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+
+      - name: Validate the production Web bundle
+        if: github.event_name == 'schedule' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        run: pnpm exec nx e2e web-e2e
+
+      - name: Upload Nx CI metrics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: nx-ci-metrics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/ci-metrics/*.json
+          if-no-files-found: error
+          retention-days: 30
+
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: pnpm exec nx fix-ci
+        if: always() && env.NX_NO_CLOUD != 'true'
+
+  database-contract:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17@sha256:7958605b474b3d264a969cb3a123d6aa00ad1e1fe9da8a69984dabb704d93317
+        env:
+          POSTGRES_USER: ray_ci
+          POSTGRES_PASSWORD: ray_ci_password
+          POSTGRES_DB: ray_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ray_ci -d ray_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      POSTGRES_DATABASE_URL: postgresql://ray_ci:ray_ci_password@127.0.0.1:5432/ray_ci
+      NX_NO_CLOUD: 'true'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          run_install: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.14.1
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install --yes postgresql-client
+      - name: Verify migrations from an empty PostgreSQL 17 database
+        run: pnpm nx run pg-dao:migration-test --skipNxCache
+      - name: Create disposable historical-upgrade database
+        env:
+          PGPASSWORD: ray_ci_password
+        run: createdb --host 127.0.0.1 --username ray_ci ray_ci_history
+      - name: Verify historical schema upgrade and resumable backfill
+        env:
+          POSTGRES_DATABASE_URL: postgresql://ray_ci:ray_ci_password@127.0.0.1:5432/ray_ci_history
+        run: pnpm nx run pg-dao:historical-migration-test --skipNxCache
+
+  metrics-audit:
+    needs: main
+    if: >-
+      needs.main.result == 'success' &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') &&
+      (inputs.ci_baseline_median_ms != '' || vars.CI_BASELINE_MEDIAN_MS != '')
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CI_BASELINE_MEDIAN_MS: ${{ inputs.ci_baseline_median_ms || vars.CI_BASELINE_MEDIAN_MS }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Download the last 14 days of Nx metrics
+        shell: bash
+        run: |
+          set -euo pipefail
+          metrics_directory='artifacts/ci-metrics-history'
+          mkdir -p "$metrics_directory"
+          cutoff_epoch="$(date --utc --date='14 days ago' +%s)"
+
+          gh api --paginate \
+            "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | select(.expired == false and (.name | startswith("nx-ci-metrics-"))) | [.id, .created_at] | @tsv' |
+          while IFS=$'\t' read -r artifact_id created_at; do
+            test -n "$artifact_id" || continue
+            created_epoch="$(date --utc --date="$created_at" +%s)"
+            test "$created_epoch" -ge "$cutoff_epoch" || continue
+
+            archive="$(mktemp)"
+            gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact_id/zip" > "$archive"
+            unzip -oq "$archive" -d "$metrics_directory"
+            rm -f "$archive"
+          done
+
+      - name: Enforce Wave 1 CI performance gates
+        run: |
+          node scripts/ci/evaluate-nx-metrics.mjs \
+            --metrics-dir=artifacts/ci-metrics-history \
+            --phase=validation \
+            --baseline-median-ms="$CI_BASELINE_MEDIAN_MS" \
+            --minimum-samples=10 \
+            --minimum-cache-hit-rate=0.70 \
+            --required-improvement=0.40 \
+            --output=artifacts/ci-metrics-evaluation/evaluation.json
+
+      - name: Upload CI metrics evaluation
         if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: nx-ci-metrics-evaluation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/ci-metrics-evaluation/evaluation.json
+          if-no-files-found: error
+          retention-days: 30

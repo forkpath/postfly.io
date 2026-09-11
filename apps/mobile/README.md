@@ -1,145 +1,66 @@
-# `apps/mobile`
+# mobile
 
-`ray` 的 Expo / React Native 客户端，完整覆盖 setup / dashboard 业务链路：
+## 用途
 
-- `setup`：欢迎、登录、注册、多步引导
-- `dashboard`：用户与组织双 Tab 体系
-- `billing`：基于 `@libs/billing/mobile` 的 RevenueCat 订阅 / 一次性购买与 Paywall
-- `analytics` / `monitoring`：PostHog + Sentry 真实 SDK 集成
+React Native + Expo Router 移动应用，组合 Native 认证/UI、RevenueCat 购买、分析监控；build 是本地 export，不等于 EAS 二进制发布。
 
-> 详细的环境准备、证书申请、商店发布流程见 [`./GUIDE.md`](./GUIDE.md)。本文档只回答一个问题：
->
-> **「我现在要做 X，应该敲哪条命令？」**
+## Tags、使用者与场景
 
----
+`type:app` · `runtime:native` · `domain:composition`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
 
-## 四种场景速查
+iOS/Android 用户；Native feature 与通用契约供本 app 使用，禁止引入 Node/DOM 库。
 
-所有命令均从 **仓库根目录** 执行（不是 `apps/mobile`），统一通过 `pnpm` 调度 Nx + Expo。命令的具体参数（`--device`、`--configuration Release`、`--profile production` 等）都封装在 [`apps/mobile/project.json`](./project.json) 的 target / configuration 里，根 `package.json` 只保留入口名，方便统一维护。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
-| # | 场景 | 命令 | 用途 | 是否需要原生编译 |
-|---|------|------|------|------------------|
-| ① | 纯 JS / HMR 调试      | `pnpm dev:mobile`              | 启动 Metro、按 `i`/`a` 唤起已装的 dev client，秒级 Fast Refresh | 否（前提是真机/模拟器已装过 dev client） |
-| ② | 真机 debug 调试       | `pnpm mobile:ios` / `pnpm mobile:android` | 在真机上重新编译 debug 原生壳并安装，自动连 Metro 拿 HMR | 是（首次几分钟） |
-| ③ | 真机 release 验证      | `pnpm mobile:ios:release` / `pnpm mobile:android:release` | 在真机上本地编译 release 包跑一遍，验证发布版的体积、性能、崩溃 | 是（release 编译更慢） |
-| ④ | 商店发布（EAS 云端）  | `pnpm mobile:release:ios` / `pnpm mobile:release:android` | 触发 `eas build --profile production`，云端生成可上架的 `.ipa` / `.aab` | 否（云端构建） |
+## 环境变量与配置来源
 
-> 经验建议：**日常开发用 ① + ②；准备打 tag 之前用 ③ 真机过一遍；提审才用 ④。**
+根 dev wrapper 注入 .env；src/lib/env.ts 与 app.config.ts 使用公开 Expo 变量。真实设备需开发机构建/可达网络，localhost 不指开发机。EAS 配置单独维护；`EXPO_PUBLIC_*` 不是秘密。billing-client-native 当前动态 env 限制仍需处理。
 
----
+| 变量                                                                                                                                                   | 含义                                    | 何时配置/默认                                                          | 值从哪里来                                      |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------- |
+| `EXPO_PUBLIC_API_BASE_URL` / `EXPO_PUBLIC_SITE_URL`                                                                                                    | API/站点公开地址                        | 默认 localhost:8000/3000，真机必须替换                                 | 部署地址或开发机局域网地址                      |
+| `EXPO_PUBLIC_DEFAULT_LOCALE` / `EXPO_PUBLIC_THEME_MODE` / `EXPO_PUBLIC_THEME_COLOR`                                                                    | 移动语言/主题                           | 应用 env.ts 定义默认值                                                 | 产品设计配置                                    |
+| `EXPO_PUBLIC_AUTH_PASSWORD` / `EXPO_PUBLIC_AUTH_MAGIC_LINK` / `EXPO_PUBLIC_AUTH_EMAIL_OTP` / `EXPO_PUBLIC_AUTH_ANONYMOUS`                              | 移动认证 UI 开关                        | 默认 true/false/false/true                                             | 与服务端能力一致                                |
+| `EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS` / `EXPO_PUBLIC_GOOGLE_CLIENT_ID`                                                                                    | Google 登录公开 client ID，iOS 专属优先 | 按登录场景配置                                                         | Google OAuth 后台                               |
+| `EXPO_PUBLIC_MIXPANEL_TOKEN`                                                                                                                           | 应用 env.ts 保留的 Mixpanel token 字段  | 可选；声明字段不等于已有完整 provider                                  | Mixpanel 项目公开 token                         |
+| `EXPO_PUBLIC_EAS_PROJECT_ID` / `EXPO_PUBLIC_EAS_UPDATES_URL`                                                                                           | Expo 项目 ID 与 OTA 更新 URL            | 真实 EAS 构建/更新必须替换空值与 placeholder                           | Expo/EAS 项目后台                               |
+| `EXPO_PUBLIC_REVENUECAT_IOS_API_KEY` / `EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY`                                                                        | iOS/Android 公开 SDK key                | 相应平台购买功能需要；缺少则跳过 SDK configure                         | RevenueCat 对应平台 Public SDK key              |
+| `EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY` / `EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY`                                                                       | 以上变量未设时的兼容别名                | 仅兼容                                                                 | 旧移动配置；不是服务端 REST key                 |
+| `VITE_BILLING_STRIPE_PRICE_PREMIUM_LIFETIME` / `VITE_BILLING_STRIPE_PRICE_PREMIUM_MONTHLY` / `VITE_BILLING_STRIPE_PRICE_PREMIUM_YEARLY`                | 终身/月/年套餐 Price ID                 | 使用相应 Stripe 套餐时配置                                             | Stripe Dashboard 创建 Price 后取得；不是 secret |
+| `EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_LIFETIME` / `EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_MONTHLY` / `EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_YEARLY` | 终身/月/年套餐产品标识                  | 使用相应移动套餐时配置                                                 | App Store/Play 产品与 RevenueCat Catalog 映射   |
+| `EXPO_PUBLIC_ANALYTICS_PROVIDER`                                                                                                                       | 分析 provider 选择                      | 默认 posthog；schema 也接受 google-analytics，是否有实现需看 providers | 开发者选择；native 不应据 enum 推断有 GA 实现   |
+| `EXPO_PUBLIC_POSTHOG_KEY` / `EXPO_PUBLIC_POSTHOG_HOST`                                                                                                 | PostHog 项目 key/接收端点               | 启用 PostHog 时填写 key；host 默认 https://us.i.posthog.com            | PostHog 项目设置                                |
+| `EXPO_PUBLIC_MONITORING_PROVIDER`                                                                                                                      | 错误监控 provider                       | 默认 sentry；schema 接受 posthog/sentry，native 实际策略另见 providers | 开发者选择                                      |
+| `EXPO_PUBLIC_SENTRY_DSN` / `EXPO_PUBLIC_SENTRY_ENVIRONMENT`                                                                                            | Sentry 项目接收地址/环境标记            | DSN 可选；environment 默认 development                                 | Sentry 对应平台项目设置                         |
 
-## 场景详解
+读取/配置定义：[src/lib/env.ts](src/lib/env.ts)。
 
-### ① 快速 HMR — `pnpm dev:mobile`
+加载时机、dotenv wrapper 和秘密管理见[环境指南](../../docs/development/environment.md)。本表未包含真实凭据。
 
-```bash
-pnpm dev:mobile          # = dotenv -e .env.local -- nx run mobile:start
+## 运行与构建
+
+所有命令从仓库根执行：
+
+```sh
+pnpm nx show project mobile --json
+pnpm dev:mobile
+pnpm nx run mobile:build
+pnpm nx run mobile:lint
+pnpm nx run mobile:typecheck
 ```
 
-- 只启动 Metro（`expo start`），**不会**重新编译原生壳。
-- 适用前提：目标设备 / 模拟器**已经安装过任意一个 development build**（Expo Dev Client）。
-- 启动后终端按键：`i` 唤起 iOS 模拟器，`a` 唤起 Android 模拟器，`r` 重载，`j` 打开 RN DevTools。
-- 改 JS / TSX / 样式 → 保存即热更新；改原生代码 / 新增 native module → 必须走 ②。
-- HMR 默认开启，无需额外配置。
+本机原生运行用 `pnpm mobile:ios` / `pnpm mobile:android`，需 Xcode/Android SDK。`pnpm nx run mobile:build` 聚合 export；`pnpm nx run mobile:release` 为 EAS 构建，`pnpm nx run mobile:submit` 为商店提交，均有外部副作用。
 
-> 第一次给一台新真机 / 模拟器装 dev client，请先跑一次 ②。后续每天都可以只跑 ①。
+## 单元测试：运行与编写
 
-### ② 真机 debug — `pnpm mobile:ios` / `pnpm mobile:android`
+当前没有标准 `mobile:test` target，不能执行不存在的命令或用 lint/build 成功冒充单测。接入步骤见[测试开发指南](../../docs/development/testing.md#没有-test-target-怎么办)。
 
-```bash
-pnpm mobile:ios          # = expo run:ios --device
-pnpm mobile:android      # = expo run:android --device
-```
+无 test target；需接入 Expo/RN 兼容测试环境与 Native SDK mock，再写 auth/provider/购买状态/离线错误等测试；不能直接套浏览器 jsdom 当真机证明。
 
-- 在 USB 连接的**真机**上重新编译一个 debug 版本的原生壳并安装。
-- iOS：会弹出设备选择列表，按方向键选；首次需要 Xcode 配好签名（GUIDE.md §2.1）。
-- Android：依赖 `adb devices` 能列出你的真机，需开启「USB 调试」。
-- 装上后 app 自动连 Metro，**自带 Fast Refresh / HMR**，与 ① 体验一致。
-- 适合：
-  - 第一次给真机装 dev client；
-  - 调试只在真机能复现的功能（相机、推送、IAP、生物识别等）；
-  - 改了 `app.config.ts` 里的 plugin / `package.json` 里的原生依赖。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
 
-> 不想接 USB？先跑一次本场景把 dev client 装上，之后只用 ① + 局域网即可。
+## E2E：运行与编写
 
-### ③ 真机 release 验证 — `pnpm mobile:ios:release` / `pnpm mobile:android:release`
+暂无设备 E2E target。后续建立固定版本 Maestro/Detox 等方案、模拟器/开发构建、隔离账户，写登录深链、组织切换、权限弹窗、sandbox 购买/恢复场景；export 只验证打包。
 
-```bash
-pnpm mobile:ios:release      # = expo run:ios --device --configuration Release
-pnpm mobile:android:release  # = expo run:android --device --variant release
-```
-
-- 仍然在你本机上编译并装到真机，但走 **release 配置**：JS minify、Hermes 字节码、移除 DevMenu、Sentry release sourcemap 等。
-- 用来在提交 EAS 之前**手动验证 release 体验**，例如：
-  - 真实启动耗时与冷启动闪屏；
-  - 动画在 Hermes 下是否掉帧；
-  - 关闭 DevMenu 后崩溃是否能正确捕获；
-  - 打包后体积是否符合预期。
-- 注意：release 包**不会**连接 Metro，没有 HMR；改代码必须重新跑一次。
-- iOS release 必须使用付费 Apple Developer 账号的签名（不能用 Personal Team）。
-
-### ④ 商店发布构建 — `pnpm mobile:release:ios` / `pnpm mobile:release:android`
-
-```bash
-pnpm mobile:release:ios       # = eas build --profile production --platform ios --non-interactive
-pnpm mobile:release:android   # = eas build --profile production --platform android --non-interactive
-```
-
-- 走 EAS 云端构建（profile 见 `apps/mobile/eas.json` 中的 `production`）。
-- 产物：iOS `.ipa`（App Store Connect 可直接上传）、Android `.aab`（Google Play 可直接上传）。
-- 环境变量来自 `eas.json` `build.base.env`，不读你本机的 `.env.local`，所以**生产用的密钥要在 EAS Secret 里配置**。
-- 第一次跑前需要本机登录 EAS：`pnpm dlx eas-cli login`。
-- 构建完成后：
-  - 上传到商店：`pnpm dlx eas-cli submit --platform ios|android`（或在 EAS 面板里点）。
-  - OTA 热更：`pnpm dlx eas-cli update --branch production --message "<改动描述>"`，仅改 JS / 资源时生效。
-
----
-
-## 关键环境变量（开发态，仓库根 `.env.local`）
-
-```bash
-EXPO_PUBLIC_API_BASE_URL=http://localhost:8000
-EXPO_PUBLIC_SITE_URL=http://localhost:3000
-EXPO_PUBLIC_DEFAULT_LOCALE=zh
-
-EXPO_PUBLIC_ANALYTICS_PROVIDER=posthog
-EXPO_PUBLIC_MONITORING_PROVIDER=sentry
-
-EXPO_PUBLIC_REVENUECAT_IOS_API_KEY=appl_xxx
-EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY=goog_xxx
-EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_LIFETIME=ray_premium_lifetime
-EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_MONTHLY=ray_premium_monthly
-EXPO_PUBLIC_REVENUECAT_PRODUCT_PREMIUM_YEARLY=ray_premium_yearly
-```
-
-说明：
-
-- 场景 ① ② ③ 的命令都通过 `dotenv -e .env.local --` 注入这些变量；④ 走 EAS 云端，不读 `.env.local`，对应的生产值请配置到 `apps/mobile/eas.json` 或 EAS Secrets。
-- 移动端计费固定使用 RevenueCat（`@libs/billing/mobile`），无需运行时切换 provider。
-- PostHog / Sentry / RevenueCat 的 provider 在 `src/lib/{analytics,monitoring,providers/billing}.tsx` 中直接注册对应 SDK。
-
----
-
-## 直接进入 app 目录的等价命令
-
-```bash
-pnpm --filter mobile dev                           # ≈ pnpm dev:mobile
-pnpm --filter mobile exec expo run:ios --device    # ≈ pnpm mobile:ios
-pnpm --filter mobile exec expo run:android --device# ≈ pnpm mobile:android
-pnpm --filter mobile exec eas build --profile production --platform ios|android   # ≈ pnpm mobile:release:*
-```
-
----
-
-## 验证
-
-```bash
-pnpm --filter mobile typecheck
-pnpm --filter mobile exec expo export --platform ios --platform android
-```
-
-或一条命令跑完两步：
-
-```bash
-pnpm verify:mobile
-```
+所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#其他应用服务-e2e)。

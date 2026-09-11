@@ -7,7 +7,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { useForm } from 'react-hook-form'
 
-import { backupCodeVerificationSchema, SecondFactor } from '@libs/auth'
+import { backupCodeVerificationSchema, SecondFactor } from '@libs/auth-contract'
 import { useTranslation } from '@libs/i18n'
 import {
   Button,
@@ -20,7 +20,7 @@ import {
   FormMessage,
   Icons,
   Input
-} from '@libs/ui-shared/web'
+} from '@libs/ui-web'
 
 import { pathsConfig } from '../../../../config/paths'
 import { auth } from '../../lib/api'

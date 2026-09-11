@@ -1,3 +1,5 @@
+import { builtinModules } from 'node:module'
+
 import nx from '@nx/eslint-plugin'
 import importPlugin from 'eslint-plugin-import'
 
@@ -5,6 +7,38 @@ export default [
   ...nx.configs['flat/base'],
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
+  {
+    files: ['libs/{email,analytics,monitoring}/src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: builtinModules.filter(name => !name.startsWith('node:')),
+          patterns: [
+            {
+              group: [
+                'node:*',
+                'envin',
+                'envin/*',
+                'posthog-*',
+                '@posthog/*',
+                '@sentry/*',
+                '@aws-sdk/*',
+                '@alicloud/*',
+                '@nestjs/*',
+                'react-native',
+                'expo',
+                'expo-*',
+                'resend'
+              ],
+              message:
+                'Universal core cannot import runtime SDKs or evaluate environment configuration. Use the matching runtime project.'
+            }
+          ]
+        }
+      ]
+    }
+  },
   {
     plugins: {
       import: importPlugin
@@ -35,8 +69,89 @@ export default [
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
           depConstraints: [
             {
-              sourceTag: '*',
-              onlyDependOnLibsWithTags: ['*']
+              sourceTag: 'runtime:universal',
+              onlyDependOnLibsWithTags: ['runtime:universal']
+            },
+            {
+              sourceTag: 'runtime:web',
+              onlyDependOnLibsWithTags: ['runtime:web', 'runtime:universal']
+            },
+            {
+              sourceTag: 'runtime:native',
+              onlyDependOnLibsWithTags: ['runtime:native', 'runtime:universal']
+            },
+            {
+              sourceTag: 'runtime:node',
+              onlyDependOnLibsWithTags: ['runtime:node', 'runtime:universal']
+            },
+            {
+              sourceTag: 'type:util',
+              onlyDependOnLibsWithTags: ['type:util']
+            },
+            {
+              sourceTag: 'type:contract',
+              onlyDependOnLibsWithTags: ['type:contract', 'type:util']
+            },
+            {
+              sourceTag: 'type:ui',
+              onlyDependOnLibsWithTags: ['type:ui', 'type:contract', 'type:util']
+            },
+            {
+              sourceTag: 'type:data-access',
+              onlyDependOnLibsWithTags: ['type:data-access', 'type:platform', 'type:contract', 'type:util']
+            },
+            {
+              sourceTag: 'type:platform',
+              onlyDependOnLibsWithTags: ['type:platform', 'type:data-access', 'type:ui', 'type:contract', 'type:util']
+            },
+            {
+              sourceTag: 'type:feature',
+              onlyDependOnLibsWithTags: [
+                'type:feature',
+                'type:data-access',
+                'type:ui',
+                'type:platform',
+                'type:contract',
+                'type:util'
+              ]
+            },
+            {
+              sourceTag: 'type:app',
+              onlyDependOnLibsWithTags: [
+                'type:feature',
+                'type:data-access',
+                'type:ui',
+                'type:platform',
+                'type:contract',
+                'type:util'
+              ]
+            },
+            {
+              sourceTag: 'domain:shared',
+              onlyDependOnLibsWithTags: ['domain:shared', 'domain:platform']
+            },
+            {
+              sourceTag: 'domain:platform',
+              onlyDependOnLibsWithTags: ['domain:platform', 'domain:shared']
+            },
+            {
+              sourceTag: 'domain:auth',
+              onlyDependOnLibsWithTags: ['domain:auth', 'domain:shared', 'domain:platform']
+            },
+            {
+              sourceTag: 'domain:billing',
+              onlyDependOnLibsWithTags: ['domain:billing', 'domain:auth', 'domain:shared', 'domain:platform']
+            },
+            {
+              sourceTag: 'domain:composition',
+              onlyDependOnLibsWithTags: [
+                'domain:composition',
+                'domain:auth',
+                'domain:billing',
+                'domain:organization',
+                'domain:shared',
+                'domain:platform'
+              ]
             }
           ]
         }

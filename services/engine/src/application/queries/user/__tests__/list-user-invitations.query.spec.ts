@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { USER_REPOSITORY } from '#/domain/repositories/user.repository.interface'
+import { UserId } from '#/domain/value-objects/user-id.vo'
 
 import { ListUserInvitationsHandler, ListUserInvitationsQuery } from '../list-user-invitations.query'
 
@@ -29,10 +30,10 @@ describe('ListUserInvitationsHandler', () => {
     const result = await handler.execute(new ListUserInvitationsQuery('u1', { page: 1, perPage: 10 }))
 
     expect(result).toEqual(expected)
-    expect(mockRepo.findInvitations).toHaveBeenCalledWith('u1', {
-      page: 1,
-      perPage: 10
-    })
+    expect(mockRepo.findInvitations).toHaveBeenCalledWith(
+      expect.any(UserId),
+      expect.objectContaining({ page: 1, perPage: 10 })
+    )
   })
 
   it('should return empty results', async () => {

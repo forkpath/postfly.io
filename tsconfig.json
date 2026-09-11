@@ -25,16 +25,40 @@
       "path": "./libs/api-core"
     },
     {
-      "path": "./libs/srv-core"
+      "path": "./libs/server-kernel"
     },
     {
-      "path": "./libs/srv-shared"
+      "path": "./libs/server-nest"
+    },
+    {
+      "path": "./libs/server-redis"
+    },
+    {
+      "path": "./libs/server-rabbitmq"
+    },
+    {
+      "path": "./libs/server-elasticsearch"
+    },
+    {
+      "path": "./libs/server-sms"
+    },
+    {
+      "path": "./libs/server-email"
+    },
+    {
+      "path": "./libs/server-storage"
     },
     {
       "path": "./libs/studio"
     },
     {
-      "path": "./libs/ui-shared"
+      "path": "./libs/ui-core"
+    },
+    {
+      "path": "./libs/ui-web"
+    },
+    {
+      "path": "./libs/ui-native"
     },
     {
       "path": "./libs/mongo-dao"
@@ -49,7 +73,34 @@
       "path": "./libs/email"
     },
     {
-      "path": "./libs/auth"
+      "path": "./libs/auth-contract"
+    },
+    {
+      "path": "./libs/billing-contract"
+    },
+    {
+      "path": "./libs/platform-contract"
+    },
+    {
+      "path": "./libs/email-server"
+    },
+    {
+      "path": "./libs/analytics-web"
+    },
+    {
+      "path": "./libs/analytics-native"
+    },
+    {
+      "path": "./libs/analytics-server"
+    },
+    {
+      "path": "./libs/monitoring-web"
+    },
+    {
+      "path": "./libs/monitoring-native"
+    },
+    {
+      "path": "./libs/monitoring-server"
     }
   ]
 }

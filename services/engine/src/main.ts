@@ -8,8 +8,7 @@ import cookieParser from 'cookie-parser'
 import express from 'express'
 import helmet from 'helmet'
 
-import { ServerConfig } from '@libs/srv-core'
-import { LoggerService } from '@libs/srv-shared'
+import { LoggerService, ServerConfig } from '@libs/server-nest'
 
 import { AppModule } from './app.module'
 

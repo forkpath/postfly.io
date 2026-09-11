@@ -1,7 +1,7 @@
-import { BadRequestException, Body, Controller, Get, Headers, Post, Req } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Get, Headers, Param, Post, Req } from '@nestjs/common'
 import { CommandBus, QueryBus } from '@nestjs/cqrs'
 
-import { AllowAnonymous, Session } from '@libs/srv-shared'
+import { AllowAnonymous, Session } from '@libs/auth-server/nest'
 
 import { CreateBillingPortalCommand } from '#/application/commands/billing/create-billing-portal.command'
 import { CreateCheckoutSessionCommand } from '#/application/commands/billing/create-checkout-session.command'
@@ -9,6 +9,7 @@ import { HandleRevenueCatWebhookCommand } from '#/application/commands/billing/h
 import { HandleStripeWebhookCommand } from '#/application/commands/billing/handle-stripe-webhook.command'
 import { BillingPortalDto, CheckoutDto } from '#/application/dtos/billing/billing.dto'
 import { GetBillingSummaryQuery } from '#/application/queries/billing/get-billing-summary.query'
+import { BillingOwner } from '#/domain/value-objects/billing-owner.vo'
 
 interface SessionUser {
   id: string
@@ -30,14 +31,15 @@ export class BillingController {
 
   @Get('me')
   async getSummary(@Session() session: AuthSession) {
-    return this.queryBus.execute(new GetBillingSummaryQuery(session.user.id))
+    return this.queryBus.execute(new GetBillingSummaryQuery(session.user.id, BillingOwner.forUser(session.user.id)))
   }
 
   @Post('checkout')
   async createCheckoutSession(@Session() session: AuthSession, @Body() dto: CheckoutDto) {
     return this.commandBus.execute(
       new CreateCheckoutSessionCommand({
-        referenceId: session.user.id,
+        actorUserId: session.user.id,
+        owner: BillingOwner.forUser(session.user.id),
         email: session.user.email,
         variantId: dto.variantId,
         successUrl: dto.successUrl,
@@ -50,7 +52,8 @@ export class BillingController {
   async createBillingPortal(@Session() session: AuthSession, @Body() dto: BillingPortalDto) {
     return this.commandBus.execute(
       new CreateBillingPortalCommand({
-        referenceId: session.user.id,
+        actorUserId: session.user.id,
+        owner: BillingOwner.forUser(session.user.id),
         email: session.user.email,
         returnUrl: dto.returnUrl
       })
@@ -89,6 +92,55 @@ export class BillingController {
       new HandleRevenueCatWebhookCommand({
         payload: req.body,
         authorization
+      })
+    )
+  }
+}
+
+@Controller('organizations/:organizationId/billing')
+export class OrganizationBillingController {
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus
+  ) {}
+
+  @Get()
+  getSummary(@Session() session: AuthSession, @Param('organizationId') organizationId: string) {
+    return this.queryBus.execute(
+      new GetBillingSummaryQuery(session.user.id, BillingOwner.forOrganization(organizationId))
+    )
+  }
+
+  @Post('checkout')
+  createCheckoutSession(
+    @Session() session: AuthSession,
+    @Param('organizationId') organizationId: string,
+    @Body() dto: CheckoutDto
+  ) {
+    return this.commandBus.execute(
+      new CreateCheckoutSessionCommand({
+        actorUserId: session.user.id,
+        owner: BillingOwner.forOrganization(organizationId),
+        email: session.user.email,
+        variantId: dto.variantId,
+        successUrl: dto.successUrl,
+        cancelUrl: dto.cancelUrl
+      })
+    )
+  }
+
+  @Post('portal')
+  createBillingPortal(
+    @Session() session: AuthSession,
+    @Param('organizationId') organizationId: string,
+    @Body() dto: BillingPortalDto
+  ) {
+    return this.commandBus.execute(
+      new CreateBillingPortalCommand({
+        actorUserId: session.user.id,
+        owner: BillingOwner.forOrganization(organizationId),
+        email: session.user.email,
+        returnUrl: dto.returnUrl
       })
     )
   }

@@ -2,8 +2,11 @@ import { workspaceRoot } from '@nx/devkit'
 import { nxE2EPreset } from '@nx/playwright/preset'
 import { defineConfig, devices } from '@playwright/test'
 
-// For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:3000'
+// BASE_URL opts into testing an explicitly deployed environment. Local runs use
+// a dedicated strict port so they can never reuse an unrelated development app.
+const externalBaseURL = process.env['BASE_URL']
+const e2ePort = process.env['E2E_WEB_PORT'] || '4173'
+const baseURL = externalBaseURL || `http://localhost:${e2ePort}`
 
 /**
  * Read environment variables from file.
@@ -23,12 +26,18 @@ export default defineConfig({
     trace: 'on-first-retry'
   },
   /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'pnpm exec nx run web:preview',
-    url: 'http://localhost:3000',
-    reuseExistingServer: true,
-    cwd: workspaceRoot
-  },
+  webServer: externalBaseURL
+    ? undefined
+    : {
+        command: 'node apps/web/.output/server/index.mjs',
+        url: baseURL,
+        reuseExistingServer: false,
+        env: {
+          HOST: 'localhost',
+          PORT: e2ePort
+        },
+        cwd: workspaceRoot
+      },
   projects: [
     {
       name: 'chromium',

@@ -19,6 +19,7 @@ model User {
   twofactors       TwoFactor[]
   members          Member[]
   invitations      Invitation[]
+  billingCustomers Customer[]     @relation("UserBillingCustomers")
 
   @@unique([email])
   @@map("user")
@@ -99,13 +100,14 @@ model Passkey {
 }
 
 model TwoFactor {
-  id          String @id
-  secret      String
-  backupCodes String @map("backup_codes")
-  userId      String @map("user_id")
-  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  verified Boolean? @default(true)
+  id                      String    @id
+  secret                  String
+  backupCodes             String    @map("backup_codes")
+  userId                  String    @map("user_id")
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified                Boolean?  @default(true)
+  failedVerificationCount Int?      @default(0) @map("failed_verification_count")
+  lockedUntil             DateTime? @map("locked_until")
 
   @@index([secret])
   @@index([userId])
@@ -122,6 +124,7 @@ model Organization {
   metadata    String?
   members     Member[]
   invitations Invitation[]
+  billingCustomers Customer[] @relation("OrganizationBillingCustomers")
 
   organizationroles OrganizationRole[]
 
@@ -139,6 +142,7 @@ model Member {
   role           String       @default("member")
   createdAt      DateTime     @map("created_at")
 
+  @@unique([organizationId, userId], map: "member_organization_user_unique")
   @@index([organizationId])
   @@index([userId])
   @@map("member")
@@ -159,6 +163,8 @@ model Invitation {
 
   @@index([organizationId])
   @@index([email])
+  @@index([organizationId, status], map: "invitation_organization_status_idx")
+  @@index([email, status], map: "invitation_email_status_idx")
   @@map("invitation")
   @@schema("public")
 }
@@ -172,6 +178,7 @@ model OrganizationRole {
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime?    @updatedAt @map("updated_at")
 
+  @@unique([organizationId, role], map: "organization_role_organization_role_unique")
   @@index([organizationId])
   @@index([role])
   @@map("organization_role")

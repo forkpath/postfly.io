@@ -4,7 +4,7 @@ import * as Sentry from '@sentry/react-native'
 import { isRunningInExpoGo } from 'expo'
 
 import { MonitoringProvider, registerMobileMonitoringAdapter } from '@libs/monitoring'
-import { mobileEnv } from '@libs/monitoring/env'
+import { mobileEnv } from '@libs/monitoring-native/env'
 
 export const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: !isRunningInExpoGo()

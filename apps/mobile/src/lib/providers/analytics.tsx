@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 
 import { authClient } from '~/lib/auth'
 
-import { identify, Provider, reset } from '@libs/analytics/mobile'
+import { identify, Provider, reset } from '@libs/analytics-native'
 
 import '~/lib/analytics/posthog'
 

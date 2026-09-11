@@ -1,0 +1,60 @@
+# worker
+
+## 用途
+
+Nest 后台 RabbitMQ 消费应用（并非 Next.js）：版本化 handler registry、PG Inbox claim/幂等、重试/DLQ 与健康端点，现阶段只注册 platform.smoke。
+
+## Tags、使用者与场景
+
+`type:app` · `runtime:node` · `domain:composition`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+
+由 Engine/平台发布者经 RabbitMQ 提交信封；不直接承载 UI，也不虚构产品事件。
+
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+
+## 环境变量与配置来源
+
+dev:worker 从根 .env 注入；app.module 组装 mongo/rabbitmq；main 读 WORKER_PORT（默认 3002）。WORKER_PROCESSORS/WORKER_QUEUES 虽在 .env.example，但当前源码没有读取，不可当成动态路由开关。平台队列/handler 由代码契约决定。
+
+| 变量                                                                                  | 含义                                        | 何时配置/默认                            | 值从哪里来                                                  |
+| ------------------------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------- | ----------------------------------------------------------- |
+| `POSTGRES_DATABASE_URL`                                                               | Prisma/pg 连接串（含主机、库名与认证）      | 连接 PG 时必填                           | 管理员提供或由本地 POSTGRES_HOST/PORT/USER/PASSWORD/DB 组合 |
+| `POSGTRES_DATABASE_URL`                                                               | 旧拼写，只有新变量未设时回退                | 仅兼容；不要新增依赖                     | 旧部署配置；非生产会告警                                    |
+| `NODE_ENV`                                                                            | 运行模式 development/test/production        | 默认 development                         | 运行命令/部署环境                                           |
+| `MONGO_HOST` / `MONGO_PORT`                                                           | Mongo 连接地址与端口                        | 连接时配置；本地默认 localhost/27017     | Mongo/Compose                                               |
+| `MONGO_INITDB_ROOT_USERNAME` / `MONGO_INITDB_ROOT_PASSWORD` / `MONGO_INITDB_DATABASE` | Mongo 用户/密码/库名                        | 连接时配置；源码示例凭据不能投产         | Mongo 管理员；实际服务应使用最小权限账号                    |
+| `RABBITMQ_URI`                                                                        | AMQP 连接串                                 | 队列连接需要；默认 amqp://localhost:5672 | RabbitMQ vhost/服务账户/网络地址                            |
+| `RABBITMQ_EXCHANGE_NAME` / `RABBITMQ_EXCHANGE_TYPE`                                   | 业务 exchange 名与 direct/topic/fanout 类型 | 默认 core/direct                         | 消费/发布双方约定；平台 smoke 使用契约内固定 exchange       |
+| `WORKER_CONCURRENCY`                                                                  | prefetchCount 并发控制输入                  | 默认/校验见 rabbitmq.module.ts           | 依据 Worker 容量配置，不等于 Nx parallel                    |
+
+加载时机、dotenv wrapper 和秘密管理见[环境指南](../../docs/development/environment.md)。本表未包含真实凭据。
+
+## 运行与构建
+
+所有命令从仓库根执行：
+
+```sh
+pnpm nx show project worker --json
+pnpm dev:worker
+pnpm nx run worker:build
+pnpm nx run worker:lint
+pnpm nx run worker:typecheck
+```
+
+## 单元测试：运行与编写
+
+```sh
+pnpm nx run worker:test --run
+```
+
+参考 platform-event.consumer.spec.ts 和 registry spec；mock Inbox/Amqp/handler，覆盖幂等、重试次数、DLQ、未知版本，注入随机源验证退避，不实际 sleep。
+
+现有用例示例：[src/app/platform-event.consumer.spec.ts](src/app/platform-event.consumer.spec.ts)、[src/app/platform-handler.registry.spec.ts](src/app/platform-handler.registry.spec.ts)。
+
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+
+## E2E：运行与编写
+
+无完整 broker/DB E2E target。后续在隔离 RabbitMQ/PG 发 envelope，验证 Inbox 完成、重复无二次效果、重试队列和 DLQ，模拟 handler 失败/重启；readiness 返回成功不是消费链路验收。
+
+所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#其他应用服务-e2e)。

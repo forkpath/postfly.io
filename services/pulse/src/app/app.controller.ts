@@ -10,4 +10,9 @@ export class AppController {
   getData() {
     return this.appService.getData()
   }
+
+  @Get('ready')
+  getReadiness() {
+    return this.appService.getReadiness()
+  }
 }

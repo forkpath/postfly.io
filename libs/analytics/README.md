@@ -1,139 +1,47 @@
-# `@libs/analytics`
+# analytics
 
-`ray` 的统一埋点库，支持 `web` / `server` / `mobile` / `desktop` / `extension` 五端，以及 `PostHog`、`Google Analytics` 两个 provider。
+## 用途
 
-## 架构
+环境无关的分析策略注册、React Provider 接口与策略选择逻辑；不从核心入口导入 PostHog/GA SDK。
 
-```
-src/
-  index.ts              ← 公共 API：类型、provider 工具、env preset、adapter 注册
-  env.ts                ← 所有平台的环境变量 preset
-  web.tsx               ← web 端入口
-  server.ts             ← 服务端入口
-  mobile.tsx            ← mobile 端入口（adapter 模式）
-  desktop.tsx           ← desktop 端入口（adapter 模式）
-  extension.tsx         ← extension 端入口（adapter 模式）
-  lib/
-    types.ts            ← 共享类型
-    provider.ts         ← strategy 选择工具
-    adapter.tsx         ← 泛化 adapter 工厂 + 各平台注册表
-  providers/
-    web/                ← web 直接实现（GA、PostHog、page-view hook）
-    server/             ← 服务端直接实现（GA Measurement Protocol、PostHog Node）
-    mobile/             ← mobile adapter 代理
-    desktop/            ← desktop adapter 代理
-    extension/          ← extension adapter 代理
-```
+## Tags、使用者与场景
 
-**设计原则：**
+`type:platform` · `runtime:universal` · `domain:platform`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
 
-- **PostHog**：`posthog-js`、`@posthog/react` 和 `posthog-node` 是跨框架通用的（PostHog 不提供框架级 SDK），web 和 server 直接内联实现
-- **Google Analytics**：web 使用 `gtag.js`（内联），server 使用 Measurement Protocol（内联）
-- `mobile`、`desktop`、`extension` 使用 **adapter 模式**，由各 app 在启动时注册平台原生 SDK，避免 analytics 库硬绑定 Expo / Electron / WXT 等依赖
-- 所有 adapter 通过 `lib/adapter.tsx` 中的泛化工厂创建，无重复代码
+跨端调用方需要公共接口时使用；实际 provider 从匹配 runtime 的 -web/-native/-server 选择。
 
-**依赖说明：**
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
-| 包 | 用途 |
-|---|---|
-| `posthog-js` | 浏览器端 PostHog SDK |
-| `@posthog/react` | React 封装（`PostHogProvider`、`usePostHog` 等），支持 `@posthog/react/slim` tree-shaking |
-| `posthog-node` | 服务端 PostHog SDK |
+### 注册顺序
 
-## 导出入口
+`registerMobileAnalyticsAdapter`、`registerDesktopAnalyticsAdapter`、`registerExtensionAnalyticsAdapter` 注册宿主实现。当前 `createStrategy` 在创建时查找 adapter，尚未注册会得到 noop；之后注册不会自动替换已经返回的 noop。宿主必须在选择/导出策略前完成注册，并测试真实调用抵达 SDK；只挂 Provider 不代表事件已发送。
 
-| 入口 | 导出 |
-|---|---|
-| `@libs/analytics` | 公共类型、provider 工具、env preset、adapter 注册函数 |
-| `@libs/analytics/web` | `Provider`、`track`、`identify`、`reset` |
-| `@libs/analytics/server` | `track` |
-| `@libs/analytics/mobile` | `Provider`、`track`、`identify`、`reset` |
-| `@libs/analytics/desktop` | `Provider`、`track`、`identify`、`reset` |
-| `@libs/analytics/extension` | `Provider`、`track`、`identify`、`reset` |
+## 环境变量与配置来源
 
-## Web 使用方式
+本项目不直接读取环境变量，也不自行加载 .env。配置由宿主通过参数/context 提供；若消费其他库，仍需遵守被调用库的配置契约。
 
-1. 配置环境变量
+加载时机、dotenv wrapper 和秘密管理见[环境指南](../../docs/development/environment.md)。本表未包含真实凭据。
 
-```bash
-VITE_ANALYTICS_PROVIDER=posthog
-VITE_POSTHOG_KEY=phc_xxx
-VITE_POSTHOG_HOST=https://us.i.posthog.com
+## 运行与构建
 
-# 或者
-VITE_ANALYTICS_PROVIDER=google-analytics
-VITE_GOOGLE_ANALYTICS_MEASUREMENT_ID=G-XXXXXXX
-GOOGLE_ANALYTICS_SECRET=xxxx
-ANALYTICS_PROVIDER=google-analytics
+所有命令从仓库根执行：
+
+```sh
+pnpm nx show project analytics --json
+pnpm nx run analytics:lint
+pnpm nx run analytics:typecheck
 ```
 
-2. 在应用根部挂载 Provider
+这是库，不启动独立 HTTP/前台进程。通过宿主应用调用 [src/index.ts](src/index.ts) 公共导出；没有标准 build target，源码随消费者构建，不要把 build-deps 当成本库编译产物。
 
-```tsx
-import { identify, Provider, reset } from '@libs/analytics/web'
+## 单元测试：运行与编写
 
-export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
-  return <Provider>{children}</Provider>
-}
+```sh
+pnpm nx run analytics:test --run
 ```
 
-3. 登录态变化时调用
+mock adapter，验证 provider 注册、调用转发、缺 provider/重复初始化、错误行为；不能在 core 的单测里初始化真实 SDK。
 
-```tsx
-identify(user.id, { email: user.email, name: user.name })
-reset()
-```
+现有用例示例：[src/lib/provider.spec.tsx](src/lib/provider.spec.tsx)。
 
-4. 服务端埋点
-
-```ts
-import { track } from '@libs/analytics/server'
-
-track('billing_checkout_created', {
-  distinctId: userId,
-  plan: planSlug
-})
-```
-
-## Mobile / Desktop / Extension 使用方式
-
-三端均使用 adapter 模式，在 app 启动时注册原生 SDK 实现，analytics 库不会引入平台特定依赖。
-
-### 1. 注册 adapter（在 app 入口）
-
-```tsx
-// apps/mobile — Expo / React Native
-import { AnalyticsProvider, registerMobileAnalyticsAdapter } from '@libs/analytics'
-registerMobileAnalyticsAdapter(AnalyticsProvider.POSTHOG, { ... })
-
-// apps/desktop — Electron
-import { AnalyticsProvider, registerDesktopAnalyticsAdapter } from '@libs/analytics'
-registerDesktopAnalyticsAdapter(AnalyticsProvider.POSTHOG, { ... })
-
-// apps/extension — WXT / Browser Extension
-import { AnalyticsProvider, registerExtensionAnalyticsAdapter } from '@libs/analytics'
-registerExtensionAnalyticsAdapter(AnalyticsProvider.POSTHOG, { ... })
-```
-
-### 2. 使用埋点
-
-```tsx
-import { Provider, track, identify, reset } from '@libs/analytics/mobile'
-// 或 '@libs/analytics/desktop' / '@libs/analytics/extension'
-
-// 挂载 Provider
-<Provider>{children}</Provider>
-
-// 埋点
-track('button_clicked', { button: 'upgrade' })
-identify(user.id, { email: user.email })
-reset()
-```
-
-## 验证
-
-```bash
-nx run analytics:lint
-nx run analytics:typecheck
-nx run analytics:test
-```
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。

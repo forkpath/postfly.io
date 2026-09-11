@@ -1,4 +1,4 @@
-import type { Invitation } from '@libs/auth'
+import type { Invitation } from '@libs/auth-contract'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -7,21 +7,21 @@ import { organization } from '~/modules/organization/lib/api'
 import dayjs from 'dayjs'
 import { Alert, Pressable, View } from 'react-native'
 
-import { getAllRolesAtOrBelow, toMemberRole } from '@libs/auth'
+import { getAllRolesAtOrBelow, toMemberRole } from '@libs/auth-contract'
 import { useTranslation } from '@libs/i18n'
-import { cn } from '@libs/ui-shared/common'
-import { Badge } from '@libs/ui-shared/mobile/components/badge'
+import { cn } from '@libs/ui-core'
 import {
+  Badge,
   ContextMenu,
   ContextMenuContent,
   ContextMenuGroup,
   ContextMenuItem,
   ContextMenuItemIcon,
   ContextMenuItemTitle,
-  ContextMenuTrigger
-} from '@libs/ui-shared/mobile/components/context-menu'
-import { Skeleton } from '@libs/ui-shared/mobile/components/skeleton'
-import { Text } from '@libs/ui-shared/mobile/components/text'
+  ContextMenuTrigger,
+  Skeleton,
+  Text
+} from '@libs/ui-native'
 
 export const InvitationListItem = ({ invitation }: { invitation: Invitation }) => {
   const { t, i18n } = useTranslation(['common', 'organization'])
