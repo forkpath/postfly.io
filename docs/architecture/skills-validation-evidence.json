@@ -1,0 +1,233 @@
+{
+  "date": "2026-09-12",
+  "baseline": "9546f88a93122d3db1251496188c80c89862b5f9",
+  "overall": "blocked-incomplete",
+  "deterministic": {
+    "command": "NX_DAEMON=false NX_NO_CLOUD=true pnpm nx run-many -t lint,test,validate,sync-check -p skills-maintenance --skip-nx-cache",
+    "exitCode": 0,
+    "tests": 27,
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0,
+    "skillCreatorValidated": 4,
+    "syncedLocalSkillLinks": 12
+  },
+  "upstream": {
+    "externalSkills": 35,
+    "upgraded": ["nx-generate"],
+    "latestCheck": {
+      "unchanged": 8,
+      "held": 27,
+      "newCandidateSources": 0
+    },
+    "automationEnabled": false,
+    "githubWrites": false
+  },
+  "samples": {
+    "1": {
+      "verification": {
+        "scenario": "REST",
+        "workspace": "/var/folders/9h/zphzxp554g38634j6ngx5vlh0000gn/T/ray-skill-eval-new-nq9s1B",
+        "checks": [
+          {
+            "name": "internal architecture dependencies",
+            "passed": true
+          },
+          {
+            "name": "HTTP denies anonymous",
+            "passed": true
+          },
+          {
+            "name": "HTTP validates DTO at real route",
+            "passed": true
+          },
+          {
+            "name": "HTTP persists owner item and preserves wire envelope",
+            "passed": true
+          },
+          {
+            "name": "HTTP cross-user list and delete isolation",
+            "passed": true
+          },
+          {
+            "name": "HTTP organization authorization and read-only role",
+            "passed": true
+          },
+          {
+            "name": "HTTP scope cannot delete personal item via organization path",
+            "passed": true
+          },
+          {
+            "name": "HTTP owner can delete own resource",
+            "passed": true
+          }
+        ],
+        "passed": true
+      },
+      "verificationDigest": "a3658a14228eaba4c7ef3dce8d7620f585baec3561ca6b75eaecf764d2997845",
+      "mutations": {
+        "source": "/var/folders/9h/zphzxp554g38634j6ngx5vlh0000gn/T/ray-skill-eval-new-nq9s1B",
+        "scenario": "REST",
+        "mutations": [
+          {
+            "name": "remove-dto-validation",
+            "workspace": "/var/folders/9h/zphzxp554g38634j6ngx5vlh0000gn/T/ray-skill-mutant-1aytli",
+            "detected": true,
+            "exitCode": 1,
+            "expected": "HTTP validates DTO at real route",
+            "verificationDigest": "a12a28aa25e7230974a188a53ee04018214fdc9b623d7f329cf398368361fcd4"
+          },
+          {
+            "name": "remove-owner-filter",
+            "workspace": "/var/folders/9h/zphzxp554g38634j6ngx5vlh0000gn/T/ray-skill-mutant-pUylgF",
+            "detected": true,
+            "exitCode": 1,
+            "expected": "HTTP cross-user list and delete isolation",
+            "verificationDigest": "5193d640a7026c8ff3aedf64bbd9a52a0cbcb06a7fd1594b0c14be243adfeac8"
+          },
+          {
+            "name": "domain-imports-database",
+            "workspace": "/var/folders/9h/zphzxp554g38634j6ngx5vlh0000gn/T/ray-skill-mutant-QzMtpI",
+            "detected": true,
+            "exitCode": 1,
+            "expected": "internal architecture dependencies",
+            "verificationDigest": "d37e9dd98fcc41eaa52b5580056999bdfa427383b68d70e778ccd9c3493a696f"
+          }
+        ],
+        "passed": true
+      },
+      "mutationsDigest": "4790ac0cdd7be3492b9e2f1139a1b748aa066f28129caff7bcedb9ee0148f274"
+    },
+    "6": {
+      "verification": {
+        "scenario": "WS",
+        "workspace": "/var/folders/9h/zphzxp554g38634j6ngx5vlh0000gn/T/ray-skill-eval-new-Q3WT5M",
+        "checks": [
+          {
+            "name": "internal architecture dependencies",
+            "passed": true
+          },
+          {
+            "name": "WS rejects unauthenticated connection",
+            "passed": true
+          },
+          {
+            "name": "WS denies cross-organization subscription",
+            "passed": true
+          },
+          {
+            "name": "WS authorized subscription has correlated ack",
+            "passed": true
+          },
+          {
+            "name": "WS uses Redis across instances and server actor",
+            "passed": true
+          },
+          {
+            "name": "WS member cannot publish",
+            "passed": true
+          },
+          {
+            "name": "WS rejects unknown version",
+            "passed": true
+          },
+          {
+            "name": "WS rejects forged actor and unknown message type",
+            "passed": true
+          },
+          {
+            "name": "WS rejects malformed JSON and oversized frames",
+            "passed": true
+          },
+          {
+            "name": "WS unsubscribe stops later delivery",
+            "passed": true
+          },
+          {
+            "name": "WS membership revocation stops later broadcast",
+            "passed": true
+          },
+          {
+            "name": "WS reconnect rechecks membership",
+            "passed": true
+          },
+          {
+            "name": "WS rejects expired session after connection",
+            "passed": true
+          }
+        ],
+        "passed": true
+      },
+      "verificationDigest": "f5e26a9a6b274a7e8f740b9b5b6121eb79d76249a29c8cf854dc7138dfc46ac2",
+      "mutations": {
+        "source": "/var/folders/9h/zphzxp554g38634j6ngx5vlh0000gn/T/ray-skill-eval-new-Q3WT5M",
+        "scenario": "WS",
+        "mutations": [
+          {
+            "name": "remove-ws-authorization",
+            "workspace": "/var/folders/9h/zphzxp554g38634j6ngx5vlh0000gn/T/ray-skill-mutant-p2ylsp",
+            "detected": true,
+            "exitCode": 1,
+            "expected": "WS denies cross-organization subscription",
+            "verificationDigest": "476fcbb1cddbebfbed69e021f48ecbdd13d20b9016c89958fcac1c52c2d8197a"
+          },
+          {
+            "name": "remove-ws-delivery-revalidation",
+            "workspace": "/var/folders/9h/zphzxp554g38634j6ngx5vlh0000gn/T/ray-skill-mutant-rtZCnr",
+            "detected": true,
+            "exitCode": 1,
+            "expected": "WS membership revocation stops later broadcast",
+            "verificationDigest": "51cd0f8298691bec906f8337afe920d18e19cf174f6e7f73422276a02c63afda"
+          }
+        ],
+        "passed": true
+      },
+      "mutationsDigest": "04928186667c5eeb764ec42836bb08e3a33e307faa3b6d5d591bd9f8e5150c7e"
+    }
+  },
+  "budget": {
+    "initial": 4,
+    "maxInitial": 12,
+    "retry": 3,
+    "maxRetry": 6
+  },
+  "businessFilesChanged": false,
+  "runtimeDependenciesChanged": false,
+  "productionAccess": false,
+  "notes": [
+    "Independent REST success does not replace Agent's blocked self-run integration.",
+    "WS 13 checks and Agent's 5 tests pass; slow-network backpressure and full three-Agent/old-new/repeat matrix remain incomplete.",
+    "All recorded isolated test containers stopped after evaluation; source/log specimens retained in temporary directories for review.",
+    "Raw Agent logs are not included because logs may contain isolated test credentials."
+  ],
+  "currentAgentSupport": {
+    "date": "2026-09-12",
+    "agents": ["codex", "cursor"],
+    "localSkillSymlinks": 8,
+    "maintenanceTests": {
+      "passed": 28,
+      "failed": 0,
+      "skipped": 0
+    },
+    "serverBoundaryTests": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "syncCommands": {
+      "bothExecuted": true,
+      "repeated": true,
+      "retiredDirectoryRecreated": false
+    },
+    "cursorAuthentication": {
+      "cliVersion": "2026.01.23-916f423",
+      "headlessProbePassed": true,
+      "model": "configured auto",
+      "reply": "RAY_CURSOR_AUTH_OK",
+      "codeGeneration": false
+    },
+    "report": "agent-support-change.md",
+    "historicalEvidencePreserved": true,
+    "overall": "pending-evaluation"
+  }
+}

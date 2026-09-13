@@ -3,7 +3,7 @@
 - 利用nx构建一个基础的repo
 
 ```bash
-npx create-nx-workspace --name ray --appName engine --workspaceType integrated --aiAgents claude copilot cursor codex --pm pnpm --style tailwind --formatter prettier --e2eTestRunner playwright --unitTestRunner vitest --preset nest  --useGithub --skipGitHubPush --defaultBase dev --ci github --commit.email forkpath@gmail.com --commit.name forkpath --docker
+npx create-nx-workspace --name ray --appName engine --workspaceType integrated --aiAgents cursor codex --pm pnpm --style tailwind --formatter prettier --e2eTestRunner playwright --unitTestRunner vitest --preset nest  --useGithub --skipGitHubPush --defaultBase dev --ci github --commit.email forkpath@gmail.com --commit.name forkpath --docker
 ```
 
 - 在apps目录下创建一个基础react应用

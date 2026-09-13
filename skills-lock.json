@@ -69,7 +69,7 @@
     "frontend-design": {
       "source": "pbakaus/impeccable",
       "sourceType": "github",
-      "computedHash": "5316f00e012e2d4a81f996adda009b6862a6684af4f6eef3f46a69f456121c6a"
+      "computedHash": "afec0a9f2225ad3e291f9cb758688bb1a47819d785fe9fa03073200319a1119a"
     },
     "harden": {
       "source": "pbakaus/impeccable",
@@ -99,7 +99,9 @@
     "nx-generate": {
       "source": "nrwl/nx-ai-agents-config",
       "sourceType": "github",
-      "computedHash": "7f465f7c7b023762c4517227a5ac9823f54d49fb5b492c61693d841a1a0ee355"
+      "skillPath": "generated/.agents/skills/nx-generate/SKILL.md",
+      "ref": "aa363e4a85f11d836c21e5d1e7f6c333caab2590",
+      "computedHash": "c1dfe360d6af9ee28f478afa4503c30790138ff1ceff32f18fb4391118a65933"
     },
     "nx-import": {
       "source": "nrwl/nx-ai-agents-config",
@@ -150,7 +152,7 @@
     "teach-impeccable": {
       "source": "pbakaus/impeccable",
       "sourceType": "github",
-      "computedHash": "61855594bf79bc5b2665cfca3580b93840cfe645872c5a2deeaa5ad336570d5a"
+      "computedHash": "114f904592b47dc3b4c2a7d70b82869231a244d3d1aad4548ce847b335ea1a66"
     },
     "transitions-dev": {
       "source": "jakubantalik/transitions-dev",

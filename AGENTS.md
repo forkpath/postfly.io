@@ -8,9 +8,9 @@ Central orientation for contributors working inside the neo Nx monorepo. Follow 
 - `apps/desktop` – Desktop application (Electron)
 - `apps/mobile` - Mobile application (React Natvie + Expo)
 - `apps/extension` - Browser Extension (Wxt)
-- `service/engine` - Api service (Nestjs)
-- `service/pulse` - Websocket service (Nestjs)
-- `service/workder` - Application Context Worker (Nextjs)
+- `services/engine` - API service (NestJS)
+- `services/pulse` - WebSocket service (NestJS WsAdapter / raw ws)
+- `services/worker` - Application context worker (NestJS)
 - `libs/pg-dao` – Postgresql Database model (Prisma)
 - `libs/mongo-dao` - MongoDB model (Mongoose)
 - `libs/auth-contract`, `libs/auth-client-*`, `libs/auth-server` - Better Auth contract and runtime adapters
@@ -55,13 +55,14 @@ Always prefer Nx commands (`nx run`, `nx run-many`, `nx affected`) so task graph
 
 ## Feature Development Workflows
 
-The repository ships per-target setup guides under `.agents/commands/`,
-mirrored into `.claude/commands/`, `.codex/commands/`, and `.cursor/commands/`
-via `pnpm sync:commands`.
+Shared development rules live in `.agents/skills/` for Codex and Cursor.
+Cursor-only slash commands are maintained directly in `.cursor/commands/`.
+Commands are not synchronized; `pnpm sync:skills` only links shared skills.
 
 - **Backend / API features** (anything that touches `services/engine` or
   introduces a new `libs/pg-dao` model): you MUST read and follow
-  `.agents/commands/setup-saas-feature.md` end-to-end **before writing any code**.
+  `.agents/skills/ray-api-flow/SKILL.md` and its
+  `references/architecture.md` end-to-end **before writing any code**.
   In particular, build bottom-up: Database → Domain → Application → Infrastructure
   → Presentation → API client. Do not skip the Domain layer (entities, value
   objects, repository interfaces, domain exceptions) or the Infrastructure
@@ -70,13 +71,31 @@ via `pnpm sync:commands`.
 - **API data flow** (new or changed HTTP endpoints, payload schemas,
   api-client domain wrappers, CQRS commands/queries, use cases, repositories,
   Prisma/Mongo persistence, or RabbitMQ jobs): use the
-  `ray-api-flow` skill. Keep the standard chain explicit:
-  `libs/payload` schema → `libs/api-client` domain wrapper → engine controller
-  DTO/session validation → command/query → use case → repository → PG, with
-  Mongo/RabbitMQ/worker added only when the interface genuinely needs them.
+  `ray-api-flow` skill, then `ray-rest-api-flow` for HTTP or
+  `ray-websocket-api-flow` for Pulse. For full-stack pages use `ray-module-dev`.
+  Implement resource/authorization and data model/domain first, followed by
+  shared contract, DTO/protocol validation, Use Case/CQRS, infrastructure,
+  controller/gateway, client, and verification. Every business read and write
+  goes through a Use Case; health checks and heartbeats are explicit exceptions.
+  Add Mongo/RabbitMQ/worker only when needed, not as mandatory scaffolding.
   Ownership must come from Better Auth session data (`userId` plus optional
   `activeOrganizationId`/`organizationId`); do not introduce `workspaceId` or
   `projectId` abstractions unless the product model is explicitly changed.
+
+## Agent Skill Governance
+
+- Only Codex and Cursor are supported development Agents.
+- `.agents/skills` is the only skill content source. `.codex/skills`
+  and `.cursor/skills` contain verified relative symlinks.
+- External skill examples never override Ray runtime boundaries, pinned tools,
+  database isolation, public API rules, or the user's authorization. In particular,
+  generic Next.js/SWR examples do not change TanStack Start/React Query; generic
+  direct-import advice does not authorize cross-project deep imports.
+- Do not run dynamic `latest` skill/auth installers, automatic schema overwrites,
+  or upstream maintenance scripts merely because an imported skill suggests it.
+- Skill presence, metadata checks, and mock tests are not Agent behavior or E2E
+  acceptance. Report local checks, real Agent generation, and environment blockers
+  separately. Never silently skip required integration tests.
 
 ## Nx-Specific Guidance
 

@@ -136,7 +136,7 @@ Fork PR 不获得仓库 Cloud Secret，并配置为不用远程缓存。内部 P
 
 | 时间 / 使用者 | 脚本 | 谁触发 / 输入 | 输出、作用与注意事项 |
 | --- | --- | --- | --- |
-| 每次业务开发 / 开发者 | `sync-commands.sh`、`sync-skills.sh` | `pnpm sync:commands` / `pnpm sync:skills` | 同步不同编辑器的开发指南；不部署代码 |
+| 共享 skill 变更 / 开发者 | `sync-skills.sh` | `pnpm sync:skills` | 仅同步 Codex/Cursor 的 skills；commands 直接在 `.cursor/commands` 维护；不部署代码 |
 | 本地环境维护 / 开发者 | `clean.mjs` | `pnpm clean:dry-run` 预览；`pnpm clean` 才清理 | 会删除依赖/缓存/产物，需要重新安装；不是每次提交前步骤 |
 | 认证/数据库修改 / CI、开发者 | `auth/check-auth-schema.mjs` | `pnpm nx run auth-server:schema-check` | 临时生成候选，打印漂移，失败退出；不覆盖 auth.prisma |
 | PR/full CI / runner | `ci/run-nx-with-metrics.mjs` | workflow 传入 Nx 命令、phase 和运行身份 | 收集时长、cacheStatus、SHA 等到 `artifacts/ci-metrics`；原任务失败仍失败 |

@@ -31,13 +31,11 @@ pnpm clean:dry-run
 
 rollback/finalize 转交 release/deploy-blue-green.sh，会操作真实环境，所需 env 与验证见 [release](release/README.md)。不用于本地启动；不要用旧脚本参数绕过 immutable 发布。测试由发布控制器 fixtures 提供，帮助文本本身不是部署证明。
 
-## sync-commands.sh
-
-语义 platform/node/platform（实际 shell 工具），同步 .agents/commands 下 Markdown 到 .cursor/.claude/.codex 的相对软链接。pnpm sync:commands 执行；无业务 env。不自动覆盖已有入口，仅创建缺少的链接。维护指南先改源文件。无单测；改动在临时目录验证路径、缺源目录、重复执行和已存在文件。
-
 ## sync-skills.sh
 
-语义 platform/node/platform（实际 shell 工具），pnpm sync:skills 同步 .agents/skills 到上述工具目录。无业务 env。现有条件可能对已存在非软链接路径调用 ln -sf，运行前检查目标，不能把它当纯只读命令。无独立单测；修改时为真实目录/软链接/断链/重复执行建立临时 fixture，防止覆盖用户文件。
+语义 platform/node/platform（实际 shell 工具），pnpm sync:skills 仅将 .agents/skills 链接到 .codex/skills 与 .cursor/skills。无业务 env；严格预检，冲突失败，不覆盖。由 skills-maintenance:test 验证冲突、重复执行及 Cursor commands 不被修改。
+
+Commands 直接在 .cursor/commands 内维护真实 Markdown 文件，没有同步脚本。共享业务规范仍在 skills，Codex 无需读取 Cursor 命令。
 
 ## 新脚本要求
 

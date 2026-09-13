@@ -1,0 +1,946 @@
+{
+  "version": 1,
+  "digestAlgorithm": "sha256-tree-v1",
+  "auditedAt": "2026-09-12",
+  "baseline": {
+    "sha": "9546f88a93122d3db1251496188c80c89862b5f9",
+    "confirmed": true,
+    "confirmedOn": "2026-09-12",
+    "confirmation": "用户回复“是的”，确认阶段零候选 SHA"
+  },
+  "schedule": {
+    "enabled": false,
+    "day": null,
+    "timeUtc": null,
+    "reason": "启用前需用户确认时刻，工作流未发布到默认分支 main"
+  },
+  "skills": [
+    {
+      "name": "adapt",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "840323c26093f687fd8816b9c3245449c4496653a1eb3da3df94e39780d7ed7f",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "animate",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "8fd06753738070c1e20e72849653bb2e3c0ff4be065ed3cc98526968ab6a22b2",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "audit",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "dacc4bd5af256928b3d33dd48387b59bb12a9136bf5cc9b71e142936a653a952",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "better-auth-best-practices",
+      "source": "better-auth/skills",
+      "path": "better-auth/best-practices",
+      "observedCommit": "20c9e88a5c007461a703f1c213572b073196113e",
+      "installedCommit": null,
+      "installedDigest": "dcdfb0032daa6c476b141baa29f02a71863c4c39c6cc85796eaa91c28edef756",
+      "upstreamDigest": "d9efb1518dbb8f7e5aa2a15d7dccf3a3377b75240ab6d08e38142c62a30de247",
+      "localState": "diverged",
+      "review": "hold",
+      "reason": "内容已变化但无法确认安装版本与本地修改归属，保留现状；候选需逐项人工兼容审查。 上游 auth@latest/schema 写入指导不符合 Ray 固定版本治理；源码未发现独立 LICENSE 文件。",
+      "licensePaths": [],
+      "executableFiles": [],
+      "scripts": [],
+      "networkLines": [
+        "4. Without MCP, start at [better-auth.com/llms.txt](https://better-auth.com/llms.txt) and follow the matching version index.",
+        "   - **Built-in adapter:** `npx auth@latest migrate`",
+        "   - **Drizzle:** `npx auth@latest generate --output src/db/auth-schema.ts` then `npx drizzle-kit push` (dev) or `npx drizzle-kit generate && npx drizzle-kit migrate` (prod)",
+        "   - **Prisma:** `npx auth@latest generate --output prisma/schema.prisma` then `npx prisma migrate dev`",
+        "- `BETTER_AUTH_URL` - Base URL (e.g., `https://example.com`)",
+        "- `npx auth@latest migrate` - Apply schema (built-in adapter)",
+        "- `npx auth@latest generate` - Generate schema for Prisma/Drizzle",
+        "- `npx auth@latest mcp --cursor` - Add MCP to AI tools",
+        "- [Docs](https://better-auth.com/docs)",
+        "- [Options Reference](https://better-auth.com/docs/reference/options)",
+        "- [LLMs.txt](https://better-auth.com/llms.txt)",
+        "- [GitHub](https://github.com/better-auth/better-auth)",
+        "- [Init Options Source](https://github.com/better-auth/better-auth/blob/main/packages/core/src/types/init-options.ts)"
+      ],
+      "changes": [
+        {
+          "path": "SKILL.md",
+          "status": "modified"
+        }
+      ],
+      "localModification": "no-lock-entry"
+    },
+    {
+      "name": "bolder",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "900ef3130bdc9325161367ffd51a107fdf076527a9420812c646b5e465b1341a",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "building-native-ui",
+      "source": "expo/skills",
+      "path": null,
+      "observedCommit": "be95528712e3709b786d573edae90d14c67949a8",
+      "installedCommit": null,
+      "installedDigest": "5f34d88feaaa6f5acd44392f28c9b49d616bd3987191ab0342886331a58c5052",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游旧入口已重命名/拆分为 expo-native-ui、expo-data-fetching 等；本轮不自动迁移调用方式或 Expo 依赖。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "clarify",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "12479e702f32bc6108a1c3561dcf6f55226e8f6775b95c8a3debfe6bc5e3c2a1",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "colorize",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "8b40c50dcd945f3dad1942f854d0317f5fc628d9f7560c93a7bed8ba1aaf85fd",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "critique",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "606132f51316edc5337f2356ce7a317ce8a47d36e7b9fda78db78de6876ab0c9",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "database-schema-designer",
+      "source": "softaworks/agent-toolkit",
+      "path": "dist/plugins/database-schema-designer/skills/database-schema-designer",
+      "observedCommit": "3027f20f3181758385a1bb8c022d4041dfb4de84",
+      "installedCommit": "3027f20f3181758385a1bb8c022d4041dfb4de84",
+      "installedDigest": "0b9da57cecfe8eb4ca87e5f9672fba71bcc328bb6f7616ccb621014cd56553df",
+      "upstreamDigest": "0b9da57cecfe8eb4ca87e5f9672fba71bcc328bb6f7616ccb621014cd56553df",
+      "localState": "matched",
+      "review": "compatible",
+      "reason": "内容与所列完整上游 SHA 完全一致，无需更新；Nx 命令使用本地 pnpm，仓库规则优先。",
+      "licensePaths": ["LICENSE"],
+      "executableFiles": [],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "delight",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "c3ea999d8bbf43f8f81e340201cde177aa60e18b1ad1aeb9553f0dfba3448b11",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "distill",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "f2cfea4a30abe402ff9a1f90f0c7f3444cbdaeddd124f27a67646f68c78cba3c",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "extract",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "b5e8c11afdcc2f99d8773c5e9ca56dd16cb9e74a39051a974c56af4e989bad99",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "find-skills",
+      "source": "vercel-labs/skills",
+      "path": "skills/find-skills",
+      "observedCommit": "d667282815248da03a08a18272b5d2eef9caf77c",
+      "installedCommit": null,
+      "installedDigest": "c198539e07fda7076e16a0808c53a81461bfcf267a10be49c2fd0c021b826861",
+      "upstreamDigest": "a29a2b8f445d874d1eaaf2277ac0308c402ec77c4b8a74b037656b00c832f7f8",
+      "localState": "diverged",
+      "review": "hold",
+      "reason": "本地内容与原安装锁摘要吻合，未发现安装后修改；但上游结构/行为变更尚未通过兼容审查，保留原版。 动态 npx skills 安装/更新不纳入只读检查。",
+      "licensePaths": ["LICENSE"],
+      "executableFiles": [],
+      "scripts": [],
+      "networkLines": [
+        "The Skills CLI (`npx skills`) is the package manager for the open agent skills ecosystem. Skills are modular packages that extend agent capabilities with specialized knowledge, workflows, and tools.",
+        "- `npx skills find [query] [--owner <owner>]` - Search for skills interactively or by keyword, optionally scoped to a GitHub owner",
+        "- `npx skills add <package>` - Install a skill from GitHub or other sources",
+        "- `npx skills update` - Update all installed skills",
+        "**Browse skills at:** https://skills.sh/",
+        "Before running a CLI search, check the [skills.sh leaderboard](https://skills.sh/) to see if a well-known skill already exists for the domain. The leaderboard ranks skills by total installs, surfacing the most popular and battle-tested options.",
+        "npx skills find [query] [--owner <owner>]",
+        "- User asks \"how do I make my React app faster?\" → `npx skills find react performance`",
+        "- User asks \"can you help me with PR reviews?\" → `npx skills find pr review`",
+        "- User asks \"I need to create a changelog\" → `npx skills find changelog`",
+        "npx skills add vercel-labs/agent-skills@react-best-practices",
+        "Learn more: https://skills.sh/vercel-labs/agent-skills/react-best-practices",
+        "npx skills add <owner/repo@skill> -g -y",
+        "3. Suggest the user could create their own skill with `npx skills init`",
+        "npx skills init my-xyz-skill"
+      ],
+      "changes": [
+        {
+          "path": "SKILL.md",
+          "status": "modified"
+        }
+      ],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "frontend-design",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "52a74dd9758267fe5ed2b3bcbf2f8255167b4e61860332b3c937dffd2646531a",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。 User-authorized local patch: Codex/Cursor-only instructions; preserve this patch in future upstream reconciliation.",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "reviewed-local-agent-support-patch",
+      "localPatches": [
+        {
+          "date": "2026-09-12",
+          "reason": "User requested Codex/Cursor-only support; remove retired Agent-specific directives without changing license attribution.",
+          "priorInstalledDigest": "ee99344a587082077ae4cb0b9f87d060ced99c8e8d17f53e6a0f8d0ccd1adc3b",
+          "priorLockComputedHash": "5316f00e012e2d4a81f996adda009b6862a6684af4f6eef3f46a69f456121c6a",
+          "files": ["SKILL.md"]
+        }
+      ]
+    },
+    {
+      "name": "harden",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "f0e485232d835ef8c26e29e22801031926a05fb72d90c38eb3c904d94cc46029",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "link-workspace-packages",
+      "source": "nrwl/nx-ai-agents-config",
+      "path": "generated/.agents/skills/link-workspace-packages",
+      "observedCommit": "aa363e4a85f11d836c21e5d1e7f6c333caab2590",
+      "installedCommit": "aa363e4a85f11d836c21e5d1e7f6c333caab2590",
+      "installedDigest": "043363bad445986b3016140fc6269f7af0212f11d32bf941423eac7f2c3a83d1",
+      "upstreamDigest": "043363bad445986b3016140fc6269f7af0212f11d32bf941423eac7f2c3a83d1",
+      "localState": "matched",
+      "review": "compatible",
+      "reason": "内容与所列完整上游 SHA 完全一致，无需更新；Nx 命令使用本地 pnpm，仓库规则优先。",
+      "licensePaths": ["LICENSE"],
+      "executableFiles": [],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "monitor-ci",
+      "source": "nrwl/nx-ai-agents-config",
+      "path": "skills/monitor-ci",
+      "observedCommit": "aa363e4a85f11d836c21e5d1e7f6c333caab2590",
+      "installedCommit": null,
+      "installedDigest": "3c7edaef7b20d4eb78150f443045a1e5fcd0766da29854cfd8d38e3948a95f67",
+      "upstreamDigest": "146051ff18892cf892b7f92ab978652d730cccf61d70a3f4efb565543548ed71",
+      "localState": "diverged",
+      "review": "hold",
+      "reason": "内容已变化但无法确认安装版本与本地修改归属，保留现状；候选需逐项人工兼容审查。 含两个自动 CI 处理脚本，需审查网络、权限及自动修复行为。",
+      "licensePaths": ["LICENSE"],
+      "executableFiles": [],
+      "scripts": ["scripts/ci-poll-decide.mjs", "scripts/ci-state-update.mjs"],
+      "networkLines": [
+        "   Nx Cloud not connected. Unlock 70% faster CI and auto-fix broken PRs with https://nx.dev/nx-cloud",
+        "1. **Detect package manager:** `pnpm-lock.yaml` → `pnpm nx`, `yarn.lock` → `yarn nx`, otherwise `npx nx`"
+      ],
+      "changes": [
+        {
+          "path": "SKILL.md",
+          "status": "modified"
+        },
+        {
+          "path": "scripts/ci-poll-decide.mjs",
+          "status": "modified"
+        },
+        {
+          "path": "scripts/ci-state-update.mjs",
+          "status": "modified"
+        }
+      ],
+      "localModification": "differs-from-install-lock"
+    },
+    {
+      "name": "native-data-fetching",
+      "source": "expo/skills",
+      "path": null,
+      "observedCommit": "be95528712e3709b786d573edae90d14c67949a8",
+      "installedCommit": null,
+      "installedDigest": "f5b5672aa5e0ee5b80ee18d89fe6d720e3bcad02ea8b6ec7e914324be0e6be0e",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游旧入口已重命名/拆分为 expo-native-ui、expo-data-fetching 等；本轮不自动迁移调用方式或 Expo 依赖。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "normalize",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "636670268cf472b7fd9b0211bf66840ade49587e75759e6d7d37efa9bf7c1577",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "nx-generate",
+      "source": "nrwl/nx-ai-agents-config",
+      "path": "generated/.agents/skills/nx-generate",
+      "observedCommit": "aa363e4a85f11d836c21e5d1e7f6c333caab2590",
+      "installedCommit": "aa363e4a85f11d836c21e5d1e7f6c333caab2590",
+      "installedDigest": "10a8b0a9b749a08d1dcaa6d856302e828307eeb6d3f4de54d11a071f0cfe474c",
+      "upstreamDigest": "10a8b0a9b749a08d1dcaa6d856302e828307eeb6d3f4de54d11a071f0cfe474c",
+      "localState": "matched",
+      "review": "compatible",
+      "reason": "已升级到上游 generated/.agents 版本：仅规范描述并移除不通用 subagent/context 元数据；完整差异已审核，无脚本/权限/依赖变化，MIT 授权保留于治理目录。",
+      "licensePaths": ["LICENSE"],
+      "executableFiles": [],
+      "scripts": [],
+      "networkLines": [
+        "- List all generators for a plugin: `npx nx list @nx/react`",
+        "- View available plugins: `npx nx list`",
+        "npx nx g @nx/react:library --help",
+        "npx nx g @nx/react:library --name=my-lib --dry-run --no-interactive"
+      ],
+      "changes": [
+        {
+          "path": "SKILL.md",
+          "status": "modified"
+        }
+      ],
+      "localModification": "upgraded-from-matching-install-lock"
+    },
+    {
+      "name": "nx-import",
+      "source": "nrwl/nx-ai-agents-config",
+      "path": "generated/.agents/skills/nx-import",
+      "observedCommit": "aa363e4a85f11d836c21e5d1e7f6c333caab2590",
+      "installedCommit": "aa363e4a85f11d836c21e5d1e7f6c333caab2590",
+      "installedDigest": "a4c99459b34d158fd99fd0b921ee90acb4d97d513e33de8e0d88f2d70818695b",
+      "upstreamDigest": "a4c99459b34d158fd99fd0b921ee90acb4d97d513e33de8e0d88f2d70818695b",
+      "localState": "matched",
+      "review": "compatible",
+      "reason": "内容与所列完整上游 SHA 完全一致，无需更新；Nx 命令使用本地 pnpm，仓库规则优先。",
+      "licensePaths": ["LICENSE"],
+      "executableFiles": [],
+      "scripts": [],
+      "networkLines": [
+        "- https://nx.dev/docs/guides/adopting-nx/import-project",
+        "- https://nx.dev/docs/guides/adopting-nx/preserving-git-histories",
+        "- **Subdirectory import**: Plugins NOT auto-detected. Manually add with `npx nx add @nx/PLUGIN`. Check `include`/`exclude` patterns — defaults won't match alternate directories (e.g. `apps-beta/`).",
+        "- Run `npx nx reset` after any plugin config changes.",
+        "3. Then `npx nx add @nx/eslint` to register the plugin in `nx.json`",
+        "1. Run `npx nx add @nx/jest` — registers `@nx/jest/plugin` in `nx.json` and updates `namedInputs`",
+        "- https://nx.dev/docs/technologies/java/gradle/introduction",
+        "`npx nx add @nx/jest` does two things:",
+        "**Other gotcha**: If you create `jest.preset.js` manually but skip `npx nx add @nx/jest`, the plugin won't be registered and `nx run PROJECT:test` will fail with \"Cannot find target 'test'\". You need both.",
+        "1. **\"Cannot find target 'test'\"**: `@nx/jest/plugin` not registered in `nx.json`. Run `npx nx add @nx/jest` or manually add the plugin entry.",
+        "1. `npx nx add @nx/jest` — registers plugin in `nx.json` (does NOT create `jest.preset.js`)",
+        "2. `npx nx add @nx/jest` — registers plugin (does NOT create preset)",
+        "- Source: `create-next-app@latest` (Next.js 16.1.6, App Router, Tailwind v4, flat ESLint config)",
+        "- Migration guide: https://nx.dev/docs/guides/adopting-nx/from-turborepo#easy-automated-migration-example",
+        "- https://nx.dev/docs/guides/adopting-nx/from-turborepo",
+        "3. Then `npx nx add @nx/eslint`"
+      ],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "nx-plugins",
+      "source": "nrwl/nx-ai-agents-config",
+      "path": "generated/.agents/skills/nx-plugins",
+      "observedCommit": "aa363e4a85f11d836c21e5d1e7f6c333caab2590",
+      "installedCommit": "aa363e4a85f11d836c21e5d1e7f6c333caab2590",
+      "installedDigest": "2784715d831b0773706eef79ad418621ee0e2354712397da754e1f67f82c34c5",
+      "upstreamDigest": "2784715d831b0773706eef79ad418621ee0e2354712397da754e1f67f82c34c5",
+      "localState": "matched",
+      "review": "compatible",
+      "reason": "内容与所列完整上游 SHA 完全一致，无需更新；Nx 命令使用本地 pnpm，仓库规则优先。",
+      "licensePaths": ["LICENSE"],
+      "executableFiles": [],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "nx-run-tasks",
+      "source": "nrwl/nx-ai-agents-config",
+      "path": "generated/.agents/skills/nx-run-tasks",
+      "observedCommit": "aa363e4a85f11d836c21e5d1e7f6c333caab2590",
+      "installedCommit": "aa363e4a85f11d836c21e5d1e7f6c333caab2590",
+      "installedDigest": "6fb13b232a0f54e2c3def313f40d72a26ad086cc87cf4914b95536237884f02e",
+      "upstreamDigest": "6fb13b232a0f54e2c3def313f40d72a26ad086cc87cf4914b95536237884f02e",
+      "localState": "matched",
+      "review": "compatible",
+      "reason": "内容与所列完整上游 SHA 完全一致，无需更新；Nx 命令使用本地 pnpm，仓库规则优先。",
+      "licensePaths": ["LICENSE"],
+      "executableFiles": [],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "nx-workspace",
+      "source": "nrwl/nx-ai-agents-config",
+      "path": "generated/.agents/skills/nx-workspace",
+      "observedCommit": "aa363e4a85f11d836c21e5d1e7f6c333caab2590",
+      "installedCommit": "aa363e4a85f11d836c21e5d1e7f6c333caab2590",
+      "installedDigest": "b15767a508d7802c077f76a02b282669a43ae0b29b4098c1992d07e611846d6c",
+      "upstreamDigest": "b15767a508d7802c077f76a02b282669a43ae0b29b4098c1992d07e611846d6c",
+      "localState": "matched",
+      "review": "compatible",
+      "reason": "内容与所列完整上游 SHA 完全一致，无需更新；Nx 命令使用本地 pnpm，仓库规则优先。",
+      "licensePaths": ["LICENSE"],
+      "executableFiles": [],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "onboard",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "1c1bb332fcf723fa14d4e31b0af23d956464377dbb8ff768ffb1a0561616d96c",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "optimize",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "be68f07e0233e704adb7c1125a18006a8f44c74dc164008c4d5a5b38165a0d1f",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "polish",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "fefcc5229074a87788cf9943fd064b1bb937bb10553b54b64e9d14ef91f68416",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "quieter",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "688531ea705d75cda536fa16e27562a00d3e9b59e4be1b08e0d61161d5bcea1d",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "tdd",
+      "source": "mattpocock/skills",
+      "path": "skills/engineering/tdd",
+      "observedCommit": "3cca18b368ae95cdbdebbff572ccafa662551015",
+      "installedCommit": null,
+      "installedDigest": "848d105178c88669a62b6ed9623406564f47cedf060894d625aa71e01b493ef3",
+      "upstreamDigest": "2e752bc95eabb4eed539b3ca80cd8109fafe52ac06576dc94f68252c5b1b1d75",
+      "localState": "diverged",
+      "review": "hold",
+      "reason": "本地内容与原安装锁摘要吻合，未发现安装后修改；但上游结构/行为变更尚未通过兼容审查，保留原版。",
+      "licensePaths": ["LICENSE"],
+      "executableFiles": [],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [
+        {
+          "path": "SKILL.md",
+          "status": "modified"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "status": "added"
+        },
+        {
+          "path": "deep-modules.md",
+          "status": "deleted"
+        },
+        {
+          "path": "interface-design.md",
+          "status": "deleted"
+        },
+        {
+          "path": "refactoring.md",
+          "status": "deleted"
+        },
+        {
+          "path": "tests.md",
+          "status": "modified"
+        }
+      ],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "teach-impeccable",
+      "source": "pbakaus/impeccable",
+      "path": null,
+      "observedCommit": "cb56ed6c19a07329a9fa0cd4e657bee040156593",
+      "installedCommit": null,
+      "installedDigest": "a8969cf98d8ed30c11b0f537172c271a58286b0d7c1b8082c1e678db902a58af",
+      "upstreamDigest": null,
+      "localState": "unknown",
+      "review": "hold",
+      "reason": "上游已合并为 impeccable 单入口，新增 launcher/二进制下载/hooks；不是原技能原位兼容更新。tests/oracle 下同名 fixture 不得当上游来源。 User-authorized local patch: Codex/Cursor-only instructions; preserve this patch in future upstream reconciliation.",
+      "licensePaths": ["LICENSE"],
+      "scripts": [],
+      "networkLines": [],
+      "changes": [],
+      "localModification": "reviewed-local-agent-support-patch",
+      "localPatches": [
+        {
+          "date": "2026-09-12",
+          "reason": "User requested Codex/Cursor-only support; remove retired Agent-specific directives without changing license attribution.",
+          "priorInstalledDigest": "3d6b9f0f8be86450632cae2ba65d7322efd6a2bae0d0c187f8697f72919909f3",
+          "priorLockComputedHash": "61855594bf79bc5b2665cfca3580b93840cfe645872c5a2deeaa5ad336570d5a",
+          "files": ["SKILL.md"]
+        }
+      ]
+    },
+    {
+      "name": "transitions-dev",
+      "source": "jakubantalik/transitions-dev",
+      "path": "skills/transitions-dev",
+      "observedCommit": "038b0bdc75375c2beed51d1e824c98cdc7b86f8c",
+      "installedCommit": null,
+      "installedDigest": "5041aec3990c916a2d78345964ff252666bc2671917d183b1370ebe1f2763fd2",
+      "upstreamDigest": "3bc6575e2081a05e74079d15ce30183f2bfd84d05ba43655707d65208ae6dee1",
+      "localState": "diverged",
+      "review": "hold",
+      "reason": "本地内容与原安装锁摘要吻合，未发现安装后修改；但上游结构/行为变更尚未通过兼容审查，保留原版。",
+      "licensePaths": ["LICENSE"],
+      "executableFiles": [],
+      "scripts": [],
+      "networkLines": [
+        "The `:root` defaults below match the live tuning on [transitions.dev](https://transitions.dev). Drop them into your global stylesheet once — every transition in this skill reads from semantic names like these, so multiple transitions can share a single `:root` block.",
+        "The `:root` defaults below match the live tuning on [transitions.dev](https://transitions.dev). Drop them into your global stylesheet once — every transition in this skill reads from semantic names like these, so multiple transitions can share a single `:root` block.",
+        "The `:root` defaults below match the live tuning on [transitions.dev](https://transitions.dev). Drop them into your global stylesheet once — every transition in this skill reads from semantic names like these, so multiple transitions can share a single `:root` block.",
+        "The `:root` defaults below match the live tuning on [transitions.dev](https://transitions.dev). Drop them into your global stylesheet once — every transition in this skill reads from semantic names like these, so multiple transitions can share a single `:root` block.",
+        "The `:root` defaults below match the live tuning on [transitions.dev](https://transitions.dev). Drop them into your global stylesheet once — every transition in this skill reads from semantic names like these, so multiple transitions can share a single `:root` block.",
+        "The `:root` defaults below match the live tuning on [transitions.dev](https://transitions.dev). Drop them into your global stylesheet once — every transition in this skill reads from semantic names like these, so multiple transitions can share a single `:root` block.",
+        "The `:root` defaults below match the live tuning on [transitions.dev](https://transitions.dev). Drop them into your global stylesheet once — every transition in this skill reads from semantic names like these, so multiple transitions can share a single `:root` block.",
+        "The `:root` defaults below match the live tuning on [transitions.dev](https://transitions.dev). Drop them into your global stylesheet once — every transition in this skill reads from semantic names like these, so multiple transitions can share a single `:root` block.",
+        "The `:root` defaults below match the live tuning on [transitions.dev](https://transitions.dev). Drop them into your global stylesheet once — every transition in this skill reads from semantic names like these, so multiple transitions can share a single `:root` block.",
+        "The `:root` defaults below match the live tuning on [transitions.dev](https://transitions.dev). Drop them into your global stylesheet once — every transition in this skill reads from semantic names like these, so multiple transitions can share a single `:root` block.",
+        "The `:root` defaults below match the live tuning on [transitions.dev](https://transitions.dev). Drop them into your global stylesheet once — every transition in this skill reads from semantic names like these, so multiple transitions can share a single `:root` block.",
+        "The `:root` defaults below match the live tuning on [transitions.dev](https://transitions.dev). Drop them into your global stylesheet once — every transition in this skill reads from semantic names like these, so multiple transitions can share a single `:root` block.",
+        "The `--pX-*` source tokens used by the live demo at [transitions.dev](https://transitions.dev) are intentionally **not** exported here. Tunable values are renamed to semantic names (`--badge-*`, `--dropdown-*`, `--modal-*`, …) so the user owns the design vocabulary."
+      ],
+      "changes": [
+        {
+          "path": "10-success-check.md",
+          "status": "added"
+        },
+        {
+          "path": "11-avatar-group-hover.md",
+          "status": "added"
+        },
+        {
+          "path": "12-error-state-shake.md",
+          "status": "added"
+        },
+        {
+          "path": "SKILL.md",
+          "status": "modified"
+        },
+        {
+          "path": "_root.css",
+          "status": "modified"
+        }
+      ],
+      "localModification": "matches-install-lock"
+    },
+    {
+      "name": "vercel-composition-patterns",
+      "source": "vercel-labs/agent-skills",
+      "path": "skills/composition-patterns",
+      "observedCommit": "063bee94c3f4df8453406c830b0a7df0f2860278",
+      "installedCommit": null,
+      "installedDigest": "59c6d15191c8a66ed78917445cf17ac8cd1bdce52706282421537920c4bbf181",
+      "upstreamDigest": "cb4ae3faa68a5da1ea5fc8e484088ddd2f5703d2be7b5822a822d0461e5baca6",
+      "localState": "diverged",
+      "review": "hold",
+      "reason": "内容已变化但无法确认安装版本与本地修改归属，保留现状；候选需逐项人工兼容审查。 仓库根未找到 LICENSE 文件，技能元数据授权需单独核验；Next.js/SWR/deep import 示例不得覆盖 Ray。",
+      "licensePaths": [],
+      "executableFiles": [],
+      "scripts": [],
+      "networkLines": [
+        "1. [https://react.dev](https://react.dev)",
+        "2. [https://react.dev/learn/passing-data-deeply-with-context](https://react.dev/learn/passing-data-deeply-with-context)",
+        "3. [https://react.dev/reference/react/use](https://react.dev/reference/react/use)",
+        "    \"https://react.dev\",",
+        "    \"https://react.dev/learn/passing-data-deeply-with-context\",",
+        "    \"https://react.dev/reference/react/use\"",
+        "Reference: [Link](https://example.com)"
+      ],
+      "changes": [
+        {
+          "path": "metadata.json",
+          "status": "added"
+        },
+        {
+          "path": "rules/_sections.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/_template.md",
+          "status": "added"
+        }
+      ],
+      "localModification": "differs-from-install-lock"
+    },
+    {
+      "name": "vercel-react-best-practices",
+      "source": "vercel-labs/agent-skills",
+      "path": "skills/react-best-practices",
+      "observedCommit": "063bee94c3f4df8453406c830b0a7df0f2860278",
+      "installedCommit": null,
+      "installedDigest": "cef006a01052c0e9aa1677d873059daffe95e7d4e5323aeee473bcd92deecea1",
+      "upstreamDigest": "d33fca5235e965811848052f1966f122a741a25e892862de05127fc9157be2f5",
+      "localState": "diverged",
+      "review": "hold",
+      "reason": "内容已变化但无法确认安装版本与本地修改归属，保留现状；候选需逐项人工兼容审查。 仓库根未找到 LICENSE 文件，技能元数据授权需单独核验；Next.js/SWR/deep import 示例不得覆盖 Ray。",
+      "licensePaths": [],
+      "executableFiles": [],
+      "scripts": [],
+      "networkLines": [
+        "Reference: [https://github.com/shuding/better-all](https://github.com/shuding/better-all)",
+        "Reference: [https://vercel.com/blog/how-we-optimized-package-imports-in-next-js](https://vercel.com/blog/how-we-optimized-package-imports-in-next-js)",
+        "Reference: [https://nextjs.org/docs/app/api-reference/config/next-config-js/output](https://nextjs.org/docs/app/api-reference/config/next-config-js/output), [https://nextjs.org/learn/seo/dynamic-imports](https://nextjs.org/learn/seo/dynamic-imports), [https://vite.dev/guide/features.html](https://vite.dev/guide/features.html), [https://esbuild.github.io/api/](https://esbuild.github.io/api/), [https://www.npmjs.com/package/@rollup/plugin-dynamic-import-vars](https://www.npmjs.com/package/@rollup/plugin-dynamic-import-vars), [https://webpack.js.org/guides/dependency-management/](https://webpack.js.org/guides/dependency-management/)",
+        "Reference: [https://nextjs.org/docs/app/guides/authentication](https://nextjs.org/docs/app/guides/authentication)",
+        "**With Vercel's [Fluid Compute](https://vercel.com/docs/fluid-compute):** LRU caching is especially effective because multiple concurrent requests can share the same function instance and cache. This means the cache persists across requests without needing external storage like Redis.",
+        "Reference: [https://github.com/isaacs/node-lru-cache](https://github.com/isaacs/node-lru-cache)",
+        "With Vercel's [Fluid Compute](https://vercel.com/docs/fluid-compute), module-level caching is especially effective because multiple concurrent requests share the same function instance. The static assets stay loaded in memory across requests without cold start penalties.",
+        "Reference: [https://react.dev/reference/react/cache](https://react.dev/reference/react/cache)",
+        "Reference: [https://nextjs.org/docs/app/api-reference/functions/after](https://nextjs.org/docs/app/api-reference/functions/after)",
+        "Reference: [https://swr.vercel.app](https://swr.vercel.app)",
+        "Reference: [https://react.dev/learn/you-might-not-need-an-effect](https://react.dev/learn/you-might-not-need-an-effect)",
+        "**Note:** If your project has [React Compiler](https://react.dev/learn/react-compiler) enabled, manual memoization with `memo()` and `useMemo()` is not necessary. The compiler automatically optimizes re-renders.",
+        "Reference: [https://react.dev/learn/removing-effect-dependencies#should-this-code-move-to-an-event-handler](https://react.dev/learn/removing-effect-dependencies#should-this-code-move-to-an-event-handler)",
+        "**Note:** If your project has [React Compiler](https://react.dev/learn/react-compiler) enabled, it automatically optimizes dependency tracking and may handle some of these cases for you.",
+        "**Note:** If your project has [React Compiler](https://react.dev/learn/react-compiler) enabled, the compiler can automatically optimize some cases, but functional updates are still recommended for correctness and to prevent stale closure bugs.",
+        "Reference: [https://react.dev/reference/react/useDeferredValue](https://react.dev/reference/react/useDeferredValue)",
+        "**Note:** If your project has [React Compiler](https://react.dev/learn/react-compiler) enabled, the compiler automatically hoists static JSX elements and optimizes component re-renders, making manual hoisting unnecessary.",
+        "npx svgo --precision=1 --multipass icon.svg",
+        "        <script src=\"https://example.com/analytics.js\" />",
+        "      <Script src=\"https://example.com/analytics.js\" strategy=\"afterInteractive\" />",
+        "Reference: [https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script#defer](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script#defer)",
+        "  prefetchDNS('https://analytics.example.com')",
+        "  preconnect('https://api.example.com')",
+        "Reference: [https://react.dev/reference/react-dom#resource-preloading-apis](https://react.dev/reference/react-dom#resource-preloading-apis)",
+        "Reference: [https://react.dev/reference/react/useTransition](https://react.dev/reference/react/useTransition)"
+      ],
+      "changes": [
+        {
+          "path": "AGENTS.md",
+          "status": "modified"
+        },
+        {
+          "path": "README.md",
+          "status": "added"
+        },
+        {
+          "path": "SKILL.md",
+          "status": "modified"
+        },
+        {
+          "path": "metadata.json",
+          "status": "added"
+        },
+        {
+          "path": "rules/_sections.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/_template.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/advanced-effect-event-deps.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/advanced-init-once.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/async-cheap-condition-before-await.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/async-defer-await.md",
+          "status": "modified"
+        },
+        {
+          "path": "rules/bundle-analyzable-paths.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/bundle-barrel-imports.md",
+          "status": "modified"
+        },
+        {
+          "path": "rules/js-flatmap-filter.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/js-request-idle-callback.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/rendering-hydration-suppress-warning.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/rendering-resource-hints.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/rendering-script-defer-async.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/rendering-usetransition-loading.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/rerender-derived-state-no-effect.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/rerender-move-effect-to-event.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/rerender-no-inline-components.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/rerender-split-combined-hooks.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/rerender-use-deferred-value.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/rerender-use-ref-transient-values.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/server-hoist-static-io.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/server-no-shared-module-state.md",
+          "status": "added"
+        },
+        {
+          "path": "rules/server-parallel-nested-fetching.md",
+          "status": "added"
+        }
+      ],
+      "localModification": "no-lock-entry"
+    },
+    {
+      "name": "web-design-guidelines",
+      "source": "vercel-labs/agent-skills",
+      "path": "skills/web-design-guidelines",
+      "observedCommit": "063bee94c3f4df8453406c830b0a7df0f2860278",
+      "installedCommit": "063bee94c3f4df8453406c830b0a7df0f2860278",
+      "installedDigest": "ee71d7630abc46a5048473f0ae3d1183b1a49036c8da547997939d3e73a9c888",
+      "upstreamDigest": "ee71d7630abc46a5048473f0ae3d1183b1a49036c8da547997939d3e73a9c888",
+      "localState": "matched",
+      "review": "hold",
+      "reason": "内容匹配，但每次从外部 URL 读取浮动规则；仅在明确 UI 审查时人工使用，自动维护暂缓。 仓库根未找到 LICENSE 文件，技能元数据授权需单独核验；Next.js/SWR/deep import 示例不得覆盖 Ray。",
+      "licensePaths": [],
+      "executableFiles": [],
+      "scripts": [],
+      "networkLines": ["https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md"],
+      "changes": [],
+      "localModification": "no-lock-entry"
+    }
+  ]
+}

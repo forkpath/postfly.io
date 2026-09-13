@@ -73,10 +73,11 @@ logs
 **/i18nTree.gen.ts
 .tanstack
 .vite
-.claude/worktrees
-.claude/settings.local.json
 .nx/migrate-runs
 
 .nx/polygraph
 
 .nx/self-healing
+
+# Retired tool: protect accidental local credentials; synchronization/validation rejects this entry.
+/.claude/

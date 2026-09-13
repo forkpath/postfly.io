@@ -56,8 +56,7 @@
     "add:mobile-ui": "pnpx shadcn@latest add -p libs/ui-native/src/components",
     "update": "nx migrate latest",
     "postinstall": "lefthook install",
-    "sync:skills": "./scripts/sync-skills.sh",
-    "sync:commands": "./scripts/sync-commands.sh"
+    "sync:skills": "./scripts/sync-skills.sh"
   },
   "private": true,
   "dependencies": {

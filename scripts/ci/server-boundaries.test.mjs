@@ -73,8 +73,8 @@ test('services depend directly on the owning server adapters', () => {
 })
 
 test('all source and project configuration uses canonical aliases', () => {
-  const roots = ['.agents', '.claude', '.codex', '.cursor', '.vscode', 'apps', 'docs', 'libs', 'services', 'tools'].map(
-    path => resolve(workspaceRoot, path)
+  const roots = ['.agents', '.codex', '.cursor', '.vscode', 'apps', 'docs', 'libs', 'services', 'tools'].map(path =>
+    resolve(workspaceRoot, path)
   )
   const files = [resolve(workspaceRoot, 'AGENTS.md'), ...roots.flatMap(collectFiles)]
   const violations = []
