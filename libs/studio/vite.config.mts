@@ -4,11 +4,11 @@ import svgr from 'vite-plugin-svgr'
 import tsconfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/libs/studio',
   plugins: [
     tsconfigPaths({
-      root: __dirname,
+      root: import.meta.dirname,
       projects: ['../../tsconfig.base.json', './tsconfig.json']
     }),
     // SVG as React components - 使用 ?react 后缀

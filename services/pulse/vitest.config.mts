@@ -2,9 +2,9 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/services/pulse',
-  plugins: [tsconfigPaths({ root: __dirname, projects: ['../../tsconfig.base.json'] })],
+  plugins: [tsconfigPaths({ root: import.meta.dirname, projects: ['../../tsconfig.base.json'] })],
   test: {
     name: 'pulse',
     watch: false,
