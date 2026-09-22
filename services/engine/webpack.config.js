@@ -19,6 +19,8 @@ module.exports = {
       optimization: false,
       outputHashing: 'none',
       generatePackageJson: true,
+      // Prisma generated sources are excluded from the Nx dependency scan.
+      runtimeDependencies: ['@prisma/client'],
       sourceMap: process.env.NODE_ENV !== 'production'
     })
   ]

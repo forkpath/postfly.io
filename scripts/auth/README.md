@@ -1,21 +1,21 @@
-# Auth 脚本 · check-auth-schema.mjs
+# Better Auth 模型检查
 
-## 用途与分类
+`check-auth-schema.mjs` 是认证维护工具：根据 `libs/auth-server/src/lib/auth-server.ts` 的 Better Auth 配置，在系统临时目录生成候选 Prisma 模型，再与 `libs/pg-dao/src/models/auth.prisma` 对比，最后删除临时目录。
 
-唯一执行脚本 check-auth-schema.mjs，由 auth-server:schema-check target 调用。脚本本身无独立 tags，语义 type:platform/runtime:node/domain:auth；供认证维护者与 CI，不由业务代码导入。
+## 什么时候使用
 
-## 运行、环境与输出
+- 升级 Better Auth 或其 CLI 后。
+- 增删 organization、two-factor、passkey 等影响数据库结构的认证插件后。
+- 修改认证字段、认证配置或 `auth.prisma` 后。
 
 ```sh
 pnpm nx run auth-server:schema-check
 ```
 
-需要已安装 workspace 依赖及 tools/auth-schema。脚本将 Node/路径解析、认证、邮件、OAuth env 覆盖为测试值；PG URL 使用已有 POSTGRES_DATABASE_URL/旧别名或本地占位 URL。无需云端生产凭据，不应携带生产环境执行。
+普通页面/业务开发、每次启动和 `pg-dao:generate` 都不需要执行。CI 保留显式调用，帮助框架维护者发现依赖和认证模型不一致。
 
-候选生成于系统临时目录，比较后 finally 清理。零退出表示当前归一化逻辑相同，非零表示 CLI 失败/漂移。忽略物理 map/schema，保留的 billing relation/索引白名单定义在脚本中；不能证明物理 schema 无漂移。
+它不执行数据库迁移、不覆盖受控模型，也不连接数据库检查实际表结构。发现差异时应审核差异，修改模型，再通过标准 Prisma 迁移处理；不要直接覆盖自定义关系。
 
-CLI 固定 1.4.21，与 runtime 1.6.26 不同。生成配置来自 auth-server/src/lib/auth-server.ts，受控文件为 pg-dao/src/models/auth.prisma；不覆盖仓库 schema。旧 auth:generate-auth-schema noop 随旧项目退役，维护者统一使用 auth-server:schema-check。
+比较器检查逻辑字段、类型、默认值、关系和索引，忽略物理映射及本项目明确列出的计费关系/索引扩展。因此它是辅助检查，不能替代数据库约束验证或真实登录测试。
 
-## 测试与后续维护
-
-目前没有独立 comparer 单元测试文件。修改解析/白名单时新增 fixture 测试，覆盖 model/enum/field/default/index/扩展及失败退出；真实认证行为另走 auth-server 测试和 E2E。若改为可写 schema 维护任务，必须另设不可缓存目标与人工 migration 审核，不能借此检查静默覆写。
+CLI 通过 `tools/auth-schema` 隔离固定版本（当前 CLI 1.4.21、运行时 1.6.26），不会动态下载 latest。版本不同意味着升级时需要审核生成器适用性。运行注入测试认证/邮件/OAuth 值；数据库地址使用占位值，不继承真实数据库配置。

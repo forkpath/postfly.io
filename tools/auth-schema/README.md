@@ -15,7 +15,7 @@ pnpm nx show project @ray/auth-schema-tool --json
 pnpm nx run auth-server:schema-check
 ```
 
-本工具包没有自己的 Nx build/test target，由 scripts/auth/check-auth-schema.mjs 调用本包安装的 better-auth executable。脚本在系统临时目录生成候选并清理，不修改受控 auth.prisma。注入 NODE_ENV=test、测试 auth/email/OAuth 值；POSTGRES_DATABASE_URL 优先继承外部环境，否则使用本地占位 URL。不要把生产环境带入检查进程。
+本工具包没有自己的 Nx build/test target，由 scripts/auth/check-auth-schema.mjs 调用本包安装的 better-auth executable。脚本在系统临时目录生成候选并清理，不修改受控 auth.prisma。注入 NODE_ENV=test、测试 auth/email/OAuth 值；POSTGRES_DATABASE_URL 固定为不连接真实数据库的占位 URL。不要把生产环境带入检查进程。
 
 比较逻辑模型/字段/索引等，忽略物理 @map/@@map/@@schema，并排除窄白名单扩展；物理表映射必须另审 Prisma migration。
 

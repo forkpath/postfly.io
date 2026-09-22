@@ -6,11 +6,11 @@ Nest 通用配置、异常过滤、装饰器、拦截器、日志和 i18n 适配
 
 ## Tags、使用者与场景
 
-`type:platform` · `runtime:node` · `domain:platform`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:platform` · `runtime:node` · `domain:platform`。
 
 Node Nest 服务；只组合框架基础能力，不承载 Billing 等业务用例。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
@@ -63,4 +63,4 @@ pnpm nx run server-nest:test --run
 
 现有用例示例：[src/filters/**tests**/all-exception.filter.spec.ts](src/filters/__tests__/all-exception.filter.spec.ts)。
 
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。

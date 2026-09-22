@@ -118,10 +118,7 @@ try {
         NODE_ENV: 'test',
         NODE_OPTIONS: '-r tsconfig-paths/register',
         TS_NODE_PROJECT: join(workspaceRoot, 'tsconfig.base.json'),
-        POSTGRES_DATABASE_URL:
-          process.env.POSTGRES_DATABASE_URL ??
-          process.env.POSGTRES_DATABASE_URL ??
-          'postgresql://schema:check@127.0.0.1:5432/schema_check',
+        POSTGRES_DATABASE_URL: 'postgresql://schema:check@127.0.0.1:1/schema_check',
         POSGTRES_DATABASE_URL: undefined,
         BETTER_AUTH_SECRET: 'auth-schema-check-secret-32-characters-minimum',
         BETTER_AUTH_URL: 'https://auth-schema.example.test',

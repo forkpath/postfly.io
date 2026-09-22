@@ -6,11 +6,11 @@ Node Better Auth 实例、数据库适配、认证插件及 Nest guard/decorator
 
 ## Tags、使用者与场景
 
-`type:platform` · `runtime:node` · `domain:auth`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:platform` · `runtime:node` · `domain:auth`。
 
 Engine/Pulse 等 Node 应用；通用入口 @libs/auth-server，Nest 集成使用明确声明的 @libs/auth-server/nest。前端禁止使用。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
@@ -23,7 +23,7 @@ src/lib/env.ts 使用 envin 从启动进程读取；在 import 前注入。依�
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                                              | Google OAuth 应用 ID/密钥                         | 启用 Google 登录时配置                 | Google Cloud OAuth 应用后台               |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`                                              | GitHub OAuth 应用 ID/密钥                         | 启用 GitHub 登录时配置                 | GitHub OAuth App 后台                     |
 | `AUTH_APPLE_CLIENT_ID` / `AUTH_APPLE_CLIENT_SECRET` / `AUTH_APPLE_APP_BUNDLE_IDENTIFIER` | Apple 服务/应用 ID、签名 client secret、Bundle ID | 启用 Apple 登录时配置                  | Apple Developer；secret 按 Apple 要求生成 |
-| `SEED_EMAIL` / `SEED_PASSWORD`                                                           | 初始化管理账户                                    | 仅 seed 时配置，禁止用源码默认密码投产 | 受控种子账户，不是普通登录用户输入        |
+| `SEED_EMAIL` / `SEED_PASSWORD`                                                           | 初始化管理账户                                    | 仅 seed 时必填，密码至少 12 字符 | 受控种子账户，不是普通登录用户输入        |
 | `NODE_ENV`                                                                               | 影响认证环境行为                                  | 默认 development                       | 进程启动环境                              |
 
 依赖配置：[pg-dao](../../libs/pg-dao/README.md)、[email-server](../../libs/email-server/README.md)。只在实际启用对应路径时提供厂商配置，不把服务端密钥放到客户端。
@@ -56,4 +56,4 @@ mock PG/邮件/厂商模块，验证认证配置和权限默认值；现有单�
 
 现有用例示例：[src/lib/auth-server.spec.ts](src/lib/auth-server.spec.ts)。
 
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。

@@ -1,42 +1,13 @@
-# Scripts · 工作流入口与安全边界
+# 维护与交付入口
 
-脚本由开发者/CI/发布维护者运行，不是应用可导入的业务库。大部分不独立注册 Nx 项目；下列 type/runtime/domain 是语义分类，不是已经执行的 tags 规则。所有命令从仓库根运行。
+新项目只需按根 README 启动基础设施、运行一次 `pnpm db:init`，再启动服务。这里的脚本由对应命令或 CI 调用，不是需要逐项执行的安装清单。
 
-## 子目录
+| 入口 | 用途 | 使用时机 |
+| --- | --- | --- |
+| `clean.mjs` | 清理依赖、缓存和构建产物；保护 Git 已跟踪文件及符号链接目标 | `pnpm clean:dry-run` 预览，`pnpm clean` 执行 |
+| `sync-skills.mjs` | 为 Codex/Cursor 补齐指向 `.agents/skills` 的相对链接，冲突时停止 | `pnpm sync:skills`；检查用 `pnpm sync:skills:check` |
+| [auth](auth/README.md) | 比较 Better Auth 生成模型与受控模型 | 修改认证配置、插件或依赖后；CI 显式调用 |
+| [ci](ci/README.md) | 验证缓存、边界和容器配置 | PR/CI；不参与应用启动 |
+| [release](release/README.md) | 初始化数据库并部署服务到 Kong 后方，以及按需执行健康探针 | 服务器部署或发布验收 |
 
-| 目录                               | 用途与分类                                      | 运行/测试                     |
-| ---------------------------------- | ----------------------------------------------- | ----------------------------- |
-| [auth](auth/README.md)             | schema 对照；platform/node/auth                 | pnpm nx run auth-server:schema-check |
-| [ci](ci/README.md)                 | CI 指标、缓存与边界治理；platform/node/platform | pnpm ci:metrics:test 等       |
-| [migrations](migrations/README.md) | PG 预检/升级/回填；platform/node/platform       | 专用 Nx targets；有写库操作   |
-| [release](release/README.md)       | 不可变发布/回退/探针；platform/node/platform    | 运维环境执行；测试用 fixtures |
-
-## clean.mjs
-
-用途：递归按目录 basename 删除依赖、构建和缓存；语义 platform/node/platform，供明确需要重建本地环境的开发者。
-
-```sh
-pnpm clean:dry-run
-```
-
-真实清理由 pnpm clean 执行，**不是本轮文档验证命令**。它还会整体删除 apps/mobile/ios 与 apps/mobile/android，以及匹配的 Pods/.gradle/build/.metro 等目录；如果原生工程中有人工作，可能丢失未提交内容。先审 dry-run，备份/提交，再决定执行。不是只删除 .nx，也不能保证所有删除物都可重建。无业务 env，不配置生产凭据。当前无单测；改动前应在临时 fixture 仓库测试匹配、dry-run 不写入与路径范围，禁止以真实仓库做删除测试。
-
-## create-engine-lockfile.js
-
-暂时保留。它读取 Engine 的 dist manifest 并生成裁剪 lockfile。2026-09-10 实测标准 package 链路失败：prune-lockfile/copy-workspace-modules 要求服务源码 package.json，当前 integrated workspace 没有该文件。新链路尚不能证明完整替代，因此不能安全删除此脚本；它也不覆盖 Pulse/Worker。后续打包方案完成替代验证后再移除，见[清理记录](../docs/development/legacy-cleanup.md)。
-
-## deploy.sh
-
-旧部署命令的安全入口；语义 platform/node/platform，供运维使用。bash scripts/deploy.sh --help 只展示说明；git-pull/现场 build/update 路径已禁用。
-
-rollback/finalize 转交 release/deploy-blue-green.sh，会操作真实环境，所需 env 与验证见 [release](release/README.md)。不用于本地启动；不要用旧脚本参数绕过 immutable 发布。测试由发布控制器 fixtures 提供，帮助文本本身不是部署证明。
-
-## sync-skills.sh
-
-语义 platform/node/platform（实际 shell 工具），pnpm sync:skills 仅将 .agents/skills 链接到 .codex/skills 与 .cursor/skills。无业务 env；严格预检，冲突失败，不覆盖。由 skills-maintenance:test 验证冲突、重复执行及 Cursor commands 不被修改。
-
-Commands 直接在 .cursor/commands 内维护真实 Markdown 文件，没有同步脚本。共享业务规范仍在 skills，Codex 无需读取 Cursor 命令。
-
-## 新脚本要求
-
-小脚本可维持单文件并在本 README 写独立章节；一个功能有多个文件时建立目录与 README。给出参数、输入来源、输出位置、退出码与副作用。确定性维护任务可注册 Nx target；迁移、发布和外部写入明确 cache:false。缺少测试要说明，不能把 node --check 的语法通过当行为测试。
+测试只覆盖有实际价值的行为。清理防误删和运行时隔离检查保留；普通转发命令不要求再写一份重复实现的测试。

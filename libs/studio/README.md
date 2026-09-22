@@ -6,11 +6,11 @@ Web/桌面 renderer 共享页面模块：认证、用户设置、组织、admin 
 
 ## Tags、使用者与场景
 
-`type:feature` · `runtime:web` · `domain:composition`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:feature` · `runtime:web` · `domain:composition`。
 
 apps/web 和 apps/desktop renderer 的路由组合层；不要让 native 依赖 DOM 页面。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
@@ -53,4 +53,4 @@ pnpm nx run studio:test --run
 
 现有用例示例：[src/modules/admin/**tests**/api.spec.ts](src/modules/admin/__tests__/api.spec.ts)、[src/modules/admin/**tests**/exports.spec.ts](src/modules/admin/__tests__/exports.spec.ts)、[src/modules/admin/**tests**/nav-config.spec.ts](src/modules/admin/__tests__/nav-config.spec.ts)。
 
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。

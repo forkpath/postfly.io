@@ -15,16 +15,19 @@
     },
     "dev": {
       "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
       "options": {
-        "command": "electron-forge start",
+        "command": "node scripts/dev.mjs",
         "cwd": "apps/desktop"
       }
     },
     "package": {
       "executor": "nx:run-commands",
       "cache": false,
+      "dependsOn": ["build"],
       "options": {
-        "command": "electron-forge make",
+        "command": "node scripts/package.mjs",
         "cwd": "apps/desktop"
       }
     },
@@ -42,8 +45,73 @@
     "release": {
       "executor": "nx:run-commands",
       "cache": false,
+      "dependsOn": ["build"],
       "options": {
-        "command": "electron-forge publish",
+        "command": "node scripts/package.mjs --release",
+        "cwd": "apps/desktop"
+      }
+    },
+    "package-dir": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node scripts/package.mjs --dir",
+        "cwd": "apps/desktop"
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "node scripts/publish.mjs",
+        "cwd": "apps/desktop"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "dependsOn": [],
+      "options": {
+        "command": "vitest run --config vitest.config.mts",
+        "cwd": "apps/desktop"
+      },
+      "outputs": ["{workspaceRoot}/coverage/apps/desktop", "{workspaceRoot}/dist/desktop/test-results/unit.json"]
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node scripts/e2e.mjs",
+        "cwd": "apps/desktop"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["package-dir"],
+      "options": {
+        "command": "node scripts/smoke.mjs",
+        "cwd": "apps/desktop"
+      }
+    },
+    "update-e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node scripts/update-e2e.mjs",
+        "cwd": "apps/desktop"
+      }
+    },
+    "publish-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "node scripts/publish-integration.mjs",
         "cwd": "apps/desktop"
       }
     }

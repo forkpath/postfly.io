@@ -9,7 +9,14 @@
       "executor": "nx:run-commands",
       "cache": true,
       "dependsOn": ["^build"],
-      "inputs": ["production", "^production", { "externalDependencies": ["vite"] }, "viteBuildEnvironment"],
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "externalDependencies": ["vite"]
+        },
+        "viteBuildEnvironment"
+      ],
       "outputs": ["{projectRoot}/.output"],
       "options": {
         "cwd": "apps/web",
@@ -49,8 +56,9 @@
         "^default",
         "{workspaceRoot}/eslint.config.mjs",
         "{workspaceRoot}/apps/web/eslint.config.mjs",
-        "{workspaceRoot}/tools/eslint-rules/**/*",
-        { "externalDependencies": ["eslint"] }
+        {
+          "externalDependencies": ["eslint"]
+        }
       ],
       "options": {
         "cwd": "apps/web",
@@ -60,7 +68,13 @@
     "typecheck": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": ["production", "^production", { "externalDependencies": ["typescript"] }],
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "externalDependencies": ["typescript"]
+        }
+      ],
       "options": {
         "cwd": "apps/web",
         "command": "tsc --noEmit -p tsconfig.app.json"

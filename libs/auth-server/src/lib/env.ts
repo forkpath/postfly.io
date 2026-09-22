@@ -3,7 +3,7 @@ import type { Preset } from 'envin/types'
 import { defineEnv } from 'envin'
 import * as z from 'zod'
 
-import { APP_SLUG, NodeEnv } from '@libs/common'
+import { NodeEnv } from '@libs/common'
 
 export const preset = {
   id: 'auth',
@@ -17,10 +17,7 @@ export const preset = {
     GITHUB_CLIENT_SECRET: z.string().optional().default(''),
     AUTH_APPLE_CLIENT_ID: z.string().optional().default(''),
     AUTH_APPLE_CLIENT_SECRET: z.string().optional().default(''),
-    AUTH_APPLE_APP_BUNDLE_IDENTIFIER: z.string().optional().default(''),
-
-    SEED_EMAIL: z.email().optional().default(`forkpath@${APP_SLUG}.com`),
-    SEED_PASSWORD: z.string().optional().default('Pa$$w0rd')
+    AUTH_APPLE_APP_BUNDLE_IDENTIFIER: z.string().optional().default('')
   }
 } as const satisfies Preset
 

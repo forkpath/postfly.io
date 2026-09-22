@@ -1,141 +1,136 @@
 #!/usr/bin/env node
 
 /**
- * Monorepo 清理脚本
- *
- * 递归删除根目录及所有子项目（apps/、libs/、services/）中的
- * 构建产物、缓存和依赖目录。
- *
- * 并对 mobile（Expo / RN）与 extension（WXT）补充：
- * - 原生工程目录（ios / android，由 prebuild 生成）
- * - CocoaPods、Gradle、Metro、Xcode/Android build 等常见产物目录名
- *
+ * 清理仓库及子项目中的依赖、构建产物和缓存。
  * 用法: node scripts/clean.mjs [--dry-run]
+ * 保留 Git 已跟踪的文件、发布配置、依赖补丁和符号链接。
+ * 不清理环境配置、签名材料或用户报告；不跟随符号链接访问仓库外部。
  */
-import { existsSync, readdirSync, rmSync, statSync } from 'node:fs'
-import { dirname, join, relative } from 'node:path'
+import { execFileSync } from 'node:child_process'
+import { readdirSync, rmSync } from 'node:fs'
+import { dirname, join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-const ROOT_DIR = join(__dirname, '..')
+const ROOT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..')
 
-// 递归扫描时按「目录 basename」匹配并删除
-const TARGET_DIRS = [
+// 与 .gitignore 中的构建、测试及缓存目录规则保持一致。
+const TARGET_DIRS = new Set([
   'node_modules',
   'dist',
-  '.nx',
-  '.vite',
-  '.cache',
-  '.tanstack',
-  '.log',
+  'build',
+  'tmp',
+  'out',
+  'out-tsc',
+  'coverage',
+  '.nyc_output',
+  'test-results',
+  'playwright-report',
+  'blob-report',
   '.playwright-mcp',
+  '.vite',
+  '.vite-temp',
+  '.cache',
+  '.sass-cache',
+  '.tanstack',
+  '.nitro',
   '.output',
+  '.source',
   '.expo',
   '.wxt',
-  // mobile / native
   'Pods',
   '.gradle',
-  'build',
-  '.metro'
-]
+  '.metro',
+  '.log',
+  'logs'
+])
 
-// 整段路径删除（相对仓库根目录），用于 prebuild 生成的原生工程
-const EXPLICIT_REL_PATHS = ['apps/mobile/ios', 'apps/mobile/android']
+// 限定路径，避免误删其他位置同名的源码/配置目录。
+const EXPLICIT_REL_PATHS = new Set([
+  'ios',
+  'android',
+  'apps/mobile/ios',
+  'apps/mobile/android',
+  '.nx/cache',
+  '.nx/workspace-data',
+  '.nx/migrate-runs',
+  '.nx/polygraph',
+  '.nx/self-healing',
+  '.vscode/.react',
+  'artifacts/ci-metrics',
+  'artifacts/ci-metrics-evaluation',
+  'artifacts/ci-baseline',
+  'artifacts/ci-baseline-samples',
+  'artifacts/ci-baseline-summary'
+])
 
-// 跳过的目录（性能优化）
-const SKIP_DIRS = ['node_modules', '.git']
-
-/** 是否位于「整段删除」路径之下（避免与递归规则重复匹配 / dry-run 重复输出） */
-function isUnderExplicitRemove(fullPath) {
-  const rel = relative(ROOT_DIR, fullPath)
-  if (rel.startsWith('..')) return false
-  return EXPLICIT_REL_PATHS.some(p => rel === p || rel.startsWith(`${p}/`))
-}
-
+const SKIP_DIRS = new Set(['.git', 'patches'])
 const isDryRun = process.argv.includes('--dry-run')
 let removedCount = 0
 
-function logRemoveMatched(relativePath) {
-  if (isDryRun) {
-    console.log(`[预览] 将删除: ${relativePath}`)
-  } else {
-    console.log(`正在删除: ${relativePath}`)
+// Git 不可用时中止，不能在无法判断源码范围时执行删除。
+const trackedPaths = new Set()
+try {
+  const files = execFileSync('git', ['ls-files', '-z', '--cached'], {
+    cwd: ROOT_DIR,
+    encoding: 'utf8',
+    maxBuffer: 64 * 1024 * 1024
+  })
+  for (const file of files.split('\0').filter(Boolean)) {
+    const parts = file.split('/')
+    while (parts.length) {
+      trackedPaths.add(parts.join('/'))
+      parts.pop()
+    }
   }
+} catch (error) {
+  console.error(`无法读取 Git 跟踪文件，已停止清理: ${error.message}`)
+  process.exit(1)
 }
 
-/**
- * 删除预置路径（mobile 的 ios/android 整体）
- */
-function cleanExplicitPaths() {
-  for (const rel of EXPLICIT_REL_PATHS) {
-    const fullPath = join(ROOT_DIR, rel)
-    if (!existsSync(fullPath)) continue
-
-    if (isDryRun) {
-      console.log(`[预览] 将删除（原生工程）: ${rel}`)
-    } else {
-      console.log(`正在删除（原生工程）: ${rel}`)
-    }
-    if (!isDryRun) {
-      rmSync(fullPath, { recursive: true, force: true })
-    }
-    removedCount++
-  }
+function isGeneratedFile(name) {
+  return (
+    name.endsWith('.tsbuildinfo') ||
+    name === '.eslintcache' ||
+    name === '.stylelintcache' ||
+    name === 'expo-env.d.ts' ||
+    name === 'routeTree.gen.ts' ||
+    name === 'i18nTree.gen.ts' ||
+    /^(vite|vitest)\.config\..*\.timestamp.*$/.test(name)
+  )
 }
 
-/**
- * 递归查找并删除目标目录
- */
-function cleanDirectory(dir, depth = 0) {
-  if (!existsSync(dir)) return
+function cleanDirectory(dir) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    // 包括指向外部目录、循环链接及失效链接：均不跟随、不删除。
+    if (entry.isSymbolicLink()) continue
+    if (entry.isDirectory() && SKIP_DIRS.has(entry.name)) continue
 
-  const entries = readdirSync(dir)
-
-  for (const entry of entries) {
-    const fullPath = join(dir, entry)
+    const fullPath = join(dir, entry.name)
+    const rel = relative(ROOT_DIR, fullPath).split(sep).join('/')
+    const matches = entry.isDirectory()
+      ? TARGET_DIRS.has(entry.name) || EXPLICIT_REL_PATHS.has(rel)
+      : entry.isFile() && isGeneratedFile(entry.name)
 
     try {
-      const stat = statSync(fullPath)
-      if (!stat.isDirectory()) continue
-
-      if (isUnderExplicitRemove(fullPath)) {
-        continue
-      }
-
-      if (TARGET_DIRS.includes(entry)) {
-        const relativePath = relative(ROOT_DIR, fullPath)
-        logRemoveMatched(relativePath)
-        if (!isDryRun) {
-          rmSync(fullPath, { recursive: true, force: true })
-        }
+      if (matches && !trackedPaths.has(rel)) {
+        console.log(`${isDryRun ? '[预览] 将删除' : '正在删除'}: ${rel}`)
+        if (!isDryRun) rmSync(fullPath, { recursive: true, force: true })
         removedCount++
-        // 已删除的目录不再递归
         continue
       }
-
-      // 跳过某些目录以提升性能
-      if (SKIP_DIRS.includes(entry)) continue
-
-      // 递归处理子目录
-      cleanDirectory(fullPath, depth + 1)
-    } catch (err) {
-      // 忽略权限错误等
-      if (err.code !== 'ENOENT') {
-        console.warn(`警告: 无法处理 ${fullPath}: ${err.message}`)
+      if (matches) console.log(`[保留] Git 已跟踪的文件或目录: ${rel}`)
+      // 保护含有已跟踪文件的目录，但仍可清理其中未跟踪的缓存。
+      if (entry.isDirectory()) cleanDirectory(fullPath)
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        console.warn(`无法处理 ${rel}: ${error.message}`)
+        process.exitCode = 1
       }
     }
   }
 }
 
-// 主程序
 console.log(isDryRun ? '🔍 预览模式\n' : '🧹 正在清理 monorepo...\n')
-
-cleanExplicitPaths()
 cleanDirectory(ROOT_DIR)
-
-console.log(`\n✅ ${isDryRun ? '将删除' : '已删除'} ${removedCount} 个项目`)
-
-if (isDryRun) {
-  console.log('\n移除 --dry-run 参数以实际执行删除操作。')
-}
+console.log(`\n${isDryRun ? '将删除' : '已删除'} ${removedCount} 个项目`)
+if (isDryRun) console.log('\n移除 --dry-run 参数以实际执行删除操作。')

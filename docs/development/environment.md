@@ -15,7 +15,7 @@
 | Prisma                 | libs/pg-dao/prisma.config.ts 导入 dotenv，工作目录影响默认文件查找，建议显式 wrapper                                       |
 | 容器                   | Compose environment/env_file 和部署 secrets；重启时改变量不能重写已编译的客户端值                                          |
 | 普通库                 | 不拥有独立 .env；读宿主环境或通过参数/DI 注入，见各库 README                                                               |
-| 脚本                   | 一般只读进程 env；发布控制器会 source DEPLOY_PATH/.env，该文件必须可信                                                     |
+| 脚本                   | 一般只读进程 env；部署脚本通过 Compose 的 --env-file 加载 RAY_ENV_FILE（默认 DEPLOY_PATH/.env）                                                     |
 
 ```sh
 # .env.local-test 需自行建立，保持未跟踪，只含测试环境值
@@ -23,6 +23,8 @@ pnpm exec dotenv -e .env.local-test -- pnpm nx run engine:serve
 ```
 
 不要通过注入整个 process.env 到客户端来修复缺变量。`VITE_*` / `EXPO_PUBLIC_*` 可被用户读取，只放地址、公开 SDK key、DSN、产品 ID、UI 开关；DB URL、OAuth/支付 secret、签名凭据留在 Node/CI。
+
+本地开发统一访问 Kong 的 `http://localhost:8080`。`PUBLIC_ORIGIN`、`VITE_URL`、`VITE_API_BASE_URL` 与 `BETTER_AUTH_URL` 应与公开入口一致；服务自身端口用于网关转发。
 
 ## 配置值来源
 
@@ -33,7 +35,7 @@ pnpm exec dotenv -e .env.local-test -- pnpm nx run engine:serve
 - RevenueCat：移动公开 SDK key 与服务端 REST key、Webhook Authorization secret 各不相同。
 - PostHog/GA/Sentry：项目后台提供 key、host、measurement ID、DSN；GA secret 仅 Node，DSN 不是上传/管理 token。
 - 邮件/短信/存储/搜索：厂商后台或最小权限账号提供；域名/签名/模板/bucket/index 事先配置。
-- feature flags：发布负责人按阶段设定，Billing 四个开关默认 false，不应看到列在文档就全部打开。
+- 功能选项：例如 ORGANIZATION_BILLING_ENABLED 仅在业务启用组织计费时开启，与数据库初始化无关。
 
 各 README 列出自身配置和必要的依赖配置链接。新增 env 同步文档与缓存输入；schema 校验仍由代码负责。不要假定 .env.example 已列出每个可选功能变量。
 

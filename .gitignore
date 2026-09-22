@@ -13,8 +13,10 @@ out-tsc
 # expo
 .expo/
 expo-env.d.ts
-apps/*/ios
-apps/*/android
+/ios/
+/android/
+/apps/mobile/ios/
+/apps/mobile/android/
 
 # wxt
 .wxt
@@ -41,9 +43,9 @@ node_modules
 !.vscode/tailwind.json
 
 # misc
-/.sass-cache
+.sass-cache/
 /connect.lock
-/coverage
+coverage/
 /typings
 
 # System Files
@@ -79,5 +81,33 @@ logs
 
 .nx/self-healing
 
-# Retired tool: protect accidental local credentials; synchronization/validation rejects this entry.
+# Local agent credentials
 /.claude/
+
+# Local tool caches
+.cache/
+.vite-temp/
+.metro/
+.gradle/
+Pods/
+.log/
+.playwright-mcp/
+/.vscode/.react/
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+
+# Test artifacts (root and subprojects)
+.nyc_output/
+test-results/
+playwright-report/
+blob-report/
+
+# Generated CI report caches
+/artifacts/ci-metrics/
+/artifacts/ci-metrics-evaluation/
+/artifacts/ci-baseline/
+/artifacts/ci-baseline-samples/
+/artifacts/ci-baseline-summary/
+
+# patches/ contains source dependency patches when used; do not ignore it.

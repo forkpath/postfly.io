@@ -6,11 +6,11 @@ Prisma 多 schema PostgreSQL 模型、迁移、生成客户端和 Nest PrismaSer
 
 ## Tags、使用者与场景
 
-`type:data-access` · `runtime:node` · `domain:platform`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:data-access` · `runtime:node` · `domain:platform`。
 
 Node persistence/auth-server/迁移工具；浏览器和 Native 禁止直接导入。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
@@ -38,7 +38,21 @@ pnpm nx run pg-dao:typecheck
 
 这是库，不启动独立 HTTP/前台进程。通过宿主应用调用 [src/index.ts](src/index.ts) 公共导出；没有标准 build target，源码随消费者构建，不要把 build-deps 当成本库编译产物。
 
-生成：`pnpm exec dotenv -e .env.local-test -- pnpm nx run pg-dao:generate`；校验：`pnpm nx run pg-dao:validate`（需可解析的测试 URL）。`migration-test`/`historical-migration-test` 只对空的可丢弃 DB 执行。`migrate/deploy/push/reset/seed/backfill-billing-owner` 有真实写入，详细流程见 [迁移手册](../../scripts/migrations/README.md)，不要为解决类型错误执行 reset。
+### 新项目初始化
+
+`src/models` 定义完整模型，`src/migrations/20260921000000_init` 在空数据库中创建全部表与约束。从根目录配置 `.env` 后执行：
+
+```sh
+pnpm db:init
+```
+
+该入口先生成 Prisma Client，再执行初始化迁移。无需回填或额外的兼容步骤，重复运行不会重复建表。`generate` 只生成 Client，不修改数据库，也不调用认证检查。`db:seed` 先运行 auth-server 的演示账号/组织 seed，再运行 `pg-dao/src/seed.ts` 业务模板。它会写入数据，仅供需要演示数据的开发环境使用，不是初始化必需步骤。
+
+业务模型变化使用 `pg-dao:migrate --name=<名称>` 创建标准迁移。`validate` 校验模型，`studio` 查看数据。`push` 仅用于原型开发，不能补建 Prisma 无法表达的 CHECK，因此不能替代初始化迁移。
+
+Customer 使用 `userId` 或 `organizationId` 作为所有者。唯一约束与外键位于模型中，二者恰好一个有值的 CHECK 位于初始化 SQL。被 Customer 引用的用户/组织受到 Restrict 外键保护。
+
+使用本脚手架建立业务后，应在版本控制中保留该业务自己的迁移历史。
 
 ## 单元测试：运行与编写
 
@@ -46,4 +60,4 @@ pnpm nx run pg-dao:typecheck
 
 目前无标准 test；迁移测试不是单测。可为 PrismaService 生命周期添加 mock 测试，SQL/索引/事务用隔离 PG integration。
 
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。

@@ -25,36 +25,10 @@
         }
       }
     },
-    "prune-lockfile": {
-      "dependsOn": ["build"],
-      "cache": true,
-      "executor": "@nx/js:prune-lockfile",
-      "outputs": [
-        "{workspaceRoot}/dist/services/engine/package.json",
-        "{workspaceRoot}/dist/services/engine/pnpm-lock.yaml"
-      ],
-      "options": {
-        "buildTarget": "build",
-        "outputPath": "dist/services/engine"
-      }
-    },
-    "copy-workspace-modules": {
-      "dependsOn": ["build"],
-      "cache": true,
-      "outputs": ["{workspaceRoot}/dist/services/engine/workspace_modules"],
-      "executor": "@nx/js:copy-workspace-modules",
-      "options": {
-        "buildTarget": "build",
-        "outputPath": "dist/services/engine"
-      }
-    },
-    "prune": {
-      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
-      "executor": "nx:noop"
-    },
     "package": {
-      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
-      "executor": "nx:noop"
+      "dependsOn": ["build"],
+      "executor": "nx:noop",
+      "cache": false
     },
     "serve": {
       "continuous": true,

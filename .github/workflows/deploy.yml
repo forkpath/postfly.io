@@ -1,8 +1,7 @@
-name: Immutable Production Release
+name: Deploy Ray
 
 on:
-  push:
-    tags: ['v*']
+  workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -24,7 +23,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-      - name: Ensure production tag belongs to main
+      - name: Ensure selected release belongs to main
         shell: bash
         run: |
           set -euo pipefail
@@ -51,6 +50,9 @@ jobs:
           --health-retries 10
     env:
       POSTGRES_DATABASE_URL: postgresql://ray_release:ray_release_password@127.0.0.1:5432/ray_release
+      VITE_URL: ${{ vars.PUBLIC_ORIGIN }}
+      VITE_API_BASE_URL: ${{ vars.PUBLIC_ORIGIN }}
+      CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
     outputs:
       engine: ${{ steps.engine.outputs.digest }}
       web: ${{ steps.web.outputs.digest }}
@@ -69,18 +71,12 @@ jobs:
           node-version: 24.14.1
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install --yes postgresql-client
-      - name: Verify migrations from an empty PostgreSQL 17 database
-        run: pnpm nx run pg-dao:migration-test --skipNxCache
-      - name: Create disposable historical-upgrade database
-        env:
-          PGPASSWORD: ray_release_password
-        run: createdb --host 127.0.0.1 --username ray_release ray_release_history
-      - name: Verify historical schema upgrade and resumable backfill
-        env:
-          POSTGRES_DATABASE_URL: postgresql://ray_release:ray_release_password@127.0.0.1:5432/ray_release_history
-        run: pnpm nx run pg-dao:historical-migration-test --skipNxCache
+      - name: Check public build configuration
+        run: |
+          test -n "$VITE_URL" || { echo 'Set the PUBLIC_ORIGIN repository variable'; exit 1; }
+          test -n "$CONTACT_EMAIL" || { echo 'Set the CONTACT_EMAIL repository variable'; exit 1; }
+      - name: Initialize a fresh database
+        run: pnpm nx run pg-dao:deploy
       - name: Full release verification
         run: pnpm nx run-many -t lint,typecheck,test,build --all
       - name: Validate database and auth contracts
@@ -89,10 +85,6 @@ jobs:
         run: |
           pnpm nx run pg-dao:generate
           git diff --exit-code -- libs/pg-dao/src/models/auth.prisma
-      - name: Validate immutable release migration intent
-        run: |
-          node --test scripts/release/migration-policy.test.mjs
-          node scripts/release/check-migration-policy.mjs --mode=static
       - name: Prepare server runtime artifacts
         run: pnpm nx run-many -t package -p engine,pulse,worker
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
@@ -150,14 +142,12 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ vars.DEPLOY_PORT || 22 }}
-          source: .release/migration-class,docker/docker-compose.app.yml,docker/kong/kong.yml,scripts/release/deploy-blue-green.sh,scripts/release/smoke-test.mjs,scripts/release/pulse-smoke-test.mjs
+          source: docker/docker-compose.infra.yml,docker/docker-compose.app.yml,docker/kong/kong.yml,docker/kong/entrypoint.sh,docker/kong/tls-plugins.yml,docker/mongo/init-db.js,scripts/release/deploy.sh
           target: ${{ vars.DEPLOY_PATH || '/opt/ray' }}
-      - name: Run migrator, probes, and blue-green switch
+      - name: Apply schema and start services behind Kong
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/opt/ray' }}
-          RELEASE_SHA: ${{ github.sha }}
-          RELEASE_OPERATOR: ${{ github.actor }}
           ENGINE_IMAGE: ${{ env.IMAGE_PREFIX }}/engine@${{ needs.build-and-push.outputs.engine }}
           WEB_IMAGE: ${{ env.IMAGE_PREFIX }}/web@${{ needs.build-and-push.outputs.web }}
           PULSE_IMAGE: ${{ env.IMAGE_PREFIX }}/pulse@${{ needs.build-and-push.outputs.pulse }}
@@ -165,17 +155,14 @@ jobs:
           MIGRATOR_IMAGE: ${{ env.IMAGE_PREFIX }}/migrator@${{ needs.build-and-push.outputs.migrator }}
           GHCR_USER: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
-          SMOKE_EMAIL: ${{ secrets.PRODUCTION_SMOKE_EMAIL }}
-          SMOKE_PASSWORD: ${{ secrets.PRODUCTION_SMOKE_PASSWORD }}
-          SMOKE_ORGANIZATION_ID: ${{ vars.PRODUCTION_SMOKE_ORGANIZATION_ID }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ vars.DEPLOY_PORT || 22 }}
           command_timeout: 30m
-          envs: DEPLOY_PATH,RELEASE_SHA,RELEASE_OPERATOR,ENGINE_IMAGE,WEB_IMAGE,PULSE_IMAGE,WORKER_IMAGE,MIGRATOR_IMAGE,GHCR_USER,GHCR_TOKEN,SMOKE_EMAIL,SMOKE_PASSWORD,SMOKE_ORGANIZATION_ID
+          envs: DEPLOY_PATH,ENGINE_IMAGE,WEB_IMAGE,PULSE_IMAGE,WORKER_IMAGE,MIGRATOR_IMAGE,GHCR_USER,GHCR_TOKEN
           script: |
             set -euo pipefail
-            chmod +x "$DEPLOY_PATH/scripts/release/deploy-blue-green.sh"
-            "$DEPLOY_PATH/scripts/release/deploy-blue-green.sh" deploy
+            chmod +x "$DEPLOY_PATH/scripts/release/deploy.sh"
+            "$DEPLOY_PATH/scripts/release/deploy.sh"

@@ -6,11 +6,11 @@ TanStack React Start 的营销站与 SaaS Web 应用，组合 Studio/UI、客户
 
 ## Tags、使用者与场景
 
-`type:app` · `runtime:web` · `domain:composition`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:app` · `runtime:web` · `domain:composition`。
 
 最终用户通过浏览器访问；它是组合入口，不允许其他项目导入 app 源码。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
@@ -62,10 +62,10 @@ pnpm nx run web:typecheck
 
 目前无 test target；为路由纯逻辑和组件补 Vitest/jsdom/Testing Library 配置与非零用例，API mock；复用库有测试不等于 Web app 已单测。
 
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。
 
 ## E2E：运行与编写
 
 已有 `pnpm nx run web-e2e:e2e`，本地需先 `pnpm nx run web:build`；测试 runner 启动 .output，Engine 需另启动。变量、skip 条件和新增用例步骤见 [web-e2e](../web-e2e/README.md)。
 
-所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#其他应用服务-e2e)。
+所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#web-与服务集成)。

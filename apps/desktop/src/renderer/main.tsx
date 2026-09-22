@@ -1,10 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createRouter, RouterProvider } from '@tanstack/react-router'
+import { createHashHistory, createRouter, RouterProvider } from '@tanstack/react-router'
 
 import ReactDOM from 'react-dom/client'
 
 import { config, I18nProvider } from '@libs/i18n'
+import { ThemeProvider } from '@libs/studio'
 
+import { Updates } from './components/updates'
 import { routeTree } from './routeTree.gen'
 
 import './styles.css'
@@ -14,6 +16,7 @@ const queryClient = new QueryClient()
 // Set up a Router instance
 const router = createRouter({
   routeTree,
+  history: createHashHistory(),
   context: {
     queryClient
   },
@@ -38,7 +41,10 @@ if (!rootElement.innerHTML) {
   root.render(
     <I18nProvider locale={config.defaultLocale} defaultLocale={config.defaultLocale}>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <ThemeProvider>
+          <RouterProvider router={router} />
+          <Updates />
+        </ThemeProvider>
       </QueryClientProvider>
     </I18nProvider>
   )

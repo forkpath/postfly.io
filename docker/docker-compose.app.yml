@@ -1,25 +1,27 @@
-name: ray-${DEPLOY_COLOR:?DEPLOY_COLOR is required}
+name: ${COMPOSE_PROJECT_NAME:-ray}
 
 networks:
-  ray-net:
-    external: true
-    name: ray-net
+  ray-net: {}
 
 x-service-environment: &service-environment
   NODE_ENV: production
-  REDIS_HOST: ray-redis
-  MONGO_HOST: ray-mongo
-  POSTGRES_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@ray-postgres:5432/${POSTGRES_DB}?connect_timeout=30&sslmode=disable
-  RABBITMQ_URI: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASSWORD}@ray-rabbitmq:5672
+  REDIS_HOST: redis
+  MONGO_HOST: mongo
+  POSTGRES_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?connect_timeout=30&sslmode=disable
+  RABBITMQ_URI: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASSWORD}@rabbitmq:5672
 
 services:
   engine:
+    depends_on:
+      postgres: { condition: service_healthy }
+      mongo: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
     image: ${ENGINE_IMAGE:?ENGINE_IMAGE digest reference is required}
-    container_name: ray-engine-${DEPLOY_COLOR}
     networks:
       ray-net:
-        aliases: ['engine-${DEPLOY_COLOR}']
-    env_file: ../.env
+        aliases: [engine]
+    env_file: ${RAY_ENV_FILE:-../.env}
     environment:
       <<: *service-environment
       ENGINE_PORT: 8000
@@ -32,12 +34,16 @@ services:
       start_period: 20s
 
   pulse:
+    depends_on:
+      postgres: { condition: service_healthy }
+      mongo: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
     image: ${PULSE_IMAGE:?PULSE_IMAGE digest reference is required}
-    container_name: ray-pulse-${DEPLOY_COLOR}
     networks:
       ray-net:
-        aliases: ['pulse-${DEPLOY_COLOR}']
-    env_file: ../.env
+        aliases: [pulse]
+    env_file: ${RAY_ENV_FILE:-../.env}
     environment:
       <<: *service-environment
       PULSE_PORT: 3001
@@ -50,16 +56,18 @@ services:
       start_period: 20s
 
   worker:
+    depends_on:
+      postgres: { condition: service_healthy }
+      mongo: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
     image: ${WORKER_IMAGE:?WORKER_IMAGE digest reference is required}
-    container_name: ray-worker-${DEPLOY_COLOR}
     networks:
       ray-net:
-        aliases: ['worker-${DEPLOY_COLOR}']
-    env_file: ../.env
+        aliases: [worker]
+    env_file: ${RAY_ENV_FILE:-../.env}
     environment:
       <<: *service-environment
-      WORKER_PROCESSORS: ${WORKER_PROCESSORS:-all}
-      WORKER_QUEUES: ${WORKER_QUEUES:-platform.smoke}
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
       WORKER_PORT: 3002
     restart: unless-stopped
@@ -72,15 +80,15 @@ services:
 
   web:
     image: ${WEB_IMAGE:?WEB_IMAGE digest reference is required}
-    container_name: ray-web-${DEPLOY_COLOR}
     networks:
       ray-net:
-        aliases: ['web-${DEPLOY_COLOR}']
-    env_file: ../.env
+        aliases: [web]
+    env_file: ${RAY_ENV_FILE:-../.env}
     environment:
       NODE_ENV: production
       PORT: 3000
       HOST: 0.0.0.0
+      API_BASE_URL: http://engine:8000
     restart: unless-stopped
     healthcheck:
       test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000/ || exit 1']
@@ -88,3 +96,18 @@ services:
       timeout: 5s
       retries: 12
       start_period: 20s
+
+  migrator:
+    image: ${MIGRATOR_IMAGE:?MIGRATOR_IMAGE digest reference is required}
+    profiles: [tools]
+    networks: [ray-net]
+    environment:
+      POSTGRES_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?connect_timeout=30&sslmode=disable
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  kong:
+    depends_on:
+      engine: { condition: service_healthy }
+      pulse: { condition: service_healthy }
+      web: { condition: service_healthy }

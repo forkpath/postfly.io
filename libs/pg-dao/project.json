@@ -7,7 +7,10 @@
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
-      "options": { "command": "tsc --noEmit -p tsconfig.lib.json", "cwd": "libs/pg-dao" }
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.lib.json",
+        "cwd": "libs/pg-dao"
+      }
     },
     "prisma": {
       "cache": false,
@@ -50,25 +53,14 @@
         "{projectRoot}/src/models/**/*",
         "{projectRoot}/prisma.config.ts",
         "sharedGlobals",
-        { "externalDependencies": ["prisma", "@prisma/client"] }
+        {
+          "externalDependencies": ["prisma", "@prisma/client"]
+        }
       ],
       "outputs": ["{projectRoot}/src/generated"],
       "command": "prisma generate --schema ./src",
       "options": {
         "cwd": "libs/pg-dao"
-      },
-      "dependsOn": [
-        {
-          "projects": "auth-server",
-          "target": "schema-check"
-        }
-      ]
-    },
-    "backfill-billing-owner": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "tsx scripts/migrations/backfill-billing-owner.ts"
       }
     },
     "migrate": {
@@ -76,13 +68,15 @@
       "options": {
         "command": "prisma migrate dev --schema ./src --name={args.name}",
         "cwd": "libs/pg-dao"
-      }
+      },
+      "cache": false
     },
     "reset": {
       "command": "prisma migrate reset --schema ./src --force",
       "options": {
         "cwd": "libs/pg-dao"
-      }
+      },
+      "cache": false
     },
     "deploy": {
       "cache": false,
@@ -91,31 +85,27 @@
         "cwd": "libs/pg-dao"
       }
     },
-    "migration-test": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bash scripts/migrations/verify-fresh-database.sh"
-      }
-    },
-    "historical-migration-test": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bash scripts/migrations/verify-historical-upgrade.sh"
-      }
-    },
     "push": {
-      "command": "prisma db push --schema ./src --accept-data-loss",
+      "command": "prisma db push --schema ./src",
       "options": {
         "cwd": "libs/pg-dao"
-      }
+      },
+      "cache": false
     },
     "validate": {
       "command": "prisma validate --schema ./src",
       "options": {
         "cwd": "libs/pg-dao"
-      }
+      },
+      "cache": false
+    },
+    "init": {
+      "cache": false,
+      "command": "prisma migrate deploy --schema ./src",
+      "options": {
+        "cwd": "libs/pg-dao"
+      },
+      "dependsOn": ["generate"]
     }
   }
 }

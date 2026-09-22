@@ -28,7 +28,14 @@
     "build-chrome": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": ["production", "^production", "viteBuildEnvironment", { "externalDependencies": ["wxt"] }],
+      "inputs": [
+        "production",
+        "^production",
+        "viteBuildEnvironment",
+        {
+          "externalDependencies": ["wxt"]
+        }
+      ],
       "outputs": ["{projectRoot}/build", "{projectRoot}/.output"],
       "options": {
         "command": "wxt zip",
@@ -39,7 +46,14 @@
     "build-firefox": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": ["production", "^production", "viteBuildEnvironment", { "externalDependencies": ["wxt"] }],
+      "inputs": [
+        "production",
+        "^production",
+        "viteBuildEnvironment",
+        {
+          "externalDependencies": ["wxt"]
+        }
+      ],
       "outputs": ["{projectRoot}/build", "{projectRoot}/.output"],
       "options": {
         "command": "wxt zip -b firefox",
@@ -51,6 +65,15 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "tsc --noEmit",
+        "cwd": "apps/extension"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["build-chrome"],
+      "options": {
+        "command": "node scripts/smoke.mjs",
         "cwd": "apps/extension"
       }
     }

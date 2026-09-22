@@ -6,11 +6,11 @@ Nest RabbitMQ 连接模块、消息发布服务和 platform exchange/重试队�
 
 ## Tags、使用者与场景
 
-`type:platform` · `runtime:node` · `domain:platform`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:platform` · `runtime:node` · `domain:platform`。
 
 Engine 发布轻量任务引用、Worker 消费；业务库通过明确契约调用，不在前端引入 AMQP。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
@@ -46,4 +46,4 @@ mock AmqpConnection，验证 messageId/correlationId/persistent 和错误传播�
 
 现有用例示例：[src/msg-pub.service.spec.ts](src/msg-pub.service.spec.ts)。
 
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。

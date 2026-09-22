@@ -18,7 +18,7 @@ services:
       - name: cors
         config:
           origins:
-            - https://${DOMAIN}
+            - ${PUBLIC_ORIGIN}
           methods:
             - GET
             - POST
@@ -47,6 +47,18 @@ services:
           - http
           - https
 
+  # Pulse uses the HTTP WebSocket upgrade on /ws. Preserve the path.
+  - name: pulse-websocket
+    url: http://${PULSE_UPSTREAM}
+    read_timeout: 3600000
+    write_timeout: 3600000
+    routes:
+      - name: pulse-websocket-route
+        paths: [/ws]
+        strip_path: false
+        preserve_host: true
+        protocols: [http, https]
+
   # ─── Web (TanStack Start SSR + SPA) ──────────────────────────
   - name: web-ssr
     url: http://${WEB_UPSTREAM}
@@ -61,57 +73,13 @@ services:
           - https
 
 plugins:
-  # ─── Let's Encrypt auto SSL ──────────────────────────────────
-  - name: acme
-    config:
-      account_email: ${ACME_EMAIL}
-      api_uri: https://acme-v02.api.letsencrypt.org
-      tos_accepted: true
-      domains:
-        - ${DOMAIN}
-        - www.${DOMAIN}
-      storage: redis
-      storage_config:
-        redis:
-          host: redis
-          port: 6379
-          auth: ${REDIS_PASSWORD}
-          database: 1
-      cert_type: rsa
-      rsa_key_size: 2048
-      renew_threshold_days: 30
-
-  # ─── HTTP → HTTPS + www → apex redirect ─────────────────────
-  - name: pre-function
-    config:
-      access:
-        - |
-          local scheme = kong.request.get_scheme()
-          local host = kong.request.get_host()
-          local path = kong.request.get_path()
-          local uri = kong.request.get_path_with_query()
-          local is_www = host:find("^www%.", 1) ~= nil
-          local is_http = scheme == "http"
-          if is_http and path:find("/.well-known/acme-challenge", 1, true) then
-            return
-          end
-          if is_http or is_www then
-            local target = host
-            if is_www then
-              target = host:sub(5)
-            end
-            return kong.response.exit(301, nil, {
-              ["Location"] = "https://" .. target .. uri
-            })
-          end
-
   # ─── Rate limiting ───────────────────────────────────────────
   - name: rate-limiting
     config:
       minute: 200
       policy: redis
       redis:
-        host: redis
+        host: ${REDIS_HOST}
         port: 6379
         password: ${REDIS_PASSWORD}
         database: 2

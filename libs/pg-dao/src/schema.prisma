@@ -1,69 +1,9 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// PostgreSQL: https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
-
-// -------------------Data Attributes---------------------
-//        Native database type	      Native database type attribute	Notes
-// String
-//        text	                      @db.Text
-//        char(x) 	                  @db.Char(x)
-//        varchar(x)	                @db.VarChar(x)
-//        bit(x)	                    @db.Bit(x)
-//        varbit	                    @db.VarBit
-//        uuid	                      @db.Uuid
-//        xml	                        @db.Xml
-//        inet	                      @db.Inet
-//        citext	                    @db.Citext
-//
-// Boolean
-//        boolean                     @db.Boolean
-//
-// Int
-//        integer | int, int4	        @db.Integer
-//        smallint | int2	            @db.SmallInt
-//        smallserial | serial2	      @db.SmallInt @default(autoincrement())
-//        serial | serial4	          @db.Int @default(autoincrement())
-//        oid	                        @db.Oid
-//
-// BigInt
-//        bigint | int8	              @db.BigInt
-//        bigserial | serial8	        @db.BigInt @default(autoincrement())
-//
-// Float
-//
-//        double precision	          @db.DoublePrecision
-//        real	                      @db.Real
-//
-// Decimal
-//        decimal | numeric	          @db.Decimal(p, s)†
-//        money	                      @db.Money
-//
-// DateTime
-//        timestamp(x)	              @db.Timestamp(x)
-//        timestamptz(x)	            @db.Timestamptz(x)
-//        date	                      @db.Date
-//        time(x)	                    @db.Time(x)
-//        timetz(x)	                  @db.Timetz(x)
-//
-// JSON
-//        json	                      @db.Json
-//        jsonb                     	@db.JsonB
-//
-// Bytes
-//        bytea	                      @db.ByteA
-
-// -------------------Data Attributes---------------------
-// link: https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference
-
+// Shared generator and datasource; domain models live in ./models.
 generator client {
   provider     = "prisma-client"
   output       = "./generated/prisma"
   engineType   = "client"
   moduleFormat = "cjs"
-  // output into a separate subdirectory so multiple schemas can be used in a monorepo
-  // this make the import path `@prisma/client/one` instead of `@prisma/client`
-  // Customize to make the most sense for your project
 }
 
 datasource db {

@@ -69,6 +69,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-build-properties',
       {
+        ios: {
+          // Google Sign-In's Swift AppCheck dependency needs module maps when
+          // Expo's default static-library linkage is used.
+          extraPods: [
+            { name: 'GoogleUtilities', modular_headers: true },
+            { name: 'RecaptchaInterop', modular_headers: true }
+          ]
+        },
         android: {
           enableProguardInReleaseBuilds: true,
           extraProguardRules: '-keep public class com.horcrux.svg.** {*;}',

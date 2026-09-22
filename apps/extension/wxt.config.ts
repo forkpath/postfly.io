@@ -82,6 +82,11 @@ export default defineConfig({
   // 关闭 WXT 自动导入，避免和 monorepo 里的显式导入习惯冲突
   imports: false,
   vite: () => ({
+    // Chromium rejects raw Unicode noncharacters (e.g. transliteration's
+    // U+10FFFF sentinel) in content scripts. Vite 8's pinned Oxc emits it raw;
+    // esbuild's ASCII output preserves the value as an accepted JS escape.
+    build: { minify: 'esbuild' },
+    esbuild: { charset: 'ascii' },
     // 复用 monorepo 的路径别名、Tailwind 和 SVG React 组件能力
     plugins: [
       tailwindcss(),

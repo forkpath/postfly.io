@@ -45,4 +45,4 @@
 
 从根执行 `pnpm nx show project <name> --json` 确认运行目标，开发入口和环境加载见[根 README](../README.md)。有测试目标不代表所有功能有单测；现有 smoke/构建也不代表 E2E 完整。新增项目时同步本索引。
 
-旧 auth/billing 项目已退役，迁移映射与保留库依据见[清理说明](../docs/development/legacy-cleanup.md)。
+认证和计费分别通过 contract、client 与 server 项目提供跨端契约及运行时实现。

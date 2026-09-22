@@ -14,11 +14,6 @@ on:
   schedule:
     - cron: '23 18 * * *'
   workflow_dispatch:
-    inputs:
-      ci_baseline_median_ms:
-        description: Optional Wave 0 median for the 14-day CI metrics audit
-        required: false
-        type: number
 
 permissions:
   actions: read
@@ -30,6 +25,7 @@ jobs:
     # GitHub resolves repository secrets to an empty string for fork PRs. This
     # keeps fork validation local while internal branches can use Nx Cloud.
     env:
+      POSTGRES_DATABASE_URL: postgresql://schema:check@127.0.0.1:1/schema_check
       NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
       NX_NO_CLOUD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
     steps:
@@ -53,8 +49,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Validate CI metrics tooling
-        run: pnpm ci:metrics:test
+      - name: Validate runtime boundaries and cleanup safety
+        run: pnpm ci:checks
 
       - name: Validate Nx cache inputs and side-effect exclusions
         run: pnpm ci:nx-cache-contracts
@@ -72,11 +68,11 @@ jobs:
       # - run: pnpm exec nx-cloud record -- echo Hello World
       - name: Validate all projects
         if: github.event_name == 'schedule' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || steps.set-shas.outcome == 'failure'
-        run: node scripts/ci/run-nx-with-metrics.mjs --phase=validation -- pnpm exec nx run-many -t lint,typecheck,test,build --all --nxBail --outputStyle=static
+        run: pnpm exec nx run-many -t lint,typecheck,test,build --all --nxBail --outputStyle=static
 
       - name: Validate affected projects
         if: github.event_name != 'schedule' && github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/v') && steps.set-shas.outcome == 'success'
-        run: node scripts/ci/run-nx-with-metrics.mjs --phase=validation -- pnpm exec nx affected -t lint,typecheck,test,build --nxBail --outputStyle=static
+        run: pnpm exec nx affected -t lint,typecheck,test,build --nxBail --outputStyle=static
 
       - name: Validate database and auth contracts
         run: pnpm exec nx run-many -t validate,schema-check -p pg-dao,auth-server --nxBail
@@ -104,15 +100,6 @@ jobs:
       - name: Validate the production Web bundle
         if: github.event_name == 'schedule' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         run: pnpm exec nx e2e web-e2e
-
-      - name: Upload Nx CI metrics
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: nx-ci-metrics-${{ github.run_id }}-${{ github.run_attempt }}
-          path: artifacts/ci-metrics/*.json
-          if-no-files-found: error
-          retention-days: 30
 
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: pnpm exec nx fix-ci
@@ -147,70 +134,9 @@ jobs:
           node-version: 24.14.1
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install --yes postgresql-client
-      - name: Verify migrations from an empty PostgreSQL 17 database
-        run: pnpm nx run pg-dao:migration-test --skipNxCache
-      - name: Create disposable historical-upgrade database
-        env:
-          PGPASSWORD: ray_ci_password
-        run: createdb --host 127.0.0.1 --username ray_ci ray_ci_history
-      - name: Verify historical schema upgrade and resumable backfill
-        env:
-          POSTGRES_DATABASE_URL: postgresql://ray_ci:ray_ci_password@127.0.0.1:5432/ray_ci_history
-        run: pnpm nx run pg-dao:historical-migration-test --skipNxCache
-
-  metrics-audit:
-    needs: main
-    if: >-
-      needs.main.result == 'success' &&
-      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') &&
-      (inputs.ci_baseline_median_ms != '' || vars.CI_BASELINE_MEDIAN_MS != '')
-    runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ github.token }}
-      CI_BASELINE_MEDIAN_MS: ${{ inputs.ci_baseline_median_ms || vars.CI_BASELINE_MEDIAN_MS }}
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-
-      - name: Download the last 14 days of Nx metrics
-        shell: bash
-        run: |
-          set -euo pipefail
-          metrics_directory='artifacts/ci-metrics-history'
-          mkdir -p "$metrics_directory"
-          cutoff_epoch="$(date --utc --date='14 days ago' +%s)"
-
-          gh api --paginate \
-            "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
-            --jq '.artifacts[] | select(.expired == false and (.name | startswith("nx-ci-metrics-"))) | [.id, .created_at] | @tsv' |
-          while IFS=$'\t' read -r artifact_id created_at; do
-            test -n "$artifact_id" || continue
-            created_epoch="$(date --utc --date="$created_at" +%s)"
-            test "$created_epoch" -ge "$cutoff_epoch" || continue
-
-            archive="$(mktemp)"
-            gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact_id/zip" > "$archive"
-            unzip -oq "$archive" -d "$metrics_directory"
-            rm -f "$archive"
-          done
-
-      - name: Enforce Wave 1 CI performance gates
-        run: |
-          node scripts/ci/evaluate-nx-metrics.mjs \
-            --metrics-dir=artifacts/ci-metrics-history \
-            --phase=validation \
-            --baseline-median-ms="$CI_BASELINE_MEDIAN_MS" \
-            --minimum-samples=10 \
-            --minimum-cache-hit-rate=0.70 \
-            --required-improvement=0.40 \
-            --output=artifacts/ci-metrics-evaluation/evaluation.json
-
-      - name: Upload CI metrics evaluation
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: nx-ci-metrics-evaluation-${{ github.run_id }}-${{ github.run_attempt }}
-          path: artifacts/ci-metrics-evaluation/evaluation.json
-          if-no-files-found: error
-          retention-days: 30
+      - name: Initialize the current schema in an empty database
+        run: pnpm nx run pg-dao:deploy
+      - name: Verify migration deployment is repeatable
+        run: pnpm nx run pg-dao:deploy
+      - name: Verify database matches the Prisma models
+        run: pnpm nx run pg-dao:prisma -- migrate diff --from-config-datasource --to-schema=./src --exit-code

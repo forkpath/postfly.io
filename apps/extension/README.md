@@ -6,11 +6,11 @@ WXT 浏览器扩展，包含 popup/content/background 交互，使用 Web 认证
 
 ## Tags、使用者与场景
 
-`type:app` · `runtime:web` · `domain:composition`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:app` · `runtime:web` · `domain:composition`。
 
 Chrome/Firefox 用户；通过浏览器加载扩展产物，不能由其他库导入此 app。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
@@ -51,10 +51,10 @@ pnpm nx run extension:typecheck
 
 无 test target；需配置 Vitest/jsdom，mock chrome/browser/storage/message API，测试会话和跨页面通信；此 mock 不证明浏览器权限配置正确。
 
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。
 
 ## E2E：运行与编写
 
 暂无扩展 E2E target。后续启动加载真实 build 目录的浏览器实例，测试 popup/content/background、跨域权限、storage、登录/注销；Firefox 单独适配。Web E2E 不会自动加载扩展。
 
-所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#其他应用服务-e2e)。
+所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#web-与服务集成)。

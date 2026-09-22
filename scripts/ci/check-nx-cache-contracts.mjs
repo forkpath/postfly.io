@@ -329,19 +329,7 @@ requireTargetInput(extension, 'build-chrome', 'viteBuildEnvironment')
 requireTargetInput(extension, 'build-firefox', 'viteBuildEnvironment')
 requireTargetInput(mobile, 'export', 'expoBuildEnvironment')
 
-for (const target of [
-  'backfill-billing-owner',
-  'deploy',
-  'format',
-  'historical-migration-test',
-  'migrate',
-  'migration-test',
-  'prisma',
-  'push',
-  'reset',
-  'seed',
-  'studio'
-]) {
+for (const target of ['deploy', 'format', 'migrate', 'prisma', 'push', 'reset', 'seed', 'studio']) {
   requireCacheDisabled(nx, pgDao, target)
 }
 for (const target of ['package', 'release']) requireCacheDisabled(nx, desktop, target)

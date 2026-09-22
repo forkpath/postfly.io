@@ -6,11 +6,11 @@
 
 ## Tags、使用者与场景
 
-`type:util` · `runtime:universal` · `domain:shared`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:util` · `runtime:universal` · `domain:shared`。
 
 各 runtime 的 util/contract/UI/平台及应用，在需要不属于具体业务域的基础定义时使用。不能反向依赖业务库。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
@@ -36,4 +36,4 @@ pnpm nx run common:typecheck
 
 优先给 src/utils 的边界值、时区/空值、格式化和品牌契约补测试；hooks 按运行环境单独测试。
 
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。

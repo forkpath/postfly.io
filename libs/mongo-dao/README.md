@@ -6,11 +6,11 @@ Mongoose 连接模块、Notification/Infographic schema 和 DAO；负责文档�
 
 ## Tags、使用者与场景
 
-`type:data-access` · `runtime:node` · `domain:platform`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:data-access` · `runtime:node` · `domain:platform`。
 
 Engine/Worker 等 Node 服务；连接由 root forRoot 建一次，业务模块按需 forFeature。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
@@ -43,4 +43,4 @@ pnpm nx run mongo-dao:typecheck
 
 补 mock Mongoose model 的过滤/分页/错误测试；隔离 Mongo 验证索引和实际查询。绝不连接生产数据库跑测试。
 
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。

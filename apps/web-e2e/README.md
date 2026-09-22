@@ -6,11 +6,11 @@ Playwright Web + API 端到端测试 runner，启动生产 Web bundle 或连接�
 
 ## Tags、使用者与场景
 
-`type:app` · `runtime:node` · `domain:composition`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:app` · `runtime:node` · `domain:composition`。
 
 开发者/CI 在隔离数据环境中验证用户流程；禁止误指生产，因为会创建/删除组织、发邀请和创建 checkout。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
@@ -48,7 +48,7 @@ pnpm nx run web-e2e:typecheck
 
 现有用例示例：[src/platform-critical-flows.spec.ts](src/platform-critical-flows.spec.ts)。
 
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。此项目使用 Playwright，不要照抄 Vitest API。测试说明不代表本次已经执行全部测试。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。此项目使用 Playwright，不要照抄 Vitest API。
 
 ## E2E：运行与编写
 
@@ -56,4 +56,4 @@ pnpm nx run web-e2e:typecheck
 
 先 `pnpm exec playwright install chromium firefox webkit` 安装浏览器，再 `pnpm nx run web:build`。无 BASE_URL 时 runner 启动 apps/web/.output/server/index.mjs，默认 4173；有 BASE_URL 则直连。Engine/DB 不会自动启动。新用例写 src/\*.spec.ts，page 测 UI、request 测 API，唯一数据 + finally 清理，验证权限和副作用；详见 [测试指南](../../docs/development/testing.md)。
 
-所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#其他应用服务-e2e)。
+所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#web-与服务集成)。

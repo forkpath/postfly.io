@@ -203,5 +203,27 @@
     "unauthorized": "需要登录后才能访问此功能！",
     "forbidden": "你没有权限访问此功能！"
   },
-  "goBackHome": "返回首页"
+  "goBackHome": "返回首页",
+  "desktopUpdates": {
+    "title": "应用更新",
+    "current": "当前版本：{{version}}",
+    "availableVersion": "新版本：{{version}}",
+    "progress": "下载进度",
+    "later": "稍后",
+    "check": "检查更新",
+    "download": "下载更新",
+    "restart": "重启并安装",
+    "restartHint": "重启前请保存工作。Ray 将关闭并安装更新。",
+    "bridgeError": "无法连接更新服务，请重试。",
+    "states": {
+      "unconfigured": "此版本尚未配置更新服务。",
+      "idle": "检查是否有新版本。",
+      "checking": "正在检查更新…",
+      "not-available": "当前已是最新版本。",
+      "available": "发现新版本，可下载更新。",
+      "downloading": "正在下载更新…",
+      "downloaded": "更新已下载，可以安装。",
+      "error": "更新未能完成，请检查网络后重试。"
+    }
+  }
 }

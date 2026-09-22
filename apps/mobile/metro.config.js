@@ -3,18 +3,14 @@ const { getDefaultConfig } = require('expo/metro-config')
 const { withUniwindConfig } = require('uniwind/metro')
 
 const projectRoot = __dirname
-const workspaceRoot = path.resolve(projectRoot, '../..')
 
 const config = withUniwindConfig(getDefaultConfig(projectRoot), {
   cssEntryFile: './src/assets/styles/globals.css'
 })
 
-config.watchFolders = [workspaceRoot]
-
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, 'node_modules'),
-  path.resolve(workspaceRoot, 'node_modules')
-]
+// Expo's default config handles monorepo watch folders and isolated pnpm links.
+// Nx source libraries are owned by the root package, not separate workspaces.
+config.watchFolders.push(path.resolve(projectRoot, '../../libs'))
 
 const { transformer, resolver } = config
 

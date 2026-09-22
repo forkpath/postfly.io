@@ -1,4 +1,4 @@
-const baseUrl = process.env.SMOKE_BASE_URL ?? 'http://127.0.0.1:8000'
+const baseUrl = process.env.SMOKE_BASE_URL ?? 'http://localhost:8080'
 const email = process.env.SMOKE_EMAIL
 const password = process.env.SMOKE_PASSWORD
 const organizationId = process.env.SMOKE_ORGANIZATION_ID

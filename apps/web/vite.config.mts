@@ -38,8 +38,8 @@ export default defineConfig(async ({ command }) => {
     cacheDir: '../../node_modules/.vite/apps/web',
     server: {
       port: parseInt(process.env.WEB_PORT as string, 10) || 3000,
-      host: 'localhost',
-      allowedHosts: ['localhost', 'postfly.io'],
+      host: '0.0.0.0',
+      allowedHosts: ['localhost', new URL(process.env.PUBLIC_ORIGIN || 'http://localhost').hostname],
       proxy: {
         '/api': {
           target: 'http://localhost:8000',

@@ -6,11 +6,11 @@ React Native + Expo Router 移动应用，组合 Native 认证/UI、RevenueCat �
 
 ## Tags、使用者与场景
 
-`type:app` · `runtime:native` · `domain:composition`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:app` · `runtime:native` · `domain:composition`。
 
 iOS/Android 用户；Native feature 与通用契约供本 app 使用，禁止引入 Node/DOM 库。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
@@ -57,10 +57,10 @@ pnpm nx run mobile:typecheck
 
 无 test target；需接入 Expo/RN 兼容测试环境与 Native SDK mock，再写 auth/provider/购买状态/离线错误等测试；不能直接套浏览器 jsdom 当真机证明。
 
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。
 
 ## E2E：运行与编写
 
 暂无设备 E2E target。后续建立固定版本 Maestro/Detox 等方案、模拟器/开发构建、隔离账户，写登录深链、组织切换、权限弹窗、sandbox 购买/恢复场景；export 只验证打包。
 
-所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#其他应用服务-e2e)。
+所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#web-与服务集成)。

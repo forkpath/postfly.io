@@ -9,7 +9,7 @@ if (!databaseUrl) {
 }
 
 export default defineConfig({
-  schema: './src/schema.prisma',
+  schema: './src',
   migrations: {
     path: './src/migrations',
     seed: 'tsx ./src/seed.ts'

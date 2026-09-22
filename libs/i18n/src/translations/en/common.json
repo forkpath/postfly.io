@@ -203,5 +203,27 @@
     "unauthorized": "You need to be logged in to access this feature!",
     "forbidden": "You don't have permission to access this feature!"
   },
-  "goBackHome": "Go back home"
+  "goBackHome": "Go back home",
+  "desktopUpdates": {
+    "title": "App updates",
+    "current": "Current version: {{version}}",
+    "availableVersion": "New version: {{version}}",
+    "progress": "Download progress",
+    "later": "Later",
+    "check": "Check for updates",
+    "download": "Download update",
+    "restart": "Restart and install",
+    "restartHint": "Save your work before restarting. Ray will close to install the update.",
+    "bridgeError": "Could not reach the update service. Please try again.",
+    "states": {
+      "unconfigured": "Updates are not configured for this build.",
+      "idle": "Check for a new version of Ray.",
+      "checking": "Checking for updates…",
+      "not-available": "You’re up to date.",
+      "available": "A new version is ready to download.",
+      "downloading": "Downloading your update…",
+      "downloaded": "Your update is ready to install.",
+      "error": "The update could not be completed. Please check your connection and retry."
+    }
+  }
 }

@@ -16,4 +16,4 @@ export {
 } from './lib/stripe'
 export { handleRevenueCatWebhook } from './lib/revenuecat'
 export type { RevenueCatWebhookInput, WebhookCallbacks as RevenueCatWebhookCallbacks } from './lib/revenuecat'
-export { assertBillingRolloutConfiguration, serverEnv } from './lib/env'
+export { serverEnv } from './lib/env'
