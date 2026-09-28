@@ -39,7 +39,8 @@ EAS 构建。云端生成的包需要匹配其 `127.0.0.1:4179` 测试服务；�
 ## 隔离和验收范围
 
 runner 把当前 Git 跟踪及未忽略的 Mobile/共享库源码复制到临时目录，不复制
-`.env`，在副本生成 native 工程。依赖使用已安装的锁定包。正式工作区的
+`.env`；根目录只复制包管理、Nx 与 TS 路径配置，在副本生成 native 工程。
+依赖使用已安装的锁定包。正式工作区的
 `ios/`、`android/` 和应用配置不会被 prebuild 改写。
 
 测试应用是 `com.ray.mobile.e2e` / `Ray E2E`，scheme 为 `ray-e2e`，OTA 关闭。
@@ -51,6 +52,8 @@ Expo Router 和页面交互照常运行。它不验证登录服务本身、OAuth
 每次运行创建自己的模拟器，安装测试包、重置状态、执行 flows，然后停止和
 删除自己的设备/临时目录。不会重置开发者已有模拟器或已安装的正式应用。
 Android 通过指定设备的 `adb reverse` 连接临时 fixture。所有等待均有截止时间。
+原生构建最多等待 60 分钟，Android 启用 Gradle 自身按输入计算的 build cache，
+并限制两个 Gradle worker；CI 的完整设备 job 最多 90 分钟。
 
 报告目录为 `dist/test-results/mobile/e2e/<platform>/<run-id>/`，含构建日志、
 JUnit、Maestro 诊断、截图、测试产物、fixture 请求记录和 `run.json`。CI 应

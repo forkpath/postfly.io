@@ -59,8 +59,10 @@ function interrupt() {
     for (const child of children) {
       try {
         terminateProcessTree(child.pid, 'SIGTERM')
-      } catch {
-        /* exited */
+      } catch (error) {
+        cleaned = false
+        log.write(`Interrupted process cleanup: ${error.message}\n`)
+        child.kill('SIGKILL')
       }
     }
 }
@@ -89,8 +91,10 @@ function command(
     const timer = setTimeout(() => {
       try {
         terminateProcessTree(child.pid, 'SIGKILL')
-      } catch {
-        /* exited */
+      } catch (error) {
+        cleaned = false
+        log.write(`Timed out process cleanup: ${error.message}\n`)
+        child.kill('SIGKILL')
       }
     }, timeout)
     child.once('error', reject)
@@ -180,9 +184,16 @@ try {
   const files = (
     await command('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard'], { captureAll: true })
   ).split('\0')
+  const rootConfigFiles = new Set([
+    'package.json',
+    'pnpm-lock.yaml',
+    'pnpm-workspace.yaml',
+    'nx.json',
+    'tsconfig.base.json'
+  ])
   for (const file of new Set(files)) {
     if (!file || /(^|\/)\.env(?:[./]|$)/.test(file)) continue
-    if (!file.startsWith('apps/mobile/') && !file.startsWith('libs/') && file.includes('/')) continue
+    if (!file.startsWith('apps/mobile/') && !file.startsWith('libs/') && !rootConfigFiles.has(file)) continue
     const target = resolve(workspace, file)
     await mkdir(dirname(target), { recursive: true })
     try {
@@ -206,8 +217,15 @@ try {
     // Expo's generated release variant uses the debug keystore for this isolated app.
     await command(
       'sh',
-      ['./gradlew', 'assembleRelease', '--no-daemon', '--max-workers=2', `-PreactNativeArchitectures=${arch}`],
-      { cwd: resolve(app, 'android'), timeout: 2_700_000 }
+      [
+        './gradlew',
+        'assembleRelease',
+        '--no-daemon',
+        '--build-cache',
+        '--max-workers=2',
+        `-PreactNativeArchitectures=${arch}`
+      ],
+      { cwd: resolve(app, 'android'), timeout: 3_600_000 }
     )
     artifact = resolve(report, 'app-release.apk')
     await copyFile(resolve(app, 'android/app/build/outputs/apk/release/app-release.apk'), artifact)
@@ -284,7 +302,7 @@ try {
         `ARCHS=${process.arch === 'arm64' ? 'arm64' : 'x86_64'}`,
         'build'
       ],
-      { cwd: resolve(app, 'ios'), timeout: 2_700_000 }
+      { cwd: resolve(app, 'ios'), timeout: 3_600_000 }
     )
     artifact = resolve(report, 'RayE2E.app')
     await cp(resolve(derived, 'Build/Products/Release-iphonesimulator/RayE2E.app'), artifact, { recursive: true })
@@ -363,11 +381,14 @@ try {
     }
   }
   for (const child of children) {
-    try {
-      terminateProcessTree(child.pid, 'SIGKILL')
-    } catch {
-      /* exited */
-    }
+    await cleanup(() => {
+      try {
+        terminateProcessTree(child.pid, 'SIGKILL')
+      } catch (error) {
+        child.kill('SIGKILL')
+        throw error
+      }
+    })
   }
   if (emulator) await emulator.completion.catch(() => {})
   server.closeAllConnections()

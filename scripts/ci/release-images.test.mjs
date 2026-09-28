@@ -67,6 +67,7 @@ test('the publication command exits before pushing when the artifact test failed
     env: {
       PATH: directory,
       VERIFIED_IMAGE_REPORT: directory,
+      GITHUB_OUTPUT: resolve(directory, 'outputs'),
       RAY_RELEASE_IMAGE_PREFIX: input.prefix,
       RAY_RELEASE_IMAGE_TAG: input.commit
     },

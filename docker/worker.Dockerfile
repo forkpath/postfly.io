@@ -10,7 +10,8 @@ ENV NODE_ENV=production
 
 COPY dist/services/worker ./
 
-COPY pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile --prod --ignore-scripts
+# Install the standalone Nx runtime graph without workspace-only overrides.
+RUN --mount=type=cache,id=ray-runtime-pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --prod --ignore-scripts --store-dir=/pnpm/store
 
 CMD ["node", "main.js"]

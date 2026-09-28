@@ -145,12 +145,6 @@ jobs:
         env:
           RAY_RELEASE_IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
           RAY_RELEASE_IMAGE_TAG: ${{ github.sha }}
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
-        with:
-          name: release-image-verification
-          path: dist/test-results/release
-          if-no-files-found: warn
       - name: Publish only the tested images
         id: publish
         run: node scripts/release/publish-verified-images.mjs
@@ -158,6 +152,13 @@ jobs:
           VERIFIED_IMAGE_REPORT: ${{ steps.verify-images.outputs.report }}
           RAY_RELEASE_IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
           RAY_RELEASE_IMAGE_TAG: ${{ github.sha }}
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: release-image-verification
+          path: dist/test-results/release
+          if-no-files-found: warn
 
   deploy:
     needs: build-and-push

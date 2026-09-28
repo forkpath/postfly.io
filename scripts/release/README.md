@@ -21,4 +21,13 @@ Ray 的服务入口是 Kong：`/api` 代理 Engine，`/ws` 代理 Pulse，页面
 部署按 digest 引用。任何验证失败都会阻止后续步骤。部署后的公开入口探针失败
 也会使 workflow 失败。详细范围和环境限制见 [测试与发布门禁](../../docs/development/testing-ci.md)。
 
+CI 的 `release-image-verification` 附件保留启动日志、镜像 ID 和已推送 digest
+清单 `published-images.json`。部署失败时可在服务器使用同一 Compose 文件执行
+`ps` 和 `logs --tail 200 engine pulse worker web kong`。需要回退应用时，先确认
+旧版本与当前 schema 兼容，再将 `ENGINE_IMAGE`、`PULSE_IMAGE`、`WORKER_IMAGE`、
+`WEB_IMAGE` 设为前次清单的 digest 引用，使用 `docker compose --env-file .env
+-f docker/docker-compose.infra.yml -f docker/docker-compose.app.yml up -d --wait
+engine pulse worker web kong` 恢复应用。此操作不运行 migrator，不撤销数据库；
+恢复后再次执行框架探针。不要在未审查 schema 兼容性的情况下自动回退。
+
 业务探针统一使用 `SMOKE_BASE_URL`（默认 `http://localhost:8080`）、`SMOKE_EMAIL`、`SMOKE_PASSWORD`；组织场景另配 `SMOKE_ORGANIZATION_ID`。Pulse 会从网关地址推导 `/ws`，HTTPS 对应 WSS。使用专用测试账号运行 `node scripts/release/smoke-test.mjs` 或 `node scripts/release/pulse-smoke-test.mjs`。

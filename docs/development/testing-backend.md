@@ -21,6 +21,10 @@ runner 只继承系统与工具环境，显式关闭 Nx/Vite/Nest 的环境文�
 
 单模块集成测试只启动所需依赖。Engine 的完整应用测试启动 PG、Redis、Mongo、RabbitMQ；Worker 的完整应用测试保留 Mongo 和 RabbitMQ。不会通过删除可选框架集成或把数据库替换成内存实现来获得通过结果。
 
+Engine E2E 在自己的环境中显式启用组织计费，只验证已有身份的只读摘要路径，
+不调用 Stripe 或创建支付。生产默认仍关闭该可选能力。Web 的历史组织计费场景
+另需配置 `E2E_ORGANIZATION_BILLING_ENABLED=true`，并在隔离服务启用对应能力。
+
 测试、启动失败或正常中断后均收集日志并删除该次容器、网络和卷。runner 设置启动与执行截止时间，清理失败也返回失败。操作系统强制杀死 runner（例如 `SIGKILL` 或机器断电）无法执行 `finally`；可根据报告中的唯一 `namespace` 定位遗留资源，仅清理该命名空间，不能清空整台机器的 Docker 数据。
 
 ## 如何增加自己的用例

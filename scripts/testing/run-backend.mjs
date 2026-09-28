@@ -48,6 +48,7 @@ Object.assign(env, {
   LOCALE_PATH: resolve(root, 'libs/i18n/src/translations'),
   THROTTLER_LIMIT: '1000',
   PLATFORM_SMOKE_ENABLED: 'true',
+  ...(project === 'engine' && suite === 'e2e' ? { ORGANIZATION_BILLING_ENABLED: 'true' } : {}),
   EMAIL_FROM: 'framework-test@example.invalid'
 })
 if (releaseArtifacts) {

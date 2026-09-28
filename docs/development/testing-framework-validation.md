@@ -47,7 +47,7 @@ pnpm nx run extension:e2e --skipNxCache
 
 | 检查 | 实际结果 |
 | --- | --- |
-| Engine HTTP E2E | 4 用例通过：完整启动、真实登录与角色、非法 DTO、领域错误映射 |
+| Engine HTTP E2E | 5 用例通过：完整启动、真实登录与角色、实际用户/组织计费路径、非法 DTO、领域错误映射 |
 | Engine 集成 | 2 用例通过：PG 身份与组织约束、真实 Redis Cache TTL/读写/删除 |
 | Pulse ws E2E | 7 用例通过：缺少身份、非法协议、组织授权、双实例 Redis 分发、drain、成员移除、撤销已连接会话 |
 | Pulse Redis 集成 | 1 用例通过：真实 Redis 数据与过期 |
@@ -67,7 +67,7 @@ pnpm nx run extension:e2e --skipNxCache
 - 测试启动关闭 Nest/Vite/Nx/dotenv 的环境文件加载；fixture 写入前再次检查本机测试数据库命名。日志遮蔽认证请求头与 cookie；i18n 接受绝对目录，非开发环境不写类型文件。
 - 测试子进程直接使用临时 TS loader 无法处理项目已有模块解析约定，改用正式 Webpack 编译器。测试入口不进入生产构建。
 
-可追溯报告示例：Engine `59552fd773b087b1`，Pulse `1ae62adb139b997b`，Worker `bad6f4253953fffd`，中断验证 `7e907b21869426b9`。报告位于 `dist/test-results/<project>/<suite>/<run-id>/`。
+可追溯报告示例：Engine `caed68bcd05ff0e8`，Pulse `1ae62adb139b997b`，Worker `bad6f4253953fffd`，中断验证 `7e907b21869426b9`。报告位于 `dist/test-results/<project>/<suite>/<run-id>/`。新增计费路径用例首次因未启用组织计费返回 403；修正测试环境的显式功能开关后 5 项通过，没有改变生产默认配置。
 
 边界：本地宿主为 macOS，基础设施运行于 Linux 容器；尚未取得 Linux GitHub Actions 通过记录，因此阶段 2 的远端验收留到阶段 4。DLQ 用例从最后一次重试开始，未声称整条五次退避链已执行。测试缩短单条 fixture 的租约等待；生产五分钟租约保持不变。外部副作用仍需业务幂等键。
 
@@ -83,7 +83,7 @@ Expo 官方最低要求为 Xcode 26.4。现已固定 Xcode 26.6 / iOS 26.5，与
 macos-26 runner 对齐。重新运行前置检查报告 `963a1a8ab67c1621` 明确退出 1，
 `cleaned=true`。本机未完成 iOS 安装或 Maestro 流程，不能计作通过。
 
-Android 原生构建仍在运行，最终结果待补充。两个平台均不等于真机或商店包验收。
+Android 首次原生构建在生成 JS bundle 后进入原生 lint 阶段，触及初始 45 分钟上限，报告 `dfe33d713db4c7e9` 为 `passed=false, cleaned=true`；未出现编译错误，但没有生成 APK 或运行设备流程。已将构建时限调整为 60 分钟，待利用依赖缓存重试。两个平台均不等于真机或商店包验收。
 
 ## 阶段 4：CI/CD 门禁（已实现，本地与远端验收进行中）
 
@@ -92,9 +92,12 @@ Android 原生构建仍在运行，最终结果待补充。两个平台均不等
 的完整 CI，扩展测试解压的待发布 ZIP，服务在推送前启动实际镜像，并核对镜像 ID。
 部署后运行无业务写入的公开页面/HTTP/WS 探针。
 
-本地已验证 22 项 CI 合约测试；涵盖套件选择、缺失/失败结果拒绝、真实网络探针
-正反例、镜像替换/失败报告拒绝以及进程树清理。后续新增的发布命令负向演练
-仍待本轮执行。actionlint 1.7.12 已检查工作流语法与引用；最终改动后会再次执行。
+本地已验证 23 项 CI 合约测试；涵盖套件选择、缺失/失败结果拒绝、真实网络探针
+正反例、镜像替换/失败报告拒绝以及进程树清理。发布命令负向演练返回非零，记录命令没有收到 push。actionlint 1.7.12 已检查工作流语法与引用。
+
+正式 Chrome ZIP 在无 `.env` 的独立副本构建，再解压运行 `extension:e2e-artifact`，7 项真实浏览器用例通过；ZIP SHA-256 为 `27b9bf4f83fa5d8f14cffdf4a8c001222fcdf4f09733b7e38adc6c7dd5e91b9e`。Mobile、Extension、Web E2E 的 lint/typecheck 及 21 个依赖任务全部通过。四个应用的 build/package 共 7 个任务也通过；Web 正式构建的 Chromium/Firefox/WebKit 三个页面用例通过。
+
+真实镜像构建发现 Nx 精简锁文件与复制进去的整个 workspace overrides 不一致，冻结安装失败。服务镜像改为安装 Nx 已解析的独立 runtime manifest/lockfile，保留冻结安装；修复后 Engine 镜像的依赖安装通过，完整镜像启动仍在验证。
 
 查询远端现有定时 CI 的失败日志，确认冻结安装失败于 Extension WXT prepare 的
 Invalid URL；阶段 1 的无环境安装修复直接覆盖该原因。该旧运行不能代表新配置结果。
@@ -105,5 +108,5 @@ Invalid URL；阶段 1 的无环境安装修复直接覆盖该原因。该旧运
 ## 尚未完成的验收
 
 - 阶段 2：本地真实协议、持久化及中断清理通过，Linux CI 验收待完成。
-- 阶段 3：Android 正在构建；iOS 本机工具链阻碍，远端设备流程待验证。
+- 阶段 3：Android 首次构建超时，待重试；iOS 本机工具链阻碍，远端设备流程待验证。
 - 阶段 4：新配置的真实 PR、Linux/跨平台结果、镜像启动和远端合并阻断待验证。

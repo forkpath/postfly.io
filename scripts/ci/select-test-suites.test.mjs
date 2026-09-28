@@ -34,6 +34,8 @@ test('harness and workflow changes cannot escape the full framework matrix', () 
     'scripts/testing/run-backend.mjs',
     'scripts/ci/required-checks.mjs',
     'docker/docker-compose.test.yml',
+    'docker/engine.Dockerfile',
+    'scripts/release/publish-verified-images.mjs',
     '.github/workflows/ci.yml'
   ]) {
     const result = selectTestSuites({ affected: [], files: [file], full: false })
@@ -41,6 +43,7 @@ test('harness and workflow changes cannot escape the full framework matrix', () 
     assert.equal(result.mobileIos, true)
     assert.equal(result.extension, true)
     assert.equal(result.desktop, true)
+    assert.equal(result.full, true)
   }
 })
 

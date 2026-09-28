@@ -70,6 +70,10 @@ test.describe('authenticated SaaS critical path', () => {
   })
 
   test('organization create, switch, billing access and cleanup', async ({ request }) => {
+    test.skip(
+      process.env['E2E_ORGANIZATION_BILLING_ENABLED'] !== 'true',
+      'Enable organization billing on the isolated server and opt into this scenario explicitly'
+    )
     await signIn(
       request,
       requiredEnvironment(ownerEmail, 'E2E_OWNER_EMAIL'),

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { appendFileSync, readFileSync } from 'node:fs'
+import { appendFileSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -25,6 +25,9 @@ export function verifyImages({ run, images, current, prefix, commit }) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const report = process.env.VERIFIED_IMAGE_REPORT
   if (!report) throw new Error('VERIFIED_IMAGE_REPORT is required')
+  const output = process.env.GITHUB_OUTPUT
+  if (!output) throw new Error('GITHUB_OUTPUT is required before publishing')
+  appendFileSync(output, '')
   const prefix = process.env.RAY_RELEASE_IMAGE_PREFIX
   const commit = process.env.RAY_RELEASE_IMAGE_TAG
   const images = JSON.parse(readFileSync(resolve(report, 'images.json'), 'utf8'))
@@ -38,11 +41,17 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     prefix,
     commit
   })
+  const publishedImages = []
   for (const { service, tag } of verified) {
     execFileSync('docker', ['push', tag], { stdio: 'inherit', timeout: 600_000 })
     const [published] = JSON.parse(execFileSync('docker', ['image', 'inspect', tag], { encoding: 'utf8' }))
     const digest = published.RepoDigests.find(value => value.startsWith(`${prefix}/${service}@sha256:`))?.split('@')[1]
     assert.match(digest ?? '', /^sha256:[a-f0-9]{64}$/, `${tag} has no published digest`)
-    appendFileSync(process.env.GITHUB_OUTPUT, `${service}=${digest}\n`)
+    publishedImages.push({ service, tag, digest, imageId: published.Id })
+    writeFileSync(
+      resolve(report, 'published-images.json'),
+      JSON.stringify({ commit, images: publishedImages }, null, 2)
+    )
+    appendFileSync(output, `${service}=${digest}\n`)
   }
 }

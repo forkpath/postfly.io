@@ -11,8 +11,9 @@ ENV PULSE_PORT=3001
 
 COPY dist/services/pulse ./
 
-COPY pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile --prod --ignore-scripts
+# Install the standalone Nx runtime graph without workspace-only overrides.
+RUN --mount=type=cache,id=ray-runtime-pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --prod --ignore-scripts --store-dir=/pnpm/store
 
 EXPOSE 3001
 CMD ["node", "main.js"]

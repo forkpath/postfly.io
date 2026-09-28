@@ -12,8 +12,10 @@ ENV ENGINE_PORT=8000
 COPY dist/services/engine ./
 COPY libs/i18n/src/translations ./libs/i18n/src/translations
 
-COPY pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile --prod --ignore-scripts
+# Nx emits a standalone manifest and resolved lockfile. Workspace overrides
+# have already been resolved and must not be reapplied to this pruned graph.
+RUN --mount=type=cache,id=ray-runtime-pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --prod --ignore-scripts --store-dir=/pnpm/store
 
 EXPOSE 8000
 CMD ["node", "main.js"]
