@@ -53,8 +53,15 @@ pnpm nx run worker:test --run
 
 新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。
 
-## E2E：运行与编写
+## 集成与 E2E：运行与编写
 
-无完整 broker/DB E2E target。后续在隔离 RabbitMQ/PG 发 envelope，验证 Inbox 完成、重复无二次效果、重试队列和 DLQ，模拟 handler 失败/重启；readiness 返回成功不是消费链路验收。
+```sh
+pnpm nx run worker:test-integration
+pnpm nx run worker:e2e
+```
 
-所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#web-与服务集成)。
+真实 RabbitMQ/PG 套件验证 Inbox 完成、重复投递、TTL 重试、最后一次失败与 DLQ、活动租约重投，以及杀进程后重启恢复；集成套件覆盖并发认领、租约恢复与旧处理者的写入限制。外部业务副作用仍需幂等键和自己的业务用例。
+
+需要可运行 Linux 容器的 Docker / Compose v2。入口自动创建本机隔离环境、迁移和测试数据，完成后保存日志并清理；不会读取开发 `.env` 或连接外部数据库。用例放在 `tests/*.integration.spec.ts` / `tests/*.e2e.spec.ts`，不能直接运行内部 runner 指向开发库。
+
+报告位于 `dist/test-results/worker/<suite>/<run-id>/`。fixture、失败清理和新增用例说明见 [后端测试指南](../../docs/development/testing-backend.md)，实际结果见 [验收记录](../../docs/development/testing-framework-validation.md)。

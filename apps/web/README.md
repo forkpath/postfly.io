@@ -58,14 +58,15 @@ pnpm nx run web:typecheck
 
 ## 单元测试：运行与编写
 
-当前没有标准 `web:test` target，不能执行不存在的命令或用 lint/build 成功冒充单测。接入步骤见[测试开发指南](../../docs/development/testing.md#没有-test-target-怎么办)。
+```sh
+pnpm nx run web:test
+pnpm nx run web:typecheck-tests
+```
 
-目前无 test target；为路由纯逻辑和组件补 Vitest/jsdom/Testing Library 配置与非零用例，API mock；复用库有测试不等于 Web app 已单测。
-
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。
+使用独立 Vitest/jsdom 配置，验证会话身份同步和定时器生命周期。新增用例放在 `src/**/*.spec.ts` / `*.spec.tsx`；测试不加载生产构建插件或开发 `.env`。报告在 `dist/test-results/web/unit`，新增用例要求见 [测试指南](../../docs/development/testing.md)。
 
 ## E2E：运行与编写
 
-已有 `pnpm nx run web-e2e:e2e`，本地需先 `pnpm nx run web:build`；测试 runner 启动 .output，Engine 需另启动。变量、skip 条件和新增用例步骤见 [web-e2e](../web-e2e/README.md)。
+`pnpm nx run web-e2e:e2e` 依赖 Web 构建，Playwright 启动正式产物。默认框架 CI 验证公开页面在 Chromium、Firefox、WebKit 中的行为。需要真实 Engine、预置账户或厂商服务的历史业务场景另行启用，不能把跳过计作通过。
 
-所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#web-与服务集成)。
+变量、隔离数据要求、skip 条件和新增用例步骤见 [web-e2e](../web-e2e/README.md)；真实 Engine/Pulse/Worker 协议测试由各服务的独立套件负责。

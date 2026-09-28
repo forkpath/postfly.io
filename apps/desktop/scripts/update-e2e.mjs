@@ -10,7 +10,8 @@ import { _electron as electron } from '@playwright/test'
 
 import { executable, mockAuth, outputDirectory, packageTest, reportDirectory, until } from './test-utils.mjs'
 
-const root = await mkdtemp(path.join(os.tmpdir(), 'ray-update-e2e-'))
+// A tilde exercises the file-URL encoding used by Windows short installation paths.
+const root = await mkdtemp(path.join(os.tmpdir(), 'ray-update-e2e-~'))
 const feed = path.join(root, 'feed')
 await mkdir(feed)
 let failure = 'none'
@@ -165,7 +166,10 @@ try {
   await application?.close().catch(() => undefined)
   server.closeAllConnections()
   await new Promise(resolve => server.close(resolve))
-  await rm(root, { recursive: true, force: true })
+  // Windows can retain executable handles briefly after Electron/NSIS exits.
+  // Exhausting the bounded retries still fails the suite instead of hiding leaks.
+  const removal = { recursive: true, force: true, maxRetries: 10, retryDelay: 500 }
+  await rm(root, removal)
   const cacheRoot = process.platform === 'darwin' ? path.join(os.homedir(), 'Library/Caches') : process.env.LOCALAPPDATA
-  if (cacheRoot) await rm(path.join(cacheRoot, `${cacheName}-updater`), { recursive: true, force: true })
+  if (cacheRoot) await rm(path.join(cacheRoot, `${cacheName}-updater`), removal)
 }

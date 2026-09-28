@@ -50,11 +50,8 @@ const createWindow = () => {
   mainWindow.webContents.on('will-navigate', (event, url) => {
     if (url.split('#')[0] !== trustedUrl.split('#')[0]) event.preventDefault()
   })
-  if (devUrl) {
-    void mainWindow.loadURL(devUrl)
-  } else {
-    void mainWindow.loadFile(entry)
-  }
+  // Use the same encoding for loading and trust checks (for example Windows ~ paths).
+  void mainWindow.loadURL(trustedUrl)
 
   mainWindow.on('closed', () => {
     mainWindow = null

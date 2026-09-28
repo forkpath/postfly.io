@@ -61,8 +61,15 @@ pnpm nx run pulse:test --run
 
 新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。
 
-## E2E：运行与编写
+## 集成与 E2E：运行与编写
 
-现有 `node scripts/release/pulse-smoke-test.mjs` 需要 ENGINE_SMOKE_BASE_URL、SMOKE_EMAIL/SMOKE_PASSWORD、可选 SMOKE_ORGANIZATION_ID。脚本 WebSocket 地址固定 ws://127.0.0.1:3001/ws，须在对应网络命名空间运行，不能靠 Engine URL 改 WS 地址。完整拒绝/过期/跨组织/多实例场景尚待新增；见测试指南。
+```sh
+pnpm nx run pulse:test-integration
+pnpm nx run pulse:e2e
+```
 
-所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#web-与服务集成)。
+真实 WebSocket 套件验证握手身份、协议拒绝、组织权限、双实例 Redis 分发、drain、成员移除与会话撤销；集成套件验证真实 Redis 数据与过期。无需生产账户，不能用单进程 mock 代替这些跨网络断言。
+
+需要可运行 Linux 容器的 Docker / Compose v2。入口自动创建本机隔离环境、迁移和测试数据，完成后保存日志并清理；不会读取开发 `.env` 或连接外部数据库。用例放在 `tests/*.integration.spec.ts` / `tests/*.e2e.spec.ts`，不能直接运行内部 runner 指向开发库。
+
+报告位于 `dist/test-results/pulse/<suite>/<run-id>/`。fixture、失败清理和新增用例说明见 [后端测试指南](../../docs/development/testing-backend.md)，实际结果见 [验收记录](../../docs/development/testing-framework-validation.md)。

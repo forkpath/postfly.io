@@ -128,7 +128,21 @@ GitHub Actions 运行 `36439125099` 对应提交 `5723758f57160b9c1e2a87f3f72d83
 
 代码审查：此次修复保留原来的依赖完整性、设备流程、会话请求与发布顺序断言；Android 清理只发生在一次性 hosted runner，镜像锁定不可变 digest，两个脚本修复均已复现旧代码失败与新代码通过。未更改生产认证行为或降低合并门禁。
 
-## 尚未完成的验收
+## PR #1 第二轮远端验收（2026-09-29）
 
-- 阶段 3：Android 构建、页面完整性、模拟器启动与安装通过，Maestro 驱动启动 ANR/超时，设备流程失败；iOS 本机工具链阻碍，远端设备流程待验证。
-- 阶段 4：真实 PR、Linux 后端与镜像、macOS 两架构及失败合并阻断已验证；Windows 与 Storage 的修复需要远端复验，完整矩阵仍待通过。
+运行 `36450023246` 的 PR head 为 `303cf51433486e234fc4e0c0cf6efc5a8a6095e4`。基础检查、发布镜像、三个后端、Web、Extension、macOS 两架构以及 Storage 已通过；Mobile 的两个失败见下文。Storage artifact 确认了回读、缓存头、不可变文件、先文件后清单以及中断发布五项契约。
+
+Windows 的 E2E 与打包 smoke 通过，随后真实安装包的升级测试暴露了 URL 编码不一致：可信 URL 中的安装目录为 `RUNNER%7E1`，`loadFile` 实际加载的是 `RUNNER~1`。Windows 独立复现运行 `36452190503` 使用相同 Electron 39.2.7 与 ASAR 3.4.1，证实窗口与主 frame 身份一致，仅 URL 路径编码不同；改为 `loadURL(trustedUrl)` 后二者完全一致，`realpath` 不能解决此问题。
+
+修复使用同一条 URL 加载页面和校验来源，保留窗口、主 frame、协议、host、origin、pathname、query 及导航限制。升级 E2E 的临时目录固定包含 `~`，让此行为持续进入回归验收。Desktop 的 lint、类型检查、构建与 28 项单测均通过。独立运行 `36452719302` 已通过真实 Windows 0.1.0 → 0.1.1 安装、重启与数据保留断言，`installed=true`；最后删除安装目录时出现 `EBUSY`，因此整个 job 仍失败。清理现使用有上限的删除重试，失败仍传播。临时诊断 workflow 不属于交付的 CI 配置。
+
+iOS 在 Xcode 26.6 完成编译后，链接失败于菜单依赖 `react-native-ios-utilities@5.2.0` 的 `_OBJC_CLASS_$_RCTRootContentView`。采用上游 `dbc4ae1` 的同一 Swift 修复，通过 pnpm patch 固定；GitHub 虽有 5.2.1 tag，当时 npm 仍返回 404。来源及移除条件见 [补丁说明](../../patches/README.md)。冻结安装通过；Mobile lint、两类类型检查及 6 项单测通过；三个服务重新构建和 runtime 锁文件裁剪通过，没有把 Native 补丁引入后端 runtime。
+
+Android 报告 `e40819b5ca89af69` 的 Release APK 和最终 bundle 页面检查通过（5909 个来源），随后模拟器因只余 4021.59 MB、默认数据分区要求 7372.80 MB 而退出；报告为 `passed=false, cleaned=true`。修复在 APK 和报告保存后删除本次临时原生编译目录，并把专用测试设备的数据分区固定为 2 GB；不触碰已有模拟器或工作区原生工程。
+
+本次审查同步把补丁纳入 Nx 缓存输入与完整 CI 选择，并让 migrator 镜像带上 pnpm 配置引用的补丁文件。25 项 CI 合约测试通过，包括仅修改补丁也不能遗漏设备测试的回归检查。修正六个 App/服务 README 的过时测试入口说明，保持测试框架、设备流程和真实业务验收的区别。
+
+## 本轮提交前待完成的验收
+
+- 阶段 3：两平台的真实 Maestro 流程仍待通过；原生构建成功不等于设备 E2E 成功。
+- 阶段 4：Windows 升级行为已通过，但清理重试仍待验证；同一 PR 提交的完整 `Required checks` 必须通过。独立 iOS/Windows 修复验证运行 `36454765891` 正在执行，后续结果以 PR #1 的检查与 artifacts 为准。

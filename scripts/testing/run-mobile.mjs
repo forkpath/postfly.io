@@ -113,7 +113,7 @@ function command(
   })
   // Keep background failures observable without unhandled rejections.
   if (background) {
-    completion.catch(() => {})
+    completion.catch(() => undefined)
     return { child, completion }
   }
   return completion
@@ -257,6 +257,9 @@ try {
     )
     artifact = resolve(report, 'app-release.apk')
     await copyFile(resolve(app, 'android/app/build/outputs/apk/release/app-release.apk'), artifact)
+    // The installed APK and reports no longer need this owned native build tree.
+    // Reclaim its intermediates before allocating the emulator's data partition.
+    await rm(resolve(app, 'android'), { recursive: true, force: true })
     console.log('Mobile android: release APK built; starting the isolated emulator.')
     env.ANDROID_AVD_HOME = resolve(workspace, 'avd')
     await mkdir(env.ANDROID_AVD_HOME)
@@ -274,6 +277,11 @@ try {
       ],
       { input: 'no\n' }
     )
+    // The default Pixel profile reserves 6 GB. These isolated flows need only
+    // the app and Maestro driver, so use a bounded 2 GB data partition.
+    const avdConfig = resolve(env.ANDROID_AVD_HOME, `${avdName}.avd/config.ini`)
+    const avdSettings = (await readFile(avdConfig, 'utf8')).replace(/^disk\.dataPartition\.size=.*\r?\n?/gm, '')
+    await writeFile(avdConfig, `${avdSettings.trimEnd()}\ndisk.dataPartition.size=2G\n`)
     // Choose an unused even console port; the emulator reserves its companion port.
     const devices = await command(adb, ['devices'])
     let consolePort = 5554
@@ -434,8 +442,8 @@ try {
       }
     })
   }
-  if (emulator) await emulator.completion.catch(() => {})
-  if (androidLogcat) await androidLogcat.completion.catch(() => {})
+  if (emulator) await emulator.completion.catch(() => undefined)
+  if (androidLogcat) await androidLogcat.completion.catch(() => undefined)
   server.closeAllConnections()
   await new Promise(resolveClosed => server.close(resolveClosed))
   if (workspace) await cleanup(() => rm(workspace, { recursive: true, force: true }))

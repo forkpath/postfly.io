@@ -36,6 +36,7 @@ test('harness and workflow changes cannot escape the full framework matrix', () 
     'docker/docker-compose.test.yml',
     'docker/engine.Dockerfile',
     'scripts/release/publish-verified-images.mjs',
+    'patches/react-native-ios-utilities@5.2.0.patch',
     '.github/workflows/ci.yml'
   ]) {
     const result = selectTestSuites({ affected: [], files: [file], full: false })

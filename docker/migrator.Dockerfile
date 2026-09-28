@@ -6,6 +6,7 @@ RUN apk add --no-cache openssl && \
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches ./patches
 COPY tools/migrator/package.json ./tools/migrator/package.json
 # This tool has no workspace dependencies. Enable lockfile-based deploy only in
 # the image's copy of the lockfile, keeping the source workspace configuration intact.

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 
 export function selectTestSuites({ affected, files, full }) {
   const harnessChanged = files.some(file =>
-    /^(scripts\/(testing|ci|release)\/|docker\/|\.github\/(workflows|actions)\/)/.test(file)
+    /^(scripts\/(testing|ci|release)\/|docker\/|patches\/|\.github\/(workflows|actions)\/)/.test(file)
   )
   const all = full || harnessChanged
   const has = project => all || affected.includes(project)

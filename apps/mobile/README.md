@@ -64,14 +64,21 @@ pnpm nx run mobile:typecheck
 
 ## 单元测试：运行与编写
 
-当前没有标准 `mobile:test` target，不能执行不存在的命令或用 lint/build 成功冒充单测。接入步骤见[测试开发指南](../../docs/development/testing.md#没有-test-target-怎么办)。
+```sh
+pnpm nx run mobile:test
+pnpm nx run mobile:typecheck-tests
+```
 
-无 test target；需接入 Expo/RN 兼容测试环境与 Native SDK mock，再写 auth/provider/购买状态/离线错误等测试；不能直接套浏览器 jsdom 当真机证明。
-
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。
+使用 Jest、jest-expo 与 React Native Testing Library。用例放在 `tests/**/*.spec.ts` / `*.spec.tsx`，覆盖原生组件交互、剪贴板结果和路由；测试不放入 Expo Router 的 `src/app`。报告在 `dist/test-results/mobile/unit`。原生模块 mock 不代表设备验收。
 
 ## E2E：运行与编写
 
-暂无设备 E2E target。后续建立固定版本 Maestro/Detox 等方案、模拟器/开发构建、隔离账户，写登录深链、组织切换、权限弹窗、sandbox 购买/恢复场景；export 只验证打包。
+```sh
+node scripts/testing/install-maestro.mjs
+pnpm nx run mobile:e2e:android
+pnpm nx run mobile:e2e:ios
+```
 
-所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#web-与服务集成)。
+入口自动构建内嵌 JS 的独立 Release 测试包，创建专用模拟器、安装、执行 Maestro 页面往返与深链接流程，并保存报告和清理。无需生产账户或 EAS 订阅；需要固定版本的 SDK、Java / Xcode。新流程放在 `.maestro/`。
+
+工具要求、隔离边界和报告见 [设备测试指南](../../docs/development/testing-mobile.md)；实际通过情况见 [验收记录](../../docs/development/testing-framework-validation.md)。登录、支付、推送及真机硬件由使用这些能力的项目另做专项验收，Expo export 只验证打包。

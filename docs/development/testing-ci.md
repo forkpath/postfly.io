@@ -20,7 +20,7 @@ CI 检查当前提交是否仍能安装、编译并满足框架行为契约；CD
 | Mobile Android | Mobile 受影响 | 执行 |
 | Mobile iOS | Mobile 受影响且原生依赖/配置变化 | 执行 |
 
-测试编排、CI/发布脚本、Docker 配置和 workflow 的变化选择完整 E2E 矩阵。
+测试编排、CI/发布脚本、Docker 配置、依赖补丁和 workflow 的变化选择完整 E2E 矩阵。
 普通文档变化可不启动设备/后端套件。无法解析影响图时检查失败；找不到基线
 提交时保守执行完整矩阵。所有 job 都固定到本次提交，设备与真实网络套件
 不使用 Nx 结果缓存。Node/pnpm、Maestro、Java、Xcode、模拟器系统镜像及测试

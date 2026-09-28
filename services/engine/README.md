@@ -79,10 +79,15 @@ pnpm nx run engine:test --run
 
 新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。
 
-## E2E：运行与编写
+## 集成与 E2E：运行与编写
 
-当前 main.ts 的业务 API 全局前缀为 `/api/v1`，认证独立在 `/api/auth`。现有 web-e2e 的部分业务请求仍写 `/api/billing`、`/api/organizations`；直连当前 Engine 时需要先修正用例路由或提供明确的测试网关映射。这是现有 E2E 的实际缺口，不能仅填账号后就宣称全套可通过。
+```sh
+pnpm nx run engine:test-integration
+pnpm nx run engine:e2e
+```
 
-现有 apps/web-e2e 包含真实 HTTP 认证/组织/计费场景，但需单独启动 Engine 与测试 DB、预置账户，部分场景受 skip 门禁。发布 smoke 用 `node scripts/release/smoke-test.mjs`（SMOKE_BASE_URL/EMAIL/PASSWORD，组织可选）；该脚本会登录创建 Session，不是只读健康检查。完整认证/Webhook E2E 仍需新增。
+真实 HTTP 套件使用完整 Engine 启动入口、隔离 PG/Redis/Mongo/RabbitMQ，验证真实登录、用户/组织授权、非法 DTO 与领域错误映射；集成套件验证 PG 约束和 Redis TTL/读写/删除。业务 API 前缀为 `/api/v1`，认证为 `/api/auth`。厂商 Webhook 和完整支付链路仍需项目自己的专项用例。
 
-所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#web-与服务集成)。
+需要可运行 Linux 容器的 Docker / Compose v2。入口自动创建本机隔离环境、迁移和测试数据，完成后保存日志并清理；不会读取开发 `.env` 或连接外部数据库。用例放在 `tests/*.integration.spec.ts` / `tests/*.e2e.spec.ts`，不能直接运行内部 runner 指向开发库。
+
+报告位于 `dist/test-results/engine/<suite>/<run-id>/`。fixture、失败清理和新增用例说明见 [后端测试指南](../../docs/development/testing-backend.md)，实际结果见 [验收记录](../../docs/development/testing-framework-validation.md)。

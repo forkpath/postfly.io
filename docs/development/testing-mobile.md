@@ -32,6 +32,9 @@ Xcode。旧工具链会在构建前明确失败，不修改依赖源码绕过编
 参见 [Expo 兼容表](https://docs.expo.dev/versions/latest/) 和
 [GitHub runner 清单](https://github.com/actions/runner-images/blob/main/images/macos/macos-26-Readme.md)。
 
+React Native 0.86 预编译库与菜单依赖的链接兼容修复由 pnpm 固定补丁应用，
+来源与移除条件见 [依赖补丁说明](../../patches/README.md)。
+
 缺少工具、版本不匹配或原生构建失败会返回非零并留下报告，不能作为设备通过。
 本地构建不要求 EAS 订阅；`eas.json` 同时提供 `e2e` profile，供使用者接入
 EAS 构建。云端生成的包需要匹配其 `127.0.0.1:4179` 测试服务；默认本地
@@ -46,7 +49,8 @@ runner 把当前 Git 跟踪及未忽略的 Mobile/共享库源码复制到临时
 默认 Expo Router 入口在副本内包装为本地入口，仍加载真实 `expo-router/entry`，
 避免原生打包从副本外的依赖路径启动而遗漏页面。Android 先生成内嵌 bundle，
 检查 sourcemap 包含布局、欢迎页和登录页，再编译应用 APK，并复查最终 bundle；
-缺失任何页面均失败。
+缺失任何页面均失败。保存 APK 和检查报告后删除该次临时 Android 原生编译目录，
+为专用模拟器留出空间；测试设备数据分区固定为 2 GB。
 
 测试应用是 `com.ray.mobile.e2e` / `Ray E2E`，scheme 为 `ray-e2e`，OTA 关闭。
 正式应用仍使用原来的标识和更新配置。测试包允许 HTTP 以连接本机 fixture，不添加

@@ -47,14 +47,20 @@ pnpm nx run extension:typecheck
 
 ## 单元测试：运行与编写
 
-当前没有标准 `extension:test` target，不能执行不存在的命令或用 lint/build 成功冒充单测。接入步骤见[测试开发指南](../../docs/development/testing.md#没有-test-target-怎么办)。
+```sh
+pnpm nx run extension:test
+pnpm nx run extension:typecheck-tests
+```
 
-无 test target；需配置 Vitest/jsdom，mock chrome/browser/storage/message API，测试会话和跨页面通信；此 mock 不证明浏览器权限配置正确。
-
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。
+使用 Vitest、jsdom 与 WXT 官方 fake browser。用例放在 `tests/**/*.spec.ts` / `*.spec.tsx`，覆盖消息、存储竞争和错误边界，不读取开发者 `.env`。报告在 `dist/test-results/extension/unit`；browser API mock 不证明真实扩展权限与进程通信。
 
 ## E2E：运行与编写
 
-暂无扩展 E2E target。后续启动加载真实 build 目录的浏览器实例，测试 popup/content/background、跨域权限、storage、登录/注销；Firefox 单独适配。Web E2E 不会自动加载扩展。
+```sh
+pnpm exec playwright install chromium
+pnpm nx run extension:e2e
+```
 
-所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#web-与服务集成)。
+自动构建独立测试产物并加载到真实 Chromium，验证五个页面、background messaging、content script、storage 和重载。新用例放在 `e2e/`，复用 `fixtures.ts` 的独立 profile 与失败诊断。外部认证 HTTP 使用受控响应，扩展进程通信和存储保持真实。
+
+`extension:smoke` 保留生产配置构建验证；`extension:e2e-artifact` 验证已解压的发布 ZIP，详见 [测试指南](../../docs/development/testing.md#extension-真实浏览器测试)。Firefox 当前只有构建验证，未计作真实扩展运行通过。
