@@ -36,6 +36,7 @@ Object.assign(env, {
   NX_LOAD_DOT_ENV_FILES: 'false',
   SENTRY_DISABLE_AUTO_UPLOAD: 'true',
   MAESTRO_CLI_NO_ANALYTICS: '1',
+  MAESTRO_DRIVER_STARTUP_TIMEOUT: '180000',
   RAY_MOBILE_E2E: 'true',
   EXPO_PUBLIC_DEFAULT_LOCALE: 'en',
   EXPO_PUBLIC_AUTH_PASSWORD: 'true',
@@ -47,6 +48,7 @@ let interrupted = false
 let cleaning = false
 let device
 let emulator
+let androidLogcat
 let deviceOwned = false
 let workspace
 let passed = false
@@ -73,11 +75,12 @@ process.on('SIGTERM', interrupt)
 function command(
   executable,
   args,
-  { cwd = root, timeout = 120_000, input, background = false, captureAll = false } = {}
+  { cwd = root, timeout = 120_000, input, background = false, captureAll = false, logName } = {}
 ) {
   if (interrupted && !cleaning) throw new Error('Mobile test interrupted')
   log.write(`\n${executable} ${args.join(' ')}\n`)
-  const stream = createWriteStream(resolve(report, `${++commandIndex}-${executable.split('/').at(-1)}.log`))
+  const commandName = `${++commandIndex}-${executable.split('/').at(-1)}.log`
+  const stream = createWriteStream(resolve(report, logName ?? commandName))
   const child = spawn(executable, args, { cwd, env, detached: true, stdio: ['pipe', 'pipe', 'pipe'] })
   children.add(child)
   let output = ''
@@ -303,6 +306,11 @@ try {
     const actualAvd = await command(adb, ['-s', device, 'emu', 'avd', 'name'])
     if (!actualAvd.split(/\s+/).includes(avdName)) throw new Error('Refusing to use an emulator owned by another run')
     deviceOwned = true
+    androidLogcat = command(adb, ['-s', device, 'logcat', '-v', 'threadtime'], {
+      background: true,
+      timeout: 1_800_000,
+      logName: 'device-live.log'
+    })
     const deadline = Date.now() + 600_000
     while ((await command(adb, ['-s', device, 'shell', 'getprop', 'sys.boot_completed'])) !== '1') {
       if (Date.now() > deadline || emulator.child.exitCode !== null) throw new Error('Android emulator failed to boot')
@@ -392,7 +400,10 @@ try {
   if (deviceOwned) {
     if (platform === 'android') {
       await cleanup(async () =>
-        writeFile(resolve(report, 'device.log'), await command(adb, ['-s', device, 'logcat', '-d', '-t', '2000']))
+        writeFile(
+          resolve(report, 'device.log'),
+          await command(adb, ['-s', device, 'logcat', '-d', '-t', '2000'], { captureAll: true })
+        )
       )
     } else {
       await cleanup(() =>
@@ -423,6 +434,7 @@ try {
     })
   }
   if (emulator) await emulator.completion.catch(() => {})
+  if (androidLogcat) await androidLogcat.completion.catch(() => {})
   server.closeAllConnections()
   await new Promise(resolveClosed => server.close(resolveClosed))
   if (workspace) await cleanup(() => rm(workspace, { recursive: true, force: true }))

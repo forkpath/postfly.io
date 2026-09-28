@@ -8,7 +8,8 @@ afterEach(() => {
   vi.resetModules()
 })
 
-it('can import the server interface without requiring sender credentials', async () => {
+// The cold Vite import transforms the real React Email and translation graph.
+it('can import the server interface without requiring sender credentials', { timeout: 15_000 }, async () => {
   vi.stubEnv('EMAIL_FROM', undefined)
   vi.stubEnv('RESEND_API_KEY', undefined)
   const entry = await import('./index')

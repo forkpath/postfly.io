@@ -86,7 +86,11 @@ macos-26 runner 对齐。重新运行前置检查报告 `963a1a8ab67c1621` 明�
 
 Android 首次原生构建触及初始 45 分钟上限，报告 `dfe33d713db4c7e9` 为 `passed=false, cleaned=true`。第二次运行 `62e9104867b30faf` 进入 R8/原生 lint 后，2 GB 堆和 512 MB 元空间持续接近耗尽，诊断记录了 159 次 full GC、约 8.5 分钟 full GC 时间；主动中断后 `passed=false, cleaned=true, interrupted=true`，所属 Gradle/Kotlin 进程均退出。调整为 4 GB 堆、1 GB 元空间和 Gradle build cache 后，第三次 `e212791da4518c87` 原生编译成功（34 分 23 秒），但模拟器在 Vulkan 初始化时退出，整体仍为 `passed=false, cleaned=true`。
 
-第三次 APK 的后续审查还发现内嵌 bundle 只有 Router 运行库，缺少应用页面。临时目录内的入口包装修复后，真实 `expo export:embed` 包含 6001 个模块、6008 个 sourcemap 来源，欢迎页、登录页和 fixture 地址均存在；这仍只是打包验证。现已增加原生 bundle 的页面完整性门禁，并按“bundle 检查 → 应用 APK”顺序构建。模拟器改为当前支持的软件图形模式，macOS 关闭 Vulkan，已越过此前退出点，但独立启动诊断 5 分钟尚未完成。第四次完整 Android 设备运行正在验证，未计作 E2E 通过。两个平台均不等于真机或商店包验收。
+第三次 APK 的后续审查还发现内嵌 bundle 只有 Router 运行库，缺少应用页面。临时目录内的入口包装修复后，真实 `expo export:embed` 包含 6001 个模块、6008 个 sourcemap 来源，欢迎页、登录页和 fixture 地址均存在；这仍只是打包验证。现已增加原生 bundle 的页面完整性门禁，并按“bundle 检查 → 应用 APK”顺序构建。模拟器改为当前支持的软件图形模式，macOS 关闭 Vulkan，已越过此前退出点；独立启动诊断的 5 分钟不足，完整入口允许首次启动等待 10 分钟。
+
+第四次 `1a1d4967f2b83604` 通过实际原生 bundle 门禁（5910 个 sourcemap 来源），bundle 构建 5 分 7 秒、应用 APK 构建 29 分 33 秒。APK 为 66,200,036 字节，SHA-256 `2cac0ff770862ae1c27a2291a8c9f0c5331fde5c70e867da32849b4e4643c3e3`。模拟器 514.8 秒完成启动，APK 及 Maestro driver APK 安装成功，但随后出现 `AndroidDriverTimeoutException`，没有执行页面断言，也没有 fixture 请求。整体 `passed=false, cleaned=true, interrupted=false`，不能计作 E2E 通过。
+
+按 Maestro 官方指导设置 `MAESTRO_DRIVER_STARTUP_TIMEOUT=180000`，保留页面断言超时；新增设备连接后的持续日志，以及不截断的退出前日志。第五次完整入口正在复验。两个平台均不等于真机或商店包验收。
 
 ## 阶段 4：CI/CD 门禁（已实现，本地与远端验收进行中）
 
@@ -98,9 +102,11 @@ Android 首次原生构建触及初始 45 分钟上限，报告 `dfe33d713db4c7e
 本地已验证 25 项 CI 合约测试；涵盖套件选择、缺失/失败结果拒绝、真实网络探针
 正反例、镜像替换/失败报告拒绝、进程树清理以及 Mobile bundle 页面缺失拒绝。发布命令负向演练返回非零，记录命令没有收到 push。actionlint 1.7.12 已检查工作流语法与引用。
 
+独立副本的完整快速 CI 首次在 `email-server:test` 的无凭据导入用例触发默认 5 秒超时，另外两项邮件用例通过。该用例冷导入真实 React Email/模板/翻译模块；仅将这一导入用例的等待上限调整到 15 秒，保留全部断言。专项三项测试及 lint 通过后，完整矩阵复跑退出 0：47 个项目的 lint/typecheck/typecheck-tests/test/build 及依赖共 149 项任务成功，38 个单测入口共 319 个用例通过。其中 60 项任务复用此前成功缓存，复跑耗时 17 分 3 秒。首次被 `nxBail` 中止或未执行的任务未计作通过。原有 lint/依赖警告仍有保留，完整日志在 `dist/test-results/ci/local-20260928/full-fast-ci.log`；该记录不代替 Linux GitHub Actions 验收。
+
 正式 Chrome ZIP 在无 `.env` 的独立副本构建，再解压运行 `extension:e2e-artifact`，7 项真实浏览器用例通过；ZIP SHA-256 为 `27b9bf4f83fa5d8f14cffdf4a8c001222fcdf4f09733b7e38adc6c7dd5e91b9e`。Mobile、Extension、Web E2E 的 lint/typecheck 及 21 个依赖任务全部通过。四个应用的 build/package 共 7 个任务也通过；Web 正式构建的 Chromium/Firefox/WebKit 三个页面用例通过。Desktop 在无环境文件的独立副本执行 28 个单测、正式构建、无签名打包和 Electron E2E，验证更新窗口、preload、路由重载、窗口 IPC 与断网后界面可用，3 个 Nx 任务通过；该记录仅覆盖本机 macOS x64，不代表 Windows、macOS ARM 或签名升级已经通过。
 
-真实镜像构建发现 Nx 精简锁文件与复制进去的整个 workspace overrides 不一致，冻结安装失败。服务镜像改为安装 Nx 已解析的独立 runtime manifest/lockfile，保留冻结安装；修复后 Engine/Pulse/Worker 冻结安装与五个镜像构建全部通过。使用同一组镜像执行真实迁移、四个应用健康检查、公开 HTML、匿名会话、受保护 HTTP 401 和 WebSocket 4401 检查，报告 `25f061b7d09f6804` 为 `passed=true, cleaned=true, interrupted=false`，退出 0；容器与网络已删除。检查记录对应本地代码快照 `5bbdf7160dc70287c10a84f3c62b39e8b63cd1bc`，没有推送镜像或部署生产环境。
+真实镜像构建发现 Nx 精简锁文件与复制进去的整个 workspace overrides 不一致，冻结安装失败。服务镜像改为安装 Nx 已解析的独立 runtime manifest/lockfile，保留冻结安装；修复后 Engine/Pulse/Worker 冻结安装与五个镜像构建全部通过。使用同一组镜像执行真实迁移、四个应用健康检查、公开 HTML、匿名会话、受保护 HTTP 401 和 WebSocket 4401 检查，报告 `25f061b7d09f6804` 为 `passed=true, cleaned=true, interrupted=false`，退出 0；容器与网络已删除。本地测试标签为 `5bbdf7160dc70287c10a84f3c62b39e8b63cd1bc`，实际验证对象由报告中的五个镜像 ID 标识；该记录不是远端同一提交发布门禁的验收。没有推送镜像或部署生产环境。
 
 查询远端现有定时 CI 的失败日志，确认冻结安装失败于 Extension WXT prepare 的
 Invalid URL；阶段 1 的无环境安装修复直接覆盖该原因。该旧运行不能代表新配置结果。

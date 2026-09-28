@@ -63,6 +63,9 @@ Android 通过指定设备的 `adb reverse` 连接临时 fixture。所有等待�
 配置、工具版本、测试 runner 与工作流共同计算 key，原生构建输入变化会更新缓存。
 Android 使用软件图形渲染，macOS 关闭 Vulkan 以兼容本机 emulator；首次启动
 最多等待 10 分钟。确认设备归本次运行所有后即采集失败日志，包括系统启动超时。
+设备连接后持续保存 Android 日志，并保留完整退出前日志。Maestro 驱动启动上限
+设置为 180 秒，页面断言仍使用各流程自己的超时；驱动超时继续使测试失败。
+该设置见 [Maestro 官方连接超时说明](https://docs.maestro.dev/maestro-cli/run-your-first-test-with-the-maestro-cli)。
 
 报告目录为 `dist/test-results/mobile/e2e/<platform>/<run-id>/`，含构建日志、
 JUnit、Maestro 诊断、截图、测试产物、bundle 页面检查、fixture 请求记录和 `run.json`。CI 应
