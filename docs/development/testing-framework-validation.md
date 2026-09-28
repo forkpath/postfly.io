@@ -53,7 +53,7 @@ pnpm nx run extension:e2e --skipNxCache
 | Pulse Redis 集成 | 1 用例通过：真实 Redis 数据与过期 |
 | Worker E2E | 6 用例通过：完整模块启动、重复投递、真实 TTL 重试、最后一次失败/DLQ、活动租约重投、杀进程再重启恢复 |
 | Worker PG 集成 | 1 用例通过：八个并发认领、租约恢复、旧处理者不能覆盖新状态 |
-| 快速测试与类型 | Engine/Pulse/Worker 及 server-nest/server-redis 单测通过；三服务测试类型、应用类型和 lint 通过；隔离环境 guard 的 7 个正反用例通过 |
+| 快速测试与类型 | Engine/Pulse/Worker 及 server-nest/server-redis 单测通过；三服务测试类型、应用类型和 lint 通过；隔离环境 guard 的 11 个正反用例通过 |
 | 正式构建 | 三服务正式 Webpack 构建通过；Worker 子进程 fixture 使用相同编译器与解析机制 |
 | 中断清理 | 实际启动 PG 后向 runner 发送 SIGTERM，退出 1；报告 interrupted=true、cleaned=true，容器和网络删除 |
 | 失败清理 | 协议、DTO、租约和子进程加载的真实失败均返回非零并保留报告，失败环境已清理 |
@@ -66,6 +66,7 @@ pnpm nx run extension:e2e --skipNxCache
 - Worker 将活动租约的重投直接 ack，可能丢失崩溃后的消息；改为确认延迟副本后 ack。认领次数约束状态写入，防止旧处理者覆盖新租约。真实进程恢复通过。
 - 测试启动关闭 Nest/Vite/Nx/dotenv 的环境文件加载；fixture 写入前再次检查本机测试数据库命名。日志遮蔽认证请求头与 cookie；i18n 接受绝对目录，非开发环境不写类型文件。
 - 测试子进程直接使用临时 TS loader 无法处理项目已有模块解析约定，改用正式 Webpack 编译器。测试入口不进入生产构建。
+- 二次审查确认 `pg` 的连接字符串查询参数可以覆盖 URL 主机或端口。fixture guard 现在只接受带明确端口、无查询参数和片段的本机 runner 地址；11 个正反用例、类型检查与 lint 通过，避免表面为 loopback 的连接指向其他环境。
 
 可追溯报告示例：Engine `caed68bcd05ff0e8`，Pulse `1ae62adb139b997b`，Worker `bad6f4253953fffd`，中断验证 `7e907b21869426b9`。报告位于 `dist/test-results/<project>/<suite>/<run-id>/`。新增计费路径用例首次因未启用组织计费返回 403；修正测试环境的显式功能开关后 5 项通过，没有改变生产默认配置。
 
@@ -83,7 +84,9 @@ Expo 官方最低要求为 Xcode 26.4。现已固定 Xcode 26.6 / iOS 26.5，与
 macos-26 runner 对齐。重新运行前置检查报告 `963a1a8ab67c1621` 明确退出 1，
 `cleaned=true`。本机未完成 iOS 安装或 Maestro 流程，不能计作通过。
 
-Android 首次原生构建在生成 JS bundle 后进入原生 lint 阶段，触及初始 45 分钟上限，报告 `dfe33d713db4c7e9` 为 `passed=false, cleaned=true`；未出现编译错误，但没有生成 APK 或运行设备流程。第二次运行 `62e9104867b30faf` 进入 R8/原生 lint 后，2 GB 堆和 512 MB 元空间持续接近耗尽，诊断记录了 159 次 full GC、约 8.5 分钟 full GC 时间；主动中断后 `passed=false, cleaned=true, interrupted=true`，所属 Gradle/Kotlin 进程均退出。已将构建时限调整为 60 分钟，启用 Gradle build cache，并只为隔离测试进程配置 4 GB 堆和 1 GB 元空间；第三次运行正在验证。两个平台均不等于真机或商店包验收。
+Android 首次原生构建触及初始 45 分钟上限，报告 `dfe33d713db4c7e9` 为 `passed=false, cleaned=true`。第二次运行 `62e9104867b30faf` 进入 R8/原生 lint 后，2 GB 堆和 512 MB 元空间持续接近耗尽，诊断记录了 159 次 full GC、约 8.5 分钟 full GC 时间；主动中断后 `passed=false, cleaned=true, interrupted=true`，所属 Gradle/Kotlin 进程均退出。调整为 4 GB 堆、1 GB 元空间和 Gradle build cache 后，第三次 `e212791da4518c87` 原生编译成功（34 分 23 秒），但模拟器在 Vulkan 初始化时退出，整体仍为 `passed=false, cleaned=true`。
+
+第三次 APK 的后续审查还发现内嵌 bundle 只有 Router 运行库，缺少应用页面。临时目录内的入口包装修复后，真实 `expo export:embed` 包含 6001 个模块、6008 个 sourcemap 来源，欢迎页、登录页和 fixture 地址均存在；这仍只是打包验证。现已增加原生 bundle 的页面完整性门禁，并按“bundle 检查 → 应用 APK”顺序构建。模拟器改为当前支持的软件图形模式，macOS 关闭 Vulkan，已越过此前退出点，但独立启动诊断 5 分钟尚未完成。第四次完整 Android 设备运行正在验证，未计作 E2E 通过。两个平台均不等于真机或商店包验收。
 
 ## 阶段 4：CI/CD 门禁（已实现，本地与远端验收进行中）
 
@@ -92,8 +95,8 @@ Android 首次原生构建在生成 JS bundle 后进入原生 lint 阶段，触�
 的完整 CI，扩展测试解压的待发布 ZIP，服务在推送前启动实际镜像，并核对镜像 ID。
 部署后运行无业务写入的公开页面/HTTP/WS 探针。
 
-本地已验证 23 项 CI 合约测试；涵盖套件选择、缺失/失败结果拒绝、真实网络探针
-正反例、镜像替换/失败报告拒绝以及进程树清理。发布命令负向演练返回非零，记录命令没有收到 push。actionlint 1.7.12 已检查工作流语法与引用。
+本地已验证 25 项 CI 合约测试；涵盖套件选择、缺失/失败结果拒绝、真实网络探针
+正反例、镜像替换/失败报告拒绝、进程树清理以及 Mobile bundle 页面缺失拒绝。发布命令负向演练返回非零，记录命令没有收到 push。actionlint 1.7.12 已检查工作流语法与引用。
 
 正式 Chrome ZIP 在无 `.env` 的独立副本构建，再解压运行 `extension:e2e-artifact`，7 项真实浏览器用例通过；ZIP SHA-256 为 `27b9bf4f83fa5d8f14cffdf4a8c001222fcdf4f09733b7e38adc6c7dd5e91b9e`。Mobile、Extension、Web E2E 的 lint/typecheck 及 21 个依赖任务全部通过。四个应用的 build/package 共 7 个任务也通过；Web 正式构建的 Chromium/Firefox/WebKit 三个页面用例通过。Desktop 在无环境文件的独立副本执行 28 个单测、正式构建、无签名打包和 Electron E2E，验证更新窗口、preload、路由重载、窗口 IPC 与断网后界面可用，3 个 Nx 任务通过；该记录仅覆盖本机 macOS x64，不代表 Windows、macOS ARM 或签名升级已经通过。
 
@@ -108,5 +111,5 @@ Invalid URL；阶段 1 的无环境安装修复直接覆盖该原因。该旧运
 ## 尚未完成的验收
 
 - 阶段 2：本地真实协议、持久化及中断清理通过，Linux CI 验收待完成。
-- 阶段 3：Android 前两次分别超时和因内存压力主动中断，调整测试构建资源后重试中；iOS 本机工具链阻碍，远端设备流程待验证。
+- 阶段 3：Android 原生编译已成功，设备启动与 bundle 完整性修复后的完整流程仍在验证；iOS 本机工具链阻碍，远端设备流程待验证。
 - 阶段 4：新配置的真实 PR、Linux/跨平台结果和远端合并阻断待验证；镜像构建、启动及发布前探针已在本地通过。

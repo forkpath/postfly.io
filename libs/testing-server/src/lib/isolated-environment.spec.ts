@@ -20,6 +20,10 @@ describe('isolated database guard', () => {
     { ...env, POSTGRES_DATABASE_URL: `postgresql://db.example.invalid/${database}` },
     { ...env, POSTGRES_DATABASE_URL: 'postgresql://127.0.0.1/development' },
     { ...env, POSTGRES_DATABASE_URL: `https://127.0.0.1/${database}` },
+    { ...env, POSTGRES_DATABASE_URL: `${env.POSTGRES_DATABASE_URL}?host=db.example.invalid` },
+    { ...env, POSTGRES_DATABASE_URL: `${env.POSTGRES_DATABASE_URL}?port=5432` },
+    { ...env, POSTGRES_DATABASE_URL: `${env.POSTGRES_DATABASE_URL}#unexpected` },
+    { ...env, POSTGRES_DATABASE_URL: `postgresql://ray_test:secret@127.0.0.1/${database}` },
     { ...env, POSTGRES_DATABASE_URL: 'not a URL' }
   ])('rejects a missing or unrelated database %#', input => {
     expect(() => assertIsolatedTestEnvironment(input)).toThrow()

@@ -6,6 +6,7 @@ import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
 import { dirname, resolve } from 'node:path'
 
+import { verifyMobileBundle } from './mobile-bundle.mjs'
 import { terminateProcessTree } from './process-tree.mjs'
 
 const platform = process.argv[2]
@@ -171,6 +172,8 @@ try {
       throw new Error('Android system image revision differs from mobile-tools.json')
     env.ANDROID_HOME = sdk
     env.ANDROID_SDK_ROOT = sdk
+    await copyFile(resolve(sdk, 'emulator/source.properties'), resolve(report, 'emulator.properties'))
+    await command(resolve(sdk, 'emulator/emulator'), ['-accel-check'])
   }
 
   await new Promise((resolveReady, reject) => {
@@ -205,6 +208,14 @@ try {
   await symlink(resolve(root, 'node_modules'), resolve(workspace, 'node_modules'), 'dir')
   await symlink(resolve(root, 'apps/mobile/node_modules'), resolve(workspace, 'apps/mobile/node_modules'), 'dir')
   const app = resolve(workspace, 'apps/mobile')
+  const packagePath = resolve(app, 'package.json')
+  const appPackage = JSON.parse(await readFile(packagePath, 'utf8'))
+  if (appPackage.main === 'expo-router/entry') {
+    // Keep the native bundle entry inside this copy even when dependencies are symlinked.
+    appPackage.main = './.ray-e2e-entry.js'
+    await writeFile(resolve(app, '.ray-e2e-entry.js'), "import 'expo-router/entry'\n")
+    await writeFile(packagePath, `${JSON.stringify(appPackage, null, 2)}\n`)
+  }
   const expo = resolve(app, 'node_modules/expo/bin/cli')
   await command(
     process.execPath,
@@ -215,21 +226,34 @@ try {
   let artifact
   if (platform === 'android') {
     // Expo's generated release variant uses the debug keystore for this isolated app.
-    await command(
-      'sh',
-      [
-        './gradlew',
-        'assembleRelease',
-        '--no-daemon',
-        '--build-cache',
-        '--max-workers=2',
-        '-Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m',
-        `-PreactNativeArchitectures=${arch}`
-      ],
-      { cwd: resolve(app, 'android'), timeout: 3_600_000 }
+    const buildDeadline = Date.now() + 3_600_000
+    const gradleArgs = [
+      '--no-daemon',
+      '--build-cache',
+      '--max-workers=2',
+      '-Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m',
+      `-PreactNativeArchitectures=${arch}`
+    ]
+    // Fail before compiling native dependencies if the copied app's routes are absent.
+    await command('sh', ['./gradlew', ':app:createBundleReleaseJsAndAssets', ...gradleArgs], {
+      cwd: resolve(app, 'android'),
+      timeout: 900_000
+    })
+    const sourceMap = JSON.parse(
+      await readFile(
+        resolve(app, 'android/app/build/generated/sourcemaps/react/release/index.android.bundle.map'),
+        'utf8'
+      )
     )
+    await writeFile(resolve(report, 'bundle-sources.json'), JSON.stringify(verifyMobileBundle(sourceMap), null, 2))
+    console.log('Mobile android: application routes verified in the release bundle; assembling APK.')
+    await command('sh', ['./gradlew', ':app:assembleRelease', ...gradleArgs], {
+      cwd: resolve(app, 'android'),
+      timeout: Math.max(1, buildDeadline - Date.now())
+    })
     artifact = resolve(report, 'app-release.apk')
     await copyFile(resolve(app, 'android/app/build/outputs/apk/release/app-release.apk'), artifact)
+    console.log('Mobile android: release APK built; starting the isolated emulator.')
     env.ANDROID_AVD_HOME = resolve(workspace, 'avd')
     await mkdir(env.ANDROID_AVD_HOME)
     await command(
@@ -261,22 +285,29 @@ try {
         '-no-window',
         '-no-audio',
         '-no-snapshot',
+        '-no-boot-anim',
         '-gpu',
-        'swiftshader_indirect',
+        'swiftshader',
+        ...(process.platform === 'darwin' ? ['-feature', '-Vulkan'] : []),
         '-memory',
         '2048'
       ],
-      { background: true, timeout: 900_000 }
+      { background: true, timeout: 1_800_000 }
     )
-    await command(adb, ['-s', device, 'wait-for-device'])
-    const deadline = Date.now() + 180_000
+    await Promise.race([
+      command(adb, ['-s', device, 'wait-for-device']),
+      emulator.completion.then(() => {
+        throw new Error('Android emulator exited before becoming available')
+      })
+    ])
+    const actualAvd = await command(adb, ['-s', device, 'emu', 'avd', 'name'])
+    if (!actualAvd.split(/\s+/).includes(avdName)) throw new Error('Refusing to use an emulator owned by another run')
+    deviceOwned = true
+    const deadline = Date.now() + 600_000
     while ((await command(adb, ['-s', device, 'shell', 'getprop', 'sys.boot_completed'])) !== '1') {
       if (Date.now() > deadline || emulator.child.exitCode !== null) throw new Error('Android emulator failed to boot')
       await new Promise(resolveTick => setTimeout(resolveTick, 1000))
     }
-    const actualAvd = await command(adb, ['-s', device, 'emu', 'avd', 'name'])
-    if (!actualAvd.split(/\s+/).includes(avdName)) throw new Error('Refusing to use an emulator owned by another run')
-    deviceOwned = true
     await command(adb, ['-s', device, 'reverse', `tcp:${port}`, `tcp:${port}`])
     await command(adb, ['-s', device, 'install', '-r', artifact])
   } else {

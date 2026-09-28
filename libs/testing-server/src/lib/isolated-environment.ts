@@ -12,7 +12,11 @@ export function assertIsolatedTestEnvironment(env = process.env) {
     !/^[a-f0-9]{16}$/.test(runId) ||
     !['postgres:', 'postgresql:'].includes(url.protocol) ||
     url.hostname !== '127.0.0.1' ||
-    url.pathname !== `/ray_test_${runId}`
+    !url.port ||
+    url.pathname !== `/ray_test_${runId}` ||
+    // pg connection-string parameters can override the URL's host or port.
+    url.search !== '' ||
+    url.hash !== ''
   ) {
     throw new Error('Use the public e2e/test-integration target to create an isolated backend test environment.')
   }

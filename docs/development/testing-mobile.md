@@ -22,6 +22,7 @@ pnpm nx run mobile:e2e:ios
   设备镜像为 Android 35 / Google APIs / revision 9，Intel 使用 `x86_64`，
   Apple Silicon 使用 `arm64-v8a`。例如使用已安装的 SDK 管理器安装
   `system-images;android-35;google_apis;x86_64`。需要可用的硬件虚拟化。
+  构建前检查硬件加速，并记录 SDK 中已安装的 emulator 版本。
 - iOS 需要 macOS、Xcode 26.6、CocoaPods，以及配置文件指定的 iOS 26.5
   Simulator runtime。测试构建关闭代码签名，不要求商店证书。
 
@@ -42,6 +43,9 @@ runner 把当前 Git 跟踪及未忽略的 Mobile/共享库源码复制到临时
 `.env`；根目录只复制包管理、Nx 与 TS 路径配置，在副本生成 native 工程。
 依赖使用已安装的锁定包。正式工作区的
 `ios/`、`android/` 和应用配置不会被 prebuild 改写。
+默认 Expo Router 入口在副本内包装为本地入口，仍加载真实 `expo-router/entry`，
+避免原生打包从副本外的依赖路径启动而遗漏页面。Android 先生成内嵌 bundle，
+检查 sourcemap 包含布局、欢迎页和登录页，再编译应用 APK；缺失任何页面均失败。
 
 测试应用是 `com.ray.mobile.e2e` / `Ray E2E`，scheme 为 `ray-e2e`，OTA 关闭。
 正式应用仍使用原来的标识和更新配置。测试包允许 HTTP 以连接本机 fixture，不添加
@@ -53,10 +57,15 @@ Expo Router 和页面交互照常运行。它不验证登录服务本身、OAuth
 删除自己的设备/临时目录。不会重置开发者已有模拟器或已安装的正式应用。
 Android 通过指定设备的 `adb reverse` 连接临时 fixture。所有等待均有截止时间。
 原生构建最多等待 60 分钟，Android 启用 Gradle 自身按输入计算的 build cache，
-并限制两个 Gradle worker，测试构建进程最多使用 4 GB Java 堆和 1 GB 元空间（建议至少 8 GB 可用系统内存）；这些参数只传给隔离测试构建。CI 的完整设备 job 最多 90 分钟。
+并限制两个 Gradle worker。测试构建进程最多使用 4 GB Java 堆和 1 GB 元空间，
+建议至少 8 GB 可用系统内存；这些参数只传给隔离测试构建。CI 的完整设备 job
+最多 90 分钟。Android job 配置了 setup-java 的 Gradle 缓存，以锁文件、Mobile
+配置、工具版本、测试 runner 与工作流共同计算 key，原生构建输入变化会更新缓存。
+Android 使用软件图形渲染，macOS 关闭 Vulkan 以兼容本机 emulator；首次启动
+最多等待 10 分钟。确认设备归本次运行所有后即采集失败日志，包括系统启动超时。
 
 报告目录为 `dist/test-results/mobile/e2e/<platform>/<run-id>/`，含构建日志、
-JUnit、Maestro 诊断、截图、测试产物、fixture 请求记录和 `run.json`。CI 应
+JUnit、Maestro 诊断、截图、测试产物、bundle 页面检查、fixture 请求记录和 `run.json`。CI 应
 始终上传报告。成功标准是原生构建、安装、非零流程、fixture 访问与清理均通过；
 单独 YAML 语法检查或 JS export 不属于设备验收。
 
