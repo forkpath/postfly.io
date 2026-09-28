@@ -38,9 +38,10 @@ Web 的历史厂商/业务账户场景不在默认框架页面套件中，不计
 并要求合并前更新检查。YAML 成功运行与 GitHub 实际阻止合并是两件事，不能
 仅凭 job 名称宣称已经启用保护。
 
-本次查询 `forkpath/postfly.io`：默认分支 `arch` 尚未受保护；私有仓库 rulesets
-接口返回需要升级 GitHub 方案或改为公开的 403。没有修改仓库可见性或订阅。
-因此实际合并阻断必须在账户能力可用后配置并复验，详见验收记录。
+2026-09-29 已核实 `forkpath/postfly.io` 的默认分支 `arch` 和验收基线分支
+`codex/testing-baseline-20260928` 均要求 `Required checks`、严格同步基线，
+并对管理员生效。PR #1 临时转为 ready 后，失败检查使 GitHub 返回
+`mergeStateStatus=BLOCKED`；验证后恢复 draft，未执行合并。详见验收记录。
 
 ## 发布前后
 

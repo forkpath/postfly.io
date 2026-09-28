@@ -160,7 +160,7 @@ try {
     const xcode = await command('xcodebuild', ['-version'])
     if (!xcode.startsWith(`Xcode ${tools.xcodeVersion}\n`))
       throw new Error(`Expected Xcode ${tools.xcodeVersion} (Expo 57 requires 26.4 or newer): ${xcode}`)
-    const runtimes = JSON.parse(await command('xcrun', ['simctl', 'list', 'runtimes', '-j']))
+    const runtimes = JSON.parse(await command('xcrun', ['simctl', 'list', 'runtimes', '-j'], { captureAll: true }))
     if (!runtimes.runtimes.some(runtime => runtime.identifier === iosRuntime && runtime.isAvailable))
       throw new Error(`Missing simulator runtime: ${iosRuntime}`)
   } else {

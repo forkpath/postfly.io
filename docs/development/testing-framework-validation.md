@@ -70,7 +70,7 @@ pnpm nx run extension:e2e --skipNxCache
 
 可追溯报告示例：Engine `caed68bcd05ff0e8`，Pulse `1ae62adb139b997b`，Worker `bad6f4253953fffd`，中断验证 `7e907b21869426b9`。报告位于 `dist/test-results/<project>/<suite>/<run-id>/`。新增计费路径用例首次因未启用组织计费返回 403；修正测试环境的显式功能开关后 5 项通过，没有改变生产默认配置。
 
-边界：本地宿主为 macOS，基础设施运行于 Linux 容器；尚未取得 Linux GitHub Actions 通过记录，因此阶段 2 的远端验收留到阶段 4。DLQ 用例从最后一次重试开始，未声称整条五次退避链已执行。测试缩短单条 fixture 的租约等待；生产五分钟租约保持不变。外部副作用仍需业务幂等键。
+边界：本地宿主为 macOS，基础设施运行于 Linux 容器；PR #1 运行 `36439125099` 的 Engine/Pulse/Worker job 已补齐 Linux GitHub Actions 通过记录。DLQ 用例从最后一次重试开始，未声称整条五次退避链已执行。测试缩短单条 fixture 的租约等待；生产五分钟租约保持不变。外部副作用仍需业务幂等键。
 
 ## 阶段 3：Mobile 设备入口（已实现，设备验收未通过）
 
@@ -115,11 +115,20 @@ Android 首次原生构建触及初始 45 分钟上限，报告 `dfe33d713db4c7e
 查询远端现有定时 CI 的失败日志，确认冻结安装失败于 Extension WXT prepare 的
 Invalid URL；阶段 1 的无环境安装修复直接覆盖该原因。该旧运行不能代表新配置结果。
 
-仓库默认分支 arch 当前 `protected=false`；rulesets API 返回 403，说明私有仓库
-需要 GitHub 方案支持。没有修改订阅或可见性，也没有据此声称合并保护已经生效。
+首次本地验收时，默认分支 arch 未受保护，私有仓库方案限制规则集。用户随后升级 GitHub Pro 并创建 PR #1；现在已核实 arch 和验收基线分支均要求 `Required checks`、严格同步基线并对管理员生效。已临时将 PR #1 从 draft 切到 ready：`Required checks=FAILURE` 时 GitHub 返回 `mergeStateStatus=BLOCKED`，随即恢复 draft，未执行合并。验证排除了 draft 本身造成的阻断，证据为 `dist/test-results/ci/pr1/required-check-merge-block.json`。
+
+## PR #1 首轮远端验收（2026-09-29）
+
+GitHub Actions 运行 `36439125099` 对应提交 `5723758f57160b9c1e2a87f3f72d83030be873f3`。完整快速检查/镜像验证、数据库契约、三个后端、Extension、Web、macOS ARM 和 Intel Desktop job 全部通过。已下载并核对后端 JUnit 与运行报告：Engine 5 E2E + 2 integration、Pulse 7 + 1、Worker 6 + 1；六份报告均 `passed=true`、`cleaned=true`、`interrupted=false`。`Required checks` 对四个失败项返回失败，没有静默跳过。
+
+- Android：runner 注解报告磁盘耗尽，构建中途失去日志和 artifact，不能判断设备流程。仅在一次性 Ubuntu Android job 移除无关的预装 .NET/Haskell/CodeQL 工具，保留 Android、Java 与 Node 工具链，并记录清理前后磁盘空间。
+- iOS：实际 `simctl` 输出为合法的 96,648 字节 JSON，但 runner 默认只返回末尾 64 KB，导致解析失败。该调用改为完整捕获；用远端真实清单驱动隔离 preflight 的回归实验，旧代码解析失败，修复后到达预期的运行时验证，仍不代表设备流程通过。
+- Windows：ASAR 库按宿主分隔符解析路径，smoke 却将路径统一为 `/` 后直接传回读取 API。现在读取时恢复原生分隔符，依赖关系计算保持 POSIX；实际 ASAR 模块的 Windows 路径回归实验通过，完整 Windows 运行仍待复验。
+- Storage：原 MinIO Docker Hub 镜像无法拉取，官方历史二进制地址也返回 410。测试改用 Coolify 维护者从相同上游版本构建的 GHCR 镜像，并锁定 OCI digest；这是一次性 S3 验收 fixture，不改变应用存储适配器或生产部署。镜像来源与构建方式见 https://github.com/coollabsio/minio 。真实发布契约仍需下一轮 CI 通过。
+
+代码审查：此次修复保留原来的依赖完整性、设备流程、会话请求与发布顺序断言；Android 清理只发生在一次性 hosted runner，镜像锁定不可变 digest，两个脚本修复均已复现旧代码失败与新代码通过。未更改生产认证行为或降低合并门禁。
 
 ## 尚未完成的验收
 
-- 阶段 2：本地真实协议、持久化及中断清理通过，Linux CI 验收待完成。
 - 阶段 3：Android 构建、页面完整性、模拟器启动与安装通过，Maestro 驱动启动 ANR/超时，设备流程失败；iOS 本机工具链阻碍，远端设备流程待验证。
-- 阶段 4：新配置的真实 PR、Linux/跨平台结果和远端合并阻断待验证；镜像构建、启动及发布前探针已在本地通过。
+- 阶段 4：真实 PR、Linux 后端与镜像、macOS 两架构及失败合并阻断已验证；Windows 与 Storage 的修复需要远端复验，完整矩阵仍待通过。

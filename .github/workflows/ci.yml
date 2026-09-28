@@ -303,6 +303,13 @@ jobs:
         with:
           node-version: 24.14.1
           cache: pnpm
+      - name: Make room for the Android native build
+        if: matrix.platform == 'android'
+        run: |
+          df -h . /tmp
+          # This hosted Android job does not use the preinstalled .NET/Haskell/CodeQL tools.
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          df -h . /tmp
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: temurin

@@ -66,7 +66,7 @@ jobs:
           node-version: 24.14.1
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: docker run -d --name ray-minio -p 9000:9000 -e MINIO_ROOT_USER=ray-test -e MINIO_ROOT_PASSWORD=ray-test-password minio/minio:RELEASE.2025-04-22T22-12-26Z server /data
+      - run: docker run -d --name ray-minio -p 9000:9000 -e MINIO_ROOT_USER=ray-test -e MINIO_ROOT_PASSWORD=ray-test-password ghcr.io/coollabsio/minio:RELEASE.2025-04-22T22-12-26Z@sha256:a4938f37f1be1841b8e7b627ad0207b265345fd0d063e42d7410c78af0e63e68 server /data
       - run: curl --retry 20 --retry-delay 1 --retry-all-errors --fail http://127.0.0.1:9000/minio/health/live
       - run: pnpm nx run desktop:publish-test
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

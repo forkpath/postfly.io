@@ -45,7 +45,8 @@ try {
   // Check every declared production dependency, including lazy-loaded branches.
   // A successful first window alone can miss a dependency collected at the wrong level.
   for (const file of ['package.json', ...packageFiles]) {
-    const dependencyPackage = JSON.parse(extractFile(archive, file).toString())
+    // ASAR traverses paths using the host separator; dependency lookup stays POSIX.
+    const dependencyPackage = JSON.parse(extractFile(archive, path.normalize(file)).toString())
     for (const dependency of Object.keys(dependencyPackage.dependencies || {})) {
       if (dependencyPackage.optionalDependencies?.[dependency]) continue
       let directory = path.posix.dirname(file)
