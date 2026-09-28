@@ -342,7 +342,11 @@ try {
         'generic/platform=iOS Simulator',
         '-derivedDataPath',
         derived,
-        'CODE_SIGNING_ALLOWED=NO',
+        // Xcode embeds simulator entitlements at link time; disabling signing
+        // removes the Keychain identity required by the real SecureStore module.
+        'CODE_SIGNING_ALLOWED=YES',
+        'CODE_SIGN_IDENTITY=-',
+        'DEVELOPMENT_TEAM=',
         `ARCHS=${process.arch === 'arm64' ? 'arm64' : 'x86_64'}`,
         'build'
       ],
@@ -358,8 +362,6 @@ try {
     await command('xcrun', ['simctl', 'bootstatus', device, '-b'], { timeout: 180_000 })
     await command('xcrun', ['simctl', 'install', device, artifact])
   }
-  const screenshots = resolve(report, 'screenshots')
-  await mkdir(screenshots)
   console.log(`Mobile ${platform}: ${device} ready; running Maestro flows.`)
   await command(
     maestro,
@@ -375,8 +377,6 @@ try {
       resolve(report, 'maestro'),
       '--debug-output',
       resolve(report, 'debug'),
-      '-e',
-      `SCREENSHOT_DIR=${screenshots}`,
       resolve(root, 'apps/mobile/.maestro')
     ],
     { timeout: 600_000 }

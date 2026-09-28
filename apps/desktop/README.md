@@ -74,8 +74,10 @@ pnpm ci:nx-cache-contracts
 - Vitest 覆盖状态机、失败重试、并发去重、IPC 来源与清理、界面动作、发布校验和上传顺序。
 - e2e 在独立测试包运行 Playwright Electron，检查 hash 登录路由/刷新、preload、窗口 IPC 和更新面板；仅该 profile 开启调试 Fuse。认证 API 使用测试响应。
 - smoke 将正式安全配置的本地包复制到临时目录启动，检查 ASAR、Fuses、生产依赖与固定就绪报告。`--desktop-smoke` 只写 userData/desktop-smoke.json 的固定事实，随后退出，不接受页面或代码输入。
-- update-e2e 生成 0.1.0/0.1.1 测试包，通过本地 HTTP 验证 404、断网、确认后下载、校验失败与重试。Windows 脚本尝试临时目录安装升级，但实际 userData 路径与自动重启断言仍待加强（见逐文件审查 G4）；macOS 未签名环境只验证真实检查和下载。
+- update-e2e 生成 0.1.0/0.1.1 测试包，通过本地 HTTP 验证 404、断网、确认后下载、校验失败与重试。Windows 实际安装 A、升级到 B 并重新启动，核对版本与原有 userData，最后停止本次测试进程并清理安装目录和缓存；macOS 未签名环境只验证真实检查和下载。
 - macOS 完整安装升级必须使用同一 Developer ID 签名、公证的 A/B 版本和 staging HTTPS 更新源，检查 B 的版本、重启以及原有 userData。无签名凭据不能宣称通过此项。
+
+测试 profile 使用独立应用标识、更新缓存和快捷方式名称；Windows 测试安装不创建桌面或开始菜单快捷方式，避免覆盖或启动正式应用的同名入口。正式安装配置保持不变。
 
 e2e 与 update-e2e 使用同一测试打包目录，当前应顺序执行。
 
@@ -84,7 +86,7 @@ e2e 与 update-e2e 使用同一测试打包目录，当前应顺序执行。
 本地 MinIO（仅测试凭据）：
 
 ```sh
-docker run --rm -d --name ray-minio -p 9000:9000 -e MINIO_ROOT_USER=ray-test -e MINIO_ROOT_PASSWORD=ray-test-password minio/minio:RELEASE.2025-04-22T22-12-26Z server /data
+docker run --rm -d --name ray-minio -p 9000:9000 -e MINIO_ROOT_USER=ray-test -e MINIO_ROOT_PASSWORD=ray-test-password ghcr.io/coollabsio/minio:RELEASE.2025-04-22T22-12-26Z@sha256:a4938f37f1be1841b8e7b627ad0207b265345fd0d063e42d7410c78af0e63e68 server /data
 DESKTOP_S3_ENDPOINT=http://127.0.0.1:9000 DESKTOP_S3_BUCKET=ray-desktop-test AWS_ACCESS_KEY_ID=ray-test AWS_SECRET_ACCESS_KEY=ray-test-password pnpm nx run desktop:publish-test
 docker stop ray-minio
 ```

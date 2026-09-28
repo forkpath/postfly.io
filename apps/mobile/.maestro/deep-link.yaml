@@ -16,4 +16,4 @@ name: Cold deep link preserves route parameters
       id: login-email
     timeout: 30000
 - assertVisible: framework@example.invalid
-- takeScreenshot: ${SCREENSHOT_DIR}/deep-link
+- takeScreenshot: deep-link

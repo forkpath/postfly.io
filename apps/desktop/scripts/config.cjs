@@ -105,7 +105,14 @@ function createConfig(env = process.env, platform = process.platform, arch = env
       oneClick: false,
       perMachine: false,
       allowToChangeInstallationDirectory: true,
-      deleteAppDataOnUninstall: false
+      deleteAppDataOnUninstall: false,
+      ...(profile === 'test'
+        ? {
+            shortcutName: env.DESKTOP_TEST_CACHE || 'Ray Test',
+            createDesktopShortcut: false,
+            createStartMenuShortcut: false
+          }
+        : {})
     },
     dmg: { sign: profile === 'release' }
   }

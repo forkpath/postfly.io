@@ -179,7 +179,43 @@ SDK 路径须匹配 hosted runner 的固定位置；本地 SDK 不做这项清�
 参考 [GitHub runner 清单](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md)
 及 [Emulator 的分区空间检查](https://android.googlesource.com/platform/external/qemu/+/refs/heads/emu-32-release/android-qemu2-glue/main.cpp)。
 
-## 本轮提交前待完成的验收
+## PR #1 第四轮远端验收（2026-09-29）
 
-- 阶段 3：两平台的真实 Maestro 流程仍待通过；原生构建成功不等于设备 E2E 成功。
-- 阶段 4：Windows 升级行为与进程/目录清理已有单独证据，合并后的完整流程仍待通过；同一 PR 提交的完整 `Required checks` 必须通过。独立 iOS 修复验证运行 `36457847442` 和 Windows 运行 `36459752396` 正在执行，后续结果以 PR #1 的检查与 artifacts 为准。
+运行 `36460925910` 对应提交 `0c3841f`。完整快速检查与真实镜像验证、
+数据库契约、Engine/Pulse/Worker、Web、Extension、Storage 和桌面三个平台
+均已通过。后端 22 个真实协议及集成用例通过，六份报告均为
+`passed=true, cleaned=true, interrupted=false`；发布镜像报告
+`a423182aba0b572e` 也满足相同条件。
+
+Windows 完整独立运行 `36459752396` 以及本轮 PR job 均已通过真实
+0.1.0 → 0.1.1 安装升级、重新启动、版本与 userData 保留检查，
+`installed=true`，`cleanup.json` 为 `cleaned=true`。进一步审查发现测试
+安装默认会使用正式应用的 `Ray.lnk`；测试 profile 现在关闭桌面/开始菜单
+快捷方式创建，并采用独立名称，避免 NSIS 启动已有正式快捷方式。
+独立运行 `36464075702` 的安装升级与清理通过，预先放置的桌面和开始菜单
+`Ray.lnk` 哨兵内容在安装后均保持不变。
+
+Android 的磁盘修复已越过模拟器创建：报告 `df0db157055391d2` 完成
+Release APK、安装、启动、欢迎页与冷深链接参数断言，并产生真实 session
+fixture 请求。两条流程仍在截图步骤失败，因为绝对路径落在 Maestro 2.10
+管理的单流程截图目录之外；导航后续步骤尚未运行。现在使用相对截图名称，
+由 Maestro 放入各流程的 `takeScreenshot` 目录，保留所有断言与截图。
+该次报告仍为 `passed=false, cleaned=true, interrupted=false`。
+参见 [Maestro 截图路径契约](https://docs.maestro.dev/api-reference/commands/takescreenshot)。
+
+iOS 独立运行 `36457847442` 的原生编译和安装成功，但真实 SecureStore
+因缺少 Keychain entitlement 导致启动崩溃。对旧包补签的诊断运行
+`36463583037` 又被系统拒绝启动，未作为交付方案。测试构建现在保留 Xcode
+自身的模拟器签名流程，使用本地 ad-hoc identity 和空 Development Team，
+由 Xcode 在链接阶段生成模拟器 entitlements；不再关闭代码签名，也不在
+产物上自行注入权限。不需要 Apple 证书，不替换 SecureStore、不绕过认证。
+
+## 当前验收边界
+
+- 阶段 3：Android 已有实际页面与深链接通过证据，但两个平台的完整 Maestro
+  流程仍待修复后的 CI 通过；原生构建成功不能代替设备 E2E。
+- 阶段 4：Windows 安装升级与清理已经完整通过，失败合并阻断也已验证。
+  同一 PR 提交的完整 `Required checks` 尚待通过，最终状态以
+  [PR #1 检查](https://github.com/forkpath/postfly.io/pull/1/checks) 和对应 artifacts 为准。
+- macOS Developer ID 签名升级、真机硬件、商店发布和真实第三方账户仍是显式
+  专项验收，不包含在默认无生产凭据的框架测试中。

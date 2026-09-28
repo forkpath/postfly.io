@@ -24,7 +24,9 @@ pnpm nx run mobile:e2e:ios
   `system-images;android-35;google_apis;x86_64`。需要可用的硬件虚拟化。
   构建前检查硬件加速，并记录 SDK 中已安装的 emulator 版本。
 - iOS 需要 macOS、Xcode 26.6、CocoaPods，以及配置文件指定的 iOS 26.5
-  Simulator runtime。测试构建关闭代码签名，不要求商店证书。
+  Simulator runtime。测试构建由 Xcode 使用本地 ad-hoc 签名，不要求开发者
+  或商店证书。保留 Xcode 在链接阶段生成的模拟器 entitlements，确保真实
+  SecureStore 能访问该测试应用的 Keychain；不能设置 `CODE_SIGNING_ALLOWED=NO`。
 
 Expo 57 的官方最低要求是 Xcode 26.4；本套件固定到 GitHub `macos-26`
 已提供的 Xcode 26.6 / iOS 26.5。可用 `DEVELOPER_DIR` 选择并行安装的
@@ -79,6 +81,9 @@ Android 使用软件图形渲染，macOS 关闭 Vulkan 以兼容本机 emulator�
 设备连接后持续保存 Android 日志，并保留完整退出前日志。Maestro 驱动启动上限
 设置为 180 秒，页面断言仍使用各流程自己的超时；驱动超时继续使测试失败。
 该设置见 [Maestro 官方连接超时说明](https://docs.maestro.dev/maestro-cli/run-your-first-test-with-the-maestro-cli)。
+
+流程中的截图使用相对名称，由 Maestro 写入该流程 artifact 的 `takeScreenshot`
+目录；不要传入指向报告目录其他位置的绝对路径，Maestro 会拒绝越出该目录。
 
 报告目录为 `dist/test-results/mobile/e2e/<platform>/<run-id>/`，含构建日志、
 JUnit、Maestro 诊断、截图、测试产物、bundle 页面检查、fixture 请求记录和 `run.json`。CI 应

@@ -7,7 +7,7 @@ name: Signed-out startup and navigation
     visible:
       id: welcome-login
     timeout: 30000
-- takeScreenshot: ${SCREENSHOT_DIR}/welcome
+- takeScreenshot: welcome
 - tapOn:
     id: welcome-login
 - assertVisible:
