@@ -72,7 +72,7 @@ pnpm nx run extension:e2e --skipNxCache
 
 边界：本地宿主为 macOS，基础设施运行于 Linux 容器；尚未取得 Linux GitHub Actions 通过记录，因此阶段 2 的远端验收留到阶段 4。DLQ 用例从最后一次重试开始，未声称整条五次退避链已执行。测试缩短单条 fixture 的租约等待；生产五分钟租约保持不变。外部副作用仍需业务幂等键。
 
-## 阶段 3：Mobile 设备入口（平台验收进行中）
+## 阶段 3：Mobile 设备入口（已实现，设备验收未通过）
 
 已交付独立应用标识、内嵌 JS Release 构建、Maestro 两条流程、固定工具下载校验、
 临时源码副本、专用模拟器与失败报告。YAML 语法检查通过；中断清理 helper 的
@@ -90,9 +90,13 @@ Android 首次原生构建触及初始 45 分钟上限，报告 `dfe33d713db4c7e
 
 第四次 `1a1d4967f2b83604` 通过实际原生 bundle 门禁（5910 个 sourcemap 来源），bundle 构建 5 分 7 秒、应用 APK 构建 29 分 33 秒。APK 为 66,200,036 字节，SHA-256 `2cac0ff770862ae1c27a2291a8c9f0c5331fde5c70e867da32849b4e4643c3e3`。模拟器 514.8 秒完成启动，APK 及 Maestro driver APK 安装成功，但随后出现 `AndroidDriverTimeoutException`，没有执行页面断言，也没有 fixture 请求。整体 `passed=false, cleaned=true, interrupted=false`，不能计作 E2E 通过。
 
-按 Maestro 官方指导设置 `MAESTRO_DRIVER_STARTUP_TIMEOUT=180000`，保留页面断言超时；新增设备连接后的持续日志，以及不截断的退出前日志。第五次完整入口正在复验。两个平台均不等于真机或商店包验收。
+按 Maestro 官方指导设置 `MAESTRO_DRIVER_STARTUP_TIMEOUT=180000`，保留页面断言超时；新增设备连接后的持续日志，以及不截断的退出前日志。第五次 `abe5e01b7ab3ae6f` 完整入口耗时 38 分 54 秒后退出 1，`passed=false, cleaned=true, interrupted=false`。bundle 构建 5 分 21 秒，APK 构建 21 分 7 秒；最终 bundle 5909 个来源及必需页面检查通过。APK 为 66,197,800 字节，SHA-256 `b274c8aad25ce73e7d137b1da12269678dcb483b11dc69be5711b54c860a246c`。
 
-## 阶段 4：CI/CD 门禁（已实现，本地与远端验收进行中）
+第五次设备日志明确记录 `dev.mobile.maestro` 启动 ANR，Android 终止驱动后，Maestro 再次报告 `AndroidDriverTimeoutException`。ANR 主线程处于 DEX 解压/加载，调度统计显示约 4.1 秒 CPU 执行和 27.5 秒运行队列等待；模拟器当时 CPU 接近满载，宿主 `CPU_Speed_Limit=29`。这些证据说明本轮存在显著资源压力，但不能据此排除其他驱动问题。没有页面断言、JUnit 用例或 fixture 请求；临时目录及所属模拟器/进程均已清理，不能计作 E2E 通过。诊断保存在该报告的 `device-live.log`、`driver-anr-dropbox.txt`、`maestro-anr.log` 和 `host-thermal.txt`。
+
+最终代码审查发现 `assembleRelease` 可能再次生成 bundle，因此在 APK 组装后增加相同页面清单的复查。该检查已针对第五次实际生成的最终 sourcemap 验证通过；这是组装结果检查，不改变上述设备失败结论。Android 需要在资源充足的环境继续验证，iOS 需要匹配的 Xcode/运行时；两个平台均不等于真机或商店包验收。
+
+## 阶段 4：CI/CD 门禁（已实现，本地检查通过，远端验收待完成）
 
 已增加 affected 选择、统一失败汇总、后端/扩展/Web/设备/Desktop job 和报告上传；
 修复只覆盖 dev/main 而遗漏实际 arch 默认分支的问题。发布工作流复用同一 SHA
@@ -117,5 +121,5 @@ Invalid URL；阶段 1 的无环境安装修复直接覆盖该原因。该旧运
 ## 尚未完成的验收
 
 - 阶段 2：本地真实协议、持久化及中断清理通过，Linux CI 验收待完成。
-- 阶段 3：Android 原生编译已成功，设备启动与 bundle 完整性修复后的完整流程仍在验证；iOS 本机工具链阻碍，远端设备流程待验证。
+- 阶段 3：Android 构建、页面完整性、模拟器启动与安装通过，Maestro 驱动启动 ANR/超时，设备流程失败；iOS 本机工具链阻碍，远端设备流程待验证。
 - 阶段 4：新配置的真实 PR、Linux/跨平台结果和远端合并阻断待验证；镜像构建、启动及发布前探针已在本地通过。

@@ -242,18 +242,19 @@ try {
       cwd: resolve(app, 'android'),
       timeout: 900_000
     })
-    const sourceMap = JSON.parse(
-      await readFile(
-        resolve(app, 'android/app/build/generated/sourcemaps/react/release/index.android.bundle.map'),
-        'utf8'
-      )
-    )
+    const sourceMapPath = resolve(app, 'android/app/build/generated/sourcemaps/react/release/index.android.bundle.map')
+    const sourceMap = JSON.parse(await readFile(sourceMapPath, 'utf8'))
     await writeFile(resolve(report, 'bundle-sources.json'), JSON.stringify(verifyMobileBundle(sourceMap), null, 2))
     console.log('Mobile android: application routes verified in the release bundle; assembling APK.')
     await command('sh', ['./gradlew', ':app:assembleRelease', ...gradleArgs], {
       cwd: resolve(app, 'android'),
       timeout: Math.max(1, buildDeadline - Date.now())
     })
+    // Gradle may regenerate the bundle while assembling the final APK.
+    await writeFile(
+      resolve(report, 'bundle-final-sources.json'),
+      JSON.stringify(verifyMobileBundle(JSON.parse(await readFile(sourceMapPath, 'utf8'))), null, 2)
+    )
     artifact = resolve(report, 'app-release.apk')
     await copyFile(resolve(app, 'android/app/build/outputs/apk/release/app-release.apk'), artifact)
     console.log('Mobile android: release APK built; starting the isolated emulator.')

@@ -45,7 +45,8 @@ runner 把当前 Git 跟踪及未忽略的 Mobile/共享库源码复制到临时
 `ios/`、`android/` 和应用配置不会被 prebuild 改写。
 默认 Expo Router 入口在副本内包装为本地入口，仍加载真实 `expo-router/entry`，
 避免原生打包从副本外的依赖路径启动而遗漏页面。Android 先生成内嵌 bundle，
-检查 sourcemap 包含布局、欢迎页和登录页，再编译应用 APK；缺失任何页面均失败。
+检查 sourcemap 包含布局、欢迎页和登录页，再编译应用 APK，并复查最终 bundle；
+缺失任何页面均失败。
 
 测试应用是 `com.ray.mobile.e2e` / `Ray E2E`，scheme 为 `ray-e2e`，OTA 关闭。
 正式应用仍使用原来的标识和更新配置。测试包允许 HTTP 以连接本机 fixture，不添加
@@ -78,6 +79,8 @@ JUnit、Maestro 诊断、截图、测试产物、bundle 页面检查、fixture �
 深链接参数；选择器使用实际组件的 `testID`，不使用屏幕坐标。复用已有框架
 页面，为新业务增加自己的数据准备与可观察断言。复杂准备逻辑放在 Node
 编排或后端 fixture 中，不在 YAML 内实现业务逻辑。
+替换框架起始页面时，同步更新 `.maestro` 流程与
+`scripts/testing/mobile-bundle.mjs` 的必需页面清单，保留对实际测试页面的打包检查。
 
 必须包含真正的失败断言；不要用 `optional: true` 掩盖核心路径失败。需要
 第三方集成的专项测试单独显式启用，缺少前置条件时明确报告，不能悄悄当作通过。
