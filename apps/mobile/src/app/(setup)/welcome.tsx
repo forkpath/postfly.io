@@ -77,11 +77,16 @@ const WelcomePage = () => {
         </View>
 
         <View className="mt-auto gap-3">
-          <Button size="lg" onPress={() => router.navigate(pathsConfig.setup.auth.register)}>
+          <Button testID="welcome-register" size="lg" onPress={() => router.navigate(pathsConfig.setup.auth.register)}>
             <Text>{t('getStarted')}</Text>
           </Button>
 
-          <Button variant="outline" size="lg" onPress={() => router.navigate(pathsConfig.setup.auth.login)}>
+          <Button
+            testID="welcome-login"
+            variant="outline"
+            size="lg"
+            onPress={() => router.navigate(pathsConfig.setup.auth.login)}
+          >
             <Text>
               {t('register.alreadyHaveAccount')} {t('login.cta')}
             </Text>

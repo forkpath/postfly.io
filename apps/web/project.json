@@ -79,6 +79,24 @@
         "cwd": "apps/web",
         "command": "tsc --noEmit -p tsconfig.app.json"
       }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/test-results/web/unit", "{workspaceRoot}/coverage/apps/web"],
+      "options": {
+        "command": "vitest run --config vitest.config.mts",
+        "cwd": "apps/web"
+      }
+    },
+    "typecheck-tests": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.spec.json",
+        "cwd": "apps/web"
+      }
     }
   }
 }

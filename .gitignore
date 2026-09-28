@@ -20,6 +20,7 @@ expo-env.d.ts
 
 # wxt
 .wxt
+build-e2e/
 web-ext.config.ts
 
 # dependencies

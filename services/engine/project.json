@@ -3,7 +3,11 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "services/engine/src",
   "projectType": "application",
-  "tags": ["type:app", "runtime:node", "domain:composition"],
+  "tags": [
+    "type:app",
+    "runtime:node",
+    "domain:composition"
+  ],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
@@ -14,7 +18,9 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/services/engine"],
+      "outputs": [
+        "{workspaceRoot}/dist/services/engine"
+      ],
       "options": {
         "command": "webpack-cli build --config-node-env production",
         "cwd": "services/engine"
@@ -26,7 +32,9 @@
       }
     },
     "package": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:noop",
       "cache": false
     },
@@ -34,7 +42,9 @@
       "continuous": true,
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "options": {
         "buildTarget": "engine:build",
         "runBuildTargetDependencies": false,
@@ -48,6 +58,55 @@
           "buildTarget": "engine:build:production"
         }
       }
+    },
+    "test-integration": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [
+        "{workspaceRoot}/dist/test-results/engine/integration"
+      ],
+      "options": {
+        "command": "node scripts/testing/run-backend.mjs engine integration"
+      }
+    },
+    "integration-run": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "vitest run --config vitest.integration.config.mts",
+        "cwd": "services/engine"
+      }
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [
+        "{workspaceRoot}/dist/test-results/engine/e2e"
+      ],
+      "options": {
+        "command": "node scripts/testing/run-backend.mjs engine e2e"
+      }
+    },
+    "e2e-run": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "vitest run --config vitest.e2e.config.mts",
+        "cwd": "services/engine"
+      }
+    },
+    "typecheck-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.spec.json",
+        "cwd": "services/engine"
+      }
+    },
+    "test": {
+      "outputs": [
+        "{workspaceRoot}/dist/test-results/engine/unit",
+        "{workspaceRoot}/coverage/services/engine"
+      ]
     }
   }
 }

@@ -42,6 +42,7 @@ export class LoggerModule {
 
             return {
               pinoHttp: {
+                redact: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
                 transport: {
                   targets
                 },

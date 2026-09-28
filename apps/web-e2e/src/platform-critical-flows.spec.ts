@@ -59,9 +59,9 @@ test.describe('authenticated SaaS critical path', () => {
     await expectOk(session, 'get session')
     expect((await session.json()) as unknown).toBeTruthy()
 
-    const billing = await request.get(`${apiBaseURL}/api/billing/me`)
+    const billing = await request.get(`${apiBaseURL}/api/v1/billing/me`)
     await expectOk(billing, 'get user billing')
-    expect(Array.isArray((await billing.json()) as unknown)).toBe(true)
+    expect(await billing.json()).toMatchObject({ code: 0, data: expect.any(Array) })
 
     await signOut(request)
     const signedOutSession = await request.get(`${apiBaseURL}/api/auth/get-session`)
@@ -91,9 +91,9 @@ test.describe('authenticated SaaS critical path', () => {
       })
       await expectOk(activated, 'set active organization')
 
-      const summary = await request.get(`${apiBaseURL}/api/organizations/${organizationId}/billing`)
+      const summary = await request.get(`${apiBaseURL}/api/v1/organizations/${organizationId}/billing`)
       await expectOk(summary, 'get organization billing')
-      expect(Array.isArray((await summary.json()) as unknown)).toBe(true)
+      expect(await summary.json()).toMatchObject({ code: 0, data: expect.any(Array) })
     } finally {
       const deleted = await request.post(`${apiBaseURL}/api/auth/organization/delete`, {
         data: { organizationId }
@@ -152,7 +152,7 @@ test.describe('authenticated SaaS critical path', () => {
       requiredEnvironment(ownerPassword, 'E2E_OWNER_PASSWORD')
     )
     const checkout = await request.post(
-      `${apiBaseURL}/api/organizations/${requiredEnvironment(seededOrganizationId, 'E2E_ORGANIZATION_ID')}/billing/checkout`,
+      `${apiBaseURL}/api/v1/organizations/${requiredEnvironment(seededOrganizationId, 'E2E_ORGANIZATION_ID')}/billing/checkout`,
       {
         data: {
           variantId: requiredEnvironment(process.env['E2E_STRIPE_VARIANT_ID'], 'E2E_STRIPE_VARIANT_ID'),
@@ -181,10 +181,10 @@ test.describe('organization member authorization', () => {
     )
 
     const organizationId = requiredEnvironment(seededOrganizationId, 'E2E_ORGANIZATION_ID')
-    const summary = await request.get(`${apiBaseURL}/api/organizations/${organizationId}/billing`)
+    const summary = await request.get(`${apiBaseURL}/api/v1/organizations/${organizationId}/billing`)
     await expectOk(summary, 'member reads organization billing')
 
-    const checkout = await request.post(`${apiBaseURL}/api/organizations/${organizationId}/billing/checkout`, {
+    const checkout = await request.post(`${apiBaseURL}/api/v1/organizations/${organizationId}/billing/checkout`, {
       data: {
         variantId: process.env['E2E_STRIPE_VARIANT_ID'] ?? 'permission-check-only',
         successUrl: 'http://localhost:3000/user/billing?checkout=success',

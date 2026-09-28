@@ -1,0 +1,19 @@
+appId: com.ray.mobile.e2e
+name: Cold deep link preserves route parameters
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: welcome-login
+    timeout: 30000
+- stopApp
+- openLink:
+    link: ray-e2e:///auth/login?email=framework%40example.invalid
+    autoVerify: true
+- extendedWaitUntil:
+    visible:
+      id: login-email
+    timeout: 30000
+- assertVisible: framework@example.invalid
+- takeScreenshot: ${SCREENSHOT_DIR}/deep-link

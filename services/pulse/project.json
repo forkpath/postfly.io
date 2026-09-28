@@ -3,11 +3,17 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "services/pulse/src",
   "projectType": "application",
-  "tags": ["type:app", "runtime:node", "domain:composition"],
+  "tags": [
+    "type:app",
+    "runtime:node",
+    "domain:composition"
+  ],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/services/pulse"],
+      "outputs": [
+        "{workspaceRoot}/dist/services/pulse"
+      ],
       "options": {
         "command": "webpack-cli build --config-node-env production",
         "cwd": "services/pulse"
@@ -19,7 +25,9 @@
       }
     },
     "package": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "executor": "nx:noop",
       "cache": false
     },
@@ -27,7 +35,9 @@
       "continuous": true,
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "options": {
         "buildTarget": "pulse:build",
         "runBuildTargetDependencies": false
@@ -50,10 +60,14 @@
         "{workspaceRoot}/eslint.config.mjs",
         "{workspaceRoot}/services/pulse/eslint.config.mjs",
         {
-          "externalDependencies": ["eslint"]
+          "externalDependencies": [
+            "eslint"
+          ]
         }
       ],
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
         "cwd": "services/pulse",
         "command": "eslint ."
@@ -66,13 +80,18 @@
         "default",
         "^production",
         {
-          "externalDependencies": ["vitest"]
+          "externalDependencies": [
+            "vitest"
+          ]
         },
         {
           "env": "CI"
         }
       ],
-      "outputs": ["{workspaceRoot}/coverage/services/pulse"],
+      "outputs": [
+        "{workspaceRoot}/dist/test-results/pulse/unit",
+        "{workspaceRoot}/coverage/services/pulse"
+      ],
       "options": {
         "cwd": "services/pulse",
         "command": "vitest"
@@ -85,12 +104,57 @@
         "production",
         "^production",
         {
-          "externalDependencies": ["typescript"]
+          "externalDependencies": [
+            "typescript"
+          ]
         }
       ],
       "options": {
         "cwd": "services/pulse",
         "command": "tsc --noEmit -p tsconfig.app.json"
+      }
+    },
+    "test-integration": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [
+        "{workspaceRoot}/dist/test-results/pulse/integration"
+      ],
+      "options": {
+        "command": "node scripts/testing/run-backend.mjs pulse integration"
+      }
+    },
+    "integration-run": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "vitest run --config vitest.integration.config.mts",
+        "cwd": "services/pulse"
+      }
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [
+        "{workspaceRoot}/dist/test-results/pulse/e2e"
+      ],
+      "options": {
+        "command": "node scripts/testing/run-backend.mjs pulse e2e"
+      }
+    },
+    "e2e-run": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "vitest run --config vitest.e2e.config.mts",
+        "cwd": "services/pulse"
+      }
+    },
+    "typecheck-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.spec.json",
+        "cwd": "services/pulse"
       }
     }
   }

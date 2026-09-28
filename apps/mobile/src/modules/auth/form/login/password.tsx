@@ -58,6 +58,7 @@ export const PasswordLoginForm = memo<PasswordLoginFormProps>(
                 {...field}
                 onChangeText={field.onChange}
                 autoCapitalize="none"
+                testID="login-email"
                 autoComplete="email"
                 inputMode="email"
                 keyboardType="email-address"
@@ -78,6 +79,7 @@ export const PasswordLoginForm = memo<PasswordLoginFormProps>(
               <View className="flex-row items-center justify-between">
                 <FieldLabel>{t('password')}</FieldLabel>
                 <Link
+                  testID="login-forgot-password"
                   href={pathsConfig.setup.auth.forgotPassword}
                   className="text-muted-foreground self-end font-sans text-sm underline underline-offset-4"
                 >

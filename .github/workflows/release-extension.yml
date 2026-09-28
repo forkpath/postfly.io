@@ -9,15 +9,35 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 permissions:
+  actions: read
   contents: write
 
 jobs:
+  verify-release-ref:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require a version tag
+        env:
+          RELEASE_REF: ${{ github.ref }}
+        run: |
+          [[ "$RELEASE_REF" == refs/tags/v* ]] || { echo 'Select a v* tag when dispatching an extension release'; exit 1; }
+
+  quality-gate:
+    needs: verify-release-ref
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ github.sha }}
+      full: true
+
   build-and-release-extension:
+    needs: quality-gate
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
@@ -105,15 +125,43 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifacts
-          find apps/extension -type f -name '*.zip' -print -exec cp {} artifacts/ \;
+          find apps/extension/build -maxdepth 1 -type f -name '*.zip' -print -exec cp {} artifacts/ \;
           if [ -z "$(ls -A artifacts)" ]; then
             echo '::error::No extension zip artifacts found after build'
             exit 1
           fi
           ls -la artifacts
 
+      - name: Load the exact Chromium release archive
+        run: |
+          set -euo pipefail
+          mapfile -t packages < <(find artifacts -maxdepth 1 -type f -name '*chrome*.zip')
+          test "${#packages[@]}" -eq 1
+          mkdir -p dist/extension-release
+          unzip -q "${packages[0]}" -d dist/extension-release
+          test -f dist/extension-release/manifest.json
+          (cd artifacts && sha256sum *.zip > SHA256SUMS)
+          printf '%s\n' "$GITHUB_SHA" > artifacts/COMMIT
+          echo "EXTENSION_BUILD_DIR=$GITHUB_WORKSPACE/dist/extension-release" >> "$GITHUB_ENV"
+
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Verify the archive before publishing
+        run: xvfb-run --auto-servernum pnpm nx run extension:e2e-artifact
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: extension-release-verification
+          path: |
+            dist/test-results/extension
+            artifacts
+          if-no-files-found: warn
+
       - name: Upload assets to GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
-          files: artifacts/*.zip
+          files: |
+            artifacts/*.zip
+            artifacts/SHA256SUMS
+            artifacts/COMMIT
           generate_release_notes: true

@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react'
 import { appConfig } from '~/config/app'
 import { storage as browserStorage } from 'wxt/utils/storage'
 
+import { logger } from '@libs/common'
+
 export const StorageKey = {
   THEME: 'local:theme'
 } as const
@@ -29,20 +31,28 @@ export const useStorage = <K extends StorageKey>(key: K) => {
   const [value, setValue] = useState<Value<K> | null>(null)
 
   useEffect(() => {
+    let disposed = false
+    let changed = false
     const unwatch = item.watch(value => {
+      changed = true
       setValue(value)
     })
 
+    void item
+      .getValue()
+      .then(value => {
+        // A change event may arrive before the initial async read completes.
+        // Never replace the newer preference with that stale snapshot.
+        if (!disposed && !changed) setValue(value)
+      })
+      .catch(error => {
+        if (!disposed) logger.error('Failed to read extension storage:', error)
+      })
+
     return () => {
+      disposed = true
       unwatch()
     }
-  }, [item])
-
-  useEffect(() => {
-    void (async () => {
-      const value = await item.getValue()
-      setValue(value)
-    })()
   }, [item])
 
   const remove = () => {

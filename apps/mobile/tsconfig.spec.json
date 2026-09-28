@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "jest"],
+    "noEmit": true
+  },
+  "include": ["tests/**/*.ts", "tests/**/*.tsx", "uniwind-types.d.ts", "../../libs/i18n/src/typings/**/*.d.ts"],
+  "exclude": ["node_modules"]
+}

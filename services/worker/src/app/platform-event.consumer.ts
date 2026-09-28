@@ -69,23 +69,30 @@ export class PlatformEventConsumer {
       version: envelope.version
     })
     if (!claimed) {
-      this.logger.debug(`Duplicate or active message ignored: ${envelope.id}`)
+      const delay = await this.inbox.retryAfter(CONSUMER, envelope.id)
+      if (delay !== undefined) {
+        // A restarted consumer can see a lease left by a crashed process.
+        // Confirm a delayed copy before acknowledging this delivery.
+        await this.retry(envelope, this.attempt(raw), raw, delay)
+      } else {
+        this.logger.debug(`Processed duplicate ignored: ${envelope.id}`)
+      }
       return
     }
 
     const attempt = this.attempt(raw)
     try {
       await handler(envelope)
-      await this.inbox.complete(CONSUMER, envelope.id)
+      await this.inbox.complete(CONSUMER, envelope.id, claimed)
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error)
       if (attempt >= MAX_ATTEMPTS) {
-        await this.inbox.fail(CONSUMER, envelope.id, reason, false)
+        if (!(await this.inbox.fail(CONSUMER, envelope.id, reason, false, claimed))) return
         await this.deadLetter(envelope, reason, raw)
         return
       }
 
-      await this.inbox.fail(CONSUMER, envelope.id, reason, true)
+      if (!(await this.inbox.fail(CONSUMER, envelope.id, reason, true, claimed))) return
       await this.retry(envelope, attempt + 1, raw)
     }
   }
@@ -95,8 +102,12 @@ export class PlatformEventConsumer {
     return Number.isInteger(candidate) && candidate > 0 ? candidate : 1
   }
 
-  private async retry(envelope: EventEnvelopeV1<unknown>, attempt: number, raw: RawMessage) {
-    const delay = retryDelayMs(attempt - 1)
+  private async retry(
+    envelope: EventEnvelopeV1<unknown>,
+    attempt: number,
+    raw: RawMessage,
+    delay = retryDelayMs(attempt - 1)
+  ) {
     await this.amqp.managedChannel.sendToQueue('platform.smoke.retry', Buffer.from(JSON.stringify(envelope)), {
       persistent: true,
       expiration: String(delay),

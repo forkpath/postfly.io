@@ -9,6 +9,7 @@ env:
   IMAGE_PREFIX: ghcr.io/${{ github.repository }}
 
 permissions:
+  actions: read
   contents: read
   packages: write
 
@@ -23,16 +24,25 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-      - name: Ensure selected release belongs to main
+      - name: Ensure selected release belongs to the release branch
         shell: bash
+        env:
+          RELEASE_BRANCH: ${{ vars.RELEASE_BRANCH || github.event.repository.default_branch }}
         run: |
           set -euo pipefail
-          git fetch origin main --depth=1
-          tag_commit="$(git rev-list -n 1 "$GITHUB_REF")"
-          git merge-base --is-ancestor "$tag_commit" FETCH_HEAD
+          git check-ref-format --branch "$RELEASE_BRANCH"
+          git fetch origin "$RELEASE_BRANCH"
+          git merge-base --is-ancestor "$GITHUB_SHA" FETCH_HEAD
+
+  quality-gate:
+    needs: verify-branch
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ github.sha }}
+      full: true
 
   build-and-push:
-    needs: verify-branch
+    needs: quality-gate
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -54,11 +64,11 @@ jobs:
       VITE_API_BASE_URL: ${{ vars.PUBLIC_ORIGIN }}
       CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
     outputs:
-      engine: ${{ steps.engine.outputs.digest }}
-      web: ${{ steps.web.outputs.digest }}
-      pulse: ${{ steps.pulse.outputs.digest }}
-      worker: ${{ steps.worker.outputs.digest }}
-      migrator: ${{ steps.migrator.outputs.digest }}
+      engine: ${{ steps.publish.outputs.engine }}
+      web: ${{ steps.publish.outputs.web }}
+      pulse: ${{ steps.publish.outputs.pulse }}
+      worker: ${{ steps.publish.outputs.worker }}
+      migrator: ${{ steps.publish.outputs.migrator }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -77,8 +87,8 @@ jobs:
           test -n "$CONTACT_EMAIL" || { echo 'Set the CONTACT_EMAIL repository variable'; exit 1; }
       - name: Initialize a fresh database
         run: pnpm nx run pg-dao:deploy
-      - name: Full release verification
-        run: pnpm nx run-many -t lint,typecheck,test,build --all
+      - name: Build using the release configuration
+        run: pnpm nx run-many -t build -p web,engine,pulse,worker --nxBail
       - name: Validate database and auth contracts
         run: pnpm nx run-many -t validate,schema-check -p pg-dao,auth-server --nxBail
       - name: Prove Prisma generation does not mutate the auth contract
@@ -98,36 +108,56 @@ jobs:
         with:
           context: .
           file: docker/engine.Dockerfile
-          push: true
+          load: true
           tags: ${{ env.IMAGE_PREFIX }}/engine:${{ github.sha }}
       - id: web
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           file: docker/web.Dockerfile
-          push: true
+          load: true
           tags: ${{ env.IMAGE_PREFIX }}/web:${{ github.sha }}
       - id: pulse
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           file: docker/pulse.Dockerfile
-          push: true
+          load: true
           tags: ${{ env.IMAGE_PREFIX }}/pulse:${{ github.sha }}
       - id: worker
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           file: docker/worker.Dockerfile
-          push: true
+          load: true
           tags: ${{ env.IMAGE_PREFIX }}/worker:${{ github.sha }}
       - id: migrator
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           file: docker/migrator.Dockerfile
-          push: true
+          load: true
           tags: ${{ env.IMAGE_PREFIX }}/migrator:${{ github.sha }}
+
+      - name: Run the exact release images with isolated infrastructure
+        id: verify-images
+        run: node scripts/testing/run-backend.mjs release artifact
+        env:
+          RAY_RELEASE_IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          RAY_RELEASE_IMAGE_TAG: ${{ github.sha }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: release-image-verification
+          path: dist/test-results/release
+          if-no-files-found: warn
+      - name: Publish only the tested images
+        id: publish
+        run: node scripts/release/publish-verified-images.mjs
+        env:
+          VERIFIED_IMAGE_REPORT: ${{ steps.verify-images.outputs.report }}
+          RAY_RELEASE_IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          RAY_RELEASE_IMAGE_TAG: ${{ github.sha }}
 
   deploy:
     needs: build-and-push
@@ -166,3 +196,10 @@ jobs:
             set -euo pipefail
             chmod +x "$DEPLOY_PATH/scripts/release/deploy.sh"
             "$DEPLOY_PATH/scripts/release/deploy.sh"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.1
+      - name: Verify the deployed framework through its public gateway
+        run: node scripts/release/framework-smoke.mjs
+        env:
+          SMOKE_BASE_URL: ${{ vars.PUBLIC_ORIGIN }}

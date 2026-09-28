@@ -24,7 +24,13 @@ export const BaseHeader = ({ onBack, title }: BaseHeaderProps) => {
     >
       <View className="h-12 w-full flex-row items-center justify-center gap-3 pb-1">
         {onBack && (
-          <Button size="icon" variant="outline" onPress={() => onBack()} className="absolute bottom-2 left-6">
+          <Button
+            testID="navigation-back"
+            size="icon"
+            variant="outline"
+            onPress={() => onBack()}
+            className="absolute bottom-2 left-6"
+          >
             <Icons.ChevronLeft width={22} height={22} className="text-muted-foreground" />
           </Button>
         )}

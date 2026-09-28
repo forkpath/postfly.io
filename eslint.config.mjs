@@ -40,6 +40,19 @@ export default [
     }
   },
   {
+    files: ['{apps,services,libs}/**/src/**/*.{ts,tsx}'],
+    ignores: ['**/*.spec.{ts,tsx}', '**/*.test.{ts,tsx}', '**/tests/**', 'libs/testing-server/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "ImportDeclaration[source.value='@libs/testing-server']",
+          message: 'Server test fixtures may only be imported from test code.'
+        }
+      ]
+    }
+  },
+  {
     plugins: {
       import: importPlugin
     }
@@ -47,6 +60,7 @@ export default [
   {
     ignores: [
       '**/build',
+      '**/build-e2e',
       '**/dist',
       '**/out-tsc',
       '**/.output',

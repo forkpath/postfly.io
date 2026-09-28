@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "defaultBase": "dev",
+  "defaultBase": "arch",
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
@@ -27,6 +27,9 @@
       }
     ],
     "viteBuildEnvironment": [
+      {
+        "env": "RAY_EXTENSION_E2E"
+      },
       {
         "env": "NODE_ENV"
       },
@@ -107,6 +110,9 @@
       }
     ],
     "expoBuildEnvironment": [
+      {
+        "env": "RAY_MOBILE_E2E"
+      },
       {
         "env": "NODE_ENV"
       },
@@ -293,7 +299,7 @@
       "options": {
         "testTargetName": "test",
         "ciTargetName": "test-ci",
-        "testMode": "watch"
+        "testMode": "run"
       }
     },
     {

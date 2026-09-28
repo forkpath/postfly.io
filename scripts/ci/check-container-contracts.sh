@@ -11,6 +11,7 @@ sh -n scripts/release/migrator-entrypoint.sh
 sh -n docker/kong/entrypoint.sh
 node --check scripts/release/smoke-test.mjs
 node --check scripts/release/pulse-smoke-test.mjs
+node --check scripts/release/framework-smoke.mjs
 
 # Do not read the developer's .env or connect to their infrastructure.
 RAY_ENV_FILE="$(mktemp)"

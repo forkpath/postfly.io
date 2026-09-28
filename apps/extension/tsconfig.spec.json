@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": ["node", "vite/client", "chrome"],
+    "resolveJsonModule": true
+  },
+  "include": [
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
+    "e2e/**/*.ts",
+    "vitest.config.mts",
+    "playwright.config.mts",
+    "src/**/*.d.ts",
+    "../../libs/i18n/src/typings/**/*.d.ts"
+  ],
+  "exclude": ["node_modules"]
+}

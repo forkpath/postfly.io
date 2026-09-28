@@ -66,3 +66,39 @@ pnpm nx run web-e2e:e2e
 | `runtime-boundaries.test.mjs` | 实际执行 ESLint、浏览器打包和 Native 环境读取检查 | 防止运行时边界规则失效 |
 
 它们不参与新项目初始化，也不要求给每个包装脚本单独写测试。容器解析检查、真实启动、第三方沙箱测试分别报告，不以其中一项代替其他项。
+
+## Mobile、Extension、Web 单元测试
+
+```sh
+pnpm nx run-many -t test,typecheck-tests -p mobile,extension,web
+pnpm nx run mobile:test -- --watch
+pnpm nx run extension:test -- --watch
+```
+
+默认 `test` 执行完退出，零用例或断言失败返回非零。`typecheck-tests` 单独检查用例与 fixture 的类型；应用编译不加载 Jest globals。单测无需根 `.env`、生产账户或运行中的后端。JUnit 位于 `dist/test-results/<project>/unit/junit.xml`，按需传 `--coverage` 时覆盖率位于 `coverage/apps/<project>`。
+
+- Mobile：在 `apps/mobile/tests` 新增 `*.spec.ts(x)`，使用与 Expo 57 匹配的 `jest-expo`、RN preset 和 Testing Library。v14 的 `render`、`renderHook`、交互必须 `await`。参考 `settings-tile.spec.tsx` 的真实原生按钮、`copy-to-clipboard.spec.ts` 的原生适配器正反例，以及 `router.spec.tsx` 的测试路由与深链接参数。测试路由不放入 `src/app`。
+- Extension：在 `apps/extension/tests` 新增 `*.spec.ts(x)`。官方 WXT fake browser 每例重置；测试实际存储封装、消息分发和错误边界。WXT 0.20 的 `WxtVitest` 即使禁用配置文件仍调用 dotenv，因此独立测试配置直接使用其 fake browser 并禁用环境文件读取。浏览器替身不能证明扩展权限或真实注入能力。
+- Web：在 `apps/web/src` 与被测模块相邻添加 `*.spec.ts(x)`。专用 Vitest 配置不加载 TanStack Start/Nitro 的生产构建插件。参考身份同步 Provider 和定时器生命周期的用例。
+
+Jest 与 Vitest 的用例使用各自入口，根 Vitest 不收集 Mobile Jest 或 Playwright 文件。不同套件可共享普通测试数据；原生 mock、DOM fixture 不混入公共运行时代码。
+
+## Extension 真实浏览器测试
+
+```sh
+pnpm exec playwright install chromium
+pnpm nx run extension:e2e
+# 兼容旧命令：构建并验证生产配置的 Chrome 产物
+pnpm nx run extension:smoke
+```
+
+`extension:e2e` 自动构建 `build-e2e/chrome-mv3-e2e`，使用固定本地地址并关闭可选监控/分析提供商，每个用例创建并清理独立 Chromium profile。它验证五个扩展页面的 background messaging、重新加载、真实 storage，以及 content script 的交互。只替换外部 HTTP 认证响应，不替换扩展消息或 storage。测试构建没有认证绕过，与正式产物目录隔离。
+
+在 `apps/extension/e2e` 添加用例并从 `./fixtures` 导入 `test` 和 `expect`。fixture 提供真实 `context`、`page`、`extensionId`，自动收集页面错误、trace、失败截图并关闭浏览器、删除 profile。报告位于 `dist/test-results/extension/e2e`；查看 HTML 报告可用 `pnpm exec playwright show-report dist/test-results/extension/e2e/html`。Firefox 的构建检查不等于 Firefox 扩展运行验收。
+# 后端真实依赖测试
+
+Engine、Pulse、Worker 提供独立的 `test-integration` 与 `e2e` 入口，自动创建和清理一次性数据库及消息环境。运行方式、数据 fixture、报告目录和新增用例说明见 [后端框架测试指南](testing-backend.md)。实际通过情况以 [阶段验收记录](testing-framework-validation.md) 为准。
+
+Mobile 原生设备的固定工具、隔离测试构建和 Maestro 流程见 [设备测试指南](testing-mobile.md)。
+
+PR 调度、必需检查、发布产物验证及部署探针见 [测试与发布门禁](testing-ci.md)。

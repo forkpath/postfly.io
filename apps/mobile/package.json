@@ -96,9 +96,16 @@
   },
   "devDependencies": {
     "@babel/core": "catalog:",
+    "@react-native/jest-preset": "0.86.3",
+    "@testing-library/react-native": "14.0.1",
+    "@types/jest": "29.5.14",
     "@types/node": "catalog:node24",
     "@types/react": "catalog:react19",
     "babel-preset-expo": "catalog:native",
+    "jest": "29.7.0",
+    "jest-expo": "57.0.5",
+    "jest-junit": "16.0.0",
+    "test-renderer": "1.0.0",
     "typescript": "catalog:"
   }
 }

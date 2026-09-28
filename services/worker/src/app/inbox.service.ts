@@ -5,14 +5,19 @@ import { Injectable } from '@nestjs/common'
 import { PrismaService } from '@libs/pg-dao'
 
 interface ClaimedInboxRow {
-  id: string
+  attemptCount: number
 }
 
 @Injectable()
 export class InboxService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async claim(input: { consumer: string; messageId: string; eventType: string; version: number }): Promise<boolean> {
+  async claim(input: {
+    consumer: string
+    messageId: string
+    eventType: string
+    version: number
+  }): Promise<number | undefined> {
     const id = randomUUID()
     const rows = await this.prisma.$queryRaw<ClaimedInboxRow[]>`
       INSERT INTO "public"."worker_inbox" (
@@ -34,15 +39,24 @@ export class InboxService {
           OR "worker_inbox"."lease_until" < NOW()
           OR "worker_inbox"."status" IN ('failed', 'retrying')
         )
-      RETURNING "id"
+      RETURNING "attempt_count" AS "attemptCount"
     `
 
-    return rows.length === 1
+    return rows[0]?.attemptCount
   }
 
-  async complete(consumer: string, messageId: string): Promise<void> {
-    await this.prisma.inboxMessage.update({
+  async retryAfter(consumer: string, messageId: string): Promise<number | undefined> {
+    const row = await this.prisma.inboxMessage.findUnique({
       where: { consumer_messageId: { consumer, messageId } },
+      select: { status: true, leaseUntil: true }
+    })
+    if (row?.status === 'processed') return undefined
+    return Math.max(1000, Math.min(30_000, (row?.leaseUntil?.getTime() ?? Date.now()) - Date.now() + 100))
+  }
+
+  async complete(consumer: string, messageId: string, attemptCount: number): Promise<boolean> {
+    const result = await this.prisma.inboxMessage.updateMany({
+      where: { consumer, messageId, attemptCount, status: 'processing' },
       data: {
         status: 'processed',
         processedAt: new Date(),
@@ -50,16 +64,24 @@ export class InboxService {
         lastError: null
       }
     })
+    return result.count === 1
   }
 
-  async fail(consumer: string, messageId: string, error: string, retrying: boolean): Promise<void> {
-    await this.prisma.inboxMessage.update({
-      where: { consumer_messageId: { consumer, messageId } },
+  async fail(
+    consumer: string,
+    messageId: string,
+    error: string,
+    retrying: boolean,
+    attemptCount: number
+  ): Promise<boolean> {
+    const result = await this.prisma.inboxMessage.updateMany({
+      where: { consumer, messageId, attemptCount, status: 'processing' },
       data: {
         status: retrying ? 'retrying' : 'failed',
         leaseUntil: null,
         lastError: error.slice(0, 4000)
       }
     })
+    return result.count === 1
   }
 }

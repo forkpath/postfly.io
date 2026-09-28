@@ -17,6 +17,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@libs/testing-server": ["libs/testing-server/src/index.ts"],
       "@libs/mongo-dao": ["libs/mongo-dao/src/index.ts"],
       "@libs/pg-dao": ["libs/pg-dao/src/index.ts"],
       "@libs/payload": ["libs/payload/src/index.ts"],

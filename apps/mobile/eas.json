@@ -29,11 +29,34 @@
     "preview": {
       "extends": "base",
       "distribution": "internal",
-      "android": { "buildType": "apk" }
+      "android": {
+        "buildType": "apk"
+      }
     },
     "production": {
       "extends": "base",
       "autoIncrement": true
+    },
+    "e2e": {
+      "withoutCredentials": true,
+      "distribution": "internal",
+      "developmentClient": false,
+      "env": {
+        "RAY_MOBILE_E2E": "true",
+        "EXPO_PUBLIC_API_BASE_URL": "http://127.0.0.1:4179",
+        "EXPO_PUBLIC_SITE_URL": "http://127.0.0.1:4179",
+        "EXPO_PUBLIC_DEFAULT_LOCALE": "en",
+        "EXPO_PUBLIC_AUTH_PASSWORD": "true",
+        "EXPO_PUBLIC_AUTH_ANONYMOUS": "false",
+        "EXPO_PUBLIC_ANALYTICS_PROVIDER": "posthog",
+        "EXPO_PUBLIC_MONITORING_PROVIDER": "sentry"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": true
+      }
     }
   }
 }

@@ -28,6 +28,7 @@ function walkCodeFiles(directory, files = []) {
   for (const entry of readdirSync(directory)) {
     if (
       [
+        '.cache',
         '.expo',
         '.git',
         '.nx',
@@ -36,6 +37,7 @@ function walkCodeFiles(directory, files = []) {
         '.wxt',
         'artifacts',
         'build',
+        'build-e2e',
         'coverage',
         'dist',
         'generated',
@@ -63,6 +65,7 @@ function walkTsConfigFiles(directory, files = []) {
   for (const entry of readdirSync(directory)) {
     if (
       [
+        '.cache',
         '.expo',
         '.git',
         '.nx',
@@ -71,6 +74,7 @@ function walkTsConfigFiles(directory, files = []) {
         '.wxt',
         'artifacts',
         'build',
+        'build-e2e',
         'coverage',
         'dist',
         'generated',
@@ -310,10 +314,11 @@ for (const command of ['node --version', `node -p "process.platform + '-' + proc
 
 const viteEnvironment = requireNamedInput(nx, 'viteBuildEnvironment', publicEnvironment.vite)
 const expoEnvironment = requireNamedInput(nx, 'expoBuildEnvironment', publicEnvironment.expo)
-for (const variable of ['MODE', 'NODE_ENV']) {
+for (const variable of ['MODE', 'NODE_ENV', 'RAY_EXTENSION_E2E']) {
   if (!viteEnvironment.has(variable)) fail(`viteBuildEnvironment does not hash ${variable}`)
 }
 if (!expoEnvironment.has('NODE_ENV')) fail('expoBuildEnvironment does not hash NODE_ENV')
+if (!expoEnvironment.has('RAY_MOBILE_E2E')) fail('expoBuildEnvironment does not hash RAY_MOBILE_E2E')
 
 const web = readJson('apps/web/project.json')
 const desktop = readJson('apps/desktop/project.json')

@@ -3,34 +3,84 @@ name: CI
 on:
   push:
     branches:
+      - arch
       - dev
       - main
     tags:
       - 'v*'
   pull_request:
-    branches:
-      - dev
-      - main
   schedule:
     - cron: '23 18 * * *'
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
+      full:
+        type: boolean
+        default: true
 
 permissions:
   actions: read
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  select:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      full: ${{ steps.suites.outputs.full }}
+      base: ${{ steps.suites.outputs.base }}
+      head: ${{ steps.suites.outputs.head }}
+      backend: ${{ steps.suites.outputs.backend }}
+      backendEnabled: ${{ steps.suites.outputs.backendEnabled }}
+      extension: ${{ steps.suites.outputs.extension }}
+      desktop: ${{ steps.suites.outputs.desktop }}
+      web: ${{ steps.suites.outputs.web }}
+      mobile: ${{ steps.suites.outputs.mobile }}
+      mobileAndroid: ${{ steps.suites.outputs.mobileAndroid }}
+    env:
+      NX_NO_CLOUD: 'true'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          fetch-depth: 0
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.1
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: suites
+        run: node scripts/ci/select-test-suites.mjs
+        env:
+          CI_FULL: ${{ inputs.full }}
+
   main:
+    needs: select
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     # GitHub resolves repository secrets to an empty string for fork PRs. This
     # keeps fork validation local while internal branches can use Nx Cloud.
     env:
       POSTGRES_DATABASE_URL: postgresql://schema:check@127.0.0.1:1/schema_check
       NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
-      NX_NO_CLOUD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+      NX_NO_CLOUD: ${{ secrets.NX_CLOUD_ACCESS_TOKEN == '' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository) }}
+      NX_BASE: ${{ needs.select.outputs.base }}
+      NX_HEAD: ${{ needs.select.outputs.head }}
+      VITE_URL: https://example.invalid
+      VITE_API_BASE_URL: http://127.0.0.1:8000
+      CONTACT_EMAIL: framework@example.invalid
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
+          ref: ${{ inputs.ref || github.sha }}
           filter: tree:0
           fetch-depth: 0
 
@@ -55,24 +105,13 @@ jobs:
       - name: Validate Nx cache inputs and side-effect exclusions
         run: pnpm ci:nx-cache-contracts
 
-      # v5.0.1, pinned to the signed commit instead of a mutable major tag.
-      - name: Resolve affected SHAs
-        id: set-shas
-        if: github.event_name != 'schedule'
-        continue-on-error: true
-        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1
-        with:
-          main-branch-name: dev
-
-      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: pnpm exec nx-cloud record -- echo Hello World
       - name: Validate all projects
-        if: github.event_name == 'schedule' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || steps.set-shas.outcome == 'failure'
-        run: pnpm exec nx run-many -t lint,typecheck,test,build --all --nxBail --outputStyle=static
+        if: needs.select.outputs.full == 'true'
+        run: pnpm nx run-many -t lint,typecheck,typecheck-tests,test,build --nxBail --outputStyle=static
 
       - name: Validate affected projects
-        if: github.event_name != 'schedule' && github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/v') && steps.set-shas.outcome == 'success'
-        run: pnpm exec nx affected -t lint,typecheck,test,build --nxBail --outputStyle=static
+        if: needs.select.outputs.full != 'true'
+        run: pnpm nx affected -t lint,typecheck,typecheck-tests,test,build --nxBail --outputStyle=static
 
       - name: Validate database and auth contracts
         run: pnpm exec nx run-many -t validate,schema-check -p pg-dao,auth-server --nxBail
@@ -88,18 +127,31 @@ jobs:
         run: pnpm ci:container-contracts
 
       - name: Validate packaged runtime artifacts
-        if: github.event_name == 'schedule' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || steps.set-shas.outcome == 'failure'
+        if: needs.select.outputs.full == 'true'
         run: |
           pnpm exec nx run-many -t package -p engine,pulse,worker --nxBail --skipNxCache
           bash scripts/ci/check-container-contracts.sh --require-artifacts
 
-      - name: Install Playwright browsers for production smoke
-        if: github.event_name == 'schedule' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
-        run: pnpm exec playwright install --with-deps chromium firefox webkit
+      - name: Build and run disposable release images
+        if: needs.select.outputs.full == 'true'
+        env:
+          RAY_RELEASE_IMAGE_PREFIX: ray-ci
+          RAY_RELEASE_IMAGE_TAG: ${{ needs.select.outputs.head }}
+        run: |
+          set -euo pipefail
+          for service in engine web pulse worker migrator; do
+            docker build --file "docker/$service.Dockerfile" --tag "$RAY_RELEASE_IMAGE_PREFIX/$service:$RAY_RELEASE_IMAGE_TAG" .
+          done
+          node scripts/testing/run-backend.mjs release artifact
 
-      - name: Validate the production Web bundle
-        if: github.event_name == 'schedule' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
-        run: pnpm exec nx e2e web-e2e
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: fast-checks-and-builds
+          path: |
+            dist/test-results
+            coverage
+          if-no-files-found: warn
 
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: pnpm exec nx fix-ci
@@ -126,6 +178,8 @@ jobs:
       NX_NO_CLOUD: 'true'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           run_install: false
@@ -140,3 +194,165 @@ jobs:
         run: pnpm nx run pg-dao:deploy
       - name: Verify database matches the Prisma models
         run: pnpm nx run pg-dao:prisma -- migrate diff --from-config-datasource --to-schema=./src --exit-code
+
+  backend:
+    needs: select
+    if: needs.select.outputs.backendEnabled == 'true'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.select.outputs.backend) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      NX_NO_CLOUD: 'true'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.1
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm nx run ${{ matrix.project }}:test-integration
+      - run: pnpm nx run ${{ matrix.project }}:e2e
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: backend-${{ matrix.project }}
+          path: dist/test-results/${{ matrix.project }}
+          if-no-files-found: warn
+
+  extension:
+    needs: select
+    if: needs.select.outputs.extension == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      NX_NO_CLOUD: 'true'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.1
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: xvfb-run --auto-servernum pnpm nx run extension:e2e
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: extension-chromium
+          path: dist/test-results/extension
+          if-no-files-found: warn
+
+  web:
+    needs: select
+    if: needs.select.outputs.web == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      NX_NO_CLOUD: 'true'
+      VITE_URL: http://localhost:4173
+      VITE_API_BASE_URL: http://127.0.0.1:8000
+      CONTACT_EMAIL: framework@example.invalid
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.1
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium firefox webkit
+      - name: Verify the production framework page
+        run: pnpm nx run web-e2e:e2e --grep 'marketing application'
+      - name: Record optional integration scope
+        run: echo 'Provider/account business scenarios are not enabled in this framework page suite. Engine/Pulse/Worker use separate real isolated service suites.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: web-production-smoke
+          path: |
+            dist/.playwright
+            dist/test-results/web-e2e
+          if-no-files-found: warn
+
+  mobile:
+    needs: select
+    if: needs.select.outputs.mobileAndroid == 'true'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.select.outputs.mobile) }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    env:
+      NX_NO_CLOUD: 'true'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.1
+          cache: pnpm
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/testing/install-maestro.mjs
+      - name: Prepare Android device and native SDK
+        if: matrix.platform == 'android'
+        run: |
+          test -e /dev/kvm
+          sudo chmod a+rw /dev/kvm
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;36.0.0' 'ndk;27.1.12297006' 'system-images;android-35;google_apis;x86_64'
+      - name: Select pinned Xcode and hosted simulator runtime
+        if: matrix.platform == 'ios'
+        run: |
+          node --input-type=module <<'JS'
+          import { appendFileSync, readFileSync } from 'node:fs'
+          const tools = JSON.parse(readFileSync('scripts/testing/mobile-tools.json', 'utf8'))
+          appendFileSync(process.env.GITHUB_ENV, `DEVELOPER_DIR=/Applications/Xcode_${tools.xcodeVersion}.app/Contents/Developer\n`)
+          JS
+      - run: pnpm nx run mobile:e2e:${{ matrix.platform }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: mobile-${{ matrix.platform }}
+          path: |
+            dist/test-results/mobile/e2e
+            !dist/test-results/mobile/e2e/**/*.app/**
+          if-no-files-found: warn
+
+  desktop-checks:
+    needs: select
+    if: needs.select.outputs.desktop == 'true'
+    uses: ./.github/workflows/desktop.yml
+    with:
+      ref: ${{ inputs.ref || github.sha }}
+
+  required-checks:
+    name: Required checks
+    if: always()
+    needs: [select, main, database-contract, backend, extension, web, mobile, desktop-checks]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.1
+      - name: Require selected suites to pass
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: node scripts/ci/required-checks.mjs
