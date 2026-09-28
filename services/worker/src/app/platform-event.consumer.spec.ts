@@ -71,10 +71,11 @@ describe('PlatformEventConsumer delivery semantics', () => {
 
     expect(inbox.fail).toHaveBeenCalledWith('worker.platform.v1', envelope.id, 'temporary', true, 1)
     expect(sendToQueue).toHaveBeenCalledWith(
-      'platform.smoke.retry',
+      expect.stringMatching(/^platform\.smoke\.retry\.(5000|10000)$/),
       expect.any(Buffer),
       expect.objectContaining({ persistent: true, headers: expect.objectContaining({ 'x-attempt': 2 }) })
     )
+    expect(sendToQueue.mock.calls[0][2]).not.toHaveProperty('expiration')
   })
 
   it('moves an exhausted message to the DLQ', async () => {

@@ -60,7 +60,7 @@ pnpm nx run worker:test-integration
 pnpm nx run worker:e2e
 ```
 
-真实 RabbitMQ/PG 套件验证 Inbox 完成、重复投递、TTL 重试、最后一次失败与 DLQ、活动租约重投，以及杀进程后重启恢复；集成套件覆盖并发认领、租约恢复与旧处理者的写入限制。外部业务副作用仍需幂等键和自己的业务用例。
+真实 RabbitMQ/PG 套件验证 Inbox 完成、重复投递、长租约不阻塞短 TTL 重试、最后一次失败与 DLQ、活动租约重投，以及杀进程后重启恢复；集成套件覆盖并发认领、租约恢复与旧处理者的写入限制。外部业务副作用仍需幂等键和自己的业务用例。
 
 需要可运行 Linux 容器的 Docker / Compose v2。入口自动创建本机隔离环境、迁移和测试数据，完成后保存日志并清理；不会读取开发 `.env` 或连接外部数据库。用例放在 `tests/*.integration.spec.ts` / `tests/*.e2e.spec.ts`，不能直接运行内部 runner 指向开发库。
 

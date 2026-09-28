@@ -47,3 +47,11 @@ mock AmqpConnection，验证 messageId/correlationId/persistent 和错误传播�
 现有用例示例：[src/msg-pub.service.spec.ts](src/msg-pub.service.spec.ts)。
 
 新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。
+
+## Worker 延迟队列
+
+`workerQueues: true` 注册平台工作消息需要的交换器、DLQ 和九个固定 TTL
+队列。`PLATFORM_RETRY_QUEUES` 与 `platformRetryQueue()` 通过 public API
+共享声明和投递策略，按请求延迟向上选择档位；不引入 RabbitMQ 插件。
+每个延迟队列使用统一的 `x-message-ttl`，Worker 不设置每条消息的 expiration，
+避免长消息阻塞短消息的过期转发。详见 [后端测试与消息语义](../../docs/development/testing-backend.md)。

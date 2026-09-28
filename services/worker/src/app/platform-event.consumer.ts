@@ -9,6 +9,7 @@ import {
   PLATFORM_EVENT_EXCHANGE,
   PLATFORM_SMOKE_EVENT
 } from '@libs/platform-contract'
+import { platformRetryQueue } from '@libs/server-rabbitmq'
 
 import { InboxService } from './inbox.service'
 import { PlatformHandlerRegistry } from './platform-handler.registry'
@@ -108,15 +109,15 @@ export class PlatformEventConsumer {
     raw: RawMessage,
     delay = retryDelayMs(attempt - 1)
   ) {
-    await this.amqp.managedChannel.sendToQueue('platform.smoke.retry', Buffer.from(JSON.stringify(envelope)), {
+    const queue = platformRetryQueue(delay)
+    await this.amqp.managedChannel.sendToQueue(queue.name, Buffer.from(JSON.stringify(envelope)), {
       persistent: true,
-      expiration: String(delay),
       contentType: 'application/json',
       messageId: envelope.id,
       correlationId: raw.properties?.correlationId ?? envelope.correlationId,
-      headers: { 'x-attempt': attempt, 'x-retry-delay-ms': delay }
+      headers: { 'x-attempt': attempt, 'x-retry-delay-ms': queue.delayMs }
     } as never)
-    this.logger.warn(`Message ${envelope.id} scheduled for attempt ${attempt} in ${delay}ms`)
+    this.logger.warn(`Message ${envelope.id} scheduled for attempt ${attempt} in ${queue.delayMs}ms`)
   }
 
   private async deadLetter(value: unknown, reason: string, raw: RawMessage) {

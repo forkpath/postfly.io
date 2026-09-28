@@ -49,9 +49,38 @@ const server = createServer(async (request, response) => {
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
 const base = `http://127.0.0.1:${server.address().port}`
 const reports = await reportDirectory('update-e2e')
+const installDir = path.join(root, 'installed')
 let application
 let processLog = ''
 const cacheName = `ray-update-test-${path.basename(root).toLowerCase()}`
+
+function stopInstalledWindowsApp() {
+  if (process.platform !== 'win32') return
+  // Get-Process may expand RUNNER~1 to runneradmin. Match the unique test-owned
+  // directory suffix, so the updater's relaunched app cannot escape cleanup.
+  const suffix = `\\${path.basename(root)}\\installed\\Ray.exe`.replaceAll("'", "''")
+  const result = spawnSync(
+    'powershell.exe',
+    [
+      '-NoProfile',
+      '-Command',
+      `$ErrorActionPreference = 'Stop'
+$owned = @(Get-Process Ray -ErrorAction SilentlyContinue | Where-Object { $_.Path -and $_.Path.EndsWith('${suffix}', [StringComparison]::OrdinalIgnoreCase) })
+foreach ($process in $owned) {
+  Write-Output ('Stopping test process ' + $process.Id + ' ' + $process.Path)
+  try { $process.Kill() } catch { if (-not $process.HasExited) { throw } }
+  if (-not $process.WaitForExit(15000)) { throw 'Test process did not exit' }
+}
+# A child can already be gone after its parent exits. Handled races must not
+# leave PowerShell's last-command status as failure; unhandled errors still stop.
+exit 0`
+    ],
+    { encoding: 'utf8', timeout: 30000 }
+  )
+  processLog += `${result.stdout ?? ''}${result.stderr ?? ''}`
+  assert.equal(result.status, 0, `Owned Windows process cleanup failed: ${result.error ?? result.stderr}`)
+}
+
 try {
   // Separate cache names prevent false-positive downloads from previous runs.
   const env = { DESKTOP_UPDATE_BASE_URL: base, DESKTOP_TEST_CACHE: cacheName }
@@ -66,7 +95,6 @@ try {
   const userData = path.join(root, 'user-data')
   await mkdir(userData)
   await writeFile(path.join(userData, 'preserved.txt'), 'user-data-survives-upgrade')
-  const installDir = path.join(root, 'installed')
   if (process.platform === 'win32') {
     const installer = (await readdir(a)).find(name => name.endsWith('.exe'))
     const result = spawnSync(path.join(a, installer), ['/S', `/D=${installDir}`], { timeout: 120000 })
@@ -125,11 +153,7 @@ try {
       }
     }, 120000)
     // Stop only the test-installed application before relaunching it under the driver.
-    spawnSync('powershell.exe', [
-      '-NoProfile',
-      '-Command',
-      `Get-Process Ray -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq '${executableA.replaceAll("'", "''")}' } | Stop-Process -Force`
-    ])
+    stopInstalledWindowsApp()
     application = await electron.launch({
       executablePath: executableA,
       args: [`--user-data-dir=${userData}`],
@@ -161,15 +185,20 @@ try {
       await page.screenshot({ path: path.join(reports, `failure-${i}.png`) }).catch(() => undefined)
   throw error
 } finally {
-  await writeFile(path.join(reports, 'process.log'), processLog)
   await writeFile(path.join(reports, 'requests.json'), JSON.stringify(requests))
   await application?.close().catch(() => undefined)
   server.closeAllConnections()
   await new Promise(resolve => server.close(resolve))
-  // Windows can retain executable handles briefly after Electron/NSIS exits.
-  // Exhausting the bounded retries still fails the suite instead of hiding leaks.
-  const removal = { recursive: true, force: true, maxRetries: 10, retryDelay: 500 }
-  await rm(root, removal)
-  const cacheRoot = process.platform === 'darwin' ? path.join(os.homedir(), 'Library/Caches') : process.env.LOCALAPPDATA
-  if (cacheRoot) await rm(path.join(cacheRoot, `${cacheName}-updater`), removal)
+  try {
+    stopInstalledWindowsApp()
+    // Allow a brief handle-release delay; exhausting retries still fails.
+    const removal = { recursive: true, force: true, maxRetries: 3, retryDelay: 300 }
+    await rm(root, removal)
+    const cacheRoot =
+      process.platform === 'darwin' ? path.join(os.homedir(), 'Library/Caches') : process.env.LOCALAPPDATA
+    if (cacheRoot) await rm(path.join(cacheRoot, `${cacheName}-updater`), removal)
+    await writeFile(path.join(reports, 'cleanup.json'), JSON.stringify({ cleaned: true }))
+  } finally {
+    await writeFile(path.join(reports, 'process.log'), processLog)
+  }
 }

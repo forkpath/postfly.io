@@ -277,11 +277,6 @@ try {
       ],
       { input: 'no\n' }
     )
-    // The default Pixel profile reserves 6 GB. These isolated flows need only
-    // the app and Maestro driver, so use a bounded 2 GB data partition.
-    const avdConfig = resolve(env.ANDROID_AVD_HOME, `${avdName}.avd/config.ini`)
-    const avdSettings = (await readFile(avdConfig, 'utf8')).replace(/^disk\.dataPartition\.size=.*\r?\n?/gm, '')
-    await writeFile(avdConfig, `${avdSettings.trimEnd()}\ndisk.dataPartition.size=2G\n`)
     // Choose an unused even console port; the emulator reserves its companion port.
     const devices = await command(adb, ['devices'])
     let consolePort = 5554

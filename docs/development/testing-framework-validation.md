@@ -142,7 +142,44 @@ Android 报告 `e40819b5ca89af69` 的 Release APK 和最终 bundle 页面检查�
 
 本次审查同步把补丁纳入 Nx 缓存输入与完整 CI 选择，并让 migrator 镜像带上 pnpm 配置引用的补丁文件。25 项 CI 合约测试通过，包括仅修改补丁也不能遗漏设备测试的回归检查。修正六个 App/服务 README 的过时测试入口说明，保持测试框架、设备流程和真实业务验收的区别。
 
+## PR #1 第三轮与定向回归（2026-09-29）
+
+PR head `0ffeefe578fa4c846535e92a5192edebb798c53e` 的运行 `36455829977`
+已通过公共快速检查、五个实际镜像、Web、Extension、Engine、Pulse、Storage
+及 macOS 两架构。Worker 暴露了真实消息时序缺陷：同一延迟队列混放消息 TTL，
+30 秒租约副本阻塞其后 4–6 秒的处理失败重试，触发原有 15 秒断言超时。
+
+增加明确排列长租约与短重试的回归后，旧实现的独立运行 `36456929764`
+按预期失败。修复按固定 TTL 队列分档并向上取整，保留确认后 ack、持久化、
+去重、五分钟租约、认领 fencing 和五次尝试上限，不删除旧队列消息。
+独立运行 `36457847442` 的 Worker 6 项真实 RabbitMQ E2E 和 1 项数据库
+集成测试全部通过；报告 `b2b644fbfd372c70`、`f2a21378e394501c` 均为
+`passed=true, cleaned=true, interrupted=false`。本地相关单测、两类类型检查
+和 lint 共 13 项 Nx 任务通过；回归断言仍要求短重试在 15 秒内完成。
+
+iOS 独立运行 `36454765891` 已越过原来的 Swift 链接失败，随后 Sentry 的
+Xcode 调试符号脚本因 pnpm 隔离安装而找不到 `@sentry/cli/package.json`。
+Mobile 显式声明已有锁定版本 `@sentry/cli@2.58.4`，冻结安装通过，本地执行
+真实脚本确认关闭上传时正常退出；未启用上传或引入凭据。完整设备结果仍待确认。
+
+Windows 增加删除重试仍出现 `EBUSY`，因此继续按本次随机安装目录的唯一后缀
+定位、停止并等待测试进程，兼容 Windows 长短路径。进程清理和目录删除失败
+仍使任务失败；只有全部清理成功才写入 `cleanup.json`。完整 Windows 修复
+的独立运行 `36457847442` 已确认匹配并停止测试进程、删除目录，报告
+`cleanup.json` 为 `cleaned=true`。该次流程仍因 PowerShell 将已处理的子进程
+退出竞争留作失败状态而中止。脚本在所有停止与等待检查通过后明确返回 0，
+未处理异常仍立即失败；完整流程由 `36459752396` 继续复验。
+
+Android 第三轮报告 `23bae139f566e49f` 的 APK 与 bundle 复查通过，删除本次
+原生编译目录后仍只余 5050.49 MB。Emulator 37.1.11 实际采用至少 6 GB
+userdata 分区，并要求 7372.80 MB 可用空间，2 GB 配置未生效；因此撤掉该配置。
+Ubuntu runner 的预装 NDK 27.3/28.2/29.0 均不是本项目需要的版本，CI 现在
+清理这些一次性 runner 上的未用目录，保留并安装锁定的 27.1.12297006。
+SDK 路径须匹配 hosted runner 的固定位置；本地 SDK 不做这项清理。
+参考 [GitHub runner 清单](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md)
+及 [Emulator 的分区空间检查](https://android.googlesource.com/platform/external/qemu/+/refs/heads/emu-32-release/android-qemu2-glue/main.cpp)。
+
 ## 本轮提交前待完成的验收
 
 - 阶段 3：两平台的真实 Maestro 流程仍待通过；原生构建成功不等于设备 E2E 成功。
-- 阶段 4：Windows 升级行为已通过，但清理重试仍待验证；同一 PR 提交的完整 `Required checks` 必须通过。独立 iOS/Windows 修复验证运行 `36454765891` 正在执行，后续结果以 PR #1 的检查与 artifacts 为准。
+- 阶段 4：Windows 升级行为与进程/目录清理已有单独证据，合并后的完整流程仍待通过；同一 PR 提交的完整 `Required checks` 必须通过。独立 iOS 修复验证运行 `36457847442` 和 Windows 运行 `36459752396` 正在执行，后续结果以 PR #1 的检查与 artifacts 为准。

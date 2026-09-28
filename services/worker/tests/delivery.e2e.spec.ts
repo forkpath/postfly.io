@@ -78,14 +78,48 @@ describe('Worker real RabbitMQ delivery and Inbox', () => {
   })
 
   it('retries a failed handler through the broker TTL queue and then succeeds', async () => {
+    // A duplicate can wait on an active lease even after its owner completes.
+    // Its long delay must not block the following short handler retry.
+    const held = event()
+    await prisma.inboxMessage.create({
+      data: {
+        id: randomUUID(),
+        consumer: 'worker.platform.v1',
+        messageId: held.id,
+        eventType: held.type,
+        version: 1,
+        status: 'processing',
+        attemptCount: 1,
+        leaseUntil: new Date(Date.now() + 60_000)
+      }
+    })
+    const initialLeaseRetries = (await amqp.channel.checkQueue('platform.smoke.retry.30000')).messageCount
+    await amqp.publish(PLATFORM_EVENT_EXCHANGE, PLATFORM_SMOKE_EVENT, held)
+    await expect
+      .poll(async () => (await amqp.channel.checkQueue('platform.smoke.retry.30000')).messageCount)
+      .toBeGreaterThan(initialLeaseRetries)
+    await prisma.inboxMessage.update({
+      where: { consumer_messageId: { consumer: 'worker.platform.v1', messageId: held.id } },
+      data: { status: 'processed', leaseUntil: null }
+    })
     const envelope = event()
     failures.set(envelope.id, 1)
     await amqp.publish(PLATFORM_EVENT_EXCHANGE, PLATFORM_SMOKE_EVENT, envelope, { persistent: true })
     await expect.poll(async () => (await state(envelope.id))?.status).toBe('retrying')
-    expect((await amqp.channel.checkQueue('platform.smoke.retry')).messageCount).toBeGreaterThan(0)
+    await expect
+      .poll(async () => {
+        const counts: number[] = await Promise.all(
+          [5000, 10000].map(
+            async delay => (await amqp.channel.checkQueue(`platform.smoke.retry.${delay}`)).messageCount
+          )
+        )
+        return counts.reduce((count, messages) => count + messages, 0)
+      })
+      .toBeGreaterThan(0)
     await expect.poll(async () => (await state(envelope.id))?.status, { timeout: 15_000 }).toBe('processed')
     expect(calls.get(envelope.id)).toBe(2)
     expect((await state(envelope.id))?.attemptCount).toBe(2)
+    expect(calls.get(held.id)).toBeUndefined()
   })
 
   it('routes the exhausted final attempt and an unsupported envelope version to DLQ', async () => {

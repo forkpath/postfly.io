@@ -309,6 +309,9 @@ jobs:
           df -h . /tmp
           # This hosted Android job does not use the preinstalled .NET/Haskell/CodeQL tools.
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          # Expo uses the exact NDK installed below; other hosted versions only consume disk.
+          test "$ANDROID_HOME" = /usr/local/lib/android/sdk
+          sudo find "$ANDROID_HOME/ndk" -mindepth 1 -maxdepth 1 -type d ! -name '27.1.12297006' -exec rm -rf {} +
           df -h . /tmp
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
