@@ -1,5 +1,7 @@
 # 测试开发指南
 
+Ray 的测试设施面向可复用开发框架：维护者提供测试入口、隔离环境、fixture、报告和验证框架能力的用例；业务开发者编写自己的领域规则与业务流程测试。已有业务示例不等于所有使用者都必须运行的框架检查。后续工具选型、入口约定和分阶段验收见 [框架测试与 CI 实施方案](testing-framework-plan.md)；该方案中的未实施入口不能当作现有命令执行。
+
 ## 选择测试入口
 
 通过 Nx 执行项目测试。先查看目标配置，确认项目实际提供的任务与测试文件：
@@ -22,7 +24,7 @@ Node 代码使用 Node 环境，Web 组件使用 jsdom 与 Testing Library。读
 
 ## 没有 test target 怎么办
 
-选择同运行时项目的 Vitest 配置作参考，补齐 alias、环境与 include，再添加实际行为用例。用 `nx show project` 确认目标存在并运行非零用例；不要用 `passWithNoTests` 表示已有覆盖。
+按运行时选择配置：Node/Web 和平台无关 TypeScript 可复用 Vitest；真正渲染 React Native 组件或依赖 Expo 测试适配的套件优先使用 Jest + jest-expo。补齐 alias、环境与用例收集范围，再添加实际行为用例。用 `nx show project` 确认目标存在并运行非零用例；不要用 `passWithNoTests` 表示已有覆盖。
 
 Electron main 与 renderer 需要不同环境；Native SDK 需要平台专用替身。桌面测试与打包验证入口见 [Desktop README](../../apps/desktop/README.md)。
 

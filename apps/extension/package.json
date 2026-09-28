@@ -34,6 +34,7 @@
     "@wxt-dev/module-react": "^1.2.2",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
+    "vite": "catalog:",
     "vite-plugin-svgr": "catalog:",
     "wxt": "^0.20.19"
   }

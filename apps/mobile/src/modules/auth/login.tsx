@@ -1,5 +1,5 @@
 import type { LoginOption } from '~/modules/auth/form/login/constants'
-import type { Route } from 'expo-router'
+import type { RoutePath } from 'expo-router'
 
 import { memo, useState } from 'react'
 
@@ -27,7 +27,7 @@ const LoginStep = {
 type LoginStep = (typeof LoginStep)[keyof typeof LoginStep]
 
 interface LoginFlowProps {
-  readonly redirectTo?: Route
+  readonly redirectTo?: RoutePath
   readonly invitationId?: string
   readonly email?: string
 }

@@ -1,4 +1,4 @@
-import type { Route } from 'expo-router'
+import type { RoutePath } from 'expo-router'
 
 import { memo, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
@@ -35,7 +35,7 @@ const STEP = {
 type Step = (typeof STEP)[keyof typeof STEP]
 
 interface EmailOtpLoginFormProps {
-  readonly redirectTo?: Route
+  readonly redirectTo?: RoutePath
   readonly email?: string
 }
 

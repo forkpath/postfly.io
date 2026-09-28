@@ -44,12 +44,23 @@ iOS/Android 用户；Native feature 与通用契约供本 app 使用，禁止引
 ```sh
 pnpm nx show project mobile --json
 pnpm dev:mobile
+pnpm dev:mobile:ios
+pnpm dev:mobile:android
+pnpm build:mobile:ios
+pnpm build:mobile:android
+pnpm release:mobile:ios
+pnpm release:mobile:android
 pnpm nx run mobile:build
 pnpm nx run mobile:lint
 pnpm nx run mobile:typecheck
 ```
 
-本机原生运行用 `pnpm mobile:ios` / `pnpm mobile:android`，需 Xcode/Android SDK。`pnpm nx run mobile:build` 聚合 export；`pnpm nx run mobile:release` 为 EAS 构建，`pnpm nx run mobile:submit` 为商店提交，均有外部副作用。
+`pnpm dev:mobile:ios` / `pnpm dev:mobile:android` 用于本机开发运行；
+`pnpm build:mobile:ios` / `pnpm build:mobile:android` 用于本机 Release
+构建，均需 Xcode/Android SDK。`pnpm release:mobile:ios` /
+`pnpm release:mobile:android` 触发 EAS production 云端构建；
+`pnpm nx run mobile:submit` 用于商店提交，二者都有外部副作用。
+`pnpm nx run mobile:build` 只聚合 Expo export，不生成可发布的原生安装包。
 
 ## 单元测试：运行与编写
 

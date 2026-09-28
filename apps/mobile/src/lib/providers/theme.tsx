@@ -15,13 +15,12 @@ interface ThemeProviderProps {
 export const ThemeProvider = memo<ThemeProviderProps>(({ children }) => {
   const { resolvedTheme } = useTheme()
 
-  if (isAndroid) {
-    void NavigationBar.setButtonStyleAsync(resolvedTheme === ThemeMode.DARK ? ThemeMode.LIGHT : ThemeMode.DARK)
-  }
-
   return (
     <NavigationThemeProvider value={resolvedTheme === ThemeMode.DARK ? DarkTheme : DefaultTheme}>
       <View className="bg-background flex-1">{children}</View>
+      {isAndroid && (
+        <NavigationBar.NavigationBar style={resolvedTheme === ThemeMode.DARK ? ThemeMode.LIGHT : ThemeMode.DARK} />
+      )}
       <StatusBar
         barStyle={resolvedTheme === ThemeMode.DARK ? 'light-content' : 'dark-content'}
         translucent

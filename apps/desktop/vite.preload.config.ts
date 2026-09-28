@@ -8,12 +8,12 @@ const external = ['electron', ...builtinModules, ...builtinModules.map(module =>
 export default defineConfig({
   build: {
     lib: {
-      entry: path.resolve(__dirname, 'src/main/preload.ts'),
+      entry: path.resolve(import.meta.dirname, 'src/main/preload.ts'),
       formats: ['cjs'],
       // fileName 返回不带扩展名的名称，Vite 会根据 format 添加 .cjs
       fileName: () => 'preload'
     },
-    outDir: path.resolve(__dirname, '.vite/main'),
+    outDir: path.resolve(import.meta.dirname, '.vite/main'),
     emptyOutDir: false,
     rolldownOptions: {
       external,

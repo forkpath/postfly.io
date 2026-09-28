@@ -9,33 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthRegisterRouteImport } from './routes/auth/register'
-import { Route as AuthLoginRouteImport } from './routes/auth/login'
-import { Route as AuthJoinRouteImport } from './routes/auth/join'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthErrorRouteImport } from './routes/auth/error'
-import { Route as AuthPasswordUpdateRouteImport } from './routes/auth/password/update'
+import { Route as AuthJoinRouteImport } from './routes/auth/join'
+import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthPasswordForgotRouteImport } from './routes/auth/password/forgot'
+import { Route as AuthPasswordUpdateRouteImport } from './routes/auth/password/update'
 
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthRegisterRoute = AuthRegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => AuthRoute,
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const AuthErrorRoute = AuthErrorRouteImport.update({
+  id: '/error',
+  path: '/error',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthJoinRoute = AuthJoinRouteImport.update({
@@ -43,19 +38,24 @@ const AuthJoinRoute = AuthJoinRouteImport.update({
   path: '/join',
   getParentRoute: () => AuthRoute,
 } as any)
-const AuthErrorRoute = AuthErrorRouteImport.update({
-  id: '/error',
-  path: '/error',
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => AuthRoute,
 } as any)
-const AuthPasswordUpdateRoute = AuthPasswordUpdateRouteImport.update({
-  id: '/password/update',
-  path: '/password/update',
+const AuthRegisterRoute = AuthRegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthPasswordForgotRoute = AuthPasswordForgotRouteImport.update({
   id: '/password/forgot',
   path: '/password/forgot',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthPasswordUpdateRoute = AuthPasswordUpdateRouteImport.update({
+  id: '/password/update',
+  path: '/password/update',
   getParentRoute: () => AuthRoute,
 } as any)
 
@@ -130,13 +130,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -144,18 +137,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/register': {
-      id: '/auth/register'
-      path: '/register'
-      fullPath: '/auth/register'
-      preLoaderRoute: typeof AuthRegisterRouteImport
-      parentRoute: typeof AuthRoute
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/auth/login': {
-      id: '/auth/login'
-      path: '/login'
-      fullPath: '/auth/login'
-      preLoaderRoute: typeof AuthLoginRouteImport
+    '/auth/error': {
+      id: '/auth/error'
+      path: '/error'
+      fullPath: '/auth/error'
+      preLoaderRoute: typeof AuthErrorRouteImport
       parentRoute: typeof AuthRoute
     }
     '/auth/join': {
@@ -165,18 +158,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthJoinRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/auth/error': {
-      id: '/auth/error'
-      path: '/error'
-      fullPath: '/auth/error'
-      preLoaderRoute: typeof AuthErrorRouteImport
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/auth/password/update': {
-      id: '/auth/password/update'
-      path: '/password/update'
-      fullPath: '/auth/password/update'
-      preLoaderRoute: typeof AuthPasswordUpdateRouteImport
+    '/auth/register': {
+      id: '/auth/register'
+      path: '/register'
+      fullPath: '/auth/register'
+      preLoaderRoute: typeof AuthRegisterRouteImport
       parentRoute: typeof AuthRoute
     }
     '/auth/password/forgot': {
@@ -184,6 +177,13 @@ declare module '@tanstack/react-router' {
       path: '/password/forgot'
       fullPath: '/auth/password/forgot'
       preLoaderRoute: typeof AuthPasswordForgotRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/password/update': {
+      id: '/auth/password/update'
+      path: '/password/update'
+      fullPath: '/auth/password/update'
+      preLoaderRoute: typeof AuthPasswordUpdateRouteImport
       parentRoute: typeof AuthRoute
     }
   }

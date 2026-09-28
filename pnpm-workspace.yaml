@@ -8,33 +8,36 @@ packages:
 autoInstallPeers: true
 
 catalog:
-  '@babel/core': 7.28.5
+  '@babel/core': 7.29.7
   '@hookform/resolvers': ^5.1.1
   '@nx/vite': 23.2.1
   '@sentry/react': 10.47.0
-  '@tailwindcss/vite': ^4.1.18
-  '@tanstack/devtools-vite': ^0.8.1
+  '@tailwindcss/vite': ^4.3.3
+  '@tanstack/devtools-vite': ^0.8.5
   '@tanstack/react-devtools': ^0.10.8
   '@tanstack/react-query': 5.101.2
   '@tanstack/react-query-devtools': 5.101.2
-  '@tanstack/react-router': ^1.170.16
-  '@tanstack/react-router-devtools': ^1.167.0
-  '@tanstack/router-plugin': ^1.168.18
-  '@vitejs/plugin-react': 6.0.3
+  '@tanstack/react-router': ^1.170.38
+  '@tanstack/react-router-devtools': ^1.167.2
+  '@tanstack/router-plugin': ^1.168.40
+  '@vitejs/plugin-react': 6.1.1
   axios: ^1.13.2
   envin: ^1.1.13
   posthog-js: ^1.359.1
   react-hook-form: ^7.54.2
   sonner: ^2.0.7
-  tailwindcss: ^4.1.18
+  tailwindcss: ^4.3.3
   typescript: 6.0.3
-  vite: 8.1.0
+  vite: 8.3.0
   vite-plugin-svgr: ^4.5.0
   zod: ^4.3.5
 
 catalogs:
   native:
-    '@expo/metro-runtime': 56.0.21
+    '@expo/dom-webview': 57.0.1
+    # Expo SDK 57 intentionally ships @expo/metro 56.0.2.
+    '@expo/metro': 56.0.2
+    '@expo/metro-runtime': 57.0.16
     '@gorhom/bottom-sheet': 5.2.9
     '@react-navigation/native': 7.1.33
     '@rn-primitives/avatar': 1.4.0
@@ -48,34 +51,62 @@ catalogs:
     '@rn-primitives/switch': 1.4.0
     '@rn-primitives/tabs': 1.4.0
     '@rn-primitives/types': 1.4.0
-    expo: 56.0.9
-    expo-linking: 55.0.9
+    '@sentry/react-native': 7.11.0
+    '@shopify/react-native-skia': 2.6.2
+    babel-preset-expo: 57.0.12
+    expo: 57.0.24
+    expo-apple-authentication: 57.0.2
+    expo-application: 57.0.3
+    expo-auth-session: 57.0.12
+    expo-blur: 57.0.3
+    expo-build-properties: 57.0.21
+    expo-clipboard: 57.0.2
+    expo-constants: 57.0.19
+    expo-crypto: 57.0.3
+    expo-dev-client: 57.0.19
+    expo-font: 57.0.4
+    expo-glass-effect: 57.0.3
+    expo-image: 57.0.5
+    expo-image-picker: 57.0.19
+    expo-linking: 57.0.10
+    expo-localization: 57.0.2
+    expo-navigation-bar: 57.0.2
+    expo-network: 57.0.2
+    expo-router: 57.0.22
+    expo-secure-store: 57.0.4
+    expo-splash-screen: 57.0.9
+    expo-status-bar: 57.0.1
+    expo-store-review: 57.0.3
+    expo-system-ui: 57.0.4
+    expo-tracking-transparency: 57.0.2
+    expo-updates: 57.0.23
+    expo-web-browser: 57.0.3
     input-otp-native: 0.5.0
     lucide-react-native: 0.562.0
-    react-native: 0.85.3
-    react-native-gesture-handler: 2.30.1
+    react-native: 0.86.3
+    react-native-gesture-handler: 2.32.0
     react-native-ios-context-menu: 3.2.1
     react-native-ios-utilities: 5.2.0
-    react-native-keyboard-controller: 1.21.5
-    react-native-purchases: 8.12.0
-    react-native-purchases-ui: 8.12.0
-    react-native-reanimated: 4.3.0
-    react-native-safe-area-context: 5.6.2
-    react-native-screens: 4.23.0
+    react-native-keyboard-controller: 1.21.9
+    react-native-purchases: 10.10.1
+    react-native-purchases-ui: 10.10.1
+    react-native-reanimated: 4.5.1
+    react-native-safe-area-context: 5.7.0
+    react-native-screens: 4.26.2
     react-native-svg: 15.15.4
-    react-native-worklets: 0.8.1
-    uniwind: 1.6.2
+    react-native-worklets: 0.10.1
+    uniwind: 1.6.3
     zeego: 3.0.6
   node24:
     '@types/node': 24.12.2
   react19:
-    '@types/react': 19.3.0
+    '@types/react': 19.2.18
     '@types/react-dom': 19.2.3
-    react: 19.3.0
-    react-dom: 19.3.0
+    react: 19.2.3
+    react-dom: 19.2.3
 
 # Use pnpm's default isolated dependency layout. Electron builder collects the
-# desktop production graph; Expo 55 supports the same symlinked installation.
+# desktop production graph; Expo 57 supports the same symlinked installation.
 nodeLinker: isolated
 
 onlyBuiltDependencies:
@@ -107,11 +138,16 @@ onlyBuiltDependencies:
 
 overrides:
   '@peculiar/asn1-schema': 2.8.0
-  '@wxt-dev/module-react>@vitejs/plugin-react': 6.0.3
+  # Zeego 3.0.6 still pins 1.2.2, which does not compile with React Native 0.86.
+  'zeego>@react-native-menu/menu': 2.0.0
+  '@wxt-dev/module-react>@vitejs/plugin-react': 6.1.1
   better-call@1.3.7>@better-fetch/fetch: 1.3.1
   tmp: '>=0.2.4'
   zod: 4.4.3
 packageExtensions:
   '@react-native-google-signin/google-signin@16.0.0':
     dependencies:
-      '@expo/config-plugins': 55.0.8
+      '@expo/config-plugins': 57.0.9
+  zeego@3.0.6:
+    peerDependencies:
+      '@react-native-menu/menu': 2.0.0

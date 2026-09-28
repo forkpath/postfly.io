@@ -1,10 +1,5 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config'
 
-/** Expo 55+ 支持；`@expo/config-types` 的 `Android` 类型可能尚未收录 */
-type AndroidConfig = NonNullable<ExpoConfig['android']> & {
-  edgeToEdgeEnabled?: boolean
-}
-
 const SPLASH = {
   imageWidth: 150,
   image: './public/images/splash/splash.png',
@@ -36,15 +31,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       ITSAppUsesNonExemptEncryption: false
     }
   },
-  android: ((): AndroidConfig => ({
+  android: {
     package: 'com.ray.mobile',
-    edgeToEdgeEnabled: true,
     adaptiveIcon: {
       monochromeImage: './public/images/icon/android/monochrome.png',
       foregroundImage: './public/images/icon/android/adaptive.png',
       backgroundColor: '#0D121C'
     }
-  }))(),
+  },
   extra: {
     eas: {
       projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID ?? ''
@@ -59,7 +53,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     'expo-router',
+    '@sentry/react-native',
     'expo-font',
+    'expo-image',
     'expo-secure-store',
     'expo-image-picker',
     'expo-web-browser',

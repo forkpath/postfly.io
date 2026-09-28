@@ -1,4 +1,4 @@
-import type { Route } from 'expo-router'
+import type { RoutePath } from 'expo-router'
 
 import { memo } from 'react'
 import { useMutation } from '@tanstack/react-query'
@@ -17,7 +17,7 @@ import { Button, Checkbox, Field, FieldError, FieldLabel, Icons, Input, Spin, Te
 import { auth } from '../../lib/api'
 
 interface PasswordLoginFormProps {
-  readonly redirectTo?: Route
+  readonly redirectTo?: RoutePath
   readonly email?: string
   readonly onTwoFactorRedirect?: () => void
 }

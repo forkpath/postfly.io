@@ -1,4 +1,4 @@
-import type { Route } from 'expo-router'
+import type { RoutePath } from 'expo-router'
 
 import { authConfig } from '~/config/auth'
 import { AnonymousLogin } from '~/modules/auth/form/anonymous'
@@ -18,7 +18,7 @@ const RegisterPage = () => {
   const { t } = useTranslation('auth')
 
   const { redirectTo, invitationId, email } = useGlobalSearchParams<{
-    redirectTo?: Route
+    redirectTo?: RoutePath
     invitationId?: string
     email?: string
   }>()
