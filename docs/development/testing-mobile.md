@@ -44,7 +44,7 @@ runner 把当前 Git 跟踪及未忽略的 Mobile/共享库源码复制到临时
 `ios/`、`android/` 和应用配置不会被 prebuild 改写。
 
 测试应用是 `com.ray.mobile.e2e` / `Ray E2E`，scheme 为 `ray-e2e`，OTA 关闭。
-正式应用仍使用原来的标识和更新配置。测试只开放本机 HTTP 连接，不添加
+正式应用仍使用原来的标识和更新配置。测试包允许 HTTP 以连接本机 fixture，不添加
 认证绕过逻辑。外部 fixture 返回未登录 session；原生存储、Provider、字体、
 Expo Router 和页面交互照常运行。它不验证登录服务本身、OAuth、支付、推送、
 签名或真机硬件；后端身份验证由 Engine/Pulse 的真实协议套件负责。
@@ -53,7 +53,7 @@ Expo Router 和页面交互照常运行。它不验证登录服务本身、OAuth
 删除自己的设备/临时目录。不会重置开发者已有模拟器或已安装的正式应用。
 Android 通过指定设备的 `adb reverse` 连接临时 fixture。所有等待均有截止时间。
 原生构建最多等待 60 分钟，Android 启用 Gradle 自身按输入计算的 build cache，
-并限制两个 Gradle worker；CI 的完整设备 job 最多 90 分钟。
+并限制两个 Gradle worker，测试构建进程最多使用 4 GB Java 堆和 1 GB 元空间（建议至少 8 GB 可用系统内存）；这些参数只传给隔离测试构建。CI 的完整设备 job 最多 90 分钟。
 
 报告目录为 `dist/test-results/mobile/e2e/<platform>/<run-id>/`，含构建日志、
 JUnit、Maestro 诊断、截图、测试产物、fixture 请求记录和 `run.json`。CI 应

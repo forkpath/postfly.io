@@ -83,7 +83,7 @@ Expo 官方最低要求为 Xcode 26.4。现已固定 Xcode 26.6 / iOS 26.5，与
 macos-26 runner 对齐。重新运行前置检查报告 `963a1a8ab67c1621` 明确退出 1，
 `cleaned=true`。本机未完成 iOS 安装或 Maestro 流程，不能计作通过。
 
-Android 首次原生构建在生成 JS bundle 后进入原生 lint 阶段，触及初始 45 分钟上限，报告 `dfe33d713db4c7e9` 为 `passed=false, cleaned=true`；未出现编译错误，但没有生成 APK 或运行设备流程。已将构建时限调整为 60 分钟，待利用依赖缓存重试。两个平台均不等于真机或商店包验收。
+Android 首次原生构建在生成 JS bundle 后进入原生 lint 阶段，触及初始 45 分钟上限，报告 `dfe33d713db4c7e9` 为 `passed=false, cleaned=true`；未出现编译错误，但没有生成 APK 或运行设备流程。第二次运行 `62e9104867b30faf` 进入 R8/原生 lint 后，2 GB 堆和 512 MB 元空间持续接近耗尽，诊断记录了 159 次 full GC、约 8.5 分钟 full GC 时间；主动中断后 `passed=false, cleaned=true, interrupted=true`，所属 Gradle/Kotlin 进程均退出。已将构建时限调整为 60 分钟，启用 Gradle build cache，并只为隔离测试进程配置 4 GB 堆和 1 GB 元空间；第三次运行正在验证。两个平台均不等于真机或商店包验收。
 
 ## 阶段 4：CI/CD 门禁（已实现，本地与远端验收进行中）
 
@@ -95,9 +95,9 @@ Android 首次原生构建在生成 JS bundle 后进入原生 lint 阶段，触�
 本地已验证 23 项 CI 合约测试；涵盖套件选择、缺失/失败结果拒绝、真实网络探针
 正反例、镜像替换/失败报告拒绝以及进程树清理。发布命令负向演练返回非零，记录命令没有收到 push。actionlint 1.7.12 已检查工作流语法与引用。
 
-正式 Chrome ZIP 在无 `.env` 的独立副本构建，再解压运行 `extension:e2e-artifact`，7 项真实浏览器用例通过；ZIP SHA-256 为 `27b9bf4f83fa5d8f14cffdf4a8c001222fcdf4f09733b7e38adc6c7dd5e91b9e`。Mobile、Extension、Web E2E 的 lint/typecheck 及 21 个依赖任务全部通过。四个应用的 build/package 共 7 个任务也通过；Web 正式构建的 Chromium/Firefox/WebKit 三个页面用例通过。
+正式 Chrome ZIP 在无 `.env` 的独立副本构建，再解压运行 `extension:e2e-artifact`，7 项真实浏览器用例通过；ZIP SHA-256 为 `27b9bf4f83fa5d8f14cffdf4a8c001222fcdf4f09733b7e38adc6c7dd5e91b9e`。Mobile、Extension、Web E2E 的 lint/typecheck 及 21 个依赖任务全部通过。四个应用的 build/package 共 7 个任务也通过；Web 正式构建的 Chromium/Firefox/WebKit 三个页面用例通过。Desktop 在无环境文件的独立副本执行 28 个单测、正式构建、无签名打包和 Electron E2E，验证更新窗口、preload、路由重载、窗口 IPC 与断网后界面可用，3 个 Nx 任务通过；该记录仅覆盖本机 macOS x64，不代表 Windows、macOS ARM 或签名升级已经通过。
 
-真实镜像构建发现 Nx 精简锁文件与复制进去的整个 workspace overrides 不一致，冻结安装失败。服务镜像改为安装 Nx 已解析的独立 runtime manifest/lockfile，保留冻结安装；修复后 Engine 镜像的依赖安装通过，完整镜像启动仍在验证。
+真实镜像构建发现 Nx 精简锁文件与复制进去的整个 workspace overrides 不一致，冻结安装失败。服务镜像改为安装 Nx 已解析的独立 runtime manifest/lockfile，保留冻结安装；修复后 Engine/Pulse/Worker 冻结安装与五个镜像构建全部通过。使用同一组镜像执行真实迁移、四个应用健康检查、公开 HTML、匿名会话、受保护 HTTP 401 和 WebSocket 4401 检查，报告 `25f061b7d09f6804` 为 `passed=true, cleaned=true, interrupted=false`，退出 0；容器与网络已删除。检查记录对应本地代码快照 `5bbdf7160dc70287c10a84f3c62b39e8b63cd1bc`，没有推送镜像或部署生产环境。
 
 查询远端现有定时 CI 的失败日志，确认冻结安装失败于 Extension WXT prepare 的
 Invalid URL；阶段 1 的无环境安装修复直接覆盖该原因。该旧运行不能代表新配置结果。
@@ -108,5 +108,5 @@ Invalid URL；阶段 1 的无环境安装修复直接覆盖该原因。该旧运
 ## 尚未完成的验收
 
 - 阶段 2：本地真实协议、持久化及中断清理通过，Linux CI 验收待完成。
-- 阶段 3：Android 首次构建超时，待重试；iOS 本机工具链阻碍，远端设备流程待验证。
-- 阶段 4：新配置的真实 PR、Linux/跨平台结果、镜像启动和远端合并阻断待验证。
+- 阶段 3：Android 前两次分别超时和因内存压力主动中断，调整测试构建资源后重试中；iOS 本机工具链阻碍，远端设备流程待验证。
+- 阶段 4：新配置的真实 PR、Linux/跨平台结果和远端合并阻断待验证；镜像构建、启动及发布前探针已在本地通过。

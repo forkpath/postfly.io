@@ -223,6 +223,7 @@ try {
         '--no-daemon',
         '--build-cache',
         '--max-workers=2',
+        '-Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m',
         `-PreactNativeArchitectures=${arch}`
       ],
       { cwd: resolve(app, 'android'), timeout: 3_600_000 }
