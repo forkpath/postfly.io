@@ -100,6 +100,11 @@ Android 使用软件图形渲染，macOS 关闭 Vulkan 以兼容本机 emulator�
 设置为 180 秒，页面断言仍使用各流程自己的超时；驱动超时继续使测试失败。
 该设置见 [Maestro 官方连接超时说明](https://docs.maestro.dev/maestro-cli/run-your-first-test-with-the-maestro-cli)。
 
+冷启动深链接在新 iOS Simulator 上可能出现“Open in Ray E2E”系统确认框。
+flow 仅在 iOS 且该提示可见时点击 Open，然后继续验证真实登录页与邮箱参数。
+`openLink.autoVerify` 只对 Android 有效，不能用于绕过 iOS 提示。参见
+[Maestro 的平台差异说明](https://docs.maestro.dev/reference/commands-available/openlink)。
+
 流程中的截图使用相对名称，由 Maestro 写入该流程 artifact 的 `takeScreenshot`
 目录；不要传入指向报告目录其他位置的绝对路径，Maestro 会拒绝越出该目录。
 

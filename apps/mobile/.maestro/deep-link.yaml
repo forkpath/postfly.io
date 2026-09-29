@@ -11,6 +11,14 @@ name: Cold deep link preserves route parameters
 - openLink:
     link: ray-e2e:///auth/login?email=framework%40example.invalid
     autoVerify: true
+# iOS asks for confirmation the first time a fresh simulator opens this scheme.
+# autoVerify applies to Android only; keep the route/parameter assertions below.
+- runFlow:
+    when:
+      platform: iOS
+      visible: 'Open in .*Ray E2E.*'
+    commands:
+      - tapOn: Open
 - extendedWaitUntil:
     visible:
       id: login-email
