@@ -317,15 +317,32 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-          cache: ${{ matrix.platform == 'android' && 'gradle' || '' }}
-          cache-dependency-path: |
-            pnpm-lock.yaml
-            apps/mobile/package.json
-            apps/mobile/app.config.ts
-            apps/mobile/eas.json
-            scripts/testing/mobile-tools.json
-            scripts/testing/*.mjs
-            .github/workflows/ci.yml
+      # Native tools validate cached entries against their actual inputs. Do not
+      # cache an APK/app, simulator state, credentials, or a test result.
+      - name: Restore Android native dependencies and compilation cache
+        if: matrix.platform == 'android'
+        id: gradle-cache
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            !~/.gradle/caches/**/*.lock
+            !~/.gradle/caches/**/gc.properties
+          key: mobile-gradle-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/testing/mobile-tools.json') }}-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml', 'apps/mobile/package.json', 'apps/mobile/app.config.ts', 'apps/mobile/eas.json', 'patches/**') }}
+          restore-keys: |
+            mobile-gradle-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/testing/mobile-tools.json') }}-
+      - name: Restore iOS native dependencies and compilation cache
+        if: matrix.platform == 'ios'
+        id: ios-cache
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: |
+            ~/Library/Caches/CocoaPods
+            .cache/mobile-native/ios
+          key: mobile-xcode-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/testing/mobile-tools.json') }}-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml', 'apps/mobile/package.json', 'apps/mobile/app.config.ts', 'apps/mobile/eas.json', 'patches/**') }}
+          restore-keys: |
+            mobile-xcode-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/testing/mobile-tools.json') }}-
       - run: pnpm install --frozen-lockfile
       - run: node scripts/testing/install-maestro.mjs
       - name: Prepare Android device and native SDK
@@ -343,6 +360,26 @@ jobs:
           appendFileSync(process.env.GITHUB_ENV, `DEVELOPER_DIR=/Applications/Xcode_${tools.xcodeVersion}.app/Contents/Developer\n`)
           JS
       - run: pnpm nx run mobile:e2e:${{ matrix.platform }}
+      # A later device/flow failure must not discard a completed native build's
+      # reusable cache. Never publish an incomplete first build as an exact hit.
+      - name: Save Android cache after a completed native build
+        if: ${{ !cancelled() && matrix.platform == 'android' && steps.gradle-cache.outputs.cache-hit != 'true' && hashFiles('dist/test-results/mobile/e2e/android/**/native-build.json') != '' }}
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            !~/.gradle/caches/**/*.lock
+            !~/.gradle/caches/**/gc.properties
+          key: ${{ steps.gradle-cache.outputs.cache-primary-key }}
+      - name: Save iOS cache after a completed native build
+        if: ${{ !cancelled() && matrix.platform == 'ios' && steps.ios-cache.outputs.cache-hit != 'true' && hashFiles('dist/test-results/mobile/e2e/ios/**/native-build.json') != '' }}
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: |
+            ~/Library/Caches/CocoaPods
+            .cache/mobile-native/ios
+          key: ${{ steps.ios-cache.outputs.cache-primary-key }}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

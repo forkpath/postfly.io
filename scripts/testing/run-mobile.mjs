@@ -23,6 +23,7 @@ const report = resolve(root, `dist/test-results/mobile/e2e/${platform}/${runId}`
 await mkdir(report, { recursive: true })
 const log = createWriteStream(resolve(report, 'runner.log'))
 const children = new Set()
+const timings = []
 const env = Object.fromEntries(
   Object.entries(process.env).filter(([key]) =>
     /^(PATH|HOME|USER|TMPDIR|TMP|TEMP|LANG|LC_.*|JAVA_HOME|ANDROID_HOME|ANDROID_SDK_ROOT|DEVELOPER_DIR|CI)$/.test(key)
@@ -81,6 +82,7 @@ function command(
   log.write(`\n${executable} ${args.join(' ')}\n`)
   const commandName = `${++commandIndex}-${executable.split('/').at(-1)}.log`
   const stream = createWriteStream(resolve(report, logName ?? commandName))
+  const started = Date.now()
   const child = spawn(executable, args, { cwd, env, detached: true, stdio: ['pipe', 'pipe', 'pipe'] })
   children.add(child)
   let output = ''
@@ -104,6 +106,7 @@ function command(
     child.once('error', reject)
     child.once('close', (code, signal) => {
       clearTimeout(timer)
+      timings.push({ command: commandName, milliseconds: Date.now() - started, code, signal })
       children.delete(child)
       stream.end(() => {
         if (code === 0) resolveResult(output.trim())
@@ -260,6 +263,7 @@ try {
     // The installed APK and reports no longer need this owned native build tree.
     // Reclaim its intermediates before allocating the emulator's data partition.
     await rm(resolve(app, 'android'), { recursive: true, force: true })
+    await writeFile(resolve(report, 'native-build.json'), JSON.stringify({ platform, runId }))
     console.log('Mobile android: release APK built; starting the isolated emulator.')
     env.ANDROID_AVD_HOME = resolve(workspace, 'avd')
     await mkdir(env.ANDROID_AVD_HOME)
@@ -325,6 +329,15 @@ try {
   } else {
     await command('pod', ['install'], { cwd: resolve(app, 'ios'), timeout: 900_000 })
     const derived = resolve(workspace, 'derived')
+    // Keep only content-addressed compiler entries across runs. Build products,
+    // fixture URLs, simulator state and test results remain unique to this run.
+    const compilationCache = resolve(
+      root,
+      '.cache/mobile-native/ios',
+      `xcode-${tools.xcodeVersion}`,
+      'CompilationCache.noindex'
+    )
+    await mkdir(compilationCache, { recursive: true })
     await command(
       'xcodebuild',
       [
@@ -347,6 +360,9 @@ try {
         'CODE_SIGNING_ALLOWED=YES',
         'CODE_SIGN_IDENTITY=-',
         'DEVELOPMENT_TEAM=',
+        'COMPILATION_CACHE_ENABLE_CACHING=YES',
+        'COMPILATION_CACHE_ENABLE_DIAGNOSTIC_REMARKS=YES',
+        `COMPILATION_CACHE_CAS_PATH=${compilationCache}`,
         `ARCHS=${process.arch === 'arm64' ? 'arm64' : 'x86_64'}`,
         'build'
       ],
@@ -356,6 +372,7 @@ try {
     await cp(resolve(derived, 'Build/Products/Release-iphonesimulator/RayE2E.app'), artifact, { recursive: true })
     // Preserve executable permissions when GitHub uploads/downloads this artifact.
     await command('tar', ['-czf', resolve(report, 'RayE2E.app.tar.gz'), '-C', report, 'RayE2E.app'])
+    await writeFile(resolve(report, 'native-build.json'), JSON.stringify({ platform, runId }))
     device = await command('xcrun', ['simctl', 'create', avdName, tools.iosDeviceType, iosRuntime])
     deviceOwned = true
     await command('xcrun', ['simctl', 'boot', device])
@@ -442,6 +459,7 @@ try {
   server.closeAllConnections()
   await new Promise(resolveClosed => server.close(resolveClosed))
   if (workspace) await cleanup(() => rm(workspace, { recursive: true, force: true }))
+  await writeFile(resolve(report, 'timings.json'), JSON.stringify(timings, null, 2))
   await writeFile(resolve(report, 'fixture-requests.json'), JSON.stringify(requests, null, 2))
   await writeFile(
     resolve(report, 'run.json'),

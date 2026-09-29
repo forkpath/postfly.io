@@ -74,8 +74,26 @@ Android 通过指定设备的 `adb reverse` 连接临时 fixture。所有等待�
 原生构建最多等待 60 分钟，Android 启用 Gradle 自身按输入计算的 build cache，
 并限制两个 Gradle worker。测试构建进程最多使用 4 GB Java 堆和 1 GB 元空间，
 建议至少 8 GB 可用系统内存；这些参数只传给隔离测试构建。CI 的完整设备 job
-最多 90 分钟。Android job 配置了 setup-java 的 Gradle 缓存，以锁文件、Mobile
-配置、工具版本、测试 runner 与工作流共同计算 key，原生构建输入变化会更新缓存。
+最多 90 分钟。
+
+CI 分别持久化 Android 的 Gradle wrapper、依赖和 build cache，以及 iOS 的
+CocoaPods 下载缓存与 Xcode 26 内容寻址编译缓存。Xcode 缓存放在仓库
+`.cache/mobile-native/ios/xcode-<version>/CompilationCache.noindex`，不随临时
+DerivedData 清理。每次仍生成、编译、安装当前源码并运行设备流程；不会缓存
+安装包、整个 DerivedData、模拟器、凭据或测试结果。
+
+缓存 key 按 OS、CPU 架构、锁定工具版本、依赖锁文件、Mobile 原生配置和
+patches 隔离；同工具链允许恢复较早的依赖缓存，再由 Gradle/Xcode 按实际输入
+校验。修改 flows、runner 或工作流本身不会无端丢弃原生依赖缓存。仅在原生
+构建完成后保存，即使后续设备测试失败也会保存；构建未完成不保存，避免把
+不完整的首轮缓存固化。完全命中时不重复上传，避免每次提交新增大型归档。
+`timings.json` 记录实际命令耗时；用恢复日志、编译器命中信息和前后耗时评估
+收益，不能将“配置了缓存”等同于“已测得加速”。
+
+缓存遵循 [GitHub 的分支作用域和容量回收规则](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching)，
+不会自动提高付费存储额度。PR 缓存只能由该 PR 后续运行复用；合并后的主分支
+首次运行可能需要重新预热。Xcode 编译缓存使用
+[Apple 的 Compilation Caching 设置](https://developer.apple.com/documentation/xcode/build-settings-reference)。
 Android 使用软件图形渲染，macOS 关闭 Vulkan 以兼容本机 emulator；首次启动
 最多等待 10 分钟。确认设备归本次运行所有后即采集失败日志，包括系统启动超时。
 设备连接后持续保存 Android 日志，并保留完整退出前日志。Maestro 驱动启动上限
