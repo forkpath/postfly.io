@@ -181,6 +181,34 @@ export class BackendContainers {
         image(service).withEnvironment(serviceEnv).withExposedPorts(port).withWaitStrategy(Wait.forHttp(path, port))
       )
     }
+    // Exercise the deployed routes and DNS policy before publishing images.
+    await this.launch(
+      'kong',
+      this.builder(infrastructureImages.kong, 'kong')
+        .withEnvironment({
+          KONG_DATABASE: 'off',
+          KONG_DNS_ORDER: infrastructure.services.kong.environment.KONG_DNS_ORDER,
+          KONG_NGINX_WORKER_PROCESSES: '1',
+          KONG_DECLARATIVE_CONFIG: '/etc/kong/kong.yml',
+          KONG_ADMIN_LISTEN: 'off',
+          KONG_PROXY_LISTEN: '0.0.0.0:8000',
+          PUBLIC_ORIGIN: environment.BETTER_AUTH_URL,
+          REDIS_HOST: 'redis',
+          REDIS_PASSWORD: this.password,
+          ENGINE_UPSTREAM: 'engine:8000',
+          PULSE_UPSTREAM: 'pulse:3001',
+          WEB_UPSTREAM: 'web:3000',
+          KONG_AUTO_TLS: 'false'
+        })
+        .withCopyFilesToContainer([
+          { source: resolve(this.root, 'docker/kong/entrypoint.sh'), target: '/entrypoint.sh' },
+          { source: resolve(this.root, 'docker/kong/kong.yml'), target: '/etc/kong/kong.yml.template' }
+        ])
+        .withEntrypoint(['/bin/sh', '/entrypoint.sh'])
+        .withExposedPorts(8000)
+        .withHealthCheck({ test: ['CMD', 'kong', 'health'], interval: 2000, timeout: 5000, retries: 30 })
+        .withWaitStrategy(Wait.forAll([Wait.forHealthCheck(), Wait.forListeningPorts()]))
+    )
   }
 
   async stop() {

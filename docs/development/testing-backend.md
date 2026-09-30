@@ -19,6 +19,10 @@ pnpm nx run worker:e2e
 
 基础设施镜像和 Ryuk 使用固定 digest；这些公共镜像使用匿名 registry 配置，不读取开发者的 registry 凭据。发布镜像要求本机已存在，不允许拉取替换；报告核对运行容器的实际 image ID。容器不跨测试复用。
 
+发布镜像验收还启动真实 Kong，使用受控部署模板、入口脚本与 DNS 顺序；首页、健康检查、
+匿名 HTTP 会话和 WebSocket 拒绝都经过同一网关端口。`run.json` 的 `gatewayVerified`
+必须为 true 才允许发布，仅应用自身端口可用的旧报告不能授权发布。
+
 runner 只继承系统与工具环境，显式关闭 Nx/Vite/Nest 的环境文件加载。确认 Docker 返回本机端口后，构造数据库连接并通过 `pg-dao:init` 应用仓库迁移。不能传入外部数据库 URL；内部 `integration-run` / `e2e-run` target 也会检查运行标识与数据库命名，不能直接对开发库运行。
 
 单模块集成测试只启动所需依赖。Engine 的完整应用测试启动 PG、Redis、Mongo、RabbitMQ；Worker 的完整应用测试保留 Mongo 和 RabbitMQ。不会通过删除可选框架集成或把数据库替换成内存实现来获得通过结果。

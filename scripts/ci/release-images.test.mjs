@@ -17,7 +17,14 @@ function fixture() {
   return {
     prefix,
     commit,
-    run: { project: 'release', suite: 'artifact', passed: true, cleaned: true, interrupted: false },
+    run: {
+      project: 'release',
+      suite: 'artifact',
+      passed: true,
+      cleaned: true,
+      interrupted: false,
+      gatewayVerified: true
+    },
     images,
     current: structuredClone(images)
   }
@@ -35,6 +42,14 @@ test('failed, interrupted or dirty runs cannot publish', () => {
     const input = fixture()
     input.run[field] = !input.run[field]
     assert.throws(() => verifyImages(input))
+  }
+})
+
+test('direct-service evidence without a verified gateway cannot publish', () => {
+  for (const value of [false, undefined]) {
+    const input = fixture()
+    input.run.gatewayVerified = value
+    assert.throws(() => verifyImages(input), /not verified through the gateway/)
   }
 })
 

@@ -96,6 +96,8 @@ services:
     entrypoint: ['/entrypoint.sh']
     environment:
       KONG_DATABASE: 'off'
+      # Compose names have A records; SRV lookups can fall through to public DNS.
+      KONG_DNS_ORDER: LAST,A,CNAME
       # Vite serves hundreds of source modules per page in development.
       KONG_RATE_LIMIT_MINUTE: ${KONG_DEV_RATE_LIMIT_MINUTE:-10000}
       KONG_NGINX_WORKER_PROCESSES: ${KONG_WORKERS:-2}

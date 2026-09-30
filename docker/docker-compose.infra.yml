@@ -75,6 +75,8 @@ services:
     entrypoint: ['/entrypoint.sh']
     environment:
       KONG_DATABASE: 'off'
+      # Compose names have A records; SRV lookups can fall through to public DNS.
+      KONG_DNS_ORDER: LAST,A,CNAME
       KONG_NGINX_WORKER_PROCESSES: ${KONG_WORKERS:-2}
       KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
       KONG_ADMIN_LISTEN: 'off'

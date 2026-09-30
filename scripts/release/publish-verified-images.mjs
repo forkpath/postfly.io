@@ -12,6 +12,7 @@ export function verifyImages({ run, images, current, prefix, commit }) {
   assert.equal(run.passed, true, 'Image verification did not pass')
   assert.equal(run.cleaned, true, 'Verification resources were not cleaned')
   assert.equal(run.interrupted, false, 'Verification was interrupted')
+  assert.equal(run.gatewayVerified, true, 'Images were not verified through the gateway')
   return ['engine', 'web', 'pulse', 'worker', 'migrator'].map(service => {
     const tag = `${prefix}/${service}:${commit}`
     const verified = images.find(image => image.RepoTags?.includes(tag))

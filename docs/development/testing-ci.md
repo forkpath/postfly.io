@@ -53,12 +53,12 @@ main 使用同一 SHA 的 fast-forward 推广，见部署指南。YAML 成功运
   解压 Chrome ZIP 并执行 `extension:e2e-artifact` → 发布原 ZIP、校验和与提交号。
   Firefox 当前只证明构建通过，未宣称实际扩展行为验收。
 - 服务：dev 的 CI 必需检查通过 → 构建五个本地镜像 → 在独立 PG/Redis/Mongo/RabbitMQ 中运行
-  migrator 与四个应用 → 检查就绪、页面、HTTP 会话/授权和 WS 授权 → 核对镜像
+  migrator 与四个应用 → 启动真实 Kong 并通过网关检查页面、HTTP 会话/授权和 WS 授权 → 核对镜像
   ID 未变化后推送 → 按 registry digest 部署 staging → 公开 Kong 探针 → 成功部署记录。
   main 只推广同一 SHA 的五个已验证 digest；不同提交、失败/过期记录均拒绝，生产前仍做
   最新依赖扫描。分支推广、环境配置和构建变量边界见 [部署指南](../architecture/deployment.md)。
 - 任何前置步骤失败，都不能进入后续发布步骤。发布命令还独立检查报告成功、
-  清理完成、提交号以及镜像 ID；不能把失败报告或后来替换的镜像拿去发布。
+  清理完成、网关验收、提交号以及镜像 ID；不能把失败报告或后来替换的镜像拿去发布。
 - 部署后探针不创建账户、不写业务数据，不要求生产测试密码。已有专用账号
   探针仍可显式启用。部署失败不自动撤销 schema；回退入口与备份要求见
   [部署指南](../architecture/deployment.md) 和 [发布脚本说明](../../scripts/release/README.md)。

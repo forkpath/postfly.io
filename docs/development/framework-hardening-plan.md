@@ -20,7 +20,7 @@
 | 7    | Testcontainers 集成环境与真实仓储测试                | 本地六套矩阵与镜像编排通过，待最终 CI            | Testcontainers 启动 PG/Redis/RabbitMQ（完整服务需要 Mongo 时一并提供）；真实 Repository、Worker 去重/重试/恢复及成功/失败/中断清理验证；保持唯一默认入口                 |
 | 8    | PR 前移 E2E                                          | 既有 affected Web/Extension/后端套件已实现       | PR 事件确实选择并执行页面 smoke；需要身份时使用隔离测试账号，失败传播到 Required checks                                                                                  |
 | 9    | 分组依赖升级与官方源安全扫描                         | 本地安全门禁与跨端复验通过，待最终 CI            | Renovate 或 Dependabot 配置有效；官方源真实扫描与失败门禁；评估并记录 Mobile/Extension 项目依赖归属                                                                      |
-| 10   | CODEOWNERS、PR 模板及分支保护                        | CODEOWNERS/模板已添加；dev/main 保护待补         | CODEOWNERS 身份有效、模板有验证与风险说明；dev/main 必需检查实际生效                                                                                                     |
+| 10   | CODEOWNERS、PR 模板及分支保护                        | 文件与远端保护规则已就位；实际分支待建立         | dev/main 规则已读回，严格必需检查绑定 GitHub Actions、约束管理员且禁止强推/删除；分支建立后再核验实际匹配                                                                |
 | 11   | 清理 lint 警告、零警告门禁                           | 48 项目零警告与类型检查通过，待最终 CI           | 全仓 lint --max-warnings=0 通过；新增警告能使检查失败，不全局关闭规则                                                                                                    |
 | 12   | bootstrap/doctor，新人快速启动                       | 本地干净副本全栈验收 8 分 12 秒通过              | 版本与配置检查、不覆盖已有 .env、安全创建本地配置、启动 infra、db:init、显式开发 seed；隔离目录端到端计时，报告达到或未达到 10 分钟目标及条件                            |
 | 13   | 拆分 AppShell 与 marketing skeleton 大文件           | 本地拆分与真实页面验收通过，待最终 CI            | 按职责拆分、保持公开 API/页面行为；相关组件/路由测试、类型、lint 和页面 smoke 通过                                                                                       |
@@ -366,3 +366,27 @@ Engine 新 Testcontainers 入口再次通过真实 PG/Redis 集成 7 项，报�
 本次远端读回确认：`93cc3b1` 已上传加固分支；默认分支仍为 arch，arch 的严格
 Required checks 与管理员保护已生效。PR #1 的 15 项检查通过于旧提交 `3dd1b28`；
 最新加固提交的完整远端 CI、dev/main 保护与真实环境部署仍需完成，Goal 保持进行中。
+
+### 网关与仓库治理复验
+
+GitHub 已创建并读回 dev/main 保护规则：dev 要求 `Required checks`，main 额外要求
+`Staging deployment`；检查绑定 GitHub Actions，严格检查和管理员限制开启，禁止强推与删除。
+规则允许正常创建初始分支；新分支及默认分支切换将在本地完整演练通过后执行。
+现有移动编译缓存属于 `refs/pull/1/merge`，不能被新 dev 的 push 运行读取；首次 dev
+运行建立默认分支缓存后，后续 PR 才能共享。保留按工具链分开的 Gradle/CocoaPods 缓存。
+
+干净提交 `ab93187` 的完整演练 `ab718df617fe` 已通过五个镜像构建、推送、迁移与所有服务
+健康检查，但网关首页返回 502，因此整次结果仍为失败，全部资源已清理。小规模实际容器
+实验 `kong-dns-8d79496a9d.json` 证明 Docker 的 `web` A 记录是正确的内网地址，而 SRV
+查询返回公共 `.web` 域的记录。默认解析、清除搜索域、显式 Docker DNS 均返回 502；
+仅改为 `LAST,A,CNAME` 后返回 200。四个对照场景的资源均已清理。
+
+两套 Compose 现固定此 DNS 顺序。现有 Testcontainers 发布镜像入口同时增加真实 Kong，
+使用部署模板和同一 DNS 策略；发布门禁拒绝缺少网关验收的报告，避免仅凭服务自身健康
+发布无法从外部访问的镜像。当前源码的五个本地镜像已通过新增网关验收，报告
+`934a92cc17ea9fbf` 为 passed/cleaned/gatewayVerified=true、interrupted=false；
+页面、健康检查、HTTP session/权限和 WebSocket 认证边界均通过实际 Kong。
+45 项 CI 行为合约通过，相关脚本零警告 lint 通过。清理断言移至独立函数，保持
+失败退出与资源核验语义，避免 finally 内直接抛错。共享入口的 Engine 集成回归
+7 项通过，报告 `7b6e3587c7af7347` 为 passed/cleaned=true、interrupted=false。
+此结果不替代两环境完整部署演练，也不代表真实服务器或最终提交远端 CI 已通过。

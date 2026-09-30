@@ -152,6 +152,25 @@ const port = (service, internal) => infrastructure.port(service, internal)
 let passed = false
 let cleaned = false
 const resources = []
+
+async function cleanInfrastructure() {
+  const stopErrors = await infrastructure.stop()
+  for (const error of stopErrors) console.error(`Container stop will use scoped cleanup: ${error.message}`)
+  const remaining = await run('docker', ['ps', '-aq', '--filter', `label=${TEST_RUN_LABEL}=${namespace}`], {
+    capture: true
+  })
+  if (remaining) await run('docker', ['rm', '-fv', ...remaining.split(/\s+/)], { timeout: 60_000 })
+  if (infrastructure.network) await infrastructure.network.stop()
+  const leftovers = await run('docker', ['ps', '-aq', '--filter', `label=${TEST_RUN_LABEL}=${namespace}`], {
+    capture: true
+  })
+  if (leftovers) throw new Error(`Containers remain for ${namespace}`)
+  const volumes = new Set((await run('docker', ['volume', 'ls', '-q'], { capture: true })).split(/\s+/))
+  if (resources.some(resource => resource.volumes.some(volume => volumes.has(volume)))) {
+    throw new Error(`Test volumes remain for ${namespace}`)
+  }
+}
+
 try {
   const services = backendServices(project, suite)
   await infrastructure.start(services)
@@ -206,11 +225,7 @@ try {
       if (!expected || actual.Image !== expected.Id)
         throw new Error(`Release image changed before ${service} validation`)
     }
-    Object.assign(env, {
-      SMOKE_BASE_URL: `http://127.0.0.1:${await port('web', 3000)}`,
-      SMOKE_API_BASE_URL: `http://127.0.0.1:${await port('engine', 8000)}`,
-      SMOKE_PULSE_BASE_URL: `http://127.0.0.1:${await port('pulse', 3001)}`
-    })
+    env.SMOKE_BASE_URL = `http://127.0.0.1:${await port('kong', 8000)}`
     await run(process.execPath, ['scripts/release/framework-smoke.mjs'])
     await writeFile(resolve(reportDir, 'images.json'), JSON.stringify(images))
   } else {
@@ -251,21 +266,7 @@ try {
     console.error(`Could not collect infrastructure logs: ${error.message}`)
   }
   try {
-    const stopErrors = await infrastructure.stop()
-    for (const error of stopErrors) console.error(`Container stop will use scoped cleanup: ${error.message}`)
-    const remaining = await run('docker', ['ps', '-aq', '--filter', `label=${TEST_RUN_LABEL}=${namespace}`], {
-      capture: true
-    })
-    if (remaining) await run('docker', ['rm', '-fv', ...remaining.split(/\s+/)], { timeout: 60_000 })
-    if (infrastructure.network) await infrastructure.network.stop()
-    const leftovers = await run('docker', ['ps', '-aq', '--filter', `label=${TEST_RUN_LABEL}=${namespace}`], {
-      capture: true
-    })
-    if (leftovers) throw new Error(`Containers remain for ${namespace}`)
-    const volumes = new Set((await run('docker', ['volume', 'ls', '-q'], { capture: true })).split(/\s+/))
-    if (resources.some(resource => resource.volumes.some(volume => volumes.has(volume)))) {
-      throw new Error(`Test volumes remain for ${namespace}`)
-    }
+    await cleanInfrastructure()
     cleaned = true
   } catch (error) {
     console.error(`Test environment cleanup failed: ${error.message}`)
@@ -283,7 +284,8 @@ try {
         resources,
         passed,
         cleaned,
-        interrupted
+        interrupted,
+        ...(releaseArtifacts ? { gatewayVerified: passed } : {})
       },
       null,
       2

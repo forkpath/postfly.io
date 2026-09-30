@@ -30,6 +30,10 @@ Worker 是后台消费者，不通过 Kong 暴露业务端口。Kong 管理 API 
 开发 Compose 和 CI 临时数据库的一致性由合约测试检查。升级这些镜像时同步修改并重新验证，
 避免同一应用版本在两个环境中使用不同的基础设施补丁版本。
 
+Compose 中的 Kong 使用 `LAST,A,CNAME` 解析服务名，按配置端口连接 Docker 的 A 记录。
+Docker 不提供这些服务名的 SRV 记录；优先查询 SRV 可能回退到公共 DNS，例如将 `web`
+误认为公共 `.web` 域。镜像发布前会通过同一 Kong 配置验证页面与 HTTP/WS 授权边界。
+
 默认开发分支为 `dev`，Nx affected 的默认基线也为 `dev`。功能 PR 合入 dev 后自动
 运行 CI；`Required checks` 汇总格式、官方源安全扫描、类型、零警告 lint、覆盖率和
 被选中的真实测试。通过后调用 `Deploy Ray`：构建五个镜像，在隔离基础设施中实际
