@@ -61,7 +61,8 @@ services:
     volumes: [rabbitmq:/var/lib/rabbitmq]
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'check_running']
+      # A root probe can create an unreadable cookie before the broker starts.
+      test: ['CMD', 'gosu', 'rabbitmq', 'rabbitmq-diagnostics', '-q', 'check_running']
       interval: 15s
       timeout: 15s
       retries: 10

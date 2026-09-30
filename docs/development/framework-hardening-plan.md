@@ -355,6 +355,14 @@ Engine 新 Testcontainers 入口再次通过真实 PG/Redis 集成 7 项，报�
 第三次演练已推送五个不可变镜像并调用真实 deploy.sh，但 RabbitMQ 的健康诊断连续超过
 5 秒上限，基础设施阶段失败，应用尚未替换；容器、网络、卷和临时文件已清理。
 现已仅限制诊断 CLI 的 Erlang scheduler，保留 broker 的容量配置，并使用 check_running、
-15 秒检查超时及 30 秒启动宽限期。第四次完整隔离演练仍在运行，尚未宣称部署通过。
+15 秒检查超时及 30 秒启动宽限期。第四次完整隔离演练失败，日志定位到 root 健康探针
+抢先创建 Erlang cookie，broker 随后因 `eacces` 无法读取；本轮资源也已清理。
+开发与部署 Compose 的探针现改为通过 `gosu rabbitmq` 运行，与 Testcontainers 一致。
+独立空卷实验 `rabbitmq-fresh-761eee1471ed.json` 先复现 root cookie 导致启动失败，
+再验证实际部署/开发配置分别在 96.8/37.2 秒启动健康，cookie 均为
+`rabbitmq:rabbitmq:400`。三个场景均符合预期，容器、网络、卷及临时文件全部清理；
+44 项 CI 行为合约再次通过。该定向复验不替代完整部署演练，后者仍待修复后重跑。
 该测试只使用本机临时 registry、目录与数据，不代表真实服务器或公网 HTTPS 部署通过。
-远端最终 CI 与 dev/main 保护仍需完成，Goal 保持进行中。
+本次远端读回确认：`93cc3b1` 已上传加固分支；默认分支仍为 arch，arch 的严格
+Required checks 与管理员保护已生效。PR #1 的 15 项检查通过于旧提交 `3dd1b28`；
+最新加固提交的完整远端 CI、dev/main 保护与真实环境部署仍需完成，Goal 保持进行中。
