@@ -49,7 +49,7 @@ function createConfig(env = process.env, platform = process.platform, arch = env
       : { appId: 'com.forkpath.desktop' }),
     productName: 'Ray',
     executableName: 'Ray',
-    electronVersion: '39.2.7',
+    electronVersion: pkg.devDependencies.electron,
     directories: { output: `../../dist/desktop/${profile}/${platform}/${arch}`, buildResources: 'build-resources' },
     extraMetadata: {
       version,

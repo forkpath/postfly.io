@@ -2,6 +2,12 @@ import { spawnSync } from 'node:child_process'
 import { mkdir, readdir, rm } from 'node:fs/promises'
 import path from 'node:path'
 
+export function testLaunchArgs(userData) {
+  // Unsigned macOS test builds must not request the developer's real Keychain.
+  // The profile is disposable; signed-release Keychain behavior is separate.
+  return [`--user-data-dir=${userData}`, ...(process.platform === 'darwin' ? ['--use-mock-keychain'] : [])]
+}
+
 export function outputDirectory(profile = 'test', arch = process.env.DESKTOP_ARCH || process.arch) {
   return path.resolve('../../dist/desktop', profile, process.platform, arch)
 }

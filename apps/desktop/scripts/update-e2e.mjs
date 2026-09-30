@@ -8,7 +8,15 @@ import path from 'node:path'
 
 import { _electron as electron } from '@playwright/test'
 
-import { executable, mockAuth, outputDirectory, packageTest, reportDirectory, until } from './test-utils.mjs'
+import {
+  executable,
+  mockAuth,
+  outputDirectory,
+  packageTest,
+  reportDirectory,
+  testLaunchArgs,
+  until
+} from './test-utils.mjs'
 
 // A tilde exercises the file-URL encoding used by Windows short installation paths.
 const root = await mkdtemp(path.join(os.tmpdir(), 'ray-update-e2e-~'))
@@ -103,7 +111,7 @@ try {
   }
   application = await electron.launch({
     executablePath: executableA,
-    args: [`--user-data-dir=${userData}`],
+    args: testLaunchArgs(userData),
     timeout: 60000
   })
   application.process().stdout.on('data', data => {
@@ -156,7 +164,7 @@ try {
     stopInstalledWindowsApp()
     application = await electron.launch({
       executablePath: executableA,
-      args: [`--user-data-dir=${userData}`],
+      args: testLaunchArgs(userData),
       timeout: 60000
     })
     assert.equal(await application.evaluate(({ app }) => app.getVersion()), '0.1.1')

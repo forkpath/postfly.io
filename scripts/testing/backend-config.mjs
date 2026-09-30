@@ -13,6 +13,9 @@ export function backendConfig(project, suite) {
   return {
     root,
     envDir: false,
+    // SWC owns TypeScript, JSX and Nest decorator metadata below. Transforming
+    // its JavaScript again can move derived-class fields ahead of super().
+    oxc: false,
     resolve: {
       alias: Object.entries(paths).map(([key, values]) => ({
         find: new RegExp(`^${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace('\\*', '(.*)')}$`),

@@ -77,6 +77,8 @@ pnpm ci:nx-cache-contracts
 
 测试 profile 使用独立应用标识、更新缓存和快捷方式名称；Windows 测试安装不创建桌面或开始菜单快捷方式，避免覆盖或启动正式应用的同名入口。正式安装配置保持不变。
 
+macOS 的 smoke、e2e 和 update-e2e 只对临时用户目录传入 `--use-mock-keychain`，避免未签名测试包读取开发者钥匙串并等待系统授权。该参数由测试脚本传入，不写入应用或发布配置；smoke 仍检查正式 Fuse 配置，但这些自动化结果不证明真实钥匙串访问或 Cookie 加密兼容性。做签名发布验收时，应正常启动应用另行验证。此隔离方式与 [Electron 官方测试](https://releases.electronjs.org/pr/53790)一致。
+
 e2e 与 update-e2e 使用同一测试打包目录，当前应顺序执行。
 
 报告与失败截图位于 `dist/desktop/test-results`。CI 包含 macOS arm64/x64、Windows x64，以及 Linux 上的 MinIO 集成测试。普通测试包与真实发布包严格分目录。

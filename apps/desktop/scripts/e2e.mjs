@@ -5,17 +5,18 @@ import path from 'node:path'
 
 import { _electron as electron } from '@playwright/test'
 
-import { executable, mockAuth, outputDirectory, packageTest, reportDirectory } from './test-utils.mjs'
+import { executable, mockAuth, outputDirectory, packageTest, reportDirectory, testLaunchArgs } from './test-utils.mjs'
 
 packageTest()
-const userData = await mkdtemp(path.join(os.tmpdir(), 'ray-e2e-'))
 const reports = await reportDirectory('e2e')
-const app = await electron.launch({
-  executablePath: await executable(outputDirectory()),
-  args: [`--user-data-dir=${userData}`],
-  timeout: 60000
-})
+const userData = await mkdtemp(path.join(os.tmpdir(), 'ray-e2e-'))
+let app
 try {
+  app = await electron.launch({
+    executablePath: await executable(outputDirectory()),
+    args: testLaunchArgs(userData),
+    timeout: 60000
+  })
   await mockAuth(app)
   const page = await app.firstWindow({ timeout: 30000 })
   page.on('pageerror', error => console.error('Renderer error:', error.message))
@@ -43,10 +44,13 @@ try {
   await page.getByTestId('updates-status').waitFor()
   console.log('Packaged Electron UI, preload, route reload and window IPC passed')
 } catch (error) {
-  for (const [i, page] of app.windows().entries())
+  for (const [i, page] of (app?.windows() ?? []).entries())
     await page.screenshot({ path: path.join(reports, `failure-${i}.png`) }).catch(() => undefined)
   throw error
 } finally {
-  await app.close()
-  await rm(userData, { recursive: true, force: true })
+  try {
+    await app?.close()
+  } finally {
+    await rm(userData, { recursive: true, force: true })
+  }
 }

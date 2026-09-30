@@ -8,7 +8,7 @@ import path from 'node:path'
 
 import { FuseV1Options, getCurrentFuseWire } from '@electron/fuses'
 
-import { executable, outputDirectory, reportDirectory } from './test-utils.mjs'
+import { executable, outputDirectory, reportDirectory, testLaunchArgs } from './test-utils.mjs'
 
 const require = createRequire(import.meta.url)
 const { listPackage, extractFile } = require('@electron/asar')
@@ -68,7 +68,7 @@ try {
   const { mkdir } = await import('node:fs/promises')
   const userData = path.join(root, 'user-data')
   await mkdir(userData)
-  const child = spawn(binary, ['--desktop-smoke', `--user-data-dir=${userData}`], {
+  const child = spawn(binary, ['--desktop-smoke', ...testLaunchArgs(userData)], {
     cwd: root,
     stdio: ['ignore', 'pipe', 'pipe']
   })

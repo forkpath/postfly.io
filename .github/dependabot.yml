@@ -42,7 +42,10 @@ updates:
             'zeego'
           ]
       auth:
-        patterns: ['better-auth', '@better-auth/*']
+        patterns: ['auth', 'better-auth', '@better-auth/*']
+      electron-toolchain:
+        patterns: ['electron', 'electron-builder', 'electron-updater', '@electron/*', '@sentry/electron']
+        update-types: [minor, patch]
       prisma:
         patterns: ['prisma', '@prisma/*']
       web-toolchain:

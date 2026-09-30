@@ -10,8 +10,6 @@
     ]
   },
   "devDependencies": {
-    "@better-auth/cli": "1.4.21",
-    "@better-fetch/fetch": "1.1.21",
-    "better-call": "1.1.8"
+    "auth": "1.6.26"
   }
 }

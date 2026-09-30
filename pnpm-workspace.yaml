@@ -12,6 +12,7 @@ catalog:
   '@babel/core': 7.29.7
   '@hookform/resolvers': ^5.1.1
   '@nx/vite': 23.2.1
+  '@playwright/test': 1.57.0
   '@sentry/react': 10.47.0
   '@tailwindcss/vite': ^4.3.3
   '@tanstack/devtools-vite': ^0.8.5
@@ -21,8 +22,12 @@ catalog:
   '@tanstack/react-router': ^1.170.38
   '@tanstack/react-router-devtools': ^1.167.2
   '@tanstack/router-plugin': ^1.168.40
+  '@testing-library/react': 16.3.0
   '@vitejs/plugin-react': 6.1.1
-  axios: ^1.13.2
+  '@vitest/coverage-v8': 4.1.11
+  '@vitest/ui': 4.1.11
+  axios: ^1.20.0
+  dayjs: ^1.11.19
   envin: ^1.1.13
   posthog-js: ^1.359.1
   react-hook-form: ^7.54.2
@@ -31,6 +36,7 @@ catalog:
   typescript: 6.0.3
   vite: 8.3.0
   vite-plugin-svgr: ^4.5.0
+  vitest: 4.1.11
   zod: ^4.3.5
 
 catalogs:
@@ -138,16 +144,59 @@ onlyBuiltDependencies:
   - unrs-resolver
 
 overrides:
-  # Match TanStack Start's Node adapter: srvx 0.11.13 emits nested header tuples,
-  # while 0.11.22 consumes flat headers. Mixed instances crash the dev server.
-  'h3@2.0.1-rc.20>srvx': 0.11.22
   '@peculiar/asn1-schema': 2.8.0
-  # Zeego 3.0.6 still pins 1.2.2, which does not compile with React Native 0.86.
-  'zeego>@react-native-menu/menu': 2.0.0
   '@wxt-dev/module-react>@vitejs/plugin-react': 6.1.1
   better-call@1.3.7>@better-fetch/fetch: 1.3.1
-  tmp: '>=0.2.4'
+  # Match TanStack Start's Node adapter; mixed srvx headers crash the dev server.
+  'h3@2.0.1-rc.20>srvx': 0.11.22
+  # Zeego 3.0.6 still pins 1.2.2, which does not compile with React Native 0.86.
+  'zeego>@react-native-menu/menu': 2.0.0
   zod: 4.4.3
+  # Security floors for vulnerable transitive versions; newer versions remain untouched.
+  # Sources and cross-major compatibility checks: docs/development/dependency-governance.md.
+  '@babel/plugin-transform-modules-systemjs@>=7.0.0 <7.29.4': 7.29.4
+  '@isaacs/brace-expansion@>=5.0.0 <5.0.1': 5.0.1
+  '@xhmikosr/decompress@>=11.0.0 <11.1.4': 11.1.4
+  '@xmldom/xmldom@>=0.8.0 <0.8.15': 0.8.15
+  'adm-zip@>=0.5.0 <0.6.1': 0.6.1
+  'brace-expansion@>=1.0.0 <1.1.20': 1.1.20
+  'brace-expansion@>=2.0.0 <2.1.6': 2.1.6
+  'brace-expansion@>=5.0.0 <5.0.11': 5.0.11
+  'browserslist@>=4.0.0 <4.28.7': 4.28.7
+  '@prisma/config@7.8.0>deepmerge-ts': 8.0.2
+  'defu@>=6.0.0 <6.1.5': 6.1.5
+  'fast-uri@>=3.0.0 <3.1.7': 3.1.7
+  'fast-xml-parser@>=5.0.0 <5.10.1': 5.10.1
+  'form-data@>=4.0.0 <4.0.6': 4.0.6
+  'joi@>=17.0.0 <17.13.7': 17.13.7
+  'js-yaml@>=3.0.0 <3.15.2': 3.15.2
+  'js-yaml@>=4.0.0 <4.3.2': 4.3.2
+  'koa@>=3.0.0 <3.1.2': 3.1.2
+  'lodash@>=4.0.0 <4.18.0': 4.18.1
+  'minimatch@>=3.0.0 <3.1.4': 3.1.4
+  'minimatch@>=5.0.0 <5.1.8': 5.1.8
+  'minimatch@>=9.0.0 <9.0.7': 9.0.7
+  'minimatch@>=10.0.0 <10.2.3': 10.2.3
+  'mysql2@>=3.0.0 <3.22.0': 3.22.0
+  'nanoid@>=3.0.0 <3.3.18': 3.3.18
+  'node-forge@>=1.0.0 <1.4.0': 1.4.0
+  'path-to-regexp@>=0.1.0 <0.1.13': 0.1.13
+  'picomatch@>=2.0.0 <2.3.2': 2.3.2
+  'picomatch@>=4.0.0 <4.0.4': 4.0.4
+  'piscina@>=4.0.0 <4.9.3': 4.9.3
+  'postcss@>=8.0.0 <8.5.18': 8.5.18
+  'protobufjs@>=7.0.0 <7.6.1': 7.6.1
+  'rollup@>=4.0.0 <4.59.0': 4.59.0
+  'serialize-javascript@>=6.0.0 <7.0.3': 7.0.5
+  'seroval@>=1.0.0 <1.5.3': 1.5.3
+  'shell-quote@>=1.0.0 <1.9.0': 1.9.0
+  'smol-toml@>=1.0.0 <1.7.1': 1.7.1
+  'svgo@>=3.0.0 <3.3.5': 3.3.5
+  'svgo@>=4.0.0 <4.1.0': 4.1.0
+  'tmp@<0.2.7': 0.2.7
+  'undici@>=7.0.0 <7.29.1': 7.29.1
+  'urllib@>=2.0.0 <2.44.1': 2.44.1
+  'websocket-driver@>=0.7.0 <0.7.5': 0.7.5
 packageExtensions:
   '@react-native-google-signin/google-signin@16.0.0':
     dependencies:

@@ -4,6 +4,9 @@ import { PLATFORM_EVENT_DLX, PLATFORM_SMOKE_EVENT } from '@libs/platform-contrac
 
 import { PlatformEventConsumer } from './platform-event.consumer'
 
+// Decorator metadata retains the DI token; unit tests supply an in-memory inbox.
+vi.mock('@libs/pg-dao', () => ({ PrismaService: class {} }))
+
 const envelope = {
   id: 'message-1',
   type: PLATFORM_SMOKE_EVENT,

@@ -16,7 +16,7 @@ const aliases = Object.entries(tsconfig.compilerOptions.paths).map(([alias, [tar
 export default defineConfig({
   root: import.meta.dirname,
   envDir: false,
-  esbuild: { jsx: 'automatic' },
+  oxc: { jsx: { runtime: 'automatic' } },
 
   resolve: {
     alias: [

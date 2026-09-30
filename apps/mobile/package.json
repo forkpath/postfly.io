@@ -40,6 +40,7 @@
     "@tanstack/react-query": "catalog:",
     "class-variance-authority": "^0.7.1",
     "culori": "^4.0.2",
+    "dayjs": "catalog:",
     "expo": "catalog:native",
     "expo-apple-authentication": "catalog:native",
     "expo-application": "catalog:native",

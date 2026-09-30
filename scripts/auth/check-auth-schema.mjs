@@ -11,6 +11,12 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
 const workspaceRoot = resolve(import.meta.dirname, '../..')
+const toolRoot = join(workspaceRoot, 'tools/auth-schema')
+const runtimeManifest = JSON.parse(readFileSync(join(workspaceRoot, 'package.json'), 'utf8'))
+const toolManifest = JSON.parse(readFileSync(join(toolRoot, 'package.json'), 'utf8'))
+if (toolManifest.devDependencies.auth !== runtimeManifest.dependencies['better-auth']) {
+  throw new Error('Pin the auth CLI to the same exact version as the Better Auth runtime before checking schemas.')
+}
 const canonicalPath = join(workspaceRoot, 'libs/pg-dao/src/models/auth.prisma')
 const authProjectRoot = join(workspaceRoot, 'libs/auth-server')
 const temporaryDirectory = mkdtempSync(join(tmpdir(), 'ray-auth-schema-'))
@@ -99,9 +105,9 @@ try {
     'pnpm',
     [
       '--dir',
-      join(workspaceRoot, 'tools/auth-schema'),
+      toolRoot,
       'exec',
-      'better-auth',
+      'auth',
       'generate',
       '--cwd',
       authProjectRoot,
