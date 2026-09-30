@@ -20,7 +20,7 @@ await expectOk('/api/v1/health')
 
 const signIn = await expectOk('/api/auth/sign-in/email', {
   method: 'POST',
-  headers: { 'content-type': 'application/json' },
+  headers: { 'content-type': 'application/json', Origin: new URL(baseUrl).origin },
   body: JSON.stringify({ email, password })
 })
 const cookies = signIn.headers

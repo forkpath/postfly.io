@@ -76,7 +76,7 @@ plugins:
   # ─── Rate limiting ───────────────────────────────────────────
   - name: rate-limiting
     config:
-      minute: 200
+      minute: ${KONG_RATE_LIMIT_MINUTE}
       policy: redis
       redis:
         host: ${REDIS_HOST}

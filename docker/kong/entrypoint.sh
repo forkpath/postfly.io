@@ -10,6 +10,11 @@ set -eu
 : "${PULSE_UPSTREAM:=pulse:3001}"
 : "${WEB_UPSTREAM:=web:3000}"
 : "${KONG_AUTO_TLS:=false}"
+: "${KONG_RATE_LIMIT_MINUTE:=200}"
+case "$KONG_RATE_LIMIT_MINUTE" in
+  ''|*[!0-9]*) printf 'KONG_RATE_LIMIT_MINUTE must be a positive integer\n' >&2; exit 1 ;;
+esac
+test "$KONG_RATE_LIMIT_MINUTE" -gt 0 || { printf 'KONG_RATE_LIMIT_MINUTE must be positive\n' >&2; exit 1; }
 
 # Escape sed replacement characters, including those in Redis credentials.
 escape() { printf '%s' "$1" | sed 's/[\\&|]/\\&/g'; }
@@ -20,6 +25,7 @@ render() {
     -e "s|\${PUBLIC_ORIGIN}|$(escape "$PUBLIC_ORIGIN")|g" \
     -e "s|\${REDIS_HOST}|$(escape "$REDIS_HOST")|g" \
     -e "s|\${REDIS_PASSWORD}|$(escape "$REDIS_PASSWORD")|g" \
+    -e "s|\${KONG_RATE_LIMIT_MINUTE}|$KONG_RATE_LIMIT_MINUTE|g" \
     -e "s|\${ENGINE_UPSTREAM}|$(escape "$ENGINE_UPSTREAM")|g" \
     -e "s|\${PULSE_UPSTREAM}|$(escape "$PULSE_UPSTREAM")|g" \
     -e "s|\${WEB_UPSTREAM}|$(escape "$WEB_UPSTREAM")|g" "$1"

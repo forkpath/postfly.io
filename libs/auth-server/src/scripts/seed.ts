@@ -25,10 +25,6 @@ interface SeedContext {
   passwordHash: string
 }
 
-interface SeededMember {
-  userId: string
-}
-
 const seedUser = async (
   { context, passwordHash }: SeedContext,
   { email, role = UserRole.USER }: { email: string; role?: string }
@@ -186,15 +182,15 @@ const seedOrganization = async (seedCtx: SeedContext) => {
   )
 
   const invitationRoles = memberRoles.filter(role => role !== MemberRole.OWNER)
+  const inviterId = members[memberRoles.indexOf(MemberRole.OWNER)]?.userId
+  if (!inviterId) throw new Error('Seed organization owner was not created')
   await Promise.all(
-    members.flatMap((member: SeededMember | null) =>
-      invitationRoles.map(role =>
-        seedOrganizationInvitation(seedCtx, {
-          organizationId: organization.id,
-          role,
-          inviterId: member?.userId ?? ''
-        })
-      )
+    invitationRoles.map(role =>
+      seedOrganizationInvitation(seedCtx, {
+        organizationId: organization.id,
+        role,
+        inviterId
+      })
     )
   )
 
@@ -223,7 +219,7 @@ async function main() {
 main()
   .catch(error => {
     console.error('Seed failed:', error)
-    process.exit(1)
+    process.exitCode = 1
   })
   .finally(async () => {
     await prisma.$disconnect()

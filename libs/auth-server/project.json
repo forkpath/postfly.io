@@ -17,12 +17,8 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "tsx ./src/scripts/seed.ts",
-        "cwd": "libs/auth-server",
-        "env": {
-          "NODE_OPTIONS": "-r tsconfig-paths/register",
-          "TS_NODE_PROJECT": "tsconfig.json"
-        }
+        "command": "tsx --tsconfig tsconfig.json ./src/scripts/seed.ts",
+        "cwd": "libs/auth-server"
       },
       "dependsOn": [
         {

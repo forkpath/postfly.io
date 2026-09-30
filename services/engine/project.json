@@ -34,11 +34,12 @@
       "continuous": true,
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
-      "dependsOn": ["build"],
+      "dependsOn": [],
       "options": {
         "buildTarget": "engine:build",
         "runBuildTargetDependencies": false,
-        "watch": true
+        "watch": true,
+        "inspect": false
       },
       "configurations": {
         "development": {

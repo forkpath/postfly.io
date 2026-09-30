@@ -29,6 +29,9 @@
     ],
     "viteBuildEnvironment": [
       {
+        "env": "VITE_REACT_SCAN_ENABLED"
+      },
+      {
         "env": "RAY_EXTENSION_E2E"
       },
       {

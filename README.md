@@ -4,28 +4,26 @@ Ray 是基于 Nx 的 monorepo。Web、Electron、Expo 和浏览器扩展共用�
 
 ## 开始使用
 
-需要 Node 24、根 `package.json` 的 `packageManager` 指定版本的 pnpm，以及 Docker。先复制 `.env.example` 为 `.env`，设置自己的数据库密码与 `BETTER_AUTH_SECRET`；已有 `.env` 不要覆盖。
+需要 Node 24、根 `package.json` 的 `packageManager` 指定版本的 pnpm，以及已启动的本机 Docker。
 
 ```sh
-pnpm install --frozen-lockfile
-pnpm docker:dev
-pnpm db:init
+pnpm bootstrap --seed --start
 ```
 
-`db:init` 生成 Prisma Client，并通过一份初始化迁移创建完整数据库结构。无需执行回填、切换开关或框架研发过程中的升级步骤。它不会创建演示账号，普通用户通过认证页面注册；`db:seed` 仅在显式配置 SEED_EMAIL/SEED_PASSWORD 后创建开发演示账号和组织。
+命令检查工具版本，保留已有 `.env`，或从 example 创建权限为 0600 的本地配置与随机密码；冻结安装依赖，启动开发基础设施，执行 `db:init`。`--seed` 明确选择创建演示账号和组织；`--start` 随后通过 Nx 启动 Web、Engine、Pulse、Worker，并检查实际就绪状态。
 
-分别在终端启动服务：
+新配置的普通账号是 `developer+user@example.test`，管理员账号是 `developer+admin@example.test`，密码读取本地 `.env` 的 `SEED_PASSWORD`，不会打印在日志中。已有配置须提供 `SEED_EMAIL`/`SEED_PASSWORD`；不需要演示数据时省略 `--seed`。
+
+后续开发和诊断：
 
 ```sh
-pnpm dev:engine
-pnpm dev:pulse
-pnpm dev:worker
-pnpm dev:web
+pnpm dev
+pnpm run doctor --running
 ```
 
-访问 **http://localhost:8080**。开发环境的 Kong 将 `/api` 转到 Engine、`/ws` 转到 Pulse、其余页面转到 Web。Worker 的健康端口仅供内部检查，业务任务来自 RabbitMQ。
+访问启动输出中的地址，默认 **http://localhost:8080**；端口已占用时，新配置会选择空闲端口。Kong 将 `/api` 转到 Engine、`/ws` 转到 Pulse、其余页面转到 Web。Ctrl-C 停止本轮应用进程，开发数据保留；`pnpm docker:dev:down` 停止基础服务且保留数据卷。
 
-邮件验证、OAuth、支付等能力需要配置对应提供商；这些配置与数据库初始化无关。移动设备访问时，将公开 URL 的 localhost 改为开发机可访问的地址。
+邮件、OAuth、支付仍需配置对应提供商。真机调试、自定义远端基础设施及分步命令见 [本地启动指南](docs/development/bootstrap.md)；bootstrap 的自动初始化只接受本机数据库。
 
 ## 仓库结构
 
@@ -43,6 +41,7 @@ pnpm dev:web
 
 - [框架与依赖边界](docs/architecture/ray-framework-nx-guide.md)
 - [环境变量](docs/development/environment.md)
+- [本地启动与诊断](docs/development/bootstrap.md)
 - [数据库模型与日常命令](libs/pg-dao/README.md)
 - [认证与授权](docs/architecture/authentication-and-authorized.md)
 - [组织上下文](docs/architecture/workspace-switching.md)

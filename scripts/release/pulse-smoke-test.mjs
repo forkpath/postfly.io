@@ -12,7 +12,7 @@ socketUrl.protocol = socketUrl.protocol === 'https:' ? 'wss:' : 'ws:'
 
 const signIn = await fetch(new URL('/api/auth/sign-in/email', engineUrl), {
   method: 'POST',
-  headers: { 'content-type': 'application/json' },
+  headers: { 'content-type': 'application/json', Origin: new URL(engineUrl).origin },
   body: JSON.stringify({ email, password })
 })
 if (!signIn.ok) throw new Error(`Pulse smoke sign-in failed: ${signIn.status}`)
@@ -49,9 +49,8 @@ function connect(headers = {}) {
         clearTimeout(timeout)
         const response = JSON.parse(subscription.toString())
         socket.close()
-        response.type === 'subscribed'
-          ? resolve(undefined)
-          : reject(new Error(`organization subscription failed: ${subscription.toString()}`))
+        if (response.type === 'subscribed') resolve(undefined)
+        else reject(new Error(`organization subscription failed: ${subscription.toString()}`))
       })
     })
   })

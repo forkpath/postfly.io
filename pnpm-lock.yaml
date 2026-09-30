@@ -278,6 +278,7 @@ catalogs:
       version: 19.2.3
 
 overrides:
+  h3@2.0.1-rc.20>srvx: 0.11.22
   '@peculiar/asn1-schema': 2.8.0
   zeego>@react-native-menu/menu: 2.0.0
   '@wxt-dev/module-react>@vitejs/plugin-react': 6.1.1
@@ -950,6 +951,9 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+      tsx:
+        specifier: 4.21.0
+        version: 4.21.0
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -36803,14 +36807,14 @@ snapshots:
   h3@2.0.1-rc.20(crossws@0.4.4(srvx@0.11.13)):
     dependencies:
       rou3: 0.8.1
-      srvx: 0.11.13
+      srvx: 0.11.22
     optionalDependencies:
       crossws: 0.4.4(srvx@0.11.13)
 
   h3@2.0.1-rc.20(crossws@0.4.4(srvx@0.11.22)):
     dependencies:
       rou3: 0.8.1
-      srvx: 0.11.13
+      srvx: 0.11.22
     optionalDependencies:
       crossws: 0.4.4(srvx@0.11.22)
     optional: true

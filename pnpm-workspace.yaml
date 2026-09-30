@@ -137,6 +137,9 @@ onlyBuiltDependencies:
   - unrs-resolver
 
 overrides:
+  # Match TanStack Start's Node adapter: srvx 0.11.13 emits nested header tuples,
+  # while 0.11.22 consumes flat headers. Mixed instances crash the dev server.
+  'h3@2.0.1-rc.20>srvx': 0.11.22
   '@peculiar/asn1-schema': 2.8.0
   # Zeego 3.0.6 still pins 1.2.2, which does not compile with React Native 0.86.
   'zeego>@react-native-menu/menu': 2.0.0

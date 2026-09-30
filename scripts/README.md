@@ -1,13 +1,14 @@
 # 维护与交付入口
 
-新项目只需按根 README 启动基础设施、运行一次 `pnpm db:init`，再启动服务。这里的脚本由对应命令或 CI 调用，不是需要逐项执行的安装清单。
+新项目按根 README 执行 `pnpm bootstrap --seed --start`。这里的脚本由对应命令或 CI 调用，不是需要逐项执行的安装清单。
 
-| 入口                         | 用途                                                             | 使用时机                                            |
-| ---------------------------- | ---------------------------------------------------------------- | --------------------------------------------------- |
-| `clean.mjs`                  | 清理依赖、缓存和构建产物；保护 Git 已跟踪文件及符号链接目标      | `pnpm clean:dry-run` 预览，`pnpm clean` 执行        |
-| `sync-skills.mjs`            | 为 Codex/Cursor 补齐指向 `.agents/skills` 的相对链接，冲突时停止 | `pnpm sync:skills`；检查用 `pnpm sync:skills:check` |
-| [auth](auth/README.md)       | 比较 Better Auth 生成模型与受控模型                              | 修改认证配置、插件或依赖后；CI 显式调用             |
-| [ci](ci/README.md)           | 验证缓存、边界和容器配置                                         | PR/CI；不参与应用启动                               |
-| [release](release/README.md) | 初始化数据库并部署服务到 Kong 后方，以及按需执行健康探针         | 服务器部署或发布验收                                |
+| 入口                                            | 用途                                                             | 使用时机                                            |
+| ----------------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------- |
+| [development](../docs/development/bootstrap.md) | 本机初始化、诊断与全栈启动                                       | `pnpm bootstrap`、`pnpm run doctor`、`pnpm dev`     |
+| `clean.mjs`                                     | 清理依赖、缓存和构建产物；保护 Git 已跟踪文件及符号链接目标      | `pnpm clean:dry-run` 预览，`pnpm clean` 执行        |
+| `sync-skills.mjs`                               | 为 Codex/Cursor 补齐指向 `.agents/skills` 的相对链接，冲突时停止 | `pnpm sync:skills`；检查用 `pnpm sync:skills:check` |
+| [auth](auth/README.md)                          | 比较 Better Auth 生成模型与受控模型                              | 修改认证配置、插件或依赖后；CI 显式调用             |
+| [ci](ci/README.md)                              | 验证缓存、边界和容器配置                                         | PR/CI；不参与应用启动                               |
+| [release](release/README.md)                    | 初始化数据库并部署服务到 Kong 后方，以及按需执行健康探针         | 服务器部署或发布验收                                |
 
 测试只覆盖有实际价值的行为。清理防误删和运行时隔离检查保留；普通转发命令不要求再写一份重复实现的测试。

@@ -39,10 +39,11 @@ export default defineConfig(async ({ command }) => {
     server: {
       port: parseInt(process.env.WEB_PORT as string, 10) || 3000,
       host: '0.0.0.0',
+      strictPort: true,
       allowedHosts: ['localhost', new URL(process.env.PUBLIC_ORIGIN || 'http://localhost').hostname],
       proxy: {
         '/api': {
-          target: 'http://localhost:8000',
+          target: `http://localhost:${process.env.ENGINE_PORT || 8000}`,
           changeOrigin: true,
           rewrite: (path: string) => path.replace(/^\/api/, '/api')
         }
