@@ -11,13 +11,14 @@ import type {
 
 import { Injectable } from '@nestjs/common'
 
-import { prisma } from '@libs/pg-dao'
+import { Prisma, prisma } from '@libs/pg-dao'
 
 import { Invitation, Member, Organization } from '../../domain/entities/organization.entity'
 import { InvitationId } from '../../domain/value-objects/invitation-id.vo'
 import { MemberId } from '../../domain/value-objects/member-id.vo'
 import { OrganizationId } from '../../domain/value-objects/organization-id.vo'
 import { OrganizationSlug } from '../../domain/value-objects/organization-slug.vo'
+import { listOffset, listOrder } from './list-query'
 
 @Injectable()
 export class OrganizationRepository implements IOrganizationRepository {
@@ -26,53 +27,31 @@ export class OrganizationRepository implements IOrganizationRepository {
   ): Promise<PagedResult<OrganizationEntity> & { max: { members: number } }> {
     const { page, perPage, sort, q, createdAt, members } = params
 
-    const conditions: string[] = ['1=1']
-    const values: unknown[] = []
-    let paramIdx = 1
-
-    if (q) {
-      conditions.push(`(o.name ILIKE $${paramIdx} OR o.slug ILIKE $${paramIdx})`)
-      values.push(`%${q}%`)
-      paramIdx++
-    }
-
-    if (createdAt) {
-      conditions.push(`o.created_at >= $${paramIdx}::timestamptz AND o.created_at <= $${paramIdx + 1}::timestamptz`)
-      values.push(createdAt.from, createdAt.to)
-      paramIdx += 2
-    }
-
-    const havingConditions: string[] = []
-    if (members) {
-      havingConditions.push(`COUNT(m.id) >= ${members.from} AND COUNT(m.id) <= ${members.to}`)
-    }
-
-    const whereClause = conditions.join(' AND ')
-    const havingClause = havingConditions.length ? `HAVING ${havingConditions.join(' AND ')}` : ''
-
-    const sortColumn =
-      sort?.[0]?.field === 'members'
-        ? 'member_count'
-        : sort?.[0]?.field
-          ? `o.${this.toSnakeCase(sort[0].field)}`
-          : 'o.created_at'
-    const sortDir = sort?.[0]?.desc ? 'DESC' : 'ASC'
-
-    const dataQuery = `
-      SELECT
-        o.id, o.name, o.slug, o.logo, o.created_at,
-        COUNT(m.id)::int AS member_count,
-        COUNT(*) OVER() AS total_count
-      FROM organization o
-      LEFT JOIN member m ON m.organization_id = o.id
-      WHERE ${whereClause}
+    const offset = listOffset(page, perPage)
+    const orderBy = listOrder(
+      sort,
+      new Map([
+        ['id', Prisma.sql`o.id`],
+        ['name', Prisma.sql`o.name`],
+        ['slug', Prisma.sql`o.slug`],
+        ['logo', Prisma.sql`o.logo`],
+        ['createdAt', Prisma.sql`o.created_at`],
+        ['members', Prisma.sql`COUNT(m.id)`]
+      ]),
+      Prisma.sql`o.created_at ASC`,
+      Prisma.sql`o.id ASC`
+    )
+    const conditions: Prisma.Sql[] = [Prisma.sql`TRUE`]
+    if (q) conditions.push(Prisma.sql`(o.name ILIKE ${`%${q}%`} OR o.slug ILIKE ${`%${q}%`})`)
+    if (createdAt) conditions.push(Prisma.sql`o.created_at BETWEEN ${createdAt.from} AND ${createdAt.to}`)
+    const grouped = Prisma.sql`
+      FROM public.organization o
+      LEFT JOIN public.member m ON m.organization_id = o.id
+      WHERE ${Prisma.join(conditions, ' AND ')}
       GROUP BY o.id
-      ${havingClause}
-      ORDER BY ${sortColumn} ${sortDir}
-      LIMIT ${perPage} OFFSET ${(page - 1) * perPage}
+      HAVING ${members ? Prisma.sql`COUNT(m.id) BETWEEN ${members.from} AND ${members.to}` : Prisma.sql`TRUE`}
     `
-
-    const rows = await prisma.$queryRawUnsafe<
+    const rows = await prisma.$queryRaw<
       Array<{
         id: string
         name: string
@@ -82,20 +61,28 @@ export class OrganizationRepository implements IOrganizationRepository {
         member_count: number
         total_count: number
       }>
-    >(dataQuery, ...values)
-
-    const total = rows.length > 0 ? Number(rows[0].total_count) : 0
-
-    const maxQuery = `
-      SELECT COALESCE(MAX(cnt), 0)::int AS max_members
-      FROM (
-        SELECT COUNT(m.id) AS cnt
-        FROM organization o
-        LEFT JOIN member m ON m.organization_id = o.id
-        GROUP BY o.id
-      ) sub
-    `
-    const maxResult = await prisma.$queryRawUnsafe<[{ max_members: number }]>(maxQuery)
+    >(Prisma.sql`
+      SELECT o.id, o.name, o.slug, o.logo, o.created_at,
+        COUNT(m.id)::int AS member_count, COUNT(*) OVER()::int AS total_count
+      ${grouped}
+      ORDER BY ${orderBy}
+      LIMIT ${perPage} OFFSET ${offset}
+    `)
+    const total =
+      rows[0]?.total_count ??
+      (offset > 0
+        ? ((
+            await prisma.$queryRaw<Array<{ total: number }>>(
+              Prisma.sql`SELECT COUNT(*)::int AS total FROM (SELECT o.id ${grouped}) filtered`
+            )
+          )[0]?.total ?? 0)
+        : 0)
+    const maxResult = await prisma.$queryRaw<Array<{ max_members: number }>>(Prisma.sql`
+      SELECT COALESCE(MAX(cnt), 0)::int AS max_members FROM (
+        SELECT COUNT(m.id) AS cnt FROM public.organization o
+        LEFT JOIN public.member m ON m.organization_id = o.id GROUP BY o.id
+      ) counts
+    `)
     const membersMax = maxResult[0]?.max_members ?? 0
 
     return {
@@ -363,9 +350,5 @@ export class OrganizationRepository implements IOrganizationRepository {
       organizationId: data.organizationId,
       inviterId: data.inviterId
     })
-  }
-
-  private toSnakeCase(str: string): string {
-    return str.replace(/[A-Z]/g, c => `_${c.toLowerCase()}`)
   }
 }

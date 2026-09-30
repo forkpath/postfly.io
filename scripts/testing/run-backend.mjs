@@ -4,6 +4,15 @@ import { createWriteStream } from 'node:fs'
 import { appendFile, mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
+// These fixtures use public, pinned images and locally built release images.
+// Do not request a developer's registry credentials or reusable test resources.
+process.env.DOCKER_AUTH_CONFIG = '{"auths":{}}'
+process.env.TESTCONTAINERS_REUSE_ENABLE = 'false'
+process.env.TESTCONTAINERS_RYUK_DISABLED = 'false'
+process.env.RYUK_CONTAINER_IMAGE =
+  'testcontainers/ryuk:0.14.0@sha256:7c1a8a9a47c780ed0f983770a662f80deb115d95cce3e2daa3d12115b8cd28f0'
+const { BackendContainers, backendServices, TEST_RUN_LABEL } = await import('./backend-containers.mjs')
+
 const [project, suite] = process.argv.slice(2)
 const releaseArtifacts = project === 'release' && suite === 'artifact'
 if (
@@ -60,16 +69,6 @@ if (releaseArtifacts) {
   env.RAY_RELEASE_IMAGE_TAG = tag
 }
 
-const compose = [
-  'compose',
-  '--env-file',
-  '/dev/null',
-  '-f',
-  resolve(root, 'docker/docker-compose.test.yml'),
-  ...(releaseArtifacts ? ['-f', resolve(root, 'docker/docker-compose.release-test.yml')] : []),
-  '-p',
-  namespace
-]
 let activeChild
 let interrupted = false
 let cleaning = false
@@ -88,7 +87,7 @@ function stop(signal) {
 process.on('SIGINT', stop)
 process.on('SIGTERM', stop)
 
-function run(command, args, { capture = false, timeout = 300_000 } = {}) {
+function run(command, args, { capture = false, includeStderr = false, timeout = 300_000 } = {}) {
   if (interrupted && !cleaning) throw new Error('Test run interrupted')
   return new Promise((resolveResult, reject) => {
     const child = spawn(command, args, { cwd: root, env, detached: true, stdio: ['ignore', 'pipe', 'pipe'] })
@@ -104,6 +103,7 @@ function run(command, args, { capture = false, timeout = 300_000 } = {}) {
     })
     child.stderr.on('data', chunk => {
       stderr += chunk
+      if (capture && includeStderr) stdout += chunk
       if (!capture) {
         process.stderr.write(chunk)
         outputLog.write(chunk.toString().replaceAll(password, '[test-password]'))
@@ -116,7 +116,11 @@ function run(command, args, { capture = false, timeout = 300_000 } = {}) {
         /* already exited */
       }
     }, timeout)
-    child.on('error', reject)
+    child.on('error', error => {
+      clearTimeout(timer)
+      if (activeChild === child) activeChild = undefined
+      reject(error)
+    })
     child.on('close', (code, signal) => {
       clearTimeout(timer)
       if (activeChild === child) activeChild = undefined
@@ -126,26 +130,31 @@ function run(command, args, { capture = false, timeout = 300_000 } = {}) {
   })
 }
 
-async function port(service, internal) {
-  const address = await run('docker', [...compose, 'port', service, String(internal)], { capture: true })
-  if (!/^127\.0\.0\.1:\d+$/.test(address)) throw new Error(`Unsafe test address: ${address}`)
-  return address.split(':')[1]
-}
+const infrastructure = new BackendContainers({
+  namespace,
+  database,
+  password,
+  root,
+  progress(message) {
+    const line = `[${namespace}] ${message}\n`
+    process.stdout.write(line)
+    outputLog.write(line)
+  },
+  assertRunning() {
+    if (interrupted) throw new Error('Test run interrupted')
+  },
+  async inspect(id) {
+    return JSON.parse(await run('docker', ['inspect', id], { capture: true }))[0]
+  }
+})
+const port = (service, internal) => infrastructure.port(service, internal)
 
 let passed = false
 let cleaned = false
+const resources = []
 try {
-  const services =
-    suite === 'integration'
-      ? project === 'worker'
-        ? ['postgres']
-        : ['postgres', 'redis']
-      : project === 'pulse'
-        ? ['postgres', 'redis']
-        : project === 'worker'
-          ? ['postgres', 'mongo', 'rabbitmq']
-          : ['postgres', 'redis', 'mongo', 'rabbitmq']
-  await run('docker', [...compose, 'up', '-d', '--wait', '--wait-timeout', '240', ...services])
+  const services = backendServices(project, suite)
+  await infrastructure.start(services)
   const pgPort = await port('postgres', 5432)
   Object.assign(env, {
     POSTGRES_DATABASE_URL: `postgresql://ray_test:${password}@127.0.0.1:${pgPort}/${database}`
@@ -169,30 +178,9 @@ try {
   // The runner constructs the URL after verifying Docker's loopback mapping.
   // Never migrate a caller-supplied URL or reuse development volumes.
   if (releaseArtifacts) {
-    // Test already-built images. Never rebuild or pull an unverified replacement.
-    await run('docker', [...compose, 'run', '--rm', '--pull', 'never', 'migrator'])
-    await run('docker', [
-      ...compose,
-      'up',
-      '-d',
-      '--pull',
-      'never',
-      '--wait',
-      '--wait-timeout',
-      '120',
-      'engine',
-      'pulse',
-      'worker',
-      'web'
-    ])
-    Object.assign(env, {
-      SMOKE_BASE_URL: `http://127.0.0.1:${await port('web', 3000)}`,
-      SMOKE_API_BASE_URL: `http://127.0.0.1:${await port('engine', 8000)}`,
-      SMOKE_PULSE_BASE_URL: `http://127.0.0.1:${await port('pulse', 3001)}`
-    })
-    await run(process.execPath, ['scripts/release/framework-smoke.mjs'])
-    await writeFile(
-      resolve(reportDir, 'images.json'),
+    // Capture local image IDs before starting; bind evidence to the images
+    // actually executed, even if another process later changes these tags.
+    const images = JSON.parse(
       await run(
         'docker',
         [
@@ -205,6 +193,26 @@ try {
         { capture: true }
       )
     )
+    await infrastructure.release({
+      prefix: env.RAY_RELEASE_IMAGE_PREFIX,
+      tag: env.RAY_RELEASE_IMAGE_TAG,
+      secret: env.BETTER_AUTH_SECRET
+    })
+    for (const service of ['engine', 'pulse', 'worker', 'web', 'migrator']) {
+      const actual = await infrastructure.inspect(infrastructure.containers.get(service).getId())
+      const expected = images.find(image =>
+        image.RepoTags?.includes(`${env.RAY_RELEASE_IMAGE_PREFIX}/${service}:${env.RAY_RELEASE_IMAGE_TAG}`)
+      )
+      if (!expected || actual.Image !== expected.Id)
+        throw new Error(`Release image changed before ${service} validation`)
+    }
+    Object.assign(env, {
+      SMOKE_BASE_URL: `http://127.0.0.1:${await port('web', 3000)}`,
+      SMOKE_API_BASE_URL: `http://127.0.0.1:${await port('engine', 8000)}`,
+      SMOKE_PULSE_BASE_URL: `http://127.0.0.1:${await port('pulse', 3001)}`
+    })
+    await run(process.execPath, ['scripts/release/framework-smoke.mjs'])
+    await writeFile(resolve(reportDir, 'images.json'), JSON.stringify(images))
   } else {
     await run('pnpm', ['nx', 'run', 'pg-dao:init', '--outputStyle=stream'])
     await run('pnpm', ['nx', 'run', `${project}:${suite}-run`, '--outputStyle=stream'], { timeout: 600_000 })
@@ -216,17 +224,48 @@ try {
 } finally {
   cleaning = true
   try {
-    const logs = await run('docker', [...compose, 'logs', '--no-color'], { capture: true, timeout: 30_000 })
-    await writeFile(resolve(reportDir, 'infrastructure.log'), logs.replaceAll(password, '[test-password]'))
+    const ids = (
+      await run('docker', ['ps', '-aq', '--filter', `label=${TEST_RUN_LABEL}=${namespace}`], { capture: true })
+    )
+      .split(/\s+/)
+      .filter(Boolean)
+    const logs = []
+    for (const id of ids) {
+      try {
+        const info = await infrastructure.inspect(id)
+        resources.push({
+          id,
+          image: info.Image,
+          ports: info.NetworkSettings.Ports,
+          volumes: info.Mounts.filter(mount => mount.Type === 'volume').map(mount => mount.Name)
+        })
+        logs.push(
+          await run('docker', ['logs', '--tail', '2000', id], { capture: true, includeStderr: true, timeout: 15_000 })
+        )
+      } catch (error) {
+        logs.push(`Could not collect ${id}: ${error.message}`)
+      }
+    }
+    await writeFile(resolve(reportDir, 'infrastructure.log'), logs.join('\n').replaceAll(password, '[test-password]'))
   } catch (error) {
     console.error(`Could not collect infrastructure logs: ${error.message}`)
   }
   try {
-    await run('docker', [...compose, 'down', '--volumes', '--remove-orphans', '--timeout', '10'], { timeout: 60_000 })
-    const remaining = await run('docker', ['ps', '-aq', '--filter', `label=com.docker.compose.project=${namespace}`], {
+    const stopErrors = await infrastructure.stop()
+    for (const error of stopErrors) console.error(`Container stop will use scoped cleanup: ${error.message}`)
+    const remaining = await run('docker', ['ps', '-aq', '--filter', `label=${TEST_RUN_LABEL}=${namespace}`], {
       capture: true
     })
-    if (remaining) throw new Error(`Containers remain for ${namespace}`)
+    if (remaining) await run('docker', ['rm', '-fv', ...remaining.split(/\s+/)], { timeout: 60_000 })
+    if (infrastructure.network) await infrastructure.network.stop()
+    const leftovers = await run('docker', ['ps', '-aq', '--filter', `label=${TEST_RUN_LABEL}=${namespace}`], {
+      capture: true
+    })
+    if (leftovers) throw new Error(`Containers remain for ${namespace}`)
+    const volumes = new Set((await run('docker', ['volume', 'ls', '-q'], { capture: true })).split(/\s+/))
+    if (resources.some(resource => resource.volumes.some(volume => volumes.has(volume)))) {
+      throw new Error(`Test volumes remain for ${namespace}`)
+    }
     cleaned = true
   } catch (error) {
     console.error(`Test environment cleanup failed: ${error.message}`)
@@ -234,7 +273,21 @@ try {
   }
   await writeFile(
     resolve(reportDir, 'run.json'),
-    JSON.stringify({ namespace, project, suite, passed, cleaned, interrupted }, null, 2)
+    JSON.stringify(
+      {
+        namespace,
+        project,
+        suite,
+        orchestrator: 'testcontainers',
+        network: infrastructure.network?.getId(),
+        resources,
+        passed,
+        cleaned,
+        interrupted
+      },
+      null,
+      2
+    )
   )
   await new Promise(resolveLog => outputLog.end(resolveLog))
   process.removeListener('SIGINT', stop)

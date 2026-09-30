@@ -17,7 +17,7 @@
 | 4    | analytics-web 冷导入测试稳定                         | 冷启动 3 轮通过，待最终 CI                 | 独立冷启动及并发任务压力下重复通过，保留原断言，不靠 retries 隐藏失败                                                                                                    |
 | 5    | 本地确定性完整模块 generator                         | 待实施                                     | 一条 Nx 命令生成 Prisma、Domain、Repository、CQRS、Use Case、Controller、Payload、API client 和测试；干净副本生成后类型/lint/测试/真实 HTTP 与持久化通过；拒绝越界及覆盖 |
 | 6    | 覆盖率门槛及跨端测试示例                             | Mobile/Extension 示例已有，其余待补        | Vitest 阈值在 affected CI 强制执行，降低覆盖率的负向验证失败；ui-web 组件、Web 路由示例和已有 Native/扩展示例可复制运行                                                  |
-| 7    | Testcontainers 集成环境与真实仓储测试                | 既有 Compose 协议测试通过，需按要求迁移    | Testcontainers 启动 PG/Redis/RabbitMQ（完整服务需要 Mongo 时一并提供）；真实 Repository、Worker 去重/重试/恢复及成功/失败/中断清理验证；保持唯一默认入口                 |
+| 7    | Testcontainers 集成环境与真实仓储测试                | 本地六套矩阵与镜像编排通过，待最终 CI      | Testcontainers 启动 PG/Redis/RabbitMQ（完整服务需要 Mongo 时一并提供）；真实 Repository、Worker 去重/重试/恢复及成功/失败/中断清理验证；保持唯一默认入口                 |
 | 8    | PR 前移 E2E                                          | 既有 affected Web/Extension/后端套件已实现 | PR 事件确实选择并执行页面 smoke；需要身份时使用隔离测试账号，失败传播到 Required checks                                                                                  |
 | 9    | 分组依赖升级与官方源安全扫描                         | 分组更新/扫描配置已添加；依赖告警待修复    | Renovate 或 Dependabot 配置有效；官方源真实扫描与失败门禁；评估并记录 Mobile/Extension 项目依赖归属                                                                      |
 | 10   | CODEOWNERS、PR 模板及分支保护                        | CODEOWNERS/模板已添加；dev/main 保护待补   | CODEOWNERS 身份有效、模板有验证与风险说明；dev/main 必需检查实际生效                                                                                                     |
@@ -97,3 +97,54 @@ ObjectId 不被误转换。主工作区暂存内容没有被本轮操作改写�
 本阶段没有执行新的远端或原生 CI；最终同一提交的完整验收仍属于阶段 6。
 未修复的依赖安全告警、生成器、Testcontainers、覆盖率门槛、bootstrap、剩余 UI 拆分及
 分支部署仍是本 Goal 的必要后续工作，不能以本阶段通过提前结项。
+
+## 仓储与 Testcontainers 阶段验收（2026-09-30）
+
+代码复核发现管理列表排序字段未限定，以及 CustomerRepository 仍查询旧
+`reference_id` 列。现在客户/组织列表使用固定 SQL 字段映射和 Prisma 参数化，
+支持已有 `user.name` 排序及个人/组织客户，修正超出末页时的总数；客户端与 DTO
+共用请求校验。两个 CQRS Handler 通过独立 Use Case 调用仓储接口，路径、平台
+管理员权限与响应 envelope 保持兼容，没有迁移生产数据或新增业务表。
+
+Testcontainers 12.2.0 成为后端测试与发布镜像验证的共同编排入口，替换两份测试
+Compose 文件。固定 PG/Redis/Mongo/RabbitMQ 与 Ryuk 的 image digest，随机 loopback
+端口、临时身份、迁移隔离与唯一网络保留。公共镜像不读取个人 registry 凭据，
+发布镜像必须在本机存在且运行 image ID 与验收记录一致。
+
+已通过：Engine 集成 7 项、HTTP E2E 6 项，Pulse 集成 1 项、WebSocket E2E 7 项，
+Worker 集成 1 项、消息 E2E 6 项，共 28 项，无失败、无跳过。
+32 项相关 Nx 单测/类型/lint 检查，以及新增客户端校验的 31 项单测与类型/lint；
+CI 合约 25 项。首次类型复验发现表格 SortingState 类型兼容问题，已修复并复验。
+向有运行容器的独立 runner 发送 SIGTERM，报告 `c287708074eb6a44` 退出非零、
+`interrupted=true, passed=false, cleaned=true`；容器、匿名卷和网络已核验删除。
+
+### 验收边界与阶段审核
+
+- 六套后端矩阵通过默认 Nx 入口执行，报告均为 `passed=true, cleaned=true`。
+  Engine 新增的仓储测试覆盖真实表结构、个人/组织客户、默认表格排序、聚合计数、
+  空页总数、搜索/provider 参数化以及绕过 HTTP 校验后的排序字段拒绝。
+- 恢复旧仓储实现的隔离实验实际失败，复现 `reference_id` 缺列及空页总数错误；
+  失败后 `1042914e7e8c57d5` 的环境仍清理成功，临时旧实现与测试已删除。
+- 排序边界反向实验 `8b10411c0a4c66c9` 按预期产生两项失败：移除请求白名单后，
+  HTTP 从约定的 400 变成 500；旧组织仓储接受了应拒绝的 SQL 表达式。实验退出非零且
+  清理成功，原校验源码逐字恢复，临时 fixture 删除，证据为 `sort-http-negative.json`。
+- 发布镜像编排 `bd3756770b6f38b1` 通过，实际启动四个基础服务及五个已有本地镜像，
+  执行迁移、页面/HTTP/WS smoke，并验证运行镜像 ID 与记录一致、资源全部清理。
+  使用的是先前提交 `5bbdf7160dc70287c10a84f3c62b39e8b63cd1bc` 的本地镜像；
+  这证明新 Testcontainers 编排兼容发布验证，不代表本轮源码的镜像已验收。
+- 代码审核确认排序标识符仅来自固定 Map，值使用 Prisma 参数化；现有查询路径、
+  管理员权限、query key 和响应格式保持兼容，公开 `referenceId` 由当前 owner 列派生。
+  两个查询遵循 Handler → Use Case → repository port → infrastructure；没有新增业务表。
+- 测试 Compose 的调用引用已移除，开发/部署 Compose 保留。测试环境不复用个人数据，
+  成功、失败和 SIGTERM 都验证清理；未关闭 lint、未跳过真实集成测试。
+
+最终 `nx format:check --all` 与 Engine/API client/Payload 的测试类型及 lint 检查通过。
+对六套成功、两次失败、一次中断和一次发布验证的十份报告再次检查 Docker 状态，
+属于这些运行的容器、网络和已记录卷均无残留（`testcontainers-cleanup-final.json`）。
+仅由 Prisma 再生成产生的四份空白差异已恢复，未纳入本阶段提交。
+
+完整矩阵和边界报告见 `testcontainers-matrix.json`、`repositories-negative.json`、
+`testcontainers-interrupt.json` 及各套件 `run.json`；均保存在
+`dist/test-results/hardening-20260930/` 或其记录指向的测试目录。
+本阶段未启动远端 Actions。最终提交的远端 CI、依赖修复、生成器、覆盖率门槛、
+bootstrap、剩余 UI 拆分和 dev/main 自动部署仍未完成，Goal 保持进行中。

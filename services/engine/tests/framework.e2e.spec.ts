@@ -77,6 +77,36 @@ describe('Engine production HTTP assembly', () => {
     expect(body.code).not.toBe(0)
   })
 
+  it('enforces list roles and rejects malformed or unlisted sort fields before querying', async () => {
+    for (const resource of ['customers', 'organizations']) {
+      const path = `${baseURL}/api/v1/admin/${resource}`
+      expect((await fetch(path)).status).toBe(401)
+      expect((await fetch(path, { headers: { cookie: userCookie } })).status).toBe(403)
+      for (const sort of [
+        JSON.stringify([{ id: 'createdAt, (select 1)' }]),
+        JSON.stringify([{ id: '__proto__' }]),
+        '{broken',
+        '%zz'
+      ]) {
+        const query = new URLSearchParams({ sort })
+        const response = await fetch(`${path}?${query}`, { headers: { cookie: adminCookie } })
+        expect(response.status).toBe(400)
+        expect(await response.json()).toHaveProperty('msg')
+      }
+      for (const query of ['page=0', 'perPage=0', 'perPage=101']) {
+        expect((await fetch(`${path}?${query}`, { headers: { cookie: adminCookie } })).status).toBe(400)
+      }
+      const sort = resource === 'customers' ? 'user.name' : 'name'
+      const query = new URLSearchParams({ sort: JSON.stringify([{ id: sort, desc: false }]) })
+      const response = await fetch(`${path}?${query}`, { headers: { cookie: adminCookie } })
+      expect(response.status).toBe(200)
+      expect(await response.json()).toMatchObject({
+        code: 0,
+        data: { list: expect.any(Array), total: expect.any(Number) }
+      })
+    }
+  })
+
   it('maps an existing framework domain error without leaking infrastructure details', async () => {
     const response = await fetch(`${baseURL}/api/v1/admin/organizations/non-existent`, {
       headers: { cookie: adminCookie }

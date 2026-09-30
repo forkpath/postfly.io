@@ -7,80 +7,55 @@ import type {
 
 import { Injectable } from '@nestjs/common'
 
-import { prisma } from '@libs/pg-dao'
+import { Prisma, prisma } from '@libs/pg-dao'
 
 import { BillingCustomer } from '../../domain/entities/customer.entity'
+import { listOffset, listOrder } from './list-query'
 
 @Injectable()
 export class CustomerRepository implements ICustomerRepository {
   async findAll(params: ListCustomersCriteria): Promise<PagedCustomerResult> {
     const { page, perPage, sort, q, provider, subscriptions, orders, createdAt } = params
 
-    const conditions: string[] = ['1=1']
-    const values: unknown[] = []
-    let paramIdx = 1
-
-    if (q) {
-      conditions.push(`(u.name ILIKE $${paramIdx} OR c.external_id ILIKE $${paramIdx})`)
-      values.push(`%${q}%`)
-      paramIdx++
-    }
-
-    if (provider) {
-      const placeholders = provider.map(() => `$${paramIdx++}`).join(', ')
-      conditions.push(`c.provider IN (${placeholders})`)
-      values.push(...provider)
-    }
-
-    if (createdAt) {
-      conditions.push(`c.created_at >= $${paramIdx}::timestamptz AND c.created_at <= $${paramIdx + 1}::timestamptz`)
-      values.push(createdAt.from, createdAt.to)
-      paramIdx += 2
-    }
-
-    const havingConditions: string[] = []
-    if (subscriptions) {
-      havingConditions.push(
-        `COUNT(DISTINCT s.id) >= ${subscriptions.from} AND COUNT(DISTINCT s.id) <= ${subscriptions.to}`
+    const offset = listOffset(page, perPage)
+    const orderBy = listOrder(
+      sort,
+      new Map([
+        ['id', Prisma.sql`c.id`],
+        ['referenceId', Prisma.sql`COALESCE(c.user_id, c.organization_id)`],
+        ['externalId', Prisma.sql`c.external_id`],
+        ['provider', Prisma.sql`c.provider`],
+        ['createdAt', Prisma.sql`c.created_at`],
+        ['updatedAt', Prisma.sql`c.updated_at`],
+        ['user.name', Prisma.sql`COALESCE(u.name, o.name)`],
+        ['subscriptions', Prisma.sql`COUNT(DISTINCT s.id)`],
+        ['orders', Prisma.sql`COUNT(DISTINCT ord.id)`]
+      ]),
+      Prisma.sql`c.created_at ASC`,
+      Prisma.sql`c.id ASC`
+    )
+    const conditions: Prisma.Sql[] = [Prisma.sql`TRUE`]
+    if (q)
+      conditions.push(
+        Prisma.sql`(u.name ILIKE ${`%${q}%`} OR o.name ILIKE ${`%${q}%`} OR c.external_id ILIKE ${`%${q}%`})`
       )
-    }
-    if (orders) {
-      havingConditions.push(`COUNT(DISTINCT o.id) >= ${orders.from} AND COUNT(DISTINCT o.id) <= ${orders.to}`)
-    }
-
-    const whereClause = conditions.join(' AND ')
-    const havingClause = havingConditions.length ? `HAVING ${havingConditions.join(' AND ')}` : ''
-
-    const sortColumn =
-      sort?.[0]?.field === 'subscriptions'
-        ? 'sub_count'
-        : sort?.[0]?.field === 'orders'
-          ? 'ord_count'
-          : sort?.[0]?.field
-            ? `c.${this.toSnakeCase(sort[0].field)}`
-            : 'c.created_at'
-    const sortDir = sort?.[0]?.desc ? 'DESC' : 'ASC'
-
-    const dataQuery = `
-      SELECT
-        c.id, c.reference_id, c.provider,
-        c.external_id, c.created_at, c.updated_at,
-        u.name AS user_name, u.image AS user_image,
-        COUNT(DISTINCT s.id)::int AS sub_count,
-        COUNT(DISTINCT o.id)::int AS ord_count,
-        COUNT(*) OVER() AS total_count
+    if (provider?.length) conditions.push(Prisma.sql`c.provider IN (${Prisma.join(provider)})`)
+    if (createdAt) conditions.push(Prisma.sql`c.created_at BETWEEN ${createdAt.from} AND ${createdAt.to}`)
+    const having: Prisma.Sql[] = [Prisma.sql`TRUE`]
+    if (subscriptions)
+      having.push(Prisma.sql`COUNT(DISTINCT s.id) BETWEEN ${subscriptions.from} AND ${subscriptions.to}`)
+    if (orders) having.push(Prisma.sql`COUNT(DISTINCT ord.id) BETWEEN ${orders.from} AND ${orders.to}`)
+    const grouped = Prisma.sql`
       FROM billing.customer c
-      LEFT JOIN public."user" u ON c.reference_id = u.id
+      LEFT JOIN public."user" u ON c.user_id = u.id
+      LEFT JOIN public.organization o ON c.organization_id = o.id
       LEFT JOIN billing.subscription s ON s.customer_id = c.id
-      LEFT JOIN billing."order" o ON o.customer_id = c.id
-      WHERE ${whereClause}
-      GROUP BY c.id, u.name, u.image
-      ${havingClause}
-      ORDER BY ${sortColumn} ${sortDir}
-      LIMIT ${perPage} OFFSET ${(page - 1) * perPage}
+      LEFT JOIN billing."order" ord ON ord.customer_id = c.id
+      WHERE ${Prisma.join(conditions, ' AND ')}
+      GROUP BY c.id, u.name, u.image, o.name, o.logo
+      HAVING ${Prisma.join(having, ' AND ')}
     `
-
-    const rows = await prisma.$queryRawUnsafe<
+    const rows = await prisma.$queryRaw<
       Array<{
         id: string
         reference_id: string
@@ -94,32 +69,40 @@ export class CustomerRepository implements ICustomerRepository {
         ord_count: number
         total_count: number
       }>
-    >(dataQuery, ...values)
-
-    const total = rows.length > 0 ? Number(rows[0].total_count) : 0
-
-    const maxQuery = `
-      SELECT
-        COALESCE(MAX(sub_count), 0)::int AS max_subscriptions,
+    >(Prisma.sql`
+      SELECT c.id, COALESCE(c.user_id, c.organization_id) AS reference_id,
+        c.provider, c.external_id, c.created_at, c.updated_at,
+        COALESCE(u.name, o.name) AS user_name, COALESCE(u.image, o.logo) AS user_image,
+        COUNT(DISTINCT s.id)::int AS sub_count, COUNT(DISTINCT ord.id)::int AS ord_count,
+        COUNT(*) OVER()::int AS total_count
+      ${grouped}
+      ORDER BY ${orderBy}
+      LIMIT ${perPage} OFFSET ${offset}
+    `)
+    // A window count has no row to carry it when an offset is past the last page.
+    const total =
+      rows[0]?.total_count ??
+      (offset > 0
+        ? ((
+            await prisma.$queryRaw<Array<{ total: number }>>(
+              Prisma.sql`SELECT COUNT(*)::int AS total FROM (SELECT c.id ${grouped}) filtered`
+            )
+          )[0]?.total ?? 0)
+        : 0)
+    const maxResult = await prisma.$queryRaw<Array<{ max_subscriptions: number; max_orders: number }>>(Prisma.sql`
+      SELECT COALESCE(MAX(sub_count), 0)::int AS max_subscriptions,
         COALESCE(MAX(ord_count), 0)::int AS max_orders
       FROM (
-        SELECT
-          COUNT(DISTINCT s.id) AS sub_count,
-          COUNT(DISTINCT o.id) AS ord_count
+        SELECT COUNT(DISTINCT s.id) AS sub_count, COUNT(DISTINCT ord.id) AS ord_count
         FROM billing.customer c
         LEFT JOIN billing.subscription s ON s.customer_id = c.id
-        LEFT JOIN billing."order" o ON o.customer_id = c.id
+        LEFT JOIN billing."order" ord ON ord.customer_id = c.id
         GROUP BY c.id
-      ) sub
-    `
-    const maxResult = await prisma.$queryRawUnsafe<[{ max_subscriptions: number; max_orders: number }]>(maxQuery)
-
-    const providerQuery = `
-      SELECT DISTINCT provider
-      FROM billing.customer
-      ORDER BY provider
-    `
-    const providerRows = await prisma.$queryRawUnsafe<Array<{ provider: string }>>(providerQuery)
+      ) counts
+    `)
+    const providerRows = await prisma.$queryRaw<Array<{ provider: string }>>(Prisma.sql`
+      SELECT DISTINCT provider FROM billing.customer ORDER BY provider
+    `)
 
     return {
       list: rows.map(r =>
@@ -168,9 +151,5 @@ export class CustomerRepository implements ICustomerRepository {
     ordersCount: number
   }): BillingCustomerEntity {
     return BillingCustomer.fromPersistence(data)
-  }
-
-  private toSnakeCase(str: string): string {
-    return str.replace(/[A-Z]/g, c => `_${c.toLowerCase()}`)
   }
 }

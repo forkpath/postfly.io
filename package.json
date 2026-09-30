@@ -279,6 +279,7 @@
     "prettier-plugin-tailwindcss": "^0.7.2",
     "prisma": "^7.8.0",
     "react-grab": "^0.1.32",
+    "testcontainers": "12.2.0",
     "tslib": "^2.3.0",
     "typescript": "catalog:",
     "typescript-eslint": "8.70.1",

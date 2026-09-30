@@ -8,6 +8,8 @@ import type {
   GetOrganizationsRes
 } from '@libs/payload'
 
+import { getOrganizationsReqSchema } from '@libs/payload'
+
 import { createMutationFactory, createQueryOptionsWithParams } from '../../lib/queries/factory'
 
 function serializeSort(sort?: { id: string; desc?: boolean }[]) {
@@ -49,7 +51,11 @@ export const adminOrgQueries = {
   list: createQueryOptionsWithParams<GetOrganizationsRes, Error, GetOrganizationsRes, GetOrganizationsReq | undefined>(
     (api, params) => ({
       queryKey: adminOrgKeys.list(params ? ({ ...params } as Record<string, unknown>) : undefined),
-      queryFn: () => api.get('/admin/organizations', { params: serializeQueryParams(params) })
+      queryFn: async () => {
+        const serialized = serializeQueryParams(params)
+        getOrganizationsReqSchema.parse(serialized ?? {})
+        return api.get('/admin/organizations', { params: serialized })
+      }
     })
   ),
 

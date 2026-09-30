@@ -1,13 +1,11 @@
 import type { IQueryHandler } from '@nestjs/cqrs'
 import type { GetCustomersReq, GetCustomersRes } from '@libs/payload'
-import type { ICustomerRepository } from '#/domain/repositories/customer.repository.interface'
 
 import { Inject } from '@nestjs/common'
 import { QueryHandler } from '@nestjs/cqrs'
 
-import { CUSTOMER_REPOSITORY } from '#/domain/repositories/customer.repository.interface'
-
 import { CustomerMapper } from '../../mappers/customer.mapper'
+import { ListCustomersUseCase } from '../../use-cases/customer/list-customers.usecase'
 
 export class ListCustomersQuery {
   constructor(public readonly params: GetCustomersReq) {}
@@ -15,13 +13,10 @@ export class ListCustomersQuery {
 
 @QueryHandler(ListCustomersQuery)
 export class ListCustomersHandler implements IQueryHandler<ListCustomersQuery, GetCustomersRes> {
-  constructor(
-    @Inject(CUSTOMER_REPOSITORY)
-    private readonly customerRepository: ICustomerRepository
-  ) {}
+  constructor(@Inject(ListCustomersUseCase) private readonly useCase: ListCustomersUseCase) {}
 
   async execute(query: ListCustomersQuery): Promise<GetCustomersRes> {
-    const result = await this.customerRepository.findAll(CustomerMapper.toListCustomersCriteria(query.params))
+    const result = await this.useCase.execute(CustomerMapper.toListCustomersCriteria(query.params))
     return CustomerMapper.toCustomersResponse(result)
   }
 }

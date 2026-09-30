@@ -1,13 +1,11 @@
 import type { IQueryHandler } from '@nestjs/cqrs'
 import type { GetOrganizationsReq, GetOrganizationsRes } from '@libs/payload'
-import type { IOrganizationRepository } from '#/domain/repositories/organization.repository.interface'
 
 import { Inject } from '@nestjs/common'
 import { QueryHandler } from '@nestjs/cqrs'
 
-import { ORGANIZATION_REPOSITORY } from '#/domain/repositories/organization.repository.interface'
-
 import { OrganizationMapper } from '../../mappers/organization.mapper'
+import { ListOrganizationsUseCase } from '../../use-cases/organization/list-organizations.usecase'
 
 export class ListOrganizationsQuery {
   constructor(public readonly params: GetOrganizationsReq) {}
@@ -15,13 +13,10 @@ export class ListOrganizationsQuery {
 
 @QueryHandler(ListOrganizationsQuery)
 export class ListOrganizationsHandler implements IQueryHandler<ListOrganizationsQuery, GetOrganizationsRes> {
-  constructor(
-    @Inject(ORGANIZATION_REPOSITORY)
-    private readonly orgRepository: IOrganizationRepository
-  ) {}
+  constructor(@Inject(ListOrganizationsUseCase) private readonly useCase: ListOrganizationsUseCase) {}
 
   async execute(query: ListOrganizationsQuery): Promise<GetOrganizationsRes> {
-    const result = await this.orgRepository.findAll(OrganizationMapper.toListOrganizationsCriteria(query.params))
+    const result = await this.useCase.execute(OrganizationMapper.toListOrganizationsCriteria(query.params))
     return OrganizationMapper.toOrganizationsResponse(result)
   }
 }

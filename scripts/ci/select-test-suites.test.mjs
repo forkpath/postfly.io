@@ -33,7 +33,7 @@ test('harness and workflow changes cannot escape the full framework matrix', () 
   for (const file of [
     'scripts/testing/run-backend.mjs',
     'scripts/ci/required-checks.mjs',
-    'docker/docker-compose.test.yml',
+    'scripts/testing/backend-containers.mjs',
     'docker/engine.Dockerfile',
     'scripts/release/publish-verified-images.mjs',
     'patches/react-native-ios-utilities@5.2.0.patch',

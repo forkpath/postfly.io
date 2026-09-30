@@ -114,7 +114,7 @@ Web 现有 API 示例的 `/api` 与实际 `/api/v1` 不一致应修正并在隔�
 
 ## 测试环境与 CI
 
-默认采用专用测试 Docker Compose 配置，复用仓库已有 Docker 使用方式。测试 profile 按需启动 PG、Redis、RabbitMQ、Mongo，不直接复用开发环境的持久卷。Testcontainers 可在确有按用例生命周期需求时引入，不同时维护两套默认基础设施。
+原阶段采用专用 Compose；后续脚手架优化现已将默认入口统一为 Testcontainers，按套件启动 PG、Redis、RabbitMQ、Mongo，不复用开发卷。集成与发布产物验收共用同一基础设施实现，详见 testing-backend.md。
 
 每次运行独立命名空间、数据库和消息队列，使用测试生成的凭据；明确检查隔离目标后才迁移或重置。fixture 初始化、健康等待、日志收集与清理均由 runner 编排；就绪检查有超时，不依赖固定 sleep。并发任务不可共享可写状态，失败后同样清理。
 
