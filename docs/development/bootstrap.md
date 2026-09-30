@@ -35,6 +35,9 @@ bootstrap 不继承父 shell 的数据库/SaaS 配置，`${VARIABLE}` 只从同�
 自动入口要求根目录及应用/库目录没有额外的 dotenv 文件，避免 Nx 的任务配置覆盖
 已校验的数据库地址；已有多层配置继续使用分步 `dev:*`。保留 Nx 的 dotenv 加载，
 防止它卸载与根文件相同的注入值；开发服务启用 Nx daemon 以支持源码修改后重启。
+三个后端服务的 development 构建只转译，避免启动时同时运行重复的 TypeScript 检查进程。
+编辑期间可单独运行 `pnpm nx run-many -t typecheck -p engine,pulse,worker`；
+生产构建保留类型检查，CI 也独立强制执行 affected 项目的 typecheck。
 Postgres URL 的主机、用户名、密码、端口、库名必须与本机 Compose 配置一致；
 Mongo、Redis、RabbitMQ 同样要求本机地址。外部数据库、远端 Docker 和生产环境
 拒绝自动写入。失败/中断保留配置与数据，修正错误后重复运行即可。
