@@ -15,7 +15,7 @@
 | 2    | dev 测试、main 正式的 CI/CD；命名 ray、宽度 120 一致 | 待实施；远端尚无 dev/main 或部署环境        | 工作流事件及同一提交门禁正反测试；默认基线与文档一致；dev/main 合并保护读回；真实部署须明确环境                                                                          |
 | 3    | CI 强制 nx format:check，并修复存量格式              | 本地全仓格式检查通过，待最终 CI             | 全仓格式检查通过；CI 必需检查包含格式失败                                                                                                                                |
 | 4    | analytics-web 冷导入测试稳定                         | 冷启动 3 轮通过，待最终 CI                  | 独立冷启动及并发任务压力下重复通过，保留原断言，不靠 retries 隐藏失败                                                                                                    |
-| 5    | 本地确定性完整模块 generator                         | 待实施                                      | 一条 Nx 命令生成 Prisma、Domain、Repository、CQRS、Use Case、Controller、Payload、API client 和测试；干净副本生成后类型/lint/测试/真实 HTTP 与持久化通过；拒绝越界及覆盖 |
+| 5    | 本地确定性完整模块 generator                         | 本地生成与真实 HTTP 验收通过，待最终 CI     | 一条 Nx 命令生成 Prisma、Domain、Repository、CQRS、Use Case、Controller、Payload、API client 和测试；干净副本生成后类型/lint/测试/真实 HTTP 与持久化通过；拒绝越界及覆盖 |
 | 6    | 覆盖率门槛及跨端测试示例                             | 本地 39 项目单测及覆盖率门禁通过，待最终 CI | Vitest 阈值在 affected CI 强制执行，降低覆盖率的负向验证失败；ui-web 组件、Web 路由示例和已有 Native/扩展示例可复制运行                                                  |
 | 7    | Testcontainers 集成环境与真实仓储测试                | 本地六套矩阵与镜像编排通过，待最终 CI       | Testcontainers 启动 PG/Redis/RabbitMQ（完整服务需要 Mongo 时一并提供）；真实 Repository、Worker 去重/重试/恢复及成功/失败/中断清理验证；保持唯一默认入口                 |
 | 8    | PR 前移 E2E                                          | 既有 affected Web/Extension/后端套件已实现  | PR 事件确实选择并执行页面 smoke；需要身份时使用隔离测试账号，失败传播到 Required checks                                                                                  |
@@ -23,7 +23,7 @@
 | 10   | CODEOWNERS、PR 模板及分支保护                        | CODEOWNERS/模板已添加；dev/main 保护待补    | CODEOWNERS 身份有效、模板有验证与风险说明；dev/main 必需检查实际生效                                                                                                     |
 | 11   | 清理 lint 警告、零警告门禁                           | 47 项目零警告与类型检查通过，待最终 CI      | 全仓 lint --max-warnings=0 通过；新增警告能使检查失败，不全局关闭规则                                                                                                    |
 | 12   | bootstrap/doctor，新人快速启动                       | 本地干净副本全栈验收 8 分 12 秒通过         | 版本与配置检查、不覆盖已有 .env、安全创建本地配置、启动 infra、db:init、显式开发 seed；隔离目录端到端计时，报告达到或未达到 10 分钟目标及条件                            |
-| 13   | 拆分 AppShell 与 marketing skeleton 大文件           | 已提取导航同步并补回归，其余拆分待实施      | 按职责拆分、保持公开 API/页面行为；相关组件/路由测试、类型、lint 和页面 smoke 通过                                                                                       |
+| 13   | 拆分 AppShell 与 marketing skeleton 大文件           | 本地拆分与真实页面验收通过，待最终 CI       | 按职责拆分、保持公开 API/页面行为；相关组件/路由测试、类型、lint 和页面 smoke 通过                                                                                       |
 
 ## 实施阶段
 
@@ -244,3 +244,48 @@ Nx 23 会按工作区身份在用户目录共享缓存；曾有一次新副本�
 证据目录为 `dist/test-results/hardening-20260930/`，包含失败尝试、真实 HTTP 反向实验、
 浏览器错误、重复 seed 和资源清理报告。此阶段未触发远端或移动原生 Actions；最终同一
 提交的远端 CI、完整 generator、dev/main 自动部署、依赖安全修复与剩余 UI 拆分仍待完成。
+
+## 生成器阶段补录（2026-09-30）
+
+提交 `8e1e916` 已实现 `@ray/plugin:resource`，包括个人/组织归属 CRUD、真实仓储、
+公开契约与客户端、离线迁移和可执行测试。临时副本中真实调用 Nx 生成两种资源，
+检查 dry-run、重复生成拒绝、层次依赖、类型、lint、覆盖率以及真实 HTTP/Postgres。
+额外移除 DTO 校验和 owner 条件的反向实验均使对应 HTTP 测试失败，随后恢复并清理。
+最终记录 `dist/test-results/ray-plugin/2026-09-30T04-14-11.522Z/acceptance.json`
+为 `passed=true, cleaned=true`；`generator-commit.json` 记录提交与主工作区暂存区校验。
+这补正了上表此前仍显示“待实施”的状态；该提交的远端 CI 仍未执行。
+
+## UI 拆分阶段验收（2026-09-30）
+
+AppShell 入口由 686 行缩至 110 行，主菜单、用户菜单、路由动作和悬停生命周期分别
+提取；类型和公开导出保持兼容。悬停状态改为单一当前菜单，跨菜单互斥，进入 portal
+保留菜单，选择后取消待执行打开，卸载清理定时器。新增 7 条路由动作/计时器回归。
+两份 marketing skeleton 入口由 608/675 行改为导出入口，按演示组件、SVG 连线、
+聊天消息和静态部署数据拆分。AST 对比 20 个原声明：18 个 initializer 完全一致，
+其余两个变化分别是静态数组提取和发送按钮的无障碍名称。
+
+已验收：
+
+- Studio、Web、Desktop、Web E2E 的 lint/typecheck/typecheck-tests/test 与依赖共
+  26 项 Nx 任务通过；启用既定覆盖率门槛，不降低阈值。后续新增 E2E 断言另跑 lint/typecheck。
+- Chromium、Firefox、WebKit 的正式 Web bundle 页面流程全部通过，覆盖模型演示、
+  Enter/按钮发送、工作流标签切换和手机宽度下的发送。完整场景总时限为 90 秒，
+  单条断言时限保持 5 秒，不设置 retries；顺序复验共 51.4 秒。
+- 隔离数据库 seed 的普通用户和平台管理员通过真实 Engine 登录，Web 生产构建经
+  Kong 访问；两个侧栏场景全部通过，包含用户/管理员路径切换、记忆最后子页面、
+  管理列表默认分页参数、悬停选择、手机菜单选择后关闭及带 Origin 的注销。
+- 实际 macOS x64 Electron 测试包通过 UI、preload、认证路由重载和窗口 IPC。
+  此套件使用已有认证 mock；Desktop 当前没有接入 AppShell，不把它算作 Desktop
+  AppShell 或真实登录验收。
+
+首次尝试的漏导入、重复文本定位、测试总时限、注销 Origin 与默认分页断言问题均保留
+失败记录并修正。Docker 曾返回 500，并发验收期间 bootstrap 曾因 Engine 启动超过
+时限失败；这些不计为通过。之后按顺序完成服务启动，并在真实页面验收入口确认端口
+空闲及 HTML 为生产产物，避免误用之前的开发服务器响应。该次启动不用于重算第 12 项
+十分钟目标。截图仍可见既有组织标题/账号标签的翻译键缺项，本次未声称完成翻译修复。
+
+记录在 `dist/test-results/hardening-20260930/ui-*`；最终普通用户与管理员 JUnit 为
+2 passed、marketing JUnit 为 3 passed，Electron 日志包含实际打包应用验证结果。
+四个应用端口关闭，五个临时容器及其卷/网络已清理，见 `ui-final-cleanup.json`。
+本阶段没有触发远端或移动原生 Actions；依赖安全修复、dev/main 发布与合并保护、
+最终同一提交的远端验收继续保留为本 Goal 未完成项。
