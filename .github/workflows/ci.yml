@@ -99,6 +99,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Check repository formatting
+        run: pnpm nx format:check --all
+
       - name: Validate runtime boundaries and cleanup safety
         run: pnpm ci:checks
 

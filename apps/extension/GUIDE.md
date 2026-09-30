@@ -82,10 +82,10 @@ VITE_SENTRY_ENVIRONMENT=development        # Sentry 环境标识
 
 ### `VITE_URL` 与 `VITE_API_BASE_URL` 的区别
 
-| 变量 | 指向 | 用途 |
-| --- | --- | --- |
-| `VITE_URL` | 营销站 / Web 前端 | OAuth 回跳、打开 Web 页面、Cookie 域 |
-| `VITE_API_BASE_URL` | engine 后端服务 | API 请求、Better Auth 会话 |
+| 变量                | 指向              | 用途                                 |
+| ------------------- | ----------------- | ------------------------------------ |
+| `VITE_URL`          | 营销站 / Web 前端 | OAuth 回跳、打开 Web 页面、Cookie 域 |
+| `VITE_API_BASE_URL` | engine 后端服务   | API 请求、Better Auth 会话           |
 
 Ray 的后端是独立的 engine（NestJS），与 Web 前端分属不同域名，因此扩展必须同时持有这两个地址。
 切勿将 `VITE_URL` 当作 API 基址使用。
@@ -263,10 +263,10 @@ nx run extension:typecheck
 
 `wxt.config.ts` 中的 `host_permissions` 会根据构建模式自动切换：
 
-| 模式 | 值 | 说明 |
-| --- | --- | --- |
-| `development` | `<all_urls>` | 方便本地调试，无需手动维护域名列表 |
-| `production` | 从 `VITE_API_BASE_URL` / `VITE_URL` 派生 | 仅申请必要的域名权限 |
+| 模式          | 值                                       | 说明                               |
+| ------------- | ---------------------------------------- | ---------------------------------- |
+| `development` | `<all_urls>`                             | 方便本地调试，无需手动维护域名列表 |
+| `production`  | 从 `VITE_API_BASE_URL` / `VITE_URL` 派生 | 仅申请必要的域名权限               |
 
 **为什么要收敛权限？**
 

@@ -1,0 +1,71 @@
+version: 2
+
+registries:
+  npm-public:
+    type: npm-registry
+    url: https://registry.npmjs.org
+    replaces-base: true
+
+updates:
+  # pnpm's root lockfile covers every workspace importer and the catalogs.
+  - package-ecosystem: npm
+    directory: /
+    registries: [npm-public]
+    schedule:
+      interval: weekly
+      day: monday
+      time: '03:00'
+      timezone: Asia/Shanghai
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      nx-toolchain:
+        patterns: ['nx', '@nx/*', '@nrwl/*']
+      expo-react-native:
+        patterns:
+          [
+            'expo',
+            'expo-*',
+            '@expo/*',
+            'babel-preset-expo',
+            'react',
+            'react-dom',
+            'react-native',
+            'react-native-*',
+            '@react-native/*',
+            '@react-native-*/*',
+            '@rn-primitives/*',
+            'jest-expo',
+            'uniwind',
+            'zeego'
+          ]
+      auth:
+        patterns: ['better-auth', '@better-auth/*']
+      prisma:
+        patterns: ['prisma', '@prisma/*']
+      web-toolchain:
+        patterns: ['vite', '@vitejs/*', 'vitest', '@vitest/*', 'wxt', '@wxt-dev/*', '@tanstack/*']
+        update-types: [minor, patch]
+      development:
+        dependency-type: development
+        update-types: [minor, patch]
+      runtime:
+        dependency-type: production
+        update-types: [minor, patch]
+      security:
+        applies-to: security-updates
+        patterns: ['*']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ['*']

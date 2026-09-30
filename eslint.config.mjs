@@ -3,10 +3,21 @@ import { builtinModules } from 'node:module'
 import nx from '@nx/eslint-plugin'
 import importPlugin from 'eslint-plugin-import'
 
+// The TypeScript compiler checks redeclarations and permits overloads and
+// value/type pairs. ESLint's JS rule cannot distinguish those namespaces.
+export const typescriptOverrides = {
+  files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
+  rules: {
+    'no-redeclare': 'off',
+    '@typescript-eslint/no-unsafe-declaration-merging': 'error'
+  }
+}
+
 export default [
   ...nx.configs['flat/base'],
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
+  typescriptOverrides,
   {
     files: ['libs/{email,analytics,monitoring}/src/**/*.{ts,tsx}'],
     rules: {

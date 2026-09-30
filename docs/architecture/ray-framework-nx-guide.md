@@ -6,14 +6,14 @@ Ray 是跨端业务开发脚手架。应用负责组合能力，共享库提供�
 
 Kong 是统一入口：`/api`、`/api/auth` 进入 Engine，`/ws` 进入 Pulse，其余路径进入 Web。Worker 消费 RabbitMQ 消息，其健康端口只用于内网探针。详见 [部署指南](deployment.md)。
 
-| 层 | 职责 | 主要位置 |
-| --- | --- | --- |
-| 应用 | 页面路由、进程启动、能力组合 | `apps/*`、`services/*` |
-| 契约 | 通用类型、请求响应校验、事件信封 | `auth-contract`、`billing-contract`、`payload`、`platform-contract` |
-| 客户端 | HTTP/认证/支付的端适配 | `api-client`、`auth-client-*`、`billing-client-*` |
-| 服务端 | Use Case、领域规则、持久化与基础设施适配 | `services/engine/src`、`*-server`、`server-*` |
-| 数据 | PostgreSQL 模型、Mongo 模型 | `pg-dao`、`mongo-dao` |
-| 界面 | 通用 tokens、Web/Native 组件、共享业务页面 | `ui-core`、`ui-web`、`ui-native`、`studio` |
+| 层     | 职责                                       | 主要位置                                                            |
+| ------ | ------------------------------------------ | ------------------------------------------------------------------- |
+| 应用   | 页面路由、进程启动、能力组合               | `apps/*`、`services/*`                                              |
+| 契约   | 通用类型、请求响应校验、事件信封           | `auth-contract`、`billing-contract`、`payload`、`platform-contract` |
+| 客户端 | HTTP/认证/支付的端适配                     | `api-client`、`auth-client-*`、`billing-client-*`                   |
+| 服务端 | Use Case、领域规则、持久化与基础设施适配   | `services/engine/src`、`*-server`、`server-*`                       |
+| 数据   | PostgreSQL 模型、Mongo 模型                | `pg-dao`、`mongo-dao`                                               |
+| 界面   | 通用 tokens、Web/Native 组件、共享业务页面 | `ui-core`、`ui-web`、`ui-native`、`studio`                          |
 
 新增业务按数据库/领域、契约、Use Case、基础设施、控制器、客户端的顺序实现。业务读写经过 Use Case；数据归属来自认证会话中的 `userId` 和组织上下文，不能相信客户端自己声明的所有者。
 
@@ -21,11 +21,11 @@ Kong 是统一入口：`/api`、`/api/auth` 进入 Engine，`/ws` 进入 Pulse�
 
 跨项目仅导入公开入口；禁止相对路径穿透其他项目源码。`eslint.config.mjs` 用 Nx 标签约束依赖，三个维度共同生效：
 
-| 标签 | 回答的问题 | 示例 |
-| --- | --- | --- |
-| `type:*` | 代码承担哪一层职责 | contract、data-access、platform、ui、app |
-| `runtime:*` | 可以在哪个环境运行 | universal、web、native、node |
-| `domain:*` | 属于哪个领域 | auth、billing、platform、shared、composition |
+| 标签        | 回答的问题         | 示例                                         |
+| ----------- | ------------------ | -------------------------------------------- |
+| `type:*`    | 代码承担哪一层职责 | contract、data-access、platform、ui、app     |
+| `runtime:*` | 可以在哪个环境运行 | universal、web、native、node                 |
+| `domain:*`  | 属于哪个领域       | auth、billing、platform、shared、composition |
 
 Web/Native 不得导入 Node 实现；契约不能依赖数据库。`email` 是通用契约，模板渲染与投递在 `email-server`。`analytics`、`monitoring` 是不读取环境的核心，具体实现与环境读取分别放在 `-web`、`-native`、`-server`。
 
@@ -35,13 +35,13 @@ Web/Native 不得导入 Node 实现；契约不能依赖数据库。`email` 是�
 
 框架能力通过公共 API 显式注册。没有当前应用消费者的适配器仍可作为业务扩展点；默认启动不要求开通每一个提供商。
 
-| 能力 | 入口 | 接入要求 |
-| --- | --- | --- |
-| 搜索 | `server-elasticsearch` | 注册模块，配置索引与服务地址 |
-| 短信 | `server-sms` | 注册模块，配置供应商、签名与模板 |
-| 邮件 | `email-server`、`server-email` | 选择发送提供商；Nest 可使用注入桥 |
-| 对象存储 | `server-storage` | 显式选择 S3 或 OSS，配置 bucket 与权限 |
-| 计费 | `billing-contract`、`billing-client-*`、`billing-server` | Web 使用 Stripe，Native 使用 RevenueCat |
+| 能力     | 入口                                                     | 接入要求                                |
+| -------- | -------------------------------------------------------- | --------------------------------------- |
+| 搜索     | `server-elasticsearch`                                   | 注册模块，配置索引与服务地址            |
+| 短信     | `server-sms`                                             | 注册模块，配置供应商、签名与模板        |
+| 邮件     | `email-server`、`server-email`                           | 选择发送提供商；Nest 可使用注入桥       |
+| 对象存储 | `server-storage`                                         | 显式选择 S3 或 OSS，配置 bucket 与权限  |
+| 计费     | `billing-contract`、`billing-client-*`、`billing-server` | Web 使用 Stripe，Native 使用 RevenueCat |
 
 云提供商的凭据和真实集成测试由使用该能力的项目配置。S3 签名 PUT URL 和 OSS POST 表单策略具有不同上传语义，不能把适配器看成所有厂商行为完全一致。
 

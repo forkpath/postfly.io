@@ -16,15 +16,15 @@ Engine/Pulse 等 Node 应用；通用入口 @libs/auth-server，Nest 集成使�
 
 src/lib/env.ts 使用 envin 从启动进程读取；在 import 前注入。依赖 pg-dao 和邮件实现的配置见下列链接。OAuth 配置和客户端功能开关不是同一个配置层。
 
-| 变量                                                                                     | 含义                                              | 何时配置/默认                          | 值从哪里来                                |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------- | -------------------------------------- | ----------------------------------------- |
-| `BETTER_AUTH_SECRET`                                                                     | 认证签名/加密密钥                                 | 必填，生产使用足够长的随机秘密         | secret manager 生成，不能放客户端         |
-| `BETTER_AUTH_URL`                                                                        | 认证对外基础 URL                                  | 实际启动应显式填写合法 URL             | 部署域名及认证路由配置                    |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                                              | Google OAuth 应用 ID/密钥                         | 启用 Google 登录时配置                 | Google Cloud OAuth 应用后台               |
-| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`                                              | GitHub OAuth 应用 ID/密钥                         | 启用 GitHub 登录时配置                 | GitHub OAuth App 后台                     |
-| `AUTH_APPLE_CLIENT_ID` / `AUTH_APPLE_CLIENT_SECRET` / `AUTH_APPLE_APP_BUNDLE_IDENTIFIER` | Apple 服务/应用 ID、签名 client secret、Bundle ID | 启用 Apple 登录时配置                  | Apple Developer；secret 按 Apple 要求生成 |
+| 变量                                                                                     | 含义                                              | 何时配置/默认                    | 值从哪里来                                |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------- | -------------------------------- | ----------------------------------------- |
+| `BETTER_AUTH_SECRET`                                                                     | 认证签名/加密密钥                                 | 必填，生产使用足够长的随机秘密   | secret manager 生成，不能放客户端         |
+| `BETTER_AUTH_URL`                                                                        | 认证对外基础 URL                                  | 实际启动应显式填写合法 URL       | 部署域名及认证路由配置                    |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                                              | Google OAuth 应用 ID/密钥                         | 启用 Google 登录时配置           | Google Cloud OAuth 应用后台               |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`                                              | GitHub OAuth 应用 ID/密钥                         | 启用 GitHub 登录时配置           | GitHub OAuth App 后台                     |
+| `AUTH_APPLE_CLIENT_ID` / `AUTH_APPLE_CLIENT_SECRET` / `AUTH_APPLE_APP_BUNDLE_IDENTIFIER` | Apple 服务/应用 ID、签名 client secret、Bundle ID | 启用 Apple 登录时配置            | Apple Developer；secret 按 Apple 要求生成 |
 | `SEED_EMAIL` / `SEED_PASSWORD`                                                           | 初始化管理账户                                    | 仅 seed 时必填，密码至少 12 字符 | 受控种子账户，不是普通登录用户输入        |
-| `NODE_ENV`                                                                               | 影响认证环境行为                                  | 默认 development                       | 进程启动环境                              |
+| `NODE_ENV`                                                                               | 影响认证环境行为                                  | 默认 development                 | 进程启动环境                              |
 
 依赖配置：[pg-dao](../../libs/pg-dao/README.md)、[email-server](../../libs/email-server/README.md)。只在实际启用对应路径时提供厂商配置，不把服务端密钥放到客户端。
 

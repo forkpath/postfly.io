@@ -12,8 +12,6 @@ Electron 桌面应用，main/preload 使用 Node/Electron，renderer 使用共�
 
 依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
-
-
 ## 开发、构建与发布
 
 桌面使用 Vite 8 构建 main/preload/renderer，electron-builder 26.15.3 打包，electron-updater 6.8.9 更新。工作区使用 pnpm 默认 isolated 布局，不再应用 builder 收集器补丁。桌面运行依赖仅 Sentry 和 updater，renderer 库在构建时打入 bundle。
@@ -43,7 +41,7 @@ macOS 生成 DMG 和更新必需的 ZIP；Windows 生成每用户 NSIS，支持�
 
 `DESKTOP_UPDATE_BASE_URL` 必须映射到桶的 `DESKTOP_S3_PREFIX`。例如 URL `/ray` 对应 prefix `ray`，其下生成 `stable/darwin/arm64/latest-mac.yml` 等；每个平台/架构单独目录。配置缺失的普通包显示“未配置更新”，不发请求；release 缺少 URL/签名凭据直接失败。
 
-Electron 下载默认使用官方源；需要镜像时仅为命令设置 `ELECTRON_MIRROR`。不要使用 NODE_OPTIONS 注入镜像，也不要将签名/上传凭据放进 VITE_ 变量。
+Electron 下载默认使用官方源；需要镜像时仅为命令设置 `ELECTRON_MIRROR`。不要使用 NODE*OPTIONS 注入镜像，也不要将签名/上传凭据放进 VITE* 变量。
 
 ### 发布流程
 

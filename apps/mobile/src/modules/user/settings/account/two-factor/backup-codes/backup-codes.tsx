@@ -76,7 +76,7 @@ export const BackupCodesSheet = ({ ref: passedRef }: BackupCodesSheetProps) => {
 
 const Copy = () => {
   const { t } = useTranslation('common')
-  const [_, copy] = useCopyToClipboard()
+  const [, copy] = useCopyToClipboard()
   const [showCheck, setShowCheck] = useState(false)
 
   const { codes } = useBackupCodes()

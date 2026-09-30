@@ -12,7 +12,6 @@ import { user } from '~/modules/user/lib/api'
 import dayjs from 'dayjs'
 import { Alert, Pressable, View } from 'react-native'
 
-import { handle } from '@libs/api-client'
 import { InvitationStatus } from '@libs/auth-contract'
 import { useTranslation } from '@libs/i18n'
 import {

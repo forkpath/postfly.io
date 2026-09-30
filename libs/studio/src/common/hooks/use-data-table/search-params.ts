@@ -55,7 +55,8 @@ export function useSearchParamsDataTable<TData>(props: UseSearchParamsDataTableP
   // Read from URL or use defaults
   const page = (search[PAGE_KEY] as number) ?? 1
   const perPage = (search[PER_PAGE_KEY] as number) ?? initialState?.pagination?.pageSize ?? 10
-  const sorting = (search[SORT_KEY] as SortingState) ?? initialState?.sorting ?? []
+  const searchSorting = search[SORT_KEY] as SortingState | undefined
+  const sorting = useMemo(() => searchSorting ?? initialState?.sorting ?? [], [searchSorting, initialState?.sorting])
 
   const setPage = useCallback(
     (newPage: number) => {

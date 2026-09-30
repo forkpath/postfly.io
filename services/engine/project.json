@@ -3,11 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "services/engine/src",
   "projectType": "application",
-  "tags": [
-    "type:app",
-    "runtime:node",
-    "domain:composition"
-  ],
+  "tags": ["type:app", "runtime:node", "domain:composition"],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
@@ -18,9 +14,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "outputs": [
-        "{workspaceRoot}/dist/services/engine"
-      ],
+      "outputs": ["{workspaceRoot}/dist/services/engine"],
       "options": {
         "command": "webpack-cli build --config-node-env production",
         "cwd": "services/engine"
@@ -32,9 +26,7 @@
       }
     },
     "package": {
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "executor": "nx:noop",
       "cache": false
     },
@@ -42,9 +34,7 @@
       "continuous": true,
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "options": {
         "buildTarget": "engine:build",
         "runBuildTargetDependencies": false,
@@ -62,9 +52,7 @@
     "test-integration": {
       "executor": "nx:run-commands",
       "cache": false,
-      "outputs": [
-        "{workspaceRoot}/dist/test-results/engine/integration"
-      ],
+      "outputs": ["{workspaceRoot}/dist/test-results/engine/integration"],
       "options": {
         "command": "node scripts/testing/run-backend.mjs engine integration"
       }
@@ -80,9 +68,7 @@
     "e2e": {
       "executor": "nx:run-commands",
       "cache": false,
-      "outputs": [
-        "{workspaceRoot}/dist/test-results/engine/e2e"
-      ],
+      "outputs": ["{workspaceRoot}/dist/test-results/engine/e2e"],
       "options": {
         "command": "node scripts/testing/run-backend.mjs engine e2e"
       }
@@ -103,10 +89,7 @@
       }
     },
     "test": {
-      "outputs": [
-        "{workspaceRoot}/dist/test-results/engine/unit",
-        "{workspaceRoot}/coverage/services/engine"
-      ]
+      "outputs": ["{workspaceRoot}/dist/test-results/engine/unit", "{workspaceRoot}/coverage/services/engine"]
     }
   }
 }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 import type { ImageSource } from 'expo-image'
 
 import { pathsConfig } from '~/config/paths'

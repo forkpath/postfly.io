@@ -203,6 +203,7 @@
   "targetDefaults": {
     "lint": {
       "cache": true,
+      "options": { "args": ["--max-warnings=0"] },
       "inputs": ["default", "^default"]
     },
     "typecheck": {

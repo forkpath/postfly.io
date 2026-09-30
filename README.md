@@ -4,7 +4,7 @@ Ray 是基于 Nx 的 monorepo。Web、Electron、Expo 和浏览器扩展共用�
 
 ## 开始使用
 
-需要 Node 24、pnpm 10.25 和 Docker。先复制 `.env.example` 为 `.env`，设置自己的数据库密码与 `BETTER_AUTH_SECRET`；已有 `.env` 不要覆盖。
+需要 Node 24、根 `package.json` 的 `packageManager` 指定版本的 pnpm，以及 Docker。先复制 `.env.example` 为 `.env`，设置自己的数据库密码与 `BETTER_AUTH_SECRET`；已有 `.env` 不要覆盖。
 
 ```sh
 pnpm install --frozen-lockfile
@@ -29,15 +29,15 @@ pnpm dev:web
 
 ## 仓库结构
 
-| 路径 | 职责 |
-| --- | --- |
-| [apps](apps/README.md) | Web、Desktop、Mobile、Extension 与浏览器 E2E |
-| [services](services/README.md) | Engine、Pulse、Worker |
-| [libs](libs/README.md) | 共享契约、领域实现、运行时适配器与 UI |
-| [docker](docker/README.md) | 开发基础设施、Kong 路由、服务镜像与部署编排 |
-| [scripts](scripts/README.md) | 清理、认证模型检查、CI 与发布入口 |
-| [tools](tools/README.md) | 两个固定依赖的独立执行包 |
-| [.agents/skills](.agents/skills) | Codex/Cursor 共用开发规范 |
+| 路径                             | 职责                                         |
+| -------------------------------- | -------------------------------------------- |
+| [apps](apps/README.md)           | Web、Desktop、Mobile、Extension 与浏览器 E2E |
+| [services](services/README.md)   | Engine、Pulse、Worker                        |
+| [libs](libs/README.md)           | 共享契约、领域实现、运行时适配器与 UI        |
+| [docker](docker/README.md)       | 开发基础设施、Kong 路由、服务镜像与部署编排  |
+| [scripts](scripts/README.md)     | 清理、认证模型检查、CI 与发布入口            |
+| [tools](tools/README.md)         | 两个固定依赖的独立执行包                     |
+| [.agents/skills](.agents/skills) | Codex/Cursor 共用开发规范                    |
 
 ## 开发入口
 
@@ -47,6 +47,7 @@ pnpm dev:web
 - [认证与授权](docs/architecture/authentication-and-authorized.md)
 - [组织上下文](docs/architecture/workspace-switching.md)
 - [测试](docs/development/testing.md)
+- [依赖维护与安全检查](docs/development/dependency-governance.md)
 - [Kong 与容器部署](docs/architecture/deployment.md)
 - [使用开发 Agent](docs/development/agents.md)
 

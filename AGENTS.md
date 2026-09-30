@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-Central orientation for contributors working inside the neo Nx monorepo. Follow these workspace-wide rules.
+Central orientation for contributors working inside the ray Nx monorepo. Follow these workspace-wide rules.
 
 ## Core projects
 
@@ -28,7 +28,7 @@ Central orientation for contributors working inside the neo Nx monorepo. Follow 
 
 ## Tooling & Commands
 
-- Install deps: `pnpm install` (Node >= 24.0.0, pnpm >= 10.25.0).
+- Install deps: `pnpm install --frozen-lockfile` (Node >= 24.0.0; use the pnpm version pinned in the root `packageManager`).
 - Dev servers: `pnpm dev:web | dev:desktop | dev:engine | dev:pulse | dev:worker`
 - Local infra (Docker): `pnpm docker:dev` · stop with `pnpm docker:dev:down`
 - Build: `pnpm build:web | build:desktop | build:engine | build:pulse | build:worker`.
@@ -47,7 +47,7 @@ Always prefer Nx commands (`nx run`, `nx run-many`, `nx affected`) so task graph
   supported capabilities with explicit configuration, public APIs, and tests;
   do not delete them solely because the current sample business does not use them.
 
-- Prettier: 2 spaces, single quotes, no semicolons, width 80. Tailwind + import-sort plugins are enabled; avoid manual formatting changes outside your diff.
+- Prettier: 2 spaces, single quotes, no semicolons, width 120. Tailwind + import-sort plugins are enabled; avoid manual formatting changes outside your diff.
 - ESLint: respect `@nx/enforce-module-boundaries`. Only import from a project’s public API (lib `src/index.ts`).
 - Naming: PascalCase components, camelCase variables/functions, kebab-case filenames (angular style). Group related files by feature.
 - TypeScript: no `any`. Prefer interfaces over types, avoid enums (use literal unions or maps). Use guard clauses + early returns for error handling.

@@ -9,16 +9,16 @@ CI 检查当前提交是否仍能安装、编译并满足框架行为契约；CD
 `.github/workflows/ci.yml` 对所有 PR 触发，避免必需检查因路径过滤一直等待。
 选择脚本使用 Nx 的受影响项目图，因此共享库变化会连带选择其消费者。
 
-| 套件 | PR 选择条件 | 默认分支、定时、手动、发布 |
-| --- | --- | --- |
-| lint/typecheck/typecheck-tests/test/build | Nx affected | 全部 |
-| PG 迁移与 schema | 每次 | 每次 |
-| Engine/Pulse/Worker 集成与 E2E | 对应服务受影响 | 三服务 |
-| Chromium 扩展 | Extension 受影响 | 执行 |
-| Web 正式构建页面 | Web/web-e2e 受影响 | 三浏览器 |
-| Desktop | Desktop 受影响 | macOS 两架构、Windows、存储发布契约 |
-| Mobile Android | Mobile 受影响 | 执行 |
-| Mobile iOS | Mobile 受影响且原生依赖/配置变化 | 执行 |
+| 套件                                      | PR 选择条件                      | 默认分支、定时、手动、发布          |
+| ----------------------------------------- | -------------------------------- | ----------------------------------- |
+| lint/typecheck/typecheck-tests/test/build | Nx affected                      | 全部                                |
+| PG 迁移与 schema                          | 每次                             | 每次                                |
+| Engine/Pulse/Worker 集成与 E2E            | 对应服务受影响                   | 三服务                              |
+| Chromium 扩展                             | Extension 受影响                 | 执行                                |
+| Web 正式构建页面                          | Web/web-e2e 受影响               | 三浏览器                            |
+| Desktop                                   | Desktop 受影响                   | macOS 两架构、Windows、存储发布契约 |
+| Mobile Android                            | Mobile 受影响                    | 执行                                |
+| Mobile iOS                                | Mobile 受影响且原生依赖/配置变化 | 执行                                |
 
 测试编排、CI/发布脚本、Docker 配置、依赖补丁和 workflow 的变化选择完整 E2E 矩阵。
 普通文档变化可不启动设备/后端套件。无法解析影响图时检查失败；找不到基线

@@ -2,14 +2,14 @@
 
 Ray 的服务入口是 Kong：`/api` 代理 Engine，`/ws` 代理 Pulse，页面请求代理 Web。Worker 通过 RabbitMQ 消费任务，只在内网提供就绪检查。
 
-| 文件 | 用途 | 何时使用 |
-| --- | --- | --- |
-| `deploy.sh` | 拉取固定 digest 镜像、启动基础设施、执行 Prisma 迁移、等待应用与 Kong 就绪 | GitHub 部署 workflow 或服务器发布 |
-| `migrator-entrypoint.sh` | 在独立容器执行 `prisma migrate deploy` | 首次建库和后续业务 schema 发布 |
-| `smoke-test.mjs` | 使用专用账号验证认证与 HTTP 业务 | 部署后的业务验收；按需运行 |
-| `pulse-smoke-test.mjs` | 验证会话、WebSocket 连接及组织订阅 | 实时服务验收；按需运行 |
-| `framework-smoke.mjs` | 验证页面、健康状态、匿名 HTTP/WS 授权边界 | 自动部署后执行，不需要业务账户 |
-| `publish-verified-images.mjs` | 核对成功报告、提交号和镜像 ID，再推送已验证镜像 | 仅由发布 workflow 调用 |
+| 文件                          | 用途                                                                       | 何时使用                          |
+| ----------------------------- | -------------------------------------------------------------------------- | --------------------------------- |
+| `deploy.sh`                   | 拉取固定 digest 镜像、启动基础设施、执行 Prisma 迁移、等待应用与 Kong 就绪 | GitHub 部署 workflow 或服务器发布 |
+| `migrator-entrypoint.sh`      | 在独立容器执行 `prisma migrate deploy`                                     | 首次建库和后续业务 schema 发布    |
+| `smoke-test.mjs`              | 使用专用账号验证认证与 HTTP 业务                                           | 部署后的业务验收；按需运行        |
+| `pulse-smoke-test.mjs`        | 验证会话、WebSocket 连接及组织订阅                                         | 实时服务验收；按需运行            |
+| `framework-smoke.mjs`         | 验证页面、健康状态、匿名 HTTP/WS 授权边界                                  | 自动部署后执行，不需要业务账户    |
+| `publish-verified-images.mjs` | 核对成功报告、提交号和镜像 ID，再推送已验证镜像                            | 仅由发布 workflow 调用            |
 
 新数据库只应用当前初始化迁移，不要求历史版本、回填、发布颜色或已有测试账号。演示账号与业务探针不是启动前置条件。
 

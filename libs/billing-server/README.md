@@ -22,7 +22,7 @@ src/lib/env.ts 通过 envin 在 import 时读取进程变量，RevenueCat 实现
 | `STRIPE_WEBHOOK_SECRET`        | 验证 Stripe webhook 签名                     | 接收 Stripe webhook 时需要     | 具体 Webhook endpoint 的 signing secret |
 | `REVENUECAT_API_KEY`           | 拉取订阅快照的 REST key                      | 同步 RevenueCat 时需要         | RevenueCat 后台服务端 API keys          |
 | `REVENUECAT_WEBHOOK_SECRET`    | 校验 Authorization header                    | 接收 RevenueCat webhook 时需要 | 在 RevenueCat webhook 设置的秘密值      |
-| `ORGANIZATION_BILLING_ENABLED` | 启用组织 Stripe 计费                         | 默认 false       | 发布负责人，不能客户端自行开启          |
+| `ORGANIZATION_BILLING_ENABLED` | 启用组织 Stripe 计费                         | 默认 false                     | 发布负责人，不能客户端自行开启          |
 
 依赖配置：[pg-dao](../../libs/pg-dao/README.md)、[billing-contract](../../libs/billing-contract/README.md)。只在实际启用对应路径时提供厂商配置，不把服务端密钥放到客户端。
 

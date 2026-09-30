@@ -16,18 +16,18 @@ Nest WebSocket 服务：Session/token 握手、组织成员校验、Redis 广播
 
 dev:pulse 用根 .env。app.module 映射 REDIS_HOST/PORT/PASSWORD（Redis 实例，默认 localhost/6379/空）；main 读 PULSE_PORT → PORT → 3001。PLATFORM_SMOKE_ENABLED 仅精确 true 启用测试事件，应由测试负责人设定，生产默认 false。
 
-| 变量                                                                                     | 含义                                              | 何时配置/默认                          | 值从哪里来                                                  |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------- |
-| `POSTGRES_DATABASE_URL`                                                                  | Prisma/pg 连接串（含主机、库名与认证）            | 连接 PG 时必填                         | 管理员提供或由本地 POSTGRES_HOST/PORT/USER/PASSWORD/DB 组合 |
-| `POSGTRES_DATABASE_URL`                                                                  | 旧拼写，只有新变量未设时回退                      | 仅兼容；不要新增依赖                   | 旧部署配置；非生产会告警                                    |
-| `NODE_ENV`                                                                               | 运行模式 development/test/production              | 默认 development                       | 运行命令/部署环境                                           |
-| `BETTER_AUTH_SECRET`                                                                     | 认证签名/加密密钥                                 | 必填，生产使用足够长的随机秘密         | secret manager 生成，不能放客户端                           |
-| `BETTER_AUTH_URL`                                                                        | 认证对外基础 URL                                  | 实际启动应显式填写合法 URL             | 部署域名及认证路由配置                                      |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                                              | Google OAuth 应用 ID/密钥                         | 启用 Google 登录时配置                 | Google Cloud OAuth 应用后台                                 |
-| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`                                              | GitHub OAuth 应用 ID/密钥                         | 启用 GitHub 登录时配置                 | GitHub OAuth App 后台                                       |
-| `AUTH_APPLE_CLIENT_ID` / `AUTH_APPLE_CLIENT_SECRET` / `AUTH_APPLE_APP_BUNDLE_IDENTIFIER` | Apple 服务/应用 ID、签名 client secret、Bundle ID | 启用 Apple 登录时配置                  | Apple Developer；secret 按 Apple 要求生成                   |
+| 变量                                                                                     | 含义                                              | 何时配置/默认                    | 值从哪里来                                                  |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------- | -------------------------------- | ----------------------------------------------------------- |
+| `POSTGRES_DATABASE_URL`                                                                  | Prisma/pg 连接串（含主机、库名与认证）            | 连接 PG 时必填                   | 管理员提供或由本地 POSTGRES_HOST/PORT/USER/PASSWORD/DB 组合 |
+| `POSGTRES_DATABASE_URL`                                                                  | 旧拼写，只有新变量未设时回退                      | 仅兼容；不要新增依赖             | 旧部署配置；非生产会告警                                    |
+| `NODE_ENV`                                                                               | 运行模式 development/test/production              | 默认 development                 | 运行命令/部署环境                                           |
+| `BETTER_AUTH_SECRET`                                                                     | 认证签名/加密密钥                                 | 必填，生产使用足够长的随机秘密   | secret manager 生成，不能放客户端                           |
+| `BETTER_AUTH_URL`                                                                        | 认证对外基础 URL                                  | 实际启动应显式填写合法 URL       | 部署域名及认证路由配置                                      |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                                              | Google OAuth 应用 ID/密钥                         | 启用 Google 登录时配置           | Google Cloud OAuth 应用后台                                 |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`                                              | GitHub OAuth 应用 ID/密钥                         | 启用 GitHub 登录时配置           | GitHub OAuth App 后台                                       |
+| `AUTH_APPLE_CLIENT_ID` / `AUTH_APPLE_CLIENT_SECRET` / `AUTH_APPLE_APP_BUNDLE_IDENTIFIER` | Apple 服务/应用 ID、签名 client secret、Bundle ID | 启用 Apple 登录时配置            | Apple Developer；secret 按 Apple 要求生成                   |
 | `SEED_EMAIL` / `SEED_PASSWORD`                                                           | 初始化管理账户                                    | 仅 seed 时必填，密码至少 12 字符 | 受控种子账户，不是普通登录用户输入                          |
-| `NODE_ENV`                                                                               | 影响认证环境行为                                  | 默认 development                       | 进程启动环境                                                |
+| `NODE_ENV`                                                                               | 影响认证环境行为                                  | 默认 development                 | 进程启动环境                                                |
 
 依赖配置：[email-server](../../libs/email-server/README.md)。只在实际启用对应路径时提供厂商配置，不把服务端密钥放到客户端。
 

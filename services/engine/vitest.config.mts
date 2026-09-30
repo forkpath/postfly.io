@@ -8,7 +8,7 @@ export default defineConfig(() => ({
   plugins: [
     tsconfigPaths({
       root: import.meta.dirname,
-  envDir: false,
+      envDir: false,
       projects: ['../../tsconfig.base.json', './tsconfig.app.json']
     })
   ],

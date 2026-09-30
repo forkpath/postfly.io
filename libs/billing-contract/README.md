@@ -1,6 +1,6 @@
 # billing-contract
 
-计费通用契约与纯工具函数；运行时提供商分别由 billing-client-* 与 billing-server 实现。工具测试见 [utils.spec.ts](src/lib/utils.spec.ts)。
+计费通用契约与纯工具函数；运行时提供商分别由 billing-client-\* 与 billing-server 实现。工具测试见 [utils.spec.ts](src/lib/utils.spec.ts)。
 
 ## 用途
 

@@ -1,4 +1,4 @@
-import type { BillingPlanConfig, BillingSubscriptionRecord, BillingSummary } from '@libs/billing-contract'
+import type { BillingSubscriptionRecord, BillingSummary } from '@libs/billing-contract'
 
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'

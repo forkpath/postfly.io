@@ -187,6 +187,7 @@ services/engine/src/application/dtos/<domain>/<domain>.dto.ts
 
 ```typescript
 import { createZodDto } from 'nestjs-zod'
+
 import { getFoosReqSchema, updateFooReqSchema } from '@libs/payload'
 
 export class ListFoosQueryDto extends createZodDto(getFoosReqSchema) {}
@@ -410,9 +411,7 @@ export class FooModule {}
 最后在 `services/engine/src/app.module.ts` 的业务模块 imports 中注册：
 
 ```typescript
-imports: [
-  FooModule
-]
+imports: [FooModule]
 ```
 
 目的：NestJS DI 只在模块层装配。application 依赖的是抽象 token，实际实现由 module 连接。

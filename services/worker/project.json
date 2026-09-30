@@ -3,17 +3,11 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "services/worker/src",
   "projectType": "application",
-  "tags": [
-    "type:app",
-    "runtime:node",
-    "domain:composition"
-  ],
+  "tags": ["type:app", "runtime:node", "domain:composition"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": [
-        "{workspaceRoot}/dist/services/worker"
-      ],
+      "outputs": ["{workspaceRoot}/dist/services/worker"],
       "options": {
         "command": "webpack-cli build --config-node-env production",
         "cwd": "services/worker"
@@ -25,9 +19,7 @@
       }
     },
     "package": {
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "executor": "nx:noop",
       "cache": false
     },
@@ -35,9 +27,7 @@
       "continuous": true,
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "options": {
         "buildTarget": "worker:build",
         "runBuildTargetDependencies": false
@@ -60,14 +50,10 @@
         "{workspaceRoot}/eslint.config.mjs",
         "{workspaceRoot}/services/worker/eslint.config.mjs",
         {
-          "externalDependencies": [
-            "eslint"
-          ]
+          "externalDependencies": ["eslint"]
         }
       ],
-      "outputs": [
-        "{options.outputFile}"
-      ],
+      "outputs": ["{options.outputFile}"],
       "options": {
         "cwd": "services/worker",
         "command": "eslint ."
@@ -80,18 +66,13 @@
         "default",
         "^production",
         {
-          "externalDependencies": [
-            "vitest"
-          ]
+          "externalDependencies": ["vitest"]
         },
         {
           "env": "CI"
         }
       ],
-      "outputs": [
-        "{workspaceRoot}/dist/test-results/worker/unit",
-        "{workspaceRoot}/coverage/services/worker"
-      ],
+      "outputs": ["{workspaceRoot}/dist/test-results/worker/unit", "{workspaceRoot}/coverage/services/worker"],
       "options": {
         "cwd": "services/worker",
         "command": "vitest"
@@ -104,9 +85,7 @@
         "production",
         "^production",
         {
-          "externalDependencies": [
-            "typescript"
-          ]
+          "externalDependencies": ["typescript"]
         }
       ],
       "options": {
@@ -117,9 +96,7 @@
     "test-integration": {
       "executor": "nx:run-commands",
       "cache": false,
-      "outputs": [
-        "{workspaceRoot}/dist/test-results/worker/integration"
-      ],
+      "outputs": ["{workspaceRoot}/dist/test-results/worker/integration"],
       "options": {
         "command": "node scripts/testing/run-backend.mjs worker integration"
       }
@@ -135,9 +112,7 @@
     "e2e": {
       "executor": "nx:run-commands",
       "cache": false,
-      "outputs": [
-        "{workspaceRoot}/dist/test-results/worker/e2e"
-      ],
+      "outputs": ["{workspaceRoot}/dist/test-results/worker/e2e"],
       "options": {
         "command": "node scripts/testing/run-backend.mjs worker e2e"
       }
@@ -149,9 +124,7 @@
         "command": "vitest run --config vitest.e2e.config.mts",
         "cwd": "services/worker"
       },
-      "dependsOn": [
-        "e2e-process-build"
-      ]
+      "dependsOn": ["e2e-process-build"]
     },
     "typecheck-tests": {
       "executor": "nx:run-commands",

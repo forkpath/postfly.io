@@ -2,10 +2,10 @@
 
 `_marketing` 是 TanStack Router 的无路径布局，提供导航栏、页面 Outlet 与页脚，不增加 URL 前缀。
 
-| 文件 | URL |
-| --- | --- |
-| `index.tsx` | `/` |
-| `about.tsx` | `/about` |
+| 文件          | URL        |
+| ------------- | ---------- |
+| `index.tsx`   | `/`        |
+| `about.tsx`   | `/about`   |
 | `pricing.tsx` | `/pricing` |
 | `careers.tsx` | `/careers` |
 | `contact.tsx` | `/contact` |

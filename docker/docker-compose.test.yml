@@ -34,7 +34,11 @@ services:
       - ./test/mongo-init.js:/docker-entrypoint-initdb.d/01-test-user.js:ro
     ports: ['127.0.0.1::27017']
     healthcheck:
-      test: ['CMD-SHELL', 'mongosh --quiet -u ray_test -p "$$RAY_TEST_PASSWORD" --authenticationDatabase "$$MONGO_INITDB_DATABASE" --eval "db.adminCommand({ping:1}).ok"']
+      test:
+        [
+          'CMD-SHELL',
+          'mongosh --quiet -u ray_test -p "$$RAY_TEST_PASSWORD" --authenticationDatabase "$$MONGO_INITDB_DATABASE" --eval "db.adminCommand({ping:1}).ok"'
+        ]
       interval: 5s
       timeout: 20s
       retries: 45

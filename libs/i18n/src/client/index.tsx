@@ -1,5 +1,5 @@
-import type { FlatNamespace, i18n, KeyPrefix, Namespace, TFunction, TOptions } from 'i18next'
-import type { FallbackNs, UseTranslationOptions } from 'react-i18next'
+import type { FlatNamespace, i18n, Namespace, TFunction, TOptions } from 'i18next'
+import type { UseTranslationOptions } from 'react-i18next'
 
 import { useEffect, useState } from 'react'
 

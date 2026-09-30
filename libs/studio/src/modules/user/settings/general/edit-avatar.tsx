@@ -25,7 +25,6 @@ import {
 
 import {
   SettingsCard,
-  SettingsCardContent,
   SettingsCardDescription,
   SettingsCardFooter,
   SettingsCardHeader,

@@ -20,7 +20,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import type { User } from '@libs/auth-contract'
 
-import { memo, useCallback, useEffect, useRef, useState } from 'react'
+import { memo, useCallback, useRef, useState } from 'react'
 import { useLocation, useNavigate } from '@tanstack/react-router'
 
 import { isKey, useTranslation } from '@libs/i18n'
@@ -55,6 +55,7 @@ import { GoLink } from '../../go-link'
 import { AppHeader } from './app-header'
 import { useNavigationStore } from './navigation-store'
 import { useSecondaryNav } from './secondary-nav-context'
+import { useNavigationRoute, USER_NAV_PATHS } from './use-navigation-route'
 import { getUserNavMobileItems, UserSecondaryNav } from './user-secondary-nav'
 
 // ============================================================================
@@ -125,8 +126,6 @@ interface AppShellProps {
 const HOVER_OPEN_DELAY = 100
 /** 鼠标离开关闭下拉菜单的延迟时间（毫秒） */
 const HOVER_CLOSE_DELAY = 200
-/** 用户导航的路径前缀（用于判断用户导航是否激活） */
-const USER_NAV_PATHS = ['/user']
 
 // ============================================================================
 // 内部组件：AppShellInner
@@ -142,7 +141,6 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
   // 从 Zustand store 获取导航状态和操作
   const userNavExpanded = useNavigationStore(state => state.userNavExpanded)
   const setUserNavExpanded = useNavigationStore(state => state.setUserNavExpanded)
-  const setLastVisitedRoute = useNavigationStore(state => state.setLastVisitedRoute)
   const getLastVisitedRoute = useNavigationStore(state => state.getLastVisitedRoute)
 
   // 本地状态
@@ -186,38 +184,7 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
   // 根据路由变化自动管理导航状态
   // ============================================================================
 
-  useEffect(() => {
-    const currentPath = location.pathname
-    const isInUserNav = isUserNavActive()
-
-    // 1. 如果当前在用户路由且用户导航未展开，自动展开
-    // 这处理了直接访问用户路由（如刷新页面）的情况
-    if (isInUserNav && !userNavExpanded) {
-      setUserNavExpanded(true)
-    }
-
-    // 2. 记录当前访问的路由到对应模块
-    // 遍历所有菜单项，找到匹配的模块并记录
-    for (const item of menu) {
-      if (currentPath.startsWith(item.href + '/') || currentPath === item.href) {
-        // 只记录子路由，不记录模块根路由
-        if (currentPath !== item.href) {
-          setLastVisitedRoute(item.href, currentPath)
-        }
-        break
-      }
-    }
-
-    // 3. 记录用户导航的路由
-    for (const prefix of USER_NAV_PATHS) {
-      if (currentPath.startsWith(prefix + '/') || currentPath === prefix) {
-        if (currentPath !== prefix) {
-          setLastVisitedRoute(prefix, currentPath)
-        }
-        break
-      }
-    }
-  }, [location.pathname, menu]) // 监听路由变化
+  useNavigationRoute(menu, location.pathname)
 
   // ============================================================================
   // 一级导航点击处理
@@ -657,7 +624,7 @@ const AppShellInner = memo<AppShellProps>(({ user, menu, children, headerActions
           {/* 模块二级导航（showModuleSecondaryNav 已确保 desktopContent 非空） */}
           {showModuleSecondaryNav && (
             <div className="bg-muted sticky top-0 flex h-dvh w-65 flex-col border-r max-md:hidden">
-              <div className="flex flex-1 flex-col overflow-y-auto">{secondaryNav!.desktopContent}</div>
+              <div className="flex flex-1 flex-col overflow-y-auto">{secondaryNav.desktopContent}</div>
             </div>
           )}
         </>

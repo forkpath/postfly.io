@@ -60,10 +60,10 @@ pnpm nx run web-e2e:e2e
 
 `pnpm ci:checks` 保留两组有明确保护目标的测试：
 
-| 测试 | 验证什么 | 为什么保留 |
-| --- | --- | --- |
-| `clean.test.mjs` | 在临时 Git 仓库检查预览、已跟踪文件保护、符号链接和产物清理 | 防止维护命令误删源码或仓库外文件 |
-| `runtime-boundaries.test.mjs` | 实际执行 ESLint、浏览器打包和 Native 环境读取检查 | 防止运行时边界规则失效 |
+| 测试                          | 验证什么                                                    | 为什么保留                       |
+| ----------------------------- | ----------------------------------------------------------- | -------------------------------- |
+| `clean.test.mjs`              | 在临时 Git 仓库检查预览、已跟踪文件保护、符号链接和产物清理 | 防止维护命令误删源码或仓库外文件 |
+| `runtime-boundaries.test.mjs` | 实际执行 ESLint、浏览器打包和 Native 环境读取检查           | 防止运行时边界规则失效           |
 
 它们不参与新项目初始化，也不要求给每个包装脚本单独写测试。容器解析检查、真实启动、第三方沙箱测试分别报告，不以其中一项代替其他项。
 
@@ -95,6 +95,7 @@ pnpm nx run extension:smoke
 `extension:e2e` 自动构建 `build-e2e/chrome-mv3-e2e`，使用固定本地地址并关闭可选监控/分析提供商，每个用例创建并清理独立 Chromium profile。它验证五个扩展页面的 background messaging、重新加载、真实 storage，以及 content script 的交互。只替换外部 HTTP 认证响应，不替换扩展消息或 storage。测试构建没有认证绕过，与正式产物目录隔离。
 
 在 `apps/extension/e2e` 添加用例并从 `./fixtures` 导入 `test` 和 `expect`。fixture 提供真实 `context`、`page`、`extensionId`，自动收集页面错误、trace、失败截图并关闭浏览器、删除 profile。报告位于 `dist/test-results/extension/e2e`；查看 HTML 报告可用 `pnpm exec playwright show-report dist/test-results/extension/e2e/html`。Firefox 的构建检查不等于 Firefox 扩展运行验收。
+
 # 后端真实依赖测试
 
 Engine、Pulse、Worker 提供独立的 `test-integration` 与 `e2e` 入口，自动创建和清理一次性数据库及消息环境。运行方式、数据 fixture、报告目录和新增用例说明见 [后端框架测试指南](testing-backend.md)。实际通过情况以 [阶段验收记录](testing-framework-validation.md) 为准。

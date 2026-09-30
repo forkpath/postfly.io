@@ -15,7 +15,7 @@
 | Prisma                 | libs/pg-dao/prisma.config.ts 导入 dotenv，工作目录影响默认文件查找，建议显式 wrapper                                       |
 | 容器                   | Compose environment/env_file 和部署 secrets；重启时改变量不能重写已编译的客户端值                                          |
 | 普通库                 | 不拥有独立 .env；读宿主环境或通过参数/DI 注入，见各库 README                                                               |
-| 脚本                   | 一般只读进程 env；部署脚本通过 Compose 的 --env-file 加载 RAY_ENV_FILE（默认 DEPLOY_PATH/.env）                                                     |
+| 脚本                   | 一般只读进程 env；部署脚本通过 Compose 的 --env-file 加载 RAY_ENV_FILE（默认 DEPLOY_PATH/.env）                            |
 
 ```sh
 # .env.local-test 需自行建立，保持未跟踪，只含测试环境值

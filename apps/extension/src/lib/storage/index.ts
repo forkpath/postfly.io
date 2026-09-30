@@ -20,7 +20,8 @@ const storage = {
   })
 } as const
 
-type Value<T extends StorageKey> = (typeof storage)[T] extends WxtStorageItem<infer V, infer _> ? V : never
+type Value<T extends StorageKey> =
+  (typeof storage)[T] extends WxtStorageItem<infer V, Record<string, unknown>> ? V : never
 
 export const getStorage = <K extends StorageKey>(key: K) => {
   return storage[key]

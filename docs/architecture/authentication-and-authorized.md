@@ -15,12 +15,12 @@ flowchart LR
 
 ## 模块职责
 
-| 模块 | 职责 |
-| --- | --- |
-| `auth-contract` | 通用会话、用户与权限类型 |
-| `auth-client-web` / `auth-client-native` | 浏览器与 Native 的认证调用适配 |
-| `auth-server` | Better Auth 实例、插件、邮件回调与数据库适配 |
-| `pg-dao/src/models/auth.prisma` | 受控认证模型与关系 |
+| 模块                                     | 职责                                         |
+| ---------------------------------------- | -------------------------------------------- |
+| `auth-contract`                          | 通用会话、用户与权限类型                     |
+| `auth-client-web` / `auth-client-native` | 浏览器与 Native 的认证调用适配               |
+| `auth-server`                            | Better Auth 实例、插件、邮件回调与数据库适配 |
+| `pg-dao/src/models/auth.prisma`          | 受控认证模型与关系                           |
 
 配置入口是 [auth-server.ts](../../libs/auth-server/src/lib/auth-server.ts)。邮箱密码登录要求邮箱验证，因此完整注册流程需要可用邮件提供商；OAuth 需要对应平台的应用凭据和回调地址。插件是否启用以此配置为准。
 

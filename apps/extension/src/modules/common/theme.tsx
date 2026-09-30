@@ -9,7 +9,7 @@ import { Button, Icons, Popover, PopoverContent, PopoverTrigger } from '@libs/ui
 
 const Customizer = () => {
   const { t } = useTranslation('common')
-  const { data, set } = useStorage(StorageKey.THEME)
+  const { set } = useStorage(StorageKey.THEME)
 
   return (
     <>
