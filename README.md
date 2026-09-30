@@ -34,7 +34,7 @@ pnpm run doctor --running
 | [libs](libs/README.md)           | 共享契约、领域实现、运行时适配器与 UI        |
 | [docker](docker/README.md)       | 开发基础设施、Kong 路由、服务镜像与部署编排  |
 | [scripts](scripts/README.md)     | 清理、认证模型检查、CI 与发布入口            |
-| [tools](tools/README.md)         | 两个固定依赖的独立执行包                     |
+| [tools](tools/README.md)         | 固定依赖的执行工具与本地 Nx 业务生成器       |
 | [.agents/skills](.agents/skills) | Codex/Cursor 共用开发规范                    |
 
 ## 开发入口

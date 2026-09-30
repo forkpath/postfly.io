@@ -371,7 +371,7 @@ Required checks 与管理员保护已生效。PR #1 的 15 项检查通过于旧
 
 GitHub 已创建并读回 dev/main 保护规则：dev 要求 `Required checks`，main 额外要求
 `Staging deployment`；检查绑定 GitHub Actions，严格检查和管理员限制开启，禁止强推与删除。
-规则允许正常创建初始分支；新分支及默认分支切换将在本地完整演练通过后执行。
+尚未验证初始分支创建；新分支及默认分支切换将在本地完整演练通过后执行并核对保护。
 现有移动编译缓存属于 `refs/pull/1/merge`，不能被新 dev 的 push 运行读取；首次 dev
 运行建立默认分支缓存后，后续 PR 才能共享。保留按工具链分开的 Gradle/CocoaPods 缓存。
 
@@ -390,3 +390,21 @@ GitHub 已创建并读回 dev/main 保护规则：dev 要求 `Required checks`�
 失败退出与资源核验语义，避免 finally 内直接抛错。共享入口的 Engine 集成回归
 7 项通过，报告 `7b6e3587c7af7347` 为 passed/cleaned=true、interrupted=false。
 此结果不替代两环境完整部署演练，也不代表真实服务器或最终提交远端 CI 已通过。
+
+### 两环境完整部署演练通过
+
+提交 `5bfdeab3bd35274721496bb021f7717303902711` 的隔离演练
+`b2995d7520c8` 已完成，开始时无工作区差异。通过真实 `deploy.sh` 依次验证：
+
+- 五个当前源码镜像推送到本机临时 registry，按 digest 部署。
+- staging 的空库迁移、四个应用与 Kong 健康、页面与 HTTP/WS 认证边界通过。
+- 故意失败的 migrator 返回 17；四个既有应用容器 ID 保持不变，网关仍通过检查。
+- staging 重复部署成功；production 在另一套独立数据与网络中使用相同五个 digest，
+  应用运行 image ID 与记录一致，网关再次通过。
+- `passed=true, cleaned=true, interrupted=false`，清理错误为空，临时文件已删除。
+
+原始结果为 `dist/test-results/hardening-20260930/promotion-rehearsal-b2995d7520c8.json`。
+这是本机隔离验收，未覆盖远端 SSH、公网 HTTPS 和实际 GitHub Environment 部署。
+远端读回仍没有仓库构建变量及 staging/production 部署变量或凭据；已经询问的环境信息
+仍待提供。下一步建立实际 dev 分支并执行最终远端矩阵，真实 CD 不能用本机演练代替。
+入口复核同时修正 README 的工具目录说明，使其包含新增的本地 Nx 业务生成器。
