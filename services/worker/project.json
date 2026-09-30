@@ -70,7 +70,8 @@
         },
         {
           "env": "CI"
-        }
+        },
+        "unitTestGlobals"
       ],
       "outputs": ["{workspaceRoot}/dist/test-results/worker/unit", "{workspaceRoot}/coverage/services/worker"],
       "options": {

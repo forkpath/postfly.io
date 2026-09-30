@@ -83,6 +83,13 @@ pnpm nx run extension:test -- --watch
 
 Jest 与 Vitest 的用例使用各自入口，根 Vitest 不收集 Mobile Jest 或 Playwright 文件。不同套件可共享普通测试数据；原生 mock、DOM fixture 不混入公共运行时代码。
 
+## 覆盖率与新增 Web 示例
+
+CI 按 affected 项目执行 Vitest 覆盖率门槛，包含未被测试导入的源码。
+本地运行、统计范围、起步基线与缓存规则见 [覆盖率指南](testing-coverage.md)。
+`ui-web:test` 提供按钮、复选框、对话框交互样板；Web 的 `src/__tests__/routing.spec.ts`
+覆盖正式路由的匿名跳转、平台管理员权限和会话服务失败。
+
 ## Extension 真实浏览器测试
 
 ```sh

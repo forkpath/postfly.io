@@ -10,6 +10,7 @@
     "src/**/*.spec.tsx",
     "tests/**/*.ts",
     "vitest.config.mts",
-    "../../libs/i18n/src/typings/**/*.d.ts"
+    "../../libs/i18n/src/typings/**/*.d.ts",
+    "src/routeTree.gen.ts"
   ]
 }

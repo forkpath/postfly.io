@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 
 import { defineConfig } from 'vitest/config'
 
+import { unitCoverage } from '../../scripts/testing/unit-coverage.mjs'
 import tsconfig from './tsconfig.json' with { type: 'json' }
 
 // WXT 0.20's WxtVitest always calls dotenv, even with configFile: false.
@@ -38,6 +39,6 @@ export default defineConfig({
     },
     reporters: ['default', 'junit'],
     outputFile: { junit: '../../dist/test-results/extension/unit/junit.xml' },
-    coverage: { provider: 'v8', reportsDirectory: '../../coverage/apps/extension' }
+    coverage: unitCoverage('apps/extension')
   }
 })

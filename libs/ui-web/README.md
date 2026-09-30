@@ -37,3 +37,11 @@ pnpm nx run ui-web:typecheck
 接入 jsdom + Testing Library 后测键盘/焦点/禁用态/可访问名称、输入事件、受控状态；视觉/布局需 browser E2E。
 
 新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。
+
+## Component tests
+
+Run `pnpm nx run ui-web:test` and `pnpm nx run ui-web:typecheck-tests`.
+Use `RAY_TEST_COVERAGE=true pnpm nx run ui-web:test` to enforce the CI coverage baseline.
+The Button, Checkbox and Dialog specs exercise real component behavior with React Testing Library
+and jsdom, including disabled actions, accessible state, focus restoration and Escape handling.
+See the [coverage guide](../../docs/development/testing-coverage.md) for reporting and new tests.

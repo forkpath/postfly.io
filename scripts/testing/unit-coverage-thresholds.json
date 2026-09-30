@@ -1,0 +1,230 @@
+{
+  "apps/desktop": {
+    "statements": 34.3,
+    "branches": 47.1,
+    "functions": 27.9,
+    "lines": 36.0
+  },
+  "apps/extension": {
+    "statements": 11.9,
+    "branches": 8.0,
+    "functions": 13.8,
+    "lines": 12.0
+  },
+  "apps/web": {
+    "statements": 4.6,
+    "branches": 4.6,
+    "functions": 2.2,
+    "lines": 4.8
+  },
+  "libs/analytics": {
+    "statements": 16.5,
+    "branches": 45.0,
+    "functions": 21.1,
+    "lines": 16.5
+  },
+  "libs/analytics-native": {
+    "statements": 90.0,
+    "branches": 90.0,
+    "functions": 90.0,
+    "lines": 90.0
+  },
+  "libs/analytics-server": {
+    "statements": 70.4,
+    "branches": 54.9,
+    "functions": 90.0,
+    "lines": 70.4
+  },
+  "libs/analytics-web": {
+    "statements": 36.5,
+    "branches": 27.6,
+    "functions": 19.9,
+    "lines": 36.5
+  },
+  "libs/api-client": {
+    "statements": 22.2,
+    "branches": 12.6,
+    "functions": 22.7,
+    "lines": 21.7
+  },
+  "libs/api-core": {
+    "statements": 84.6,
+    "branches": 72.0,
+    "functions": 90.0,
+    "lines": 86.1
+  },
+  "libs/auth-client-native": {
+    "statements": 40.5,
+    "branches": 72.0,
+    "functions": 22.5,
+    "lines": 33.7
+  },
+  "libs/auth-client-web": {
+    "statements": 47.3,
+    "branches": 72.0,
+    "functions": 22.5,
+    "lines": 45.0
+  },
+  "libs/auth-contract": {
+    "statements": 46.8,
+    "branches": 61.8,
+    "functions": 67.5,
+    "lines": 44.3
+  },
+  "libs/auth-server": {
+    "statements": 16.7,
+    "branches": 18.0,
+    "functions": 8.8,
+    "lines": 15.8
+  },
+  "libs/billing-client-native": {
+    "statements": 39.2,
+    "branches": 26.5,
+    "functions": 22.5,
+    "lines": 40.2
+  },
+  "libs/billing-client-web": {
+    "statements": 90.0,
+    "branches": 90.0,
+    "functions": 90.0,
+    "lines": 90.0
+  },
+  "libs/billing-contract": {
+    "statements": 28.2,
+    "branches": 15.2,
+    "functions": 17.1,
+    "lines": 30.6
+  },
+  "libs/billing-server": {
+    "statements": 10.5,
+    "branches": 8.4,
+    "functions": 28.4,
+    "lines": 11.0
+  },
+  "libs/email-server": {
+    "statements": 32.6,
+    "branches": 14.0,
+    "functions": 18.4,
+    "lines": 32.8
+  },
+  "libs/monitoring": {
+    "statements": 12.3,
+    "branches": 56.2,
+    "functions": 15.6,
+    "lines": 12.3
+  },
+  "libs/monitoring-native": {
+    "statements": 90.0,
+    "branches": 90.0,
+    "functions": 90.0,
+    "lines": 90.0
+  },
+  "libs/monitoring-server": {
+    "statements": 90.0,
+    "branches": 90.0,
+    "functions": 90.0,
+    "lines": 90.0
+  },
+  "libs/monitoring-web": {
+    "statements": 54.0,
+    "branches": 14.2,
+    "functions": 18.0,
+    "lines": 54.0
+  },
+  "libs/payload": {
+    "statements": 61.1,
+    "branches": 45.0,
+    "functions": 77.1,
+    "lines": 60.7
+  },
+  "libs/platform-contract": {
+    "statements": 77.1,
+    "branches": 82.4,
+    "functions": 90.0,
+    "lines": 77.1
+  },
+  "libs/server-elasticsearch": {
+    "statements": 90.0,
+    "branches": 90.0,
+    "functions": 90.0,
+    "lines": 90.0
+  },
+  "libs/server-email": {
+    "statements": 76.1,
+    "branches": 90.0,
+    "functions": 67.5,
+    "lines": 73.6
+  },
+  "libs/server-kernel": {
+    "statements": 90.0,
+    "branches": 90.0,
+    "functions": 90.0,
+    "lines": 90.0
+  },
+  "libs/server-nest": {
+    "statements": 12.5,
+    "branches": 5.3,
+    "functions": 9.4,
+    "lines": 13.0
+  },
+  "libs/server-rabbitmq": {
+    "statements": 49.0,
+    "branches": 36.0,
+    "functions": 45.0,
+    "lines": 46.6
+  },
+  "libs/server-redis": {
+    "statements": 25.2,
+    "branches": 33.7,
+    "functions": 17.1,
+    "lines": 25.7
+  },
+  "libs/server-sms": {
+    "statements": 90.0,
+    "branches": 79.9,
+    "functions": 90.0,
+    "lines": 90.0
+  },
+  "libs/server-storage": {
+    "statements": 34.6,
+    "branches": 38.9,
+    "functions": 30.7,
+    "lines": 32.7
+  },
+  "libs/studio": {
+    "statements": 3.7,
+    "branches": 1.6,
+    "functions": 1.9,
+    "lines": 3.5
+  },
+  "libs/testing-server": {
+    "statements": 27.0,
+    "branches": 64.9,
+    "functions": 18.0,
+    "lines": 28.4
+  },
+  "libs/ui-web": {
+    "statements": 1.8,
+    "branches": 1.2,
+    "functions": 3.0,
+    "lines": 1.9
+  },
+  "services/engine": {
+    "statements": 28.7,
+    "branches": 21.2,
+    "functions": 31.7,
+    "lines": 29.8
+  },
+  "services/pulse": {
+    "statements": 30.1,
+    "branches": 24.7,
+    "functions": 20.7,
+    "lines": 33.2
+  },
+  "services/worker": {
+    "statements": 46.3,
+    "branches": 35.6,
+    "functions": 36.8,
+    "lines": 50.1
+  }
+}

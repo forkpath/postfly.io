@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -177,6 +177,23 @@ function verifyProjectGraph(graph) {
     if (!targets.lint) fail(`${node.name} has source code but no lint target`)
     if (!targets.typecheck) fail(`${node.name} has source code but no typecheck target`)
 
+    const unitConfigPath = join(workspaceRoot, node.data.root, 'vitest.config.mts')
+    if (existsSync(unitConfigPath)) {
+      if (!targets.test?.inputs?.includes('unitTestGlobals')) {
+        fail(`${node.name}:test must hash unitTestGlobals (coverage policy and mode)`)
+      }
+      const config = readFileSync(unitConfigPath, 'utf8')
+      if (!config.includes(`unitCoverage('${node.data.root}')`)) {
+        fail(`${node.name} must apply the shared unit coverage policy`)
+      }
+      const threshold = readJson('scripts/testing/unit-coverage-thresholds.json')[node.data.root]
+      for (const metric of ['statements', 'branches', 'functions', 'lines']) {
+        if (!Number.isFinite(threshold?.[metric]) || threshold[metric] <= 0 || threshold[metric] > 100) {
+          fail(`${node.name} needs a positive ${metric} coverage threshold`)
+        }
+      }
+    }
+
     const tags = node.data.tags ?? []
     for (const dimension of ['domain:', 'runtime:', 'type:']) {
       if (tags.filter(tag => tag.startsWith(dimension)).length !== 1) {
@@ -307,6 +324,15 @@ const codeProjects = verifyProjectGraph(projectGraph)
 verifyNoWildcardLibraryPaths()
 const workflowActionReferences = verifyWorkflowActionPins()
 const sharedRuntime = runtimeCommands(nx.namedInputs?.sharedGlobals ?? [])
+
+const unitTestGlobals = nx.namedInputs?.unitTestGlobals ?? []
+for (const file of ['unit-coverage.mts', 'unit-coverage-thresholds.json']) {
+  if (!unitTestGlobals.includes(`{workspaceRoot}/scripts/testing/${file}`))
+    fail(`Coverage policy ${file} is not hashed`)
+}
+if (!envNames(unitTestGlobals).has('RAY_TEST_COVERAGE')) fail('Coverage mode is not hashed')
+const ciWorkflow = readFileSync(join(workspaceRoot, '.github/workflows/ci.yml'), 'utf8')
+if (!/^      RAY_TEST_COVERAGE: 'true'$/m.test(ciWorkflow)) fail('CI must enable unit coverage')
 
 for (const command of ['node --version', `node -p "process.platform + '-' + process.arch"`]) {
   if (!sharedRuntime.has(command)) fail(`sharedGlobals does not hash runtime input: ${command}`)

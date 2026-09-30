@@ -9,21 +9,21 @@
 
 ## 完整需求与验收证据
 
-| 编号 | 要求                                                 | 当前状态                                   | 完成依据                                                                                                                                                                 |
-| ---- | ---------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1    | 无环境文件的新克隆可安装                             | 干净副本冻结安装通过，正式构建缺配置拒绝   | 仓库外干净副本不带环境与 node_modules，冻结安装成功；正式扩展配置缺失仍拒绝构建                                                                                          |
-| 2    | dev 测试、main 正式的 CI/CD；命名 ray、宽度 120 一致 | 待实施；远端尚无 dev/main 或部署环境       | 工作流事件及同一提交门禁正反测试；默认基线与文档一致；dev/main 合并保护读回；真实部署须明确环境                                                                          |
-| 3    | CI 强制 nx format:check，并修复存量格式              | 本地全仓格式检查通过，待最终 CI            | 全仓格式检查通过；CI 必需检查包含格式失败                                                                                                                                |
-| 4    | analytics-web 冷导入测试稳定                         | 冷启动 3 轮通过，待最终 CI                 | 独立冷启动及并发任务压力下重复通过，保留原断言，不靠 retries 隐藏失败                                                                                                    |
-| 5    | 本地确定性完整模块 generator                         | 待实施                                     | 一条 Nx 命令生成 Prisma、Domain、Repository、CQRS、Use Case、Controller、Payload、API client 和测试；干净副本生成后类型/lint/测试/真实 HTTP 与持久化通过；拒绝越界及覆盖 |
-| 6    | 覆盖率门槛及跨端测试示例                             | Mobile/Extension 示例已有，其余待补        | Vitest 阈值在 affected CI 强制执行，降低覆盖率的负向验证失败；ui-web 组件、Web 路由示例和已有 Native/扩展示例可复制运行                                                  |
-| 7    | Testcontainers 集成环境与真实仓储测试                | 本地六套矩阵与镜像编排通过，待最终 CI      | Testcontainers 启动 PG/Redis/RabbitMQ（完整服务需要 Mongo 时一并提供）；真实 Repository、Worker 去重/重试/恢复及成功/失败/中断清理验证；保持唯一默认入口                 |
-| 8    | PR 前移 E2E                                          | 既有 affected Web/Extension/后端套件已实现 | PR 事件确实选择并执行页面 smoke；需要身份时使用隔离测试账号，失败传播到 Required checks                                                                                  |
-| 9    | 分组依赖升级与官方源安全扫描                         | 分组更新/扫描配置已添加；依赖告警待修复    | Renovate 或 Dependabot 配置有效；官方源真实扫描与失败门禁；评估并记录 Mobile/Extension 项目依赖归属                                                                      |
-| 10   | CODEOWNERS、PR 模板及分支保护                        | CODEOWNERS/模板已添加；dev/main 保护待补   | CODEOWNERS 身份有效、模板有验证与风险说明；dev/main 必需检查实际生效                                                                                                     |
-| 11   | 清理 lint 警告、零警告门禁                           | 47 项目零警告与类型检查通过，待最终 CI     | 全仓 lint --max-warnings=0 通过；新增警告能使检查失败，不全局关闭规则                                                                                                    |
-| 12   | bootstrap/doctor，新人快速启动                       | 待实施                                     | 版本与配置检查、不覆盖已有 .env、安全创建本地配置、启动 infra、db:init、显式开发 seed；隔离目录端到端计时，报告达到或未达到 10 分钟目标及条件                            |
-| 13   | 拆分 AppShell 与 marketing skeleton 大文件           | 已提取导航同步并补回归，其余拆分待实施     | 按职责拆分、保持公开 API/页面行为；相关组件/路由测试、类型、lint 和页面 smoke 通过                                                                                       |
+| 编号 | 要求                                                 | 当前状态                                    | 完成依据                                                                                                                                                                 |
+| ---- | ---------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1    | 无环境文件的新克隆可安装                             | 干净副本冻结安装通过，正式构建缺配置拒绝    | 仓库外干净副本不带环境与 node_modules，冻结安装成功；正式扩展配置缺失仍拒绝构建                                                                                          |
+| 2    | dev 测试、main 正式的 CI/CD；命名 ray、宽度 120 一致 | 待实施；远端尚无 dev/main 或部署环境        | 工作流事件及同一提交门禁正反测试；默认基线与文档一致；dev/main 合并保护读回；真实部署须明确环境                                                                          |
+| 3    | CI 强制 nx format:check，并修复存量格式              | 本地全仓格式检查通过，待最终 CI             | 全仓格式检查通过；CI 必需检查包含格式失败                                                                                                                                |
+| 4    | analytics-web 冷导入测试稳定                         | 冷启动 3 轮通过，待最终 CI                  | 独立冷启动及并发任务压力下重复通过，保留原断言，不靠 retries 隐藏失败                                                                                                    |
+| 5    | 本地确定性完整模块 generator                         | 待实施                                      | 一条 Nx 命令生成 Prisma、Domain、Repository、CQRS、Use Case、Controller、Payload、API client 和测试；干净副本生成后类型/lint/测试/真实 HTTP 与持久化通过；拒绝越界及覆盖 |
+| 6    | 覆盖率门槛及跨端测试示例                             | 本地 39 项目单测及覆盖率门禁通过，待最终 CI | Vitest 阈值在 affected CI 强制执行，降低覆盖率的负向验证失败；ui-web 组件、Web 路由示例和已有 Native/扩展示例可复制运行                                                  |
+| 7    | Testcontainers 集成环境与真实仓储测试                | 本地六套矩阵与镜像编排通过，待最终 CI       | Testcontainers 启动 PG/Redis/RabbitMQ（完整服务需要 Mongo 时一并提供）；真实 Repository、Worker 去重/重试/恢复及成功/失败/中断清理验证；保持唯一默认入口                 |
+| 8    | PR 前移 E2E                                          | 既有 affected Web/Extension/后端套件已实现  | PR 事件确实选择并执行页面 smoke；需要身份时使用隔离测试账号，失败传播到 Required checks                                                                                  |
+| 9    | 分组依赖升级与官方源安全扫描                         | 分组更新/扫描配置已添加；依赖告警待修复     | Renovate 或 Dependabot 配置有效；官方源真实扫描与失败门禁；评估并记录 Mobile/Extension 项目依赖归属                                                                      |
+| 10   | CODEOWNERS、PR 模板及分支保护                        | CODEOWNERS/模板已添加；dev/main 保护待补    | CODEOWNERS 身份有效、模板有验证与风险说明；dev/main 必需检查实际生效                                                                                                     |
+| 11   | 清理 lint 警告、零警告门禁                           | 47 项目零警告与类型检查通过，待最终 CI      | 全仓 lint --max-warnings=0 通过；新增警告能使检查失败，不全局关闭规则                                                                                                    |
+| 12   | bootstrap/doctor，新人快速启动                       | 待实施                                      | 版本与配置检查、不覆盖已有 .env、安全创建本地配置、启动 infra、db:init、显式开发 seed；隔离目录端到端计时，报告达到或未达到 10 分钟目标及条件                            |
+| 13   | 拆分 AppShell 与 marketing skeleton 大文件           | 已提取导航同步并补回归，其余拆分待实施      | 按职责拆分、保持公开 API/页面行为；相关组件/路由测试、类型、lint 和页面 smoke 通过                                                                                       |
 
 ## 实施阶段
 
@@ -148,3 +148,40 @@ CI 合约 25 项。首次类型复验发现表格 SortingState 类型兼容问�
 `dist/test-results/hardening-20260930/` 或其记录指向的测试目录。
 本阶段未启动远端 Actions。最终提交的远端 CI、依赖修复、生成器、覆盖率门槛、
 bootstrap、剩余 UI 拆分和 dev/main 自动部署仍未完成，Goal 保持进行中。
+
+## 覆盖率与行为测试阶段（2026-09-30）
+
+38 个 Vitest 项目接入同一覆盖率策略；CI 质量任务显式设置采集开关，沿既有 full /
+affected 分支执行项目完整 `test` target。统计包括未被导入的源码，四项门槛均为正数，
+数值取本轮实测基线的 90% 并向下保留一位小数，没有通过排除未覆盖业务文件提高结果。
+具体实测值、范围和本地命令见 [覆盖率指南](testing-coverage.md)。Web/Studio/UI 的
+起步覆盖率仍低，这一阶段建立的是可执行的防退步门禁，不代表完整业务已充分测试。
+
+新增行为样板：UI 的按钮、复选框和 Dialog 共 5 项；Web 正式路由守卫与真实 TanStack
+导航生命周期 6 项；Native 付费墙结果/异常 6 项；Node 监控 provider 2 项；Nest DI
+装配下的 Auth Guard 6 项。外部认证、支付和监控 SDK 为明确替身；正式路由和被测
+组件保持真实。它们与既有 Mobile Jest/RNTL 及 Extension 浏览器测试分层保留。
+
+- `RAY_TEST_COVERAGE=true pnpm nx run-many -t test --skipNxCache`：39 项目全部通过，
+  38 个 Vitest 项目 372 项测试，Mobile Jest 6 项，共 378 项，耗时 2 分 15 秒。
+  所有 Vitest 项目的 statements/branches/functions/lines 都达到对应门槛。
+- UI/Web 与新增适配器测试的类型检查和 lint 通过。首次检查暴露测试中的 SDK 类型及
+  路由类型注册问题，已补全 fixture、使用 Nest DI 装配并纳入生成路由类型，未使用
+  `any` 或关闭类型检查放行。
+- `coverage-negative.json`：临时移除 Checkbox/Dialog 测试，剩余两项断言仍通过，
+  覆盖率降至 statements 0.55%、branches 0.9%、functions 0.38%、lines 0.57%，
+  Vitest 因未达到门槛退出 1。随后逐字恢复原测试。
+- `route-permission-negative.json`：临时去掉正式路由的管理员校验，普通用户进入
+  `/admin`，路由测试因预期 `/user/profile` 不符退出 1。正式路由源码已逐字恢复。
+- `unitTestGlobals` 将采集模式、策略和门槛纳入 Nx 缓存；Pulse/Worker 的显式输入
+  也已接入。修改门槛文件的真实 affected 查询选中全部 38 个 Vitest 项目。
+  CI 合约 25 项和缓存/边界检查通过。
+- 真实缓存模式切换：同一 UI 测试先关闭覆盖率运行，再开启覆盖率运行，前者执行
+  普通测试、后者命中此前覆盖率模式的正确缓存并带报告；模式之间没有串用结果。
+  证据见 `coverage-cache-modes.json`。恢复后 UI/Web 的测试、类型、lint 与覆盖率再次通过。
+- 全仓格式检查通过；UI 测试入口已按 `nx-generate` 技能核对现有生成器，保留专用
+  Vitest 配置及真实组件测试，没有引入额外的组件生产构建流程。
+
+原始日志、覆盖率汇总和反向实验结果保存在 `dist/test-results/hardening-20260930/`。
+本阶段未增加依赖、未运行移动设备 Actions。最终同一提交远端 CI 和完整 Goal 中的
+生成器、bootstrap、dev/main 部署、依赖安全修复与剩余 UI 拆分继续保留为必要工作。

@@ -70,7 +70,8 @@
         },
         {
           "env": "CI"
-        }
+        },
+        "unitTestGlobals"
       ],
       "outputs": ["{workspaceRoot}/dist/test-results/pulse/unit", "{workspaceRoot}/coverage/services/pulse"],
       "options": {

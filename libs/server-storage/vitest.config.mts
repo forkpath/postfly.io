@@ -1,7 +1,10 @@
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
 
+import { unitCoverage } from '../../scripts/testing/unit-coverage.mjs'
+
 export default defineConfig({
+  root: import.meta.dirname,
   plugins: [tsconfigPaths()],
   test: {
     name: 'server-storage',
@@ -9,6 +12,6 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.spec.ts'],
-    coverage: { provider: 'v8', reportsDirectory: '../../coverage/libs/server-storage' }
+    coverage: unitCoverage('libs/server-storage')
   }
 })

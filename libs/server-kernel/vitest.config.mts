@@ -1,6 +1,8 @@
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
 
+import { unitCoverage } from '../../scripts/testing/unit-coverage.mjs'
+
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/libs/server-kernel',
@@ -12,9 +14,6 @@ export default defineConfig(() => ({
     environment: 'node',
     include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../../coverage/libs/server-kernel',
-      provider: 'v8' as const
-    }
+    coverage: unitCoverage('libs/server-kernel')
   }
 }))

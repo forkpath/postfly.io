@@ -1,6 +1,8 @@
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
 
+import { unitCoverage } from '../../scripts/testing/unit-coverage.mjs'
+
 export default defineConfig({
   root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/libs/analytics-web',
@@ -13,6 +15,6 @@ export default defineConfig({
     testTimeout: 15_000,
     environment: 'node',
     include: ['src/**/*.spec.ts', 'src/**/*.spec.tsx'],
-    coverage: { provider: 'v8', reportsDirectory: '../../coverage/libs/analytics-web' }
+    coverage: unitCoverage('libs/analytics-web')
   }
 })

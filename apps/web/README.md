@@ -63,7 +63,7 @@ pnpm nx run web:test
 pnpm nx run web:typecheck-tests
 ```
 
-使用独立 Vitest/jsdom 配置，验证会话身份同步和定时器生命周期。新增用例放在 `src/**/*.spec.ts` / `*.spec.tsx`；测试不加载生产构建插件或开发 `.env`。报告在 `dist/test-results/web/unit`，新增用例要求见 [测试指南](../../docs/development/testing.md)。
+使用独立 Vitest/jsdom 配置，验证会话身份同步、定时器生命周期，以及正式路由的登录跳转、平台管理员权限和会话服务失败。路由测试位于 `src/__tests__`，不放进文件路由目录。新增用例放在 `src/**/*.spec.ts` / `*.spec.tsx`；测试不加载生产构建插件或开发 `.env`。报告在 `dist/test-results/web/unit`，新增用例要求见 [测试指南](../../docs/development/testing.md)。
 
 ## E2E：运行与编写
 

@@ -72,6 +72,7 @@ jobs:
       POSTGRES_DATABASE_URL: postgresql://schema:check@127.0.0.1:1/schema_check
       NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
       NX_NO_CLOUD: ${{ secrets.NX_CLOUD_ACCESS_TOKEN == '' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository) }}
+      RAY_TEST_COVERAGE: 'true'
       NX_BASE: ${{ needs.select.outputs.base }}
       NX_HEAD: ${{ needs.select.outputs.head }}
       VITE_URL: https://example.invalid

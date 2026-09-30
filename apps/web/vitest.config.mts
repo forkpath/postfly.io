@@ -2,6 +2,7 @@ import path from 'node:path'
 
 import { defineConfig } from 'vitest/config'
 
+import { unitCoverage } from '../../scripts/testing/unit-coverage.mjs'
 import tsconfig from './tsconfig.json' with { type: 'json' }
 
 const aliases = Object.entries(tsconfig.compilerOptions.paths).map(([alias, [target]]) => ({
@@ -23,6 +24,6 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     reporters: ['default', 'junit'],
     outputFile: { junit: '../../dist/test-results/web/unit/junit.xml' },
-    coverage: { provider: 'v8', reportsDirectory: '../../coverage/apps/web' }
+    coverage: unitCoverage('apps/web')
   }
 })

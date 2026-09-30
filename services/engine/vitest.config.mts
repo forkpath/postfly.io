@@ -1,6 +1,8 @@
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
 
+import { unitCoverage } from '../../scripts/testing/unit-coverage.mjs'
+
 export default defineConfig(() => ({
   root: import.meta.dirname,
   envDir: false,
@@ -21,9 +23,6 @@ export default defineConfig(() => ({
     exclude: ['**/*.integration.spec.ts', '**/*.e2e.spec.ts'],
     reporters: ['default', 'junit'],
     outputFile: { junit: '../../dist/test-results/engine/unit/junit.xml' },
-    coverage: {
-      reportsDirectory: '../../coverage/services/engine',
-      provider: 'v8' as const
-    }
+    coverage: unitCoverage('services/engine')
   }
 }))
