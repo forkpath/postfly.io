@@ -1,16 +1,16 @@
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 import { GenericContainer, Network, PullPolicy, Wait } from 'testcontainers'
+import { parse } from 'yaml'
 
 export const TEST_RUN_LABEL = 'io.ray.test.run'
 
-const images = {
-  postgres: 'docker.io/library/postgres:17@sha256:2203e6282d9e7de7c24d7da234e2a744fb325df366a3fd8ed940e8abbee39527',
-  redis: 'docker.io/library/redis:7.4@sha256:33d7c9a245edd95e6703a0addbeaa48fe40c3b3b4783627a72085155462ebfdb',
-  mongo: 'docker.io/library/mongo:8.0@sha256:45b422ba19c0f028a917ea43746ab8e8cdbdaaeb50d2e6e634a17c59666e0dbb',
-  rabbitmq:
-    'docker.io/library/rabbitmq:4.0.1-management@sha256:9b471f8528a5beee7a6913d49bc450ffd92b3d0d9732f8febc448d291f5d150b'
-}
+// Test the same immutable infrastructure versions that deployment will pull.
+const infrastructure = parse(readFileSync(new URL('../../docker/docker-compose.infra.yml', import.meta.url), 'utf8'))
+export const infrastructureImages = Object.fromEntries(
+  Object.entries(infrastructure.services).map(([service, config]) => [service, config.image])
+)
 
 // GenericContainer exposes lifecycle hooks and protected Docker create options.
 // Bind random ports only to loopback; remote Docker hosts are deliberately unsupported.
@@ -42,7 +42,7 @@ export class BackendContainers {
     this.network = await new Network().start()
     for (const service of services) {
       this.assertRunning()
-      const container = this.builder(images[service], service)
+      const container = this.builder(infrastructureImages[service], service)
       const { password, database } = this
       if (service === 'postgres') {
         container

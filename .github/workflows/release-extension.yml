@@ -24,6 +24,11 @@ jobs:
 
   quality-gate:
     needs: verify-release-ref
+    # Reusable CI declares this capability for dev deployment; tag runs skip it.
+    permissions:
+      actions: read
+      contents: read
+      packages: write
     uses: ./.github/workflows/ci.yml
     with:
       ref: ${{ github.sha }}
@@ -117,7 +122,7 @@ jobs:
           mkdir -p dist/extension-release
           unzip -q "${packages[0]}" -d dist/extension-release
           test -f dist/extension-release/manifest.json
-          (cd artifacts && sha256sum *.zip > SHA256SUMS)
+          (cd artifacts && sha256sum -- *.zip > SHA256SUMS)
           printf '%s\n' "$GITHUB_SHA" > artifacts/COMMIT
           echo "EXTENSION_BUILD_DIR=$GITHUB_WORKSPACE/dist/extension-release" >> "$GITHUB_ENV"
 

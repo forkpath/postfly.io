@@ -1,7 +1,21 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { selectTestSuites } from './select-test-suites.mjs'
+import { requiresFullRun, selectTestSuites } from './select-test-suites.mjs'
+
+test('ordinary dev pushes use affected selection; initial, scheduled and explicit full runs retain the complete matrix', () => {
+  const input = { eventName: 'push', ref: 'refs/heads/dev', base: 'a'.repeat(40), force: '' }
+  assert.equal(requiresFullRun(input), false)
+  for (const change of [
+    { base: undefined },
+    { base: '0'.repeat(40) },
+    { eventName: 'schedule' },
+    { eventName: 'workflow_dispatch' },
+    { force: 'true' },
+    { ref: 'refs/tags/v0.1.0' }
+  ])
+    assert.equal(requiresFullRun({ ...input, ...change }), true)
+})
 
 test('documentation-only changes select no device or service suites', () => {
   const result = selectTestSuites({ affected: [], files: ['docs/development/testing.md'], full: false })

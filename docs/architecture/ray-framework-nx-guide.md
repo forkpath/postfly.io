@@ -64,11 +64,11 @@ pnpm nx run-many -t package -p engine,pulse,worker
 
 ## CI 与发布
 
-`.github/workflows/ci.yml` 在 PR/dev 上运行 affected 检查，在 main、版本 tag、每日定时或无法确定基线时运行全量检查。独立数据库任务在临时 PostgreSQL 中初始化并核对模型。测试范围和运行方式见 [测试指南](../development/testing.md)。
+`.github/workflows/ci.yml` 在 PR/dev 上运行 affected 检查，在版本 tag、每周定时、手动或无法确定基线时运行全量检查。官方源安全扫描纳入必需检查。独立数据库任务在临时 PostgreSQL 中初始化并核对模型。测试范围和运行方式见 [测试指南](../development/testing.md)。
 
 GitHub Actions 启动 runner，Nx 负责任务调度；配置 Nx Cloud 后可以共享远程缓存。包下载缓存、Nx 任务缓存、Docker 层缓存各自独立。
 
-服务器发布由 `deploy.yml` 手动触发：构建并发布固定 digest 镜像，先执行迁移，再启动服务和 Kong。详细环境与命令见 [部署指南](deployment.md)。桌面打包与签名使用独立工作流，见 [Desktop](../../apps/desktop/README.md)。
+dev CI 成功后自动调用 `deploy.yml`，验证镜像并部署 staging；main 推送复用同一提交已部署成功的 digest，先执行迁移，再启动服务和 Kong。生产不重复完整 CI，但保留提交、产物和最新安全检查。详细环境与推广命令见 [部署指南](deployment.md)。桌面打包与签名使用独立工作流，见 [Desktop](../../apps/desktop/README.md)。
 
 ## 新项目的数据库与维护入口
 

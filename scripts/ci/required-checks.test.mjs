@@ -16,6 +16,7 @@ function successfulRun() {
         desktop: 'false'
       }
     },
+    security: { result: 'success' },
     main: { result: 'success' },
     'database-contract': { result: 'success' },
     backend: { result: 'success' },
@@ -40,7 +41,7 @@ test('missing selection data and failed prerequisites fail closed', () => {
   const run = successfulRun()
   delete run.select.outputs.mobileAndroid
   assert.throws(() => verifyRequiredChecks(run), /mobileAndroid/)
-  for (const id of ['select', 'main', 'database-contract']) {
+  for (const id of ['select', 'security', 'main', 'database-contract']) {
     const failed = successfulRun()
     failed[id].result = 'failure'
     assert.throws(() => verifyRequiredChecks(failed), new RegExp(id))

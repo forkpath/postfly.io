@@ -9,21 +9,21 @@
 
 ## 完整需求与验收证据
 
-| 编号 | 要求                                                 | 当前状态                                    | 完成依据                                                                                                                                                                 |
-| ---- | ---------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1    | 无环境文件的新克隆可安装                             | 干净副本冻结安装通过，正式构建缺配置拒绝    | 仓库外干净副本不带环境与 node_modules，冻结安装成功；正式扩展配置缺失仍拒绝构建                                                                                          |
-| 2    | dev 测试、main 正式的 CI/CD；命名 ray、宽度 120 一致 | 命名/宽度已统一；dev/main 部署待实施        | 工作流事件及同一提交门禁正反测试；默认基线与文档一致；dev/main 合并保护读回；真实部署须明确环境                                                                          |
-| 3    | CI 强制 nx format:check，并修复存量格式              | 本地全仓格式检查通过，待最终 CI             | 全仓格式检查通过；CI 必需检查包含格式失败                                                                                                                                |
-| 4    | analytics-web 冷导入测试稳定                         | 冷启动 3 轮通过，待最终 CI                  | 独立冷启动及并发任务压力下重复通过，保留原断言，不靠 retries 隐藏失败                                                                                                    |
-| 5    | 本地确定性完整模块 generator                         | 本地生成与真实 HTTP 验收通过，待最终 CI     | 一条 Nx 命令生成 Prisma、Domain、Repository、CQRS、Use Case、Controller、Payload、API client 和测试；干净副本生成后类型/lint/测试/真实 HTTP 与持久化通过；拒绝越界及覆盖 |
-| 6    | 覆盖率门槛及跨端测试示例                             | 本地 40 项目单测及覆盖率门禁通过，待最终 CI | Vitest 阈值在 affected CI 强制执行，降低覆盖率的负向验证失败；ui-web 组件、Web 路由示例和已有 Native/扩展示例可复制运行                                                  |
-| 7    | Testcontainers 集成环境与真实仓储测试                | 本地六套矩阵与镜像编排通过，待最终 CI       | Testcontainers 启动 PG/Redis/RabbitMQ（完整服务需要 Mongo 时一并提供）；真实 Repository、Worker 去重/重试/恢复及成功/失败/中断清理验证；保持唯一默认入口                 |
-| 8    | PR 前移 E2E                                          | 既有 affected Web/Extension/后端套件已实现  | PR 事件确实选择并执行页面 smoke；需要身份时使用隔离测试账号，失败传播到 Required checks                                                                                  |
-| 9    | 分组依赖升级与官方源安全扫描                         | 本地安全门禁与跨端复验通过，待最终 CI       | Renovate 或 Dependabot 配置有效；官方源真实扫描与失败门禁；评估并记录 Mobile/Extension 项目依赖归属                                                                      |
-| 10   | CODEOWNERS、PR 模板及分支保护                        | CODEOWNERS/模板已添加；dev/main 保护待补    | CODEOWNERS 身份有效、模板有验证与风险说明；dev/main 必需检查实际生效                                                                                                     |
-| 11   | 清理 lint 警告、零警告门禁                           | 48 项目零警告与类型检查通过，待最终 CI      | 全仓 lint --max-warnings=0 通过；新增警告能使检查失败，不全局关闭规则                                                                                                    |
-| 12   | bootstrap/doctor，新人快速启动                       | 本地干净副本全栈验收 8 分 12 秒通过         | 版本与配置检查、不覆盖已有 .env、安全创建本地配置、启动 infra、db:init、显式开发 seed；隔离目录端到端计时，报告达到或未达到 10 分钟目标及条件                            |
-| 13   | 拆分 AppShell 与 marketing skeleton 大文件           | 本地拆分与真实页面验收通过，待最终 CI       | 按职责拆分、保持公开 API/页面行为；相关组件/路由测试、类型、lint 和页面 smoke 通过                                                                                       |
+| 编号 | 要求                                                 | 当前状态                                         | 完成依据                                                                                                                                                                 |
+| ---- | ---------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1    | 无环境文件的新克隆可安装                             | 干净副本冻结安装通过，正式构建缺配置拒绝         | 仓库外干净副本不带环境与 node_modules，冻结安装成功；正式扩展配置缺失仍拒绝构建                                                                                          |
+| 2    | dev 测试、main 正式的 CI/CD；命名 ray、宽度 120 一致 | 本地发布机制与合约通过；远端分支及真实部署待验收 | 工作流事件及同一提交门禁正反测试；默认基线与文档一致；dev/main 合并保护读回；真实部署须明确环境                                                                          |
+| 3    | CI 强制 nx format:check，并修复存量格式              | 本地全仓格式检查通过，待最终 CI                  | 全仓格式检查通过；CI 必需检查包含格式失败                                                                                                                                |
+| 4    | analytics-web 冷导入测试稳定                         | 冷启动 3 轮通过，待最终 CI                       | 独立冷启动及并发任务压力下重复通过，保留原断言，不靠 retries 隐藏失败                                                                                                    |
+| 5    | 本地确定性完整模块 generator                         | 本地生成与真实 HTTP 验收通过，待最终 CI          | 一条 Nx 命令生成 Prisma、Domain、Repository、CQRS、Use Case、Controller、Payload、API client 和测试；干净副本生成后类型/lint/测试/真实 HTTP 与持久化通过；拒绝越界及覆盖 |
+| 6    | 覆盖率门槛及跨端测试示例                             | 本地 40 项目单测及覆盖率门禁通过，待最终 CI      | Vitest 阈值在 affected CI 强制执行，降低覆盖率的负向验证失败；ui-web 组件、Web 路由示例和已有 Native/扩展示例可复制运行                                                  |
+| 7    | Testcontainers 集成环境与真实仓储测试                | 本地六套矩阵与镜像编排通过，待最终 CI            | Testcontainers 启动 PG/Redis/RabbitMQ（完整服务需要 Mongo 时一并提供）；真实 Repository、Worker 去重/重试/恢复及成功/失败/中断清理验证；保持唯一默认入口                 |
+| 8    | PR 前移 E2E                                          | 既有 affected Web/Extension/后端套件已实现       | PR 事件确实选择并执行页面 smoke；需要身份时使用隔离测试账号，失败传播到 Required checks                                                                                  |
+| 9    | 分组依赖升级与官方源安全扫描                         | 本地安全门禁与跨端复验通过，待最终 CI            | Renovate 或 Dependabot 配置有效；官方源真实扫描与失败门禁；评估并记录 Mobile/Extension 项目依赖归属                                                                      |
+| 10   | CODEOWNERS、PR 模板及分支保护                        | CODEOWNERS/模板已添加；dev/main 保护待补         | CODEOWNERS 身份有效、模板有验证与风险说明；dev/main 必需检查实际生效                                                                                                     |
+| 11   | 清理 lint 警告、零警告门禁                           | 48 项目零警告与类型检查通过，待最终 CI           | 全仓 lint --max-warnings=0 通过；新增警告能使检查失败，不全局关闭规则                                                                                                    |
+| 12   | bootstrap/doctor，新人快速启动                       | 本地干净副本全栈验收 8 分 12 秒通过              | 版本与配置检查、不覆盖已有 .env、安全创建本地配置、启动 infra、db:init、显式开发 seed；隔离目录端到端计时，报告达到或未达到 10 分钟目标及条件                            |
+| 13   | 拆分 AppShell 与 marketing skeleton 大文件           | 本地拆分与真实页面验收通过，待最终 CI            | 按职责拆分、保持公开 API/页面行为；相关组件/路由测试、类型、lint 和页面 smoke 通过                                                                                       |
 
 ## 实施阶段
 
@@ -41,7 +41,8 @@
 
 - 用户指定 dev 为测试环境、main 为正式环境；正式部署必须使用经过验证的同一
   提交/产物。是否复用已有 CI 取决于提交身份，不能仅因为分支名为 main 就省略门禁。
-- 当前 GitHub 未配置部署 Environment、变量或密钥；已向用户询问环境是否存在。
+- 已创建 staging/dev 与 production/main 的 GitHub Environment 分支限制；
+  服务器、公开域名、变量或密钥尚未提供，已向用户询问环境是否存在。
   无目标环境时先完成可验证机制与隔离演练，不擅自宣称真实部署通过。
 - Testcontainers 为本轮明确要求，替换既有默认集成编排，避免新增两套维护路径。
 - 保留已验证的移动原生缓存；本地先完成可复现检查，再集中触发必要远端矩阵。
@@ -320,3 +321,40 @@ Electron 未签名测试进程曾等待真实 macOS Keychain；临时测试入�
 证据为 `dist/test-results/hardening-20260930/dependency-*`。主工作区暂存区未改写。
 此阶段未触发远端 Actions；当前提交的移动设备、其他桌面平台、远端必需检查仍待运行。
 dev/main 自动发布和合并保护尚未落实，完整 Goal 继续进行。
+
+## dev/main 发布机制阶段（2026-09-30，验收进行中）
+
+dev 推送先通过 `Required checks`，再由同次 CI 调用 staging 构建与部署；
+main 只接受同一 SHA 的成功 dev CI、成功 staging 记录及五个不可变镜像 digest。
+生产前再次扫描依赖，拒绝失败、进行中、过期、其他仓库/提交或其他 attempt 的记录；
+真正上传前复查分支 head。两个环境串行部署，不在部署中途因新推送取消。
+
+代码自审已修正：
+
+- 安全扫描是必需汇总检查的前置条件；dev/main 分支与 Nx defaultBase 对齐。
+- Web 邀请地址使用浏览器当前 origin，SSR/file 保留 canonical URL；同一前端产物
+  可以在 staging/production 使用。对应两条测试、Studio 测试类型检查和三浏览器页面回归通过。
+- 基础设施与 Kong 固定 digest，Testcontainers 读取部署 Compose 的版本；开发 Compose
+  与 CI 临时 PG 的版本由合约测试约束。服务内网 Redis/Mongo 端口显式固定，避免继承宿主映射端口。
+- 发布标签原来同时启动独立 CI 和发布流程内 CI；现在只由发布流程调用一次完整矩阵。
+  普通 dev 保持 affected，完整定时矩阵改为每周，原生编译缓存保留，镜像增加按服务区分的 BuildKit 缓存。
+- 保留可复用 CI 所需的调用方权限上限；标签调用传入 ref，不能进入 dev 自动部署步骤。
+- 两个 GitHub Environment 已实际创建并读回：staging 仅允许 dev 分支，production 仅允许 main。
+  环境分支限制不等于服务器、SSH 凭据或 HTTPS 已准备好。
+
+当前已通过 44 项 CI 行为合约（含真实本机 HTTP API fixture 和无 node_modules 的
+promotion 子进程）、全部 workflow 的 actionlint、相关脚本零警告 lint、全仓格式、
+Nx 缓存/边界合约、四应用构建与三服务 runtime package。
+官方源复扫 high/critical 均为 0，low 12、moderate 58 保留。
+Engine 新 Testcontainers 入口再次通过真实 PG/Redis 集成 7 项，报告
+`ab6d73af69ba51c7` 为 passed/cleaned=true、interrupted=false。
+
+隔离部署演练正在执行：五个当前代码镜像构建已通过；最初两次在本机临时 registry
+推送阶段失败，均完成清理，没有执行部署。诊断确认主机转发端口不等于 Docker daemon
+可访问的回环端口；独立 daemon 回环 registry 推送探针已通过，完整演练继续执行。
+第三次演练已推送五个不可变镜像并调用真实 deploy.sh，但 RabbitMQ 的健康诊断连续超过
+5 秒上限，基础设施阶段失败，应用尚未替换；容器、网络、卷和临时文件已清理。
+现已仅限制诊断 CLI 的 Erlang scheduler，保留 broker 的容量配置，并使用 check_running、
+15 秒检查超时及 30 秒启动宽限期。第四次完整隔离演练仍在运行，尚未宣称部署通过。
+该测试只使用本机临时 registry、目录与数据，不代表真实服务器或公网 HTTPS 部署通过。
+远端最终 CI 与 dev/main 保护仍需完成，Goal 保持进行中。

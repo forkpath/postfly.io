@@ -9,7 +9,7 @@ services:
   # ═══════════════════════════════════════════════════════════════
 
   redis:
-    image: redis:7.4
+    image: docker.io/library/redis:7.4@sha256:33d7c9a245edd95e6703a0addbeaa48fe40c3b3b4783627a72085155462ebfdb
     container_name: ${RAY_DEV_NAMESPACE:-ray}-redis
     networks: [ray-net]
     ports: ['127.0.0.1:${REDIS_PORT:-6379}:6379']
@@ -26,7 +26,7 @@ services:
       retries: 5
 
   postgres:
-    image: postgres:17
+    image: docker.io/library/postgres:17@sha256:2203e6282d9e7de7c24d7da234e2a744fb325df366a3fd8ed940e8abbee39527
     container_name: ${RAY_DEV_NAMESPACE:-ray}-postgres
     networks: [ray-net]
     ports: ['127.0.0.1:${POSTGRES_PORT:-5432}:5432']
@@ -44,7 +44,7 @@ services:
       retries: 5
 
   mongo:
-    image: mongo:8.0
+    image: docker.io/library/mongo:8.0@sha256:45b422ba19c0f028a917ea43746ab8e8cdbdaaeb50d2e6e634a17c59666e0dbb
     container_name: ${RAY_DEV_NAMESPACE:-ray}-mongo
     networks: [ray-net]
     ports: ['127.0.0.1:${MONGO_PORT:-27017}:27017']
@@ -64,7 +64,7 @@ services:
       start_period: 30s
 
   rabbitmq:
-    image: rabbitmq:4.0.1-management
+    image: docker.io/library/rabbitmq:4.0.1-management@sha256:9b471f8528a5beee7a6913d49bc450ffd92b3d0d9732f8febc448d291f5d150b
     container_name: ${RAY_DEV_NAMESPACE:-ray}-rabbitmq
     networks: [ray-net]
     ports:
@@ -88,7 +88,7 @@ services:
       retries: 5
 
   kong:
-    image: kong:3.9
+    image: docker.io/library/kong:3.9@sha256:12972ce1ab6396083e56e7d46fce084836c98cc819344bef44a1f583ec3ab191
     networks: [ray-net]
     ports: ['${GATEWAY_DEV_PORT:-8080}:8000']
     extra_hosts: ['host.docker.internal:host-gateway']

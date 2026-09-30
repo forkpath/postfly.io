@@ -10,7 +10,7 @@ RAY_TEST_COVERAGE=true pnpm nx run ui-web:test
 # 多个项目
 RAY_TEST_COVERAGE=true pnpm nx run-many -t test -p ui-web,web,engine
 # 当前分支受影响项目；基线按实际目标分支选择
-RAY_TEST_COVERAGE=true pnpm nx affected -t test --base=arch
+RAY_TEST_COVERAGE=true pnpm nx affected -t test --base=dev
 ```
 
 不要用按单文件分片的 `test-ci--*` 入口检查项目总覆盖率；本工作区 CI 使用完整的

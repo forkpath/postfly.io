@@ -26,18 +26,27 @@ export function selectTestSuites({ affected, files, full }) {
   }
 }
 
+export function requiresFullRun({ force, eventName, ref, base }) {
+  return (
+    force === 'true' ||
+    ['schedule', 'workflow_dispatch', 'workflow_call'].includes(eventName) ||
+    Boolean(ref?.startsWith('refs/tags/')) ||
+    !base ||
+    /^0+$/.test(base)
+  )
+}
+
 function main() {
   const require = createRequire(import.meta.url)
   const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'))
   const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
   const base = event.pull_request?.base.sha ?? event.before
-  let full =
-    process.env.CI_FULL === 'true' ||
-    ['schedule', 'workflow_dispatch', 'workflow_call'].includes(process.env.GITHUB_EVENT_NAME) ||
-    process.env.GITHUB_REF === `refs/heads/${event.repository.default_branch}` ||
-    process.env.GITHUB_REF?.startsWith('refs/tags/') ||
-    !base ||
-    /^0+$/.test(base)
+  let full = requiresFullRun({
+    force: process.env.CI_FULL,
+    eventName: process.env.GITHUB_EVENT_NAME,
+    ref: process.env.GITHUB_REF,
+    base
+  })
   let affected = []
   let files = []
   if (!full) {

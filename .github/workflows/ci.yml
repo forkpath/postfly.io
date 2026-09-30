@@ -3,14 +3,10 @@ name: CI
 on:
   push:
     branches:
-      - arch
       - dev
-      - main
-    tags:
-      - 'v*'
   pull_request:
   schedule:
-    - cron: '23 18 * * *'
+    - cron: '23 18 * * 0'
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -30,6 +26,11 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  security:
+    uses: ./.github/workflows/security.yml
+    with:
+      ref: ${{ inputs.ref || github.sha }}
+
   select:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -166,7 +167,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:17@sha256:7958605b474b3d264a969cb3a123d6aa00ad1e1fe9da8a69984dabb704d93317
+        image: docker.io/library/postgres:17@sha256:2203e6282d9e7de7c24d7da234e2a744fb325df366a3fd8ed940e8abbee39527
         env:
           POSTGRES_USER: ray_ci
           POSTGRES_PASSWORD: ray_ci_password
@@ -430,7 +431,7 @@ jobs:
   required-checks:
     name: Required checks
     if: always()
-    needs: [select, main, database-contract, backend, generator, extension, web, mobile, desktop-checks]
+    needs: [select, security, main, database-contract, backend, generator, extension, web, mobile, desktop-checks]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -443,3 +444,29 @@ jobs:
         env:
           RESULTS: ${{ toJSON(needs) }}
         run: node scripts/ci/required-checks.mjs
+
+  deploy-staging:
+    name: Deploy staging
+    needs: required-checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev' && inputs.ref == ''
+    permissions:
+      actions: read
+      contents: read
+      packages: write
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: staging
+      commit: ${{ github.sha }}
+    secrets: inherit
+
+  staging-deployment:
+    name: Staging deployment
+    needs: deploy-staging
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/dev' && inputs.ref == ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require the real staging deployment to succeed
+        env:
+          DEPLOYMENT_RESULT: ${{ needs.deploy-staging.result }}
+        run: test "$DEPLOYMENT_RESULT" = success

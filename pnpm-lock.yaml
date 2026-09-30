@@ -1047,6 +1047,9 @@ importers:
       webpack-dev-server:
         specifier: 5.2.5
         version: 5.2.5(webpack-cli@7.1.0)(webpack@5.108.1)
+      yaml:
+        specifier: 2.9.1
+        version: 2.9.1
 
   apps/desktop:
     dependencies:

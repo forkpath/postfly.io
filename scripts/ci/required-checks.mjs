@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url'
 
 export function verifyRequiredChecks(results) {
-  for (const id of ['select', 'main', 'database-contract']) {
+  for (const id of ['select', 'security', 'main', 'database-contract']) {
     if (results[id]?.result !== 'success') throw new Error(`${id}: ${results[id]?.result ?? 'missing'}`)
   }
   const chosen = results.select.outputs

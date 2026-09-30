@@ -2,14 +2,16 @@
 
 CI 检查当前提交是否仍能安装、编译并满足框架行为契约；CD 在检查通过后使用
 该提交构建的产物发布或部署。单测随开发运行并进入 PR，集成与 E2E 按影响范围
-进入 PR，完整矩阵在默认分支、定时任务及发布前运行。
+进入 PR 与 dev 推送，完整矩阵在首次建分支、每周定时、手动及显式发布验证时运行。
 
 ## 调度
 
 `.github/workflows/ci.yml` 对所有 PR 触发，避免必需检查因路径过滤一直等待。
 选择脚本使用 Nx 的受影响项目图，因此共享库变化会连带选择其消费者。
+版本标签由 `Release Extension` 调用一次完整 CI，`ci.yml` 不再同时监听标签，
+避免同一个发布提交重复运行两套移动设备与桌面矩阵。
 
-| 套件                                      | PR 选择条件                      | 默认分支、定时、手动、发布          |
+| 套件                                      | PR / dev 推送选择条件            | 首次建分支、定时、手动、发布验证    |
 | ----------------------------------------- | -------------------------------- | ----------------------------------- |
 | lint/typecheck/typecheck-tests/test/build | Nx affected                      | 全部                                |
 | PG 迁移与 schema                          | 每次                             | 每次                                |
@@ -27,31 +29,34 @@ CI 检查当前提交是否仍能安装、编译并满足框架行为契约；CD
 容器版本按配置固定。Android emulator 使用 SDK 中已安装的版本并记录诊断；
 硬件加速检查在原生构建前执行，设备行为仍需通过实际流程验证。
 
-`Required checks` 必须成功：基础检查失败、取消，或者应跑套件缺失/跳过，
+`Required checks` 必须成功：官方源安全扫描或基础检查失败、取消，或者应跑套件缺失/跳过，
 都会返回失败。只有明确没有被选择的套件可以显示 skipped。
 JUnit、trace、失败截图、构建/服务日志由各 job 的 `always()` 步骤上传。
 Web 的历史厂商/业务账户场景不在默认框架页面套件中，不计作已通过。
 
 ## 仓库合并规则
 
-在仓库 Settings → Rules → Rulesets / Branches 为受保护分支添加 `Required checks`，
-并要求合并前更新检查。YAML 成功运行与 GitHub 实际阻止合并是两件事，不能
+在仓库 Settings → Rules → Rulesets / Branches 为 dev 添加 `Required checks`，
+为 main 添加 `Required checks` 和 `Staging deployment`，并要求合并前更新检查。
+main 使用同一 SHA 的 fast-forward 推广，见部署指南。YAML 成功运行与 GitHub 实际阻止合并是两件事，不能
 仅凭 job 名称宣称已经启用保护。
 
-2026-09-29 已核实 `forkpath/postfly.io` 的默认分支 `arch` 和验收基线分支
+2026-09-29 历史验收已核实 `forkpath/postfly.io` 当时的默认分支 `arch` 和验收基线分支
 `codex/testing-baseline-20260928` 均要求 `Required checks`、严格同步基线，
 并对管理员生效。PR #1 临时转为 ready 后，失败检查使 GitHub 返回
-`mergeStateStatus=BLOCKED`；验证后恢复 draft，未执行合并。详见验收记录。
+`mergeStateStatus=BLOCKED`；验证后恢复 draft，未执行合并。此记录不等于新 dev/main
+保护已生效；当前策略切换的实际读回与远端验证见 [优化计划](framework-hardening-plan.md)。
 
 ## 发布前后
 
 - Extension：版本标签 → 同一 SHA 的完整 CI → 正式 Chrome/Firefox ZIP →
   解压 Chrome ZIP 并执行 `extension:e2e-artifact` → 发布原 ZIP、校验和与提交号。
   Firefox 当前只证明构建通过，未宣称实际扩展行为验收。
-- 服务：检查提交属于 `RELEASE_BRANCH`（默认仓库默认分支）→ 同一 SHA 的完整
-  CI → 按正式配置构建五个本地镜像 → 在独立 PG/Redis/Mongo/RabbitMQ 中运行
+- 服务：dev 的 CI 必需检查通过 → 构建五个本地镜像 → 在独立 PG/Redis/Mongo/RabbitMQ 中运行
   migrator 与四个应用 → 检查就绪、页面、HTTP 会话/授权和 WS 授权 → 核对镜像
-  ID 未变化后推送 → 按 registry digest 部署 → 通过公开 Kong 入口运行框架探针。
+  ID 未变化后推送 → 按 registry digest 部署 staging → 公开 Kong 探针 → 成功部署记录。
+  main 只推广同一 SHA 的五个已验证 digest；不同提交、失败/过期记录均拒绝，生产前仍做
+  最新依赖扫描。分支推广、环境配置和构建变量边界见 [部署指南](../architecture/deployment.md)。
 - 任何前置步骤失败，都不能进入后续发布步骤。发布命令还独立检查报告成功、
   清理完成、提交号以及镜像 ID；不能把失败报告或后来替换的镜像拿去发布。
 - 部署后探针不创建账户、不写业务数据，不要求生产测试密码。已有专用账号

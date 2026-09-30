@@ -10,10 +10,14 @@ Ray 的服务入口是 Kong：`/api` 代理 Engine，`/ws` 代理 Pulse，页面
 | `pulse-smoke-test.mjs`        | 验证会话、WebSocket 连接及组织订阅                                         | 实时服务验收；按需运行            |
 | `framework-smoke.mjs`         | 验证页面、健康状态、匿名 HTTP/WS 授权边界                                  | 自动部署后执行，不需要业务账户    |
 | `publish-verified-images.mjs` | 核对成功报告、提交号和镜像 ID，再推送已验证镜像                            | 仅由发布 workflow 调用            |
+| `promotion.mjs`               | 校验 dev/main 提交、成功 staging 记录和固定 digest；验证环境配置           | 自动测试部署及生产推广门禁        |
 
 新数据库只应用当前初始化迁移，不要求历史版本、回填、发布颜色或已有测试账号。演示账号与业务探针不是启动前置条件。
 
-`.github/workflows/deploy.yml` 构建镜像并调用 `deploy.sh`。服务器需 Docker 和 `.env`，环境变量说明、首次部署及更新流程见 [部署指南](../../docs/architecture/deployment.md)。本地开发使用 `pnpm docker:dev`、`pnpm db:init` 和 `dev:*`，无需构建镜像。
+dev CI 成功后，`.github/workflows/deploy.yml` 构建并验证镜像，调用 `deploy.sh` 部署 staging。
+main 复用同一提交的 staging 成功记录和五个 digest，不重建镜像；仍检查最新安全告警。
+服务器需 Docker 和 `.env`，两个 Environment 的配置及 fast-forward 推广流程见
+[部署指南](../../docs/architecture/deployment.md)。本地开发使用 `pnpm bootstrap --seed --start`，无需构建镜像。
 
 更新应用前先执行迁移；迁移失败时不替换应用容器。部署不会自动撤销数据库变更，项目产生真实业务数据后应维护自己的迁移和备份策略。
 

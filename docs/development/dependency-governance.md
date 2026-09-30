@@ -12,13 +12,13 @@ Better Auth、Prisma 按关联工具链分组，其他依赖的 minor/patch 更�
 所有更新通过 PR 审核，不自动合并。Nx 升级需要检查迁移，Expo 更新需要验证完整
 SDK 配套版本；分组本身不能证明版本兼容。
 
-配置不指定 `target-branch`，以便安全更新使用默认分支配置。建立 dev/main 策略时，
-默认开发分支需要与此同步。pnpm 的根锁文件覆盖 Mobile、Extension 和 tools 的
+配置不指定 `target-branch`，以便安全更新使用默认分支配置。默认开发分支采用 `dev`，
+实际远端切换记录见优化计划。pnpm 的根锁文件覆盖 Mobile、Extension 和 tools 的
 workspace importer，不另外维护应用锁文件。
 
 ## 官方源扫描
 
-`Dependency security` 工作流在 PR、dev/main 推送、每周定时及手动触发时运行：
+`Dependency security` 可复用工作流由每次 PR/dev CI 调用，也可每周定时及手动运行：
 
 ```sh
 pnpm audit --registry=https://registry.npmjs.org --audit-level=high --json
@@ -26,7 +26,8 @@ pnpm audit --registry=https://registry.npmjs.org --audit-level=high --json
 
 检查根锁文件，无需安装依赖，也不执行依赖的生命周期脚本。高危或严重告警返回非零，
 网络或 registry 错误也按失败处理。报告上传为 `dependency-audit`，保留 7 天。
-需要将该检查与 `Required checks` 一起纳入 dev/main 的合并保护。
+其成功结果是 `Required checks` 的必需前置条件，dev/main 的合并保护要求该汇总检查。
+main 推广时另做一次相同扫描，拒绝在 staging 验收之后新披露的 high/critical 告警。
 
 处理告警时先检查实际依赖路径、受影响版本和调用方式，优先升级直接依赖与对应工具链。
 传递依赖 override 必须限定版本范围并通过相关构建和测试。不要自动执行 audit fix、

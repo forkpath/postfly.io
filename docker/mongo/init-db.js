@@ -16,10 +16,10 @@
  */
 
 const dbName =
-  (typeof process !== 'undefined' && process.env && process.env.MONGO_INITDB_DATABASE) || db.getName() || 'neo'
-const username = (typeof process !== 'undefined' && process.env && process.env.MONGO_INITDB_ROOT_USERNAME) || 'neo_user'
+  (typeof process !== 'undefined' && process.env && process.env.MONGO_INITDB_DATABASE) || db.getName() || 'ray'
+const username = (typeof process !== 'undefined' && process.env && process.env.MONGO_INITDB_ROOT_USERNAME) || 'ray_user'
 const password =
-  (typeof process !== 'undefined' && process.env && process.env.MONGO_INITDB_ROOT_PASSWORD) || 'neo_password'
+  (typeof process !== 'undefined' && process.env && process.env.MONGO_INITDB_ROOT_PASSWORD) || 'ray_password'
 
 const targetDb = db.getSiblingDB(dbName)
 
