@@ -1,0 +1,30 @@
+import { describe, expect, it } from 'vitest'
+import { <%= propertyName %>CreateSchema, <%= propertyName %>UpdateSchema, <%= propertyName %>ListSchema,
+  <%= propertyName %>ParamsSchema, <%= propertyName %>PageSchema, <%= propertyName %>DeletedSchema } from './<%= name %>'
+
+describe('<%= className %> public validation contract', () => {
+  it('normalizes titles, allows clearing descriptions, and rejects owner spoofing or empty edits', () => {
+    expect(<%= propertyName %>CreateSchema.parse({ title: ' Example ' })).toEqual({ title: 'Example' })
+    expect(<%= propertyName %>UpdateSchema.parse({ description: null })).toEqual({ description: null })
+    expect(<%= propertyName %>UpdateSchema.parse({ title: ' Renamed ' })).toEqual({ title: 'Renamed' })
+    for (const value of [{}, { title: '  ' }, { title: 'a'.repeat(121) }, { description: 'a'.repeat(2001) },
+      { title: 'valid', userId: 'forged' }, { title: 'valid', organizationId: 'forged' }]) {
+      expect(<%= propertyName %>UpdateSchema.safeParse(value).success).toBe(false)
+    }
+  })
+  it('bounds list input and validates route identifiers', () => {
+    expect(<%= propertyName %>ListSchema.parse({})).toEqual({ page: 1, perPage: 20 })
+    expect(<%= propertyName %>ListSchema.parse({ page: '2', perPage: '10' })).toEqual({ page: 2, perPage: 10 })
+    for (const value of [{ page: 0 }, { page: 10001 }, { perPage: 101 }, { perPage: -1 }, { page: 1.5 }, { sort: 'secret' }]) {
+      expect(<%= propertyName %>ListSchema.safeParse(value).success).toBe(false)
+    }
+    expect(<%= propertyName %>ParamsSchema.safeParse({ id: '../escape'<% if (org) { %>, organizationId: 'org'<% } %> }).success).toBe(false)
+    expect(<%= propertyName %>ParamsSchema.safeParse({ id: 'b658906c-35a6-40b8-b270-67fef6ae9513'<% if (org) { %>, organizationId: 'org'<% } %> }).success).toBe(true)
+  })
+  it('rejects malformed server pages instead of caching them as successful responses', () => {
+    expect(<%= propertyName %>PageSchema.parse({ items: [], total: 0 })).toEqual({ items: [], total: 0 })
+    expect(<%= propertyName %>PageSchema.safeParse({ items: [], total: -1 }).success).toBe(false)
+    expect(<%= propertyName %>PageSchema.safeParse({ items: [{ id: 'invalid' }], total: 1 }).success).toBe(false)
+    expect(<%= propertyName %>DeletedSchema.safeParse({ id: 'invalid' }).success).toBe(false)
+  })
+})

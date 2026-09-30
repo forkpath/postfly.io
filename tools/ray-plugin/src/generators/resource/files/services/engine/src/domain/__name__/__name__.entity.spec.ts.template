@@ -1,0 +1,24 @@
+import { describe, expect, it } from 'vitest'
+import { <%= className %> } from './<%= name %>.entity'
+
+describe('<%= className %> domain rules', () => {
+  const now = new Date('2026-01-01T00:00:00Z')
+  const data = { id: 'example', ownerId: 'owner', title: '  Initial  ', description: null, createdAt: now, updatedAt: now }
+  it('normalizes titles and preserves identity/creation time when edited', () => {
+    const entity = new <%= className %>(data)
+    const later = new Date('2026-01-02T00:00:00Z')
+    const edited = entity.revise({ title: ' Changed ', description: 'details' }, later)
+    expect(edited.snapshot()).toEqual({ ...data, title: 'Changed', description: 'details', updatedAt: later })
+    expect(entity.snapshot().title).toBe('Initial')
+  })
+  it('rejects invalid state and empty edits even without HTTP', () => {
+    for (const title of ['', '   ', 'a'.repeat(121)]) expect(() => new <%= className %>({ ...data, title })).toThrow()
+    expect(() => new <%= className %>({ ...data, description: 'a'.repeat(2001) })).toThrow()
+    expect(() => new <%= className %>(data).revise({}, now)).toThrow()
+  })
+  it('does not expose mutable timestamps', () => {
+    const entity = new <%= className %>(data)
+    entity.snapshot().createdAt.setUTCFullYear(2000)
+    expect(entity.snapshot().createdAt).toEqual(now)
+  })
+})

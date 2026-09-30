@@ -4,6 +4,7 @@ packages:
   - apps/extension
   - tools/auth-schema
   - tools/migrator
+  - tools/ray-plugin
 
 autoInstallPeers: true
 

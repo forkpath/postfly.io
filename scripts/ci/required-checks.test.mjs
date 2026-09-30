@@ -7,11 +7,19 @@ function successfulRun() {
   return {
     select: {
       result: 'success',
-      outputs: { backendEnabled: 'true', extension: 'false', web: 'true', mobileAndroid: 'false', desktop: 'false' }
+      outputs: {
+        backendEnabled: 'true',
+        generator: 'true',
+        extension: 'false',
+        web: 'true',
+        mobileAndroid: 'false',
+        desktop: 'false'
+      }
     },
     main: { result: 'success' },
     'database-contract': { result: 'success' },
     backend: { result: 'success' },
+    generator: { result: 'success' },
     extension: { result: 'skipped' },
     web: { result: 'success' },
     mobile: { result: 'skipped' },
@@ -36,5 +44,13 @@ test('missing selection data and failed prerequisites fail closed', () => {
     const failed = successfulRun()
     failed[id].result = 'failure'
     assert.throws(() => verifyRequiredChecks(failed), new RegExp(id))
+  }
+})
+
+test('a selected generator acceptance failure cannot be hidden by the other green jobs', () => {
+  for (const result of ['failure', 'skipped', 'cancelled', undefined]) {
+    const run = successfulRun()
+    run.generator.result = result
+    assert.throws(() => verifyRequiredChecks(run), /generator/)
   }
 })

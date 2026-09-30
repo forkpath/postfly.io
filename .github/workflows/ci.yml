@@ -42,6 +42,7 @@ jobs:
       extension: ${{ steps.suites.outputs.extension }}
       desktop: ${{ steps.suites.outputs.desktop }}
       web: ${{ steps.suites.outputs.web }}
+      generator: ${{ steps.suites.outputs.generator }}
       mobile: ${{ steps.suites.outputs.mobile }}
       mobileAndroid: ${{ steps.suites.outputs.mobileAndroid }}
     env:
@@ -228,6 +229,32 @@ jobs:
           path: dist/test-results/${{ matrix.project }}
           if-no-files-found: warn
 
+  generator:
+    needs: select
+    if: needs.select.outputs.generator == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      NX_NO_CLOUD: 'true'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.1
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Generate both ownership variants and verify real HTTP and PostgreSQL
+        run: pnpm nx run ray-plugin:e2e
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: generated-resources
+          path: dist/test-results/ray-plugin
+          if-no-files-found: error
+
   extension:
     needs: select
     if: needs.select.outputs.extension == 'true'
@@ -403,7 +430,7 @@ jobs:
   required-checks:
     name: Required checks
     if: always()
-    needs: [select, main, database-contract, backend, extension, web, mobile, desktop-checks]
+    needs: [select, main, database-contract, backend, generator, extension, web, mobile, desktop-checks]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262

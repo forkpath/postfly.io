@@ -52,4 +52,15 @@ test('scheduled/full validation selects every runtime without an affected set', 
   const result = selectTestSuites({ affected: [], files: [], full: true })
   assert.deepEqual(result.backend, ['engine', 'pulse', 'worker'])
   assert.equal(result.web && result.mobileIos && result.mobileAndroid && result.extension && result.desktop, true)
+  assert.equal(result.generator, true)
+})
+
+test('generator changes run generated HTTP acceptance without selecting native devices', () => {
+  const result = selectTestSuites({
+    affected: ['ray-plugin'],
+    files: ['tools/ray-plugin/src/generators/resource/generator.cjs'],
+    full: false
+  })
+  assert.equal(result.generator, true)
+  assert.equal(result.mobileAndroid || result.mobileIos || result.desktop, false)
 })

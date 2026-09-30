@@ -1,0 +1,16 @@
+import type { <%= className %>Snapshot } from './<%= name %>.entity'
+
+export interface <%= className %>Page {
+  items: <%= className %>Snapshot[]
+  total: number
+}
+
+export interface <%= className %>Repository {
+  create(record: <%= className %>Snapshot): Promise<void>
+  find(ownerId: string, id: string): Promise<<%= className %>Snapshot | null>
+  list(ownerId: string, page: number, perPage: number): Promise<<%= className %>Page>
+  update(ownerId: string, record: <%= className %>Snapshot): Promise<boolean>
+  remove(ownerId: string, id: string): Promise<boolean>
+}
+
+export const <%= constantName %>_REPOSITORY = Symbol('<%= className %>Repository')

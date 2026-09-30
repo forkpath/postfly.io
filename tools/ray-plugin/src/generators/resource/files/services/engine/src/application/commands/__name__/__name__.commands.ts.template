@@ -1,0 +1,31 @@
+import { Inject } from '@nestjs/common'
+import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs'
+import type { <%= className %>Snapshot, <%= className %>Changes } from '../../../domain/<%= name %>/<%= name %>.entity'
+import type { <%= className %>Scope } from '../../use-cases/<%= name %>/<%= name %>.use-cases'
+import { <%= className %>UseCases } from '../../use-cases/<%= name %>/<%= name %>.use-cases'
+
+export class Create<%= className %>Command extends Command<<%= className %>Snapshot> {
+  constructor(readonly scope: <%= className %>Scope, readonly input: { title: string; description?: string | null }) { super() }
+}
+export class Update<%= className %>Command extends Command<<%= className %>Snapshot> {
+  constructor(readonly scope: <%= className %>Scope, readonly id: string, readonly input: <%= className %>Changes) { super() }
+}
+export class Delete<%= className %>Command extends Command<{ id: string }> {
+  constructor(readonly scope: <%= className %>Scope, readonly id: string) { super() }
+}
+
+@CommandHandler(Create<%= className %>Command)
+export class Create<%= className %>Handler implements ICommandHandler<Create<%= className %>Command> {
+  constructor(@Inject(<%= className %>UseCases) private readonly useCases: <%= className %>UseCases) {}
+  execute(command: Create<%= className %>Command) { return this.useCases.create(command.scope, command.input) }
+}
+@CommandHandler(Update<%= className %>Command)
+export class Update<%= className %>Handler implements ICommandHandler<Update<%= className %>Command> {
+  constructor(@Inject(<%= className %>UseCases) private readonly useCases: <%= className %>UseCases) {}
+  execute(command: Update<%= className %>Command) { return this.useCases.update(command.scope, command.id, command.input) }
+}
+@CommandHandler(Delete<%= className %>Command)
+export class Delete<%= className %>Handler implements ICommandHandler<Delete<%= className %>Command> {
+  constructor(@Inject(<%= className %>UseCases) private readonly useCases: <%= className %>UseCases) {}
+  execute(command: Delete<%= className %>Command) { return this.useCases.remove(command.scope, command.id) }
+}

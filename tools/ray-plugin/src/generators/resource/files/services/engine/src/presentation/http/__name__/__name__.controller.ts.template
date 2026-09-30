@@ -1,0 +1,49 @@
+import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Query, UseFilters } from '@nestjs/common'
+import { CommandBus, QueryBus } from '@nestjs/cqrs'
+import { Session } from '@libs/auth-server/nest'
+import type { <%= className %>Snapshot } from '../../../domain/<%= name %>/<%= name %>.entity'
+import { Create<%= className %>Command, Update<%= className %>Command, Delete<%= className %>Command } from '../../../application/commands/<%= name %>/<%= name %>.commands'
+import { Get<%= className %>Query, List<%= className %>Query } from '../../../application/queries/<%= name %>/<%= name %>.queries'
+import { Create<%= className %>Dto, Update<%= className %>Dto, List<%= className %>Dto, <%= className %>ParamsDto<% if (org) { %>, <%= className %>OwnerDto<% } %> } from './<%= name %>.dto'
+import { <%= className %>Filter } from './<%= name %>.filter'
+
+interface AuthenticatedSession { user: { id: string } }
+function scope(session: AuthenticatedSession<% if (org) { %>, params: <%= className %>OwnerDto<% } %>) {
+  return { userId: session.user.id, ownerId: <%= org ? 'params.organizationId' : 'session.user.id' %> }
+}
+function present(record: <%= className %>Snapshot) {
+  return { id: record.id, title: record.title, description: record.description,
+    createdAt: record.createdAt.toISOString(), updatedAt: record.updatedAt.toISOString() }
+}
+
+@Controller('<%= route %>')
+@UseFilters(<%= className %>Filter)
+export class <%= className %>Controller {
+  constructor(@Inject(CommandBus) private readonly commands: CommandBus, @Inject(QueryBus) private readonly queries: QueryBus) {}
+
+  @Post()
+  async create(@Session() session: AuthenticatedSession, <% if (org) { %>@Param() params: <%= className %>OwnerDto, <% } %>@Body() input: Create<%= className %>Dto) {
+    return present(await this.commands.execute(new Create<%= className %>Command(scope(session<% if (org) { %>, params<% } %>), input)))
+  }
+
+  @Get()
+  async list(@Session() session: AuthenticatedSession, <% if (org) { %>@Param() params: <%= className %>OwnerDto, <% } %>@Query() query: List<%= className %>Dto) {
+    const result = await this.queries.execute(new List<%= className %>Query(scope(session<% if (org) { %>, params<% } %>), query.page, query.perPage))
+    return { items: result.items.map(present), total: result.total }
+  }
+
+  @Get(':id')
+  async get(@Session() session: AuthenticatedSession, @Param() params: <%= className %>ParamsDto) {
+    return present(await this.queries.execute(new Get<%= className %>Query(scope(session<% if (org) { %>, params<% } %>), params.id)))
+  }
+
+  @Patch(':id')
+  async update(@Session() session: AuthenticatedSession, @Param() params: <%= className %>ParamsDto, @Body() input: Update<%= className %>Dto) {
+    return present(await this.commands.execute(new Update<%= className %>Command(scope(session<% if (org) { %>, params<% } %>), params.id, input)))
+  }
+
+  @Delete(':id')
+  remove(@Session() session: AuthenticatedSession, @Param() params: <%= className %>ParamsDto) {
+    return this.commands.execute(new Delete<%= className %>Command(scope(session<% if (org) { %>, params<% } %>), params.id))
+  }
+}

@@ -7,6 +7,7 @@ export function verifyRequiredChecks(results) {
   const chosen = results.select.outputs
   const selected = {
     backend: 'backendEnabled',
+    generator: 'generator',
     extension: 'extension',
     web: 'web',
     mobile: 'mobileAndroid',

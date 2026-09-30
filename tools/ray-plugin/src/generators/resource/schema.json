@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "RayResource",
+  "title": "Ray owned resource",
+  "description": "Create an owned CRUD resource with Clean Architecture, contracts and executable tests.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Singular kebab-case resource name (for example, reading-note).",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z][a-z0-9]*)*$",
+      "maxLength": 32,
+      "$default": { "$source": "argv", "index": 0 }
+    },
+    "plural": {
+      "type": "string",
+      "description": "Explicit plural route (for example, reading-notes or categories).",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z][a-z0-9]*)*$",
+      "maxLength": 40
+    },
+    "ownership": {
+      "type": "string",
+      "enum": ["user", "organization"],
+      "description": "User: private CRUD. Organization: members read, owners/admins write."
+    }
+  },
+  "required": ["name", "plural", "ownership"]
+}

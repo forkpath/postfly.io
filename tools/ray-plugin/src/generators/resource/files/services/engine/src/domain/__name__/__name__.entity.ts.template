@@ -1,0 +1,43 @@
+import { <%= className %>Title } from './<%= name %>-title.vo'
+import { <%= className %>Error } from './<%= name %>.error'
+
+export interface <%= className %>Snapshot {
+  id: string
+  ownerId: string
+  title: string
+  description: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface <%= className %>Changes {
+  title?: string
+  description?: string | null
+}
+
+export class <%= className %> {
+  private readonly title: <%= className %>Title
+  private readonly state: <%= className %>Snapshot
+
+  constructor(state: <%= className %>Snapshot) {
+    this.title = <%= className %>Title.create(state.title)
+    if (!state.id || !state.ownerId || (state.description?.length ?? 0) > 2000) {
+      throw new <%= className %>Error('invalid')
+    }
+    this.state = { ...state, createdAt: new Date(state.createdAt), updatedAt: new Date(state.updatedAt) }
+  }
+
+  revise(changes: <%= className %>Changes, now: Date): <%= className %> {
+    if (changes.title === undefined && changes.description === undefined) throw new <%= className %>Error('invalid')
+    return new <%= className %>({
+      ...this.snapshot(),
+      title: changes.title ?? this.title.value,
+      description: changes.description === undefined ? this.state.description : changes.description,
+      updatedAt: now
+    })
+  }
+
+  snapshot(): <%= className %>Snapshot {
+    return { ...this.state, title: this.title.value, createdAt: new Date(this.state.createdAt), updatedAt: new Date(this.state.updatedAt) }
+  }
+}

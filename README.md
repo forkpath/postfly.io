@@ -42,6 +42,7 @@ pnpm run doctor --running
 - [框架与依赖边界](docs/architecture/ray-framework-nx-guide.md)
 - [环境变量](docs/development/environment.md)
 - [本地启动与诊断](docs/development/bootstrap.md)
+- [一条命令生成完整业务资源](tools/ray-plugin/README.md)
 - [数据库模型与日常命令](libs/pg-dao/README.md)
 - [认证与授权](docs/architecture/authentication-and-authorized.md)
 - [组织上下文](docs/architecture/workspace-switching.md)

@@ -1,0 +1,71 @@
+import type { QueryClient } from '@tanstack/react-query'
+import type { ApiClient } from '../lib/client'
+import type { <%= className %>Create, <%= className %>Update, <%= className %>Response } from '@libs/payload'
+import { z } from 'zod'
+import { <%= propertyName %>CreateSchema, <%= propertyName %>UpdateSchema, <%= propertyName %>ListSchema,
+  <%= propertyName %>Schema, <%= propertyName %>PageSchema, <%= propertyName %>DeletedSchema } from '@libs/payload'
+import { createQueryOptionsWithParams, createMutationWithParamsFactory } from '../lib/queries'
+
+const scopeSchema = z.strictObject({ userId: z.string().min(1).max(128)<% if (org) { %>, organizationId: z.string().min(1).max(128)<% } %> })
+export interface <%= className %>ClientScope { userId: string<% if (org) { %>; organizationId: string<% } %> }
+function path(scope: <%= className %>ClientScope) {
+  scopeSchema.parse(scope)
+  return <%- org ? "'/organizations/' + encodeURIComponent(scope.organizationId) + '/" + plural + "'" : "'/" + plural + "'" %>
+}
+export const <%= propertyName %>Keys = {
+  scope: (scope: <%= className %>ClientScope) => {
+    scopeSchema.parse(scope)
+    return ['<%= plural %>', scope.userId, '<%= ownership %>', <%= org ? 'scope.organizationId' : 'scope.userId' %>] as const
+  },
+  lists: (scope: <%= className %>ClientScope) => [...<%= propertyName %>Keys.scope(scope), 'list'] as const,
+  detail: (scope: <%= className %>ClientScope, id: string) => [...<%= propertyName %>Keys.scope(scope), 'detail', z.uuid().parse(id)] as const
+}
+
+export const <%= propertyName %>Queries = {
+  list: createQueryOptionsWithParams((api, input: { scope: <%= className %>ClientScope; page?: number; perPage?: number }) => {
+    const params = <%= propertyName %>ListSchema.parse({ page: input.page, perPage: input.perPage })
+    return { queryKey: [...<%= propertyName %>Keys.lists(input.scope), params] as const,
+      queryFn: async ({ signal }) => <%= propertyName %>PageSchema.parse(await api.get(path(input.scope), { params, signal })) }
+  }),
+  get: createQueryOptionsWithParams((api, input: { scope: <%= className %>ClientScope; id: string }) => ({
+    queryKey: <%= propertyName %>Keys.detail(input.scope, input.id),
+    queryFn: async ({ signal }) => <%= propertyName %>Schema.parse(await api.get(path(input.scope) + '/' + z.uuid().parse(input.id), { signal }))
+  }))
+}
+
+const create = createMutationWithParamsFactory<<%= className %>Response, Error, <%= className %>Create, <%= className %>ClientScope>(
+  async (api, input, scope) => <%= propertyName %>Schema.parse(await api.post(path(scope), <%= propertyName %>CreateSchema.parse(input)))
+)
+const update = createMutationWithParamsFactory<<%= className %>Response, Error, { id: string; changes: <%= className %>Update }, <%= className %>ClientScope>(
+  async (api, input, scope) => <%= propertyName %>Schema.parse(await api.patch(path(scope) + '/' + z.uuid().parse(input.id), <%= propertyName %>UpdateSchema.parse(input.changes)))
+)
+const remove = createMutationWithParamsFactory<{ id: string }, Error, string, <%= className %>ClientScope>(
+  async (api, id, scope) => <%= propertyName %>DeletedSchema.parse(await api.delete(path(scope) + '/' + z.uuid().parse(id)))
+)
+
+export const <%= propertyName %>Mutations = {
+  create: (api: ApiClient, cache: QueryClient, scope: <%= className %>ClientScope) => create.options(api, scope, {
+    onSuccess: async () => { await cache.invalidateQueries({ queryKey: <%= propertyName %>Keys.lists(scope) }) }
+  }),
+  update: (api: ApiClient, cache: QueryClient, scope: <%= className %>ClientScope) => update.options(api, scope, {
+    onSuccess: async record => {
+      await Promise.all([
+        cache.invalidateQueries({ queryKey: <%= propertyName %>Keys.lists(scope) }),
+        cache.invalidateQueries({ queryKey: <%= propertyName %>Keys.detail(scope, record.id), exact: true })
+      ])
+    }
+  }),
+  remove: (api: ApiClient, cache: QueryClient, scope: <%= className %>ClientScope) => remove.options(api, scope, {
+    onSuccess: async record => {
+      await cache.cancelQueries({ queryKey: <%= propertyName %>Keys.detail(scope, record.id), exact: true })
+      cache.removeQueries({ queryKey: <%= propertyName %>Keys.detail(scope, record.id), exact: true })
+      await cache.invalidateQueries({ queryKey: <%= propertyName %>Keys.lists(scope) })
+    }
+  })
+}
+
+// Call before discarding a session/organization scope; an old response must not repopulate its cache.
+export async function clear<%= className %>Scope(cache: QueryClient, scope: <%= className %>ClientScope) {
+  await cache.cancelQueries({ queryKey: <%= propertyName %>Keys.scope(scope) })
+  cache.removeQueries({ queryKey: <%= propertyName %>Keys.scope(scope) })
+}

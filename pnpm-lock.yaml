@@ -1450,6 +1450,15 @@ importers:
         specifier: 7.8.0
         version: 7.8.0(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.3.0)(better-sqlite3@12.11.1)(magicast@0.5.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@6.0.3)
 
+  tools/ray-plugin:
+    dependencies:
+      '@nx/devkit':
+        specifier: 23.2.1
+        version: 23.2.1(nx@23.2.1(@swc-node/register@1.11.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@swc/core@1.15.8(@swc/helpers@0.5.21))(@swc/types@0.1.25)(typescript@6.0.3))(@swc/core@1.15.8(@swc/helpers@0.5.21)))
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
 packages:
   '@1natsu/wait-element@4.1.2':
     resolution:

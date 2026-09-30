@@ -1,0 +1,65 @@
+import type { <%= className %>Changes } from '../../../domain/<%= name %>/<%= name %>.entity'
+import type { <%= className %>Repository } from '../../../domain/<%= name %>/<%= name %>.repository'
+
+import { <%= className %> } from '../../../domain/<%= name %>/<%= name %>.entity'
+import { <%= className %>Error } from '../../../domain/<%= name %>/<%= name %>.error'
+
+export interface <%= className %>Scope {
+  userId: string
+  ownerId: string
+}
+
+export interface <%= className %>Access {
+  authorize(scope: <%= className %>Scope, mode: 'read' | 'write'): Promise<void>
+}
+
+export class <%= className %>UseCases {
+  constructor(
+    private readonly repository: <%= className %>Repository,
+    private readonly access: <%= className %>Access,
+    private readonly newId: () => string,
+    private readonly now: () => Date
+  ) {}
+
+  async create(scope: <%= className %>Scope, input: { title: string; description?: string | null }) {
+    await this.access.authorize(scope, 'write')
+    const now = this.now()
+    const entity = new <%= className %>({ id: this.newId(), ownerId: scope.ownerId, title: input.title,
+      description: input.description ?? null, createdAt: now, updatedAt: now })
+    const record = entity.snapshot()
+    await this.repository.create(record)
+    return record
+  }
+
+  async get(scope: <%= className %>Scope, id: string) {
+    await this.access.authorize(scope, 'read')
+    return this.require(scope.ownerId, id)
+  }
+
+  async list(scope: <%= className %>Scope, page: number, perPage: number) {
+    await this.access.authorize(scope, 'read')
+    if (!Number.isInteger(page) || page < 1 || page > 10000 ||
+      !Number.isInteger(perPage) || perPage < 1 || perPage > 100) throw new <%= className %>Error('invalid')
+    return this.repository.list(scope.ownerId, page, perPage)
+  }
+
+  async update(scope: <%= className %>Scope, id: string, changes: <%= className %>Changes) {
+    await this.access.authorize(scope, 'write')
+    const entity = new <%= className %>(await this.require(scope.ownerId, id))
+    const record = entity.revise(changes, this.now()).snapshot()
+    if (!await this.repository.update(scope.ownerId, record)) throw new <%= className %>Error('not_found')
+    return record
+  }
+
+  async remove(scope: <%= className %>Scope, id: string) {
+    await this.access.authorize(scope, 'write')
+    if (!await this.repository.remove(scope.ownerId, id)) throw new <%= className %>Error('not_found')
+    return { id }
+  }
+
+  private async require(ownerId: string, id: string) {
+    const record = await this.repository.find(ownerId, id)
+    if (!record) throw new <%= className %>Error('not_found')
+    return record
+  }
+}

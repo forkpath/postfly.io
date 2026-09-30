@@ -1,0 +1,45 @@
+import type { <%= className %>Snapshot } from '../../../domain/<%= name %>/<%= name %>.entity'
+import type { <%= className %>Repository } from '../../../domain/<%= name %>/<%= name %>.repository'
+
+import { Injectable } from '@nestjs/common'
+import { prisma } from '@libs/pg-dao'
+
+function toSnapshot(row: Omit<<%= className %>Snapshot, 'ownerId'> & { <%= ownerField %>: string }): <%= className %>Snapshot {
+  return { id: row.id, ownerId: row.<%= ownerField %>, title: row.title, description: row.description,
+    createdAt: row.createdAt, updatedAt: row.updatedAt }
+}
+
+@Injectable()
+export class Prisma<%= className %>Repository implements <%= className %>Repository {
+  async create(record: <%= className %>Snapshot) {
+    const { ownerId, ...data } = record
+    await prisma.<%= propertyName %>.create({ data: { ...data, <%= ownerField %>: ownerId } })
+  }
+
+  async find(ownerId: string, id: string) {
+    const row = await prisma.<%= propertyName %>.findFirst({ where: { id, <%= ownerField %>: ownerId } })
+    return row ? toSnapshot(row) : null
+  }
+
+  async list(ownerId: string, page: number, perPage: number) {
+    const where = { <%= ownerField %>: ownerId }
+    const [rows, total] = await prisma.$transaction([
+      prisma.<%= propertyName %>.findMany({ where, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], skip: (page - 1) * perPage, take: perPage }),
+      prisma.<%= propertyName %>.count({ where })
+    ], { isolationLevel: 'RepeatableRead' })
+    return { items: rows.map(toSnapshot), total }
+  }
+
+  async update(ownerId: string, record: <%= className %>Snapshot) {
+    const result = await prisma.<%= propertyName %>.updateMany({
+      where: { id: record.id, <%= ownerField %>: ownerId },
+      data: { title: record.title, description: record.description, updatedAt: record.updatedAt }
+    })
+    return result.count === 1
+  }
+
+  async remove(ownerId: string, id: string) {
+    const result = await prisma.<%= propertyName %>.deleteMany({ where: { id, <%= ownerField %>: ownerId } })
+    return result.count === 1
+  }
+}

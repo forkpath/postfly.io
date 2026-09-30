@@ -1,0 +1,109 @@
+import type { NestExpressApplication } from '@nestjs/platform-express'
+import { randomUUID } from 'node:crypto'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { z } from 'zod'
+import { prisma } from '@libs/pg-dao'
+import { <%= propertyName %>Schema, <%= propertyName %>PageSchema } from '@libs/payload'
+import { createIdentity, responseCookie<% if (org) { %>, createOrganization<% } %> } from '@libs/testing-server'
+import { createEngineApplication } from '../src/application'
+import { Prisma<%= className %>Repository } from '../src/infrastructure/repositories/<%= name %>/<%= name %>.repository'
+
+describe('<%= className %> generated production HTTP and PostgreSQL', () => {
+  let app: NestExpressApplication
+  let baseURL: string
+  let cookie: string
+  let otherCookie: string
+  let ownerId: string
+  let otherOwnerId: string
+<% if (org) { %>  let memberCookie: string
+  let outsiderAdminCookie: string<% } %>
+  function route(<% if (org) { %>owner = ownerId<% } %>) { return <%- org ? "'/api/v1/organizations/' + encodeURIComponent(owner) + '/" + plural + "'" : "'/api/v1/" + plural + "'" %> }
+  async function request(path: string, method = 'GET', body?: unknown, session = cookie) {
+    return fetch(baseURL + path, { method, headers: { cookie: session, 'Content-Type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body) })
+  }
+  async function signIn(role = 'user') {
+    const identity = await createIdentity(role)
+    const response = await request('/api/auth/sign-in/email', 'POST', { email: identity.email, password: identity.password }, '')
+    return { id: identity.id, cookie: responseCookie(response) }
+  }
+  beforeAll(async () => {
+    app = await createEngineApplication()
+    await app.listen(0, '127.0.0.1')
+    baseURL = await app.getUrl()
+    const actor = await signIn()
+    const other = await signIn()
+    cookie = actor.cookie
+    otherCookie = other.cookie
+<% if (org) { %>
+    ownerId = (await createOrganization(actor.id)).id
+    otherOwnerId = (await createOrganization(other.id)).id
+    const member = await signIn()
+    await prisma.member.create({ data: { id: randomUUID(), userId: member.id, organizationId: ownerId, role: 'member', createdAt: new Date() } })
+    memberCookie = member.cookie
+    outsiderAdminCookie = (await signIn('admin')).cookie
+<% } else { %>
+    ownerId = actor.id
+    otherOwnerId = other.id
+<% } %>
+  })
+  afterAll(async () => { await app?.close(); await prisma.$disconnect() })
+
+  it('requires a session and rejects malformed body/query/path and owner spoofing', async () => {
+    expect((await request(route(), 'GET', undefined, '')).status).toBe(401)
+    for (const body of [{ title: '   ' }, { title: 5 }, { title: 'ok', ownerId: otherOwnerId },
+      { title: 'ok', userId: otherOwnerId }, { title: 'ok', organizationId: otherOwnerId }]) {
+      expect((await request(route(), 'POST', body)).status).toBe(400)
+    }
+    for (const query of ['page=0', 'perPage=101', 'page=1.5', 'sort=password', 'ownerId=forged']) {
+      expect((await request(route() + '?' + query)).status).toBe(400)
+    }
+    expect((await request(route() + '/not-a-uuid')).status).toBe(400)
+    expect((await prisma.<%= propertyName %>.count({ where: { <%= ownerField %>: ownerId } }))).toBe(0)
+  })
+
+  it('persists CRUD, scopes pages/counts and denies cross-owner repository and HTTP access', async () => {
+    const created = await request(route(), 'POST', { title: ' First ', description: 'Details' })
+    expect(created.status).toBe(201)
+    const record = z.object({ code: z.literal(0), data: <%= propertyName %>Schema }).parse(await created.json()).data
+    expect(record.title).toBe('First')
+    expect(await prisma.<%= propertyName %>.findUnique({ where: { id: record.id } })).toMatchObject({ <%= ownerField %>: ownerId, title: 'First' })
+    const other = await request(route(<% if (org) { %>otherOwnerId<% } %>), 'POST', { title: 'Private' }, otherCookie)
+    expect(other.status).toBe(201)
+    const otherRecord = z.object({ data: <%= propertyName %>Schema }).parse(await other.json()).data
+    for (const [method, body] of [['GET', undefined], ['PATCH', { title: 'Stolen' }], ['DELETE', undefined]] as const) {
+      expect((await request(route() + '/' + otherRecord.id, method, body)).status).toBe(404)
+    }
+    const repository = new Prisma<%= className %>Repository()
+    const persisted = await repository.find(ownerId, record.id)
+    if (!persisted) throw new Error('Created row missing')
+    expect(persisted).not.toHaveProperty('<%= ownerField %>')
+    expect(await repository.find(otherOwnerId, record.id)).toBeNull()
+    expect(await repository.update(otherOwnerId, { ...persisted, title: 'Stolen' })).toBe(false)
+    expect(await repository.remove(otherOwnerId, record.id)).toBe(false)
+    expect((await repository.find(ownerId, record.id))?.title).toBe('First')
+    const list = z.object({ data: <%= propertyName %>PageSchema }).parse(await (await request(route())).json()).data
+    expect(list).toEqual({ items: [record], total: 1 })
+    expect(z.object({ data: <%= propertyName %>PageSchema }).parse(await (await request(route() + '?page=100')).json()).data).toEqual({ items: [], total: 1 })
+    expect((await request(route() + '/' + record.id, 'PATCH', {})).status).toBe(400)
+    expect((await request(route() + '/' + record.id, 'PATCH', { ownerId: otherOwnerId })).status).toBe(400)
+    const edited = await request(route() + '/' + record.id, 'PATCH', { title: ' Edited ', description: null })
+    expect(edited.status).toBe(200)
+    expect(await edited.json()).toMatchObject({ data: { id: record.id, title: 'Edited', description: null, createdAt: record.createdAt } })
+    expect(await prisma.<%= propertyName %>.findUnique({ where: { id: record.id } })).toMatchObject({ title: 'Edited', <%= ownerField %>: ownerId })
+<% if (org) { %>
+    expect((await request(route(), 'GET', undefined, memberCookie)).status).toBe(200)
+    expect((await request(route() + '/' + record.id, 'GET', undefined, memberCookie)).status).toBe(200)
+    for (const session of [memberCookie, outsiderAdminCookie, otherCookie]) {
+      expect((await request(route(), 'POST', { title: 'Denied' }, session)).status).toBe(403)
+      expect((await request(route() + '/' + record.id, 'PATCH', { title: 'Denied' }, session)).status).toBe(403)
+      expect((await request(route() + '/' + record.id, 'DELETE', undefined, session)).status).toBe(403)
+    }
+    expect((await request(route(), 'GET', undefined, outsiderAdminCookie)).status).toBe(403)
+<% } %>
+    expect((await request(route() + '/' + record.id, 'DELETE')).status).toBe(200)
+    expect(await prisma.<%= propertyName %>.findUnique({ where: { id: record.id } })).toBeNull()
+    expect((await request(route() + '/' + record.id)).status).toBe(404)
+    expect((await request(route() + '/' + randomUUID(), 'DELETE')).status).toBe(404)
+  })
+})

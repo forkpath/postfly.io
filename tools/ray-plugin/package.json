@@ -1,0 +1,11 @@
+{
+  "name": "@ray/plugin",
+  "version": "0.0.0",
+  "private": true,
+  "type": "commonjs",
+  "generators": "./generators.json",
+  "dependencies": {
+    "@nx/devkit": "23.2.1",
+    "typescript": "catalog:"
+  }
+}

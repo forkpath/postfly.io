@@ -20,6 +20,7 @@ export function selectTestSuites({ affected, files, full }) {
     extension: has('extension'),
     desktop: has('desktop'),
     web: has('web') || has('web-e2e'),
+    generator: has('ray-plugin') || files.includes('ray.resources.json'),
     mobileAndroid: has('mobile'),
     mobileIos: has('mobile') && (all || nativeChanged)
   }
@@ -73,6 +74,7 @@ function main() {
     extension: suites.extension,
     desktop: suites.desktop,
     web: suites.web,
+    generator: suites.generator,
     mobileAndroid: suites.mobileAndroid,
     mobileIos: suites.mobileIos,
     mobile: JSON.stringify({

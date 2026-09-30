@@ -1,0 +1,11 @@
+-- Generated offline. Review, then apply with pg-dao:deploy to the intended environment.
+CREATE TABLE "public"."<%= table %>" (
+  "id" UUID NOT NULL,
+  "<%= ownerColumn %>" TEXT NOT NULL,
+  "title" VARCHAR(120) NOT NULL,
+  "description" VARCHAR(2000),
+  "created_at" TIMESTAMPTZ(3) NOT NULL,
+  "updated_at" TIMESTAMPTZ(3) NOT NULL,
+  CONSTRAINT "<%= table %>_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX "<%= table %>_owner_created_idx" ON "public"."<%= table %>" ("<%= ownerColumn %>", "created_at", "id");
