@@ -307,6 +307,7 @@ overrides:
   '@xhmikosr/decompress@>=11.0.0 <11.1.4': 11.1.4
   '@xmldom/xmldom@>=0.8.0 <0.8.15': 0.8.15
   adm-zip@>=0.5.0 <0.6.1: 0.6.1
+  nx@23.2.1>axios: 1.20.0
   brace-expansion@>=1.0.0 <1.1.20: 1.1.20
   brace-expansion@>=2.0.0 <2.1.6: 2.1.6
   brace-expansion@>=5.0.0 <5.0.11: 5.0.11
@@ -11062,10 +11063,6 @@ packages:
     resolution:
       { integrity: sha512-ilYanEU8vxxBexpJd8cWM4ElSQq4QctCLKih0TSfjIfCQTeyH/6zVrmIJfLPrKTKJRbiG+cfnZbQIjAlJmF1jQ== }
     engines: { node: '>=4' }
-
-  axios@1.18.1:
-    resolution:
-      { integrity: sha512-3nTvFlvpn9Zu/RkHUqtc7/+al4UpRW5az71ap5zccp6e8RAYEzhMTecX8Dz1wWDYrPpUoB1HAQEGEAEvUr7S9g== }
 
   axios@1.20.0:
     resolution:
@@ -33690,7 +33687,7 @@ snapshots:
 
   axe-core@4.11.0: {}
 
-  axios@1.18.1(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0):
+  axios@1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0):
     dependencies:
       follow-redirects: 1.16.0(debug@4.4.3(supports-color@7.2.0))
       form-data: 4.0.6
@@ -40688,7 +40685,7 @@ snapshots:
       ansi-styles: 4.3.0
       argparse: 2.0.1
       asynckit: 0.4.0
-      axios: 1.18.1(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
+      axios: 1.20.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       balanced-match: 4.0.3
       base64-js: 1.5.1
       bl: 4.1.0

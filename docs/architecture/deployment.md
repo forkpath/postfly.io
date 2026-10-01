@@ -48,6 +48,9 @@ main 不再执行整套测试或重建镜像，但仍重新扫描依赖以拦截
 
 ### GitHub 配置
 
+首次配置请按 [GitHub 部署配置清单](../development/github-deployment-setup.md) 操作，
+其中包含逐项取值、主机指纹提取、服务器 `.env` 模板、首次创建 main 与故障恢复。
+
 仓库变量（两套环境共用同一构建）：
 
 | 变量                  | 用途                                                   |
@@ -58,14 +61,14 @@ main 不再执行整套测试或重建镜像，但仍重新扫描依赖以拦截
 创建 `staging` 和 `production` 两个 GitHub Environments，各自只允许 `dev` 和
 `main` 分支部署。以下配置分别存入两个 Environment，不放进仓库文件：
 
-| 类型     | 名称                                           | 用途                                         |
-| -------- | ---------------------------------------------- | -------------------------------------------- |
-| Secret   | `DEPLOY_HOST`、`DEPLOY_USER`、`DEPLOY_SSH_KEY` | SSH 主机、用户与私钥                         |
-| Secret   | `GHCR_PULL_TOKEN`                              | 私有 GHCR 镜像只读拉取凭据                   |
-| Variable | `PUBLIC_ORIGIN`                                | 该环境 HTTPS 网关 origin；不带路径或末尾斜杠 |
-| Variable | `DEPLOY_HOST_FINGERPRINT`                      | 从服务器可信终端确认的 SSH 主机 SHA256 指纹  |
-| Variable | `DEPLOY_PATH`                                  | 服务器部署目录，默认 `/opt/ray`              |
-| Variable | `DEPLOY_PORT`                                  | SSH 端口，默认 22                            |
+| 类型     | 名称                                           | 用途                                             |
+| -------- | ---------------------------------------------- | ------------------------------------------------ |
+| Secret   | `DEPLOY_HOST`、`DEPLOY_USER`、`DEPLOY_SSH_KEY` | SSH 主机、用户与私钥                             |
+| Secret   | `GHCR_PULL_TOKEN`                              | 私有 GHCR 镜像只读拉取凭据                       |
+| Variable | `PUBLIC_ORIGIN`                                | 该环境 HTTPS 网关 origin；不带路径或末尾斜杠     |
+| Variable | `DEPLOY_HOST_FINGERPRINT`                      | 只填 `SHA256:哈希`，不含位数、用户或 `(ED25519)` |
+| Variable | `DEPLOY_PATH`                                  | 服务器部署目录，默认 `/opt/ray`                  |
+| Variable | `DEPLOY_PORT`                                  | SSH 端口，默认 22                                |
 
 例如使用 `gh secret set DEPLOY_SSH_KEY --env staging --repo owner/repo < /安全路径/staging-key`
 设置私钥；其他 secrets 可使用同一命令交互输入。用
@@ -90,7 +93,7 @@ Web 的 API/认证默认走同源网关，邀请链接使用当前浏览器 orig
 
 先等待目标 dev 提交的整次 CI 成功，包括 `Deploy staging`。main 使用 fast-forward
 推广同一提交；GitHub 的 merge/squash/rebase 按钮通常会产生新 SHA，不能复用原记录。
-在本地任意干净工作目录可执行（不会切换当前分支）：
+main 已存在时，在本地任意干净工作目录可执行（不会切换当前分支）：
 
 ```sh
 git fetch origin dev main
