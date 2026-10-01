@@ -4,16 +4,26 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 
 export function selectTestSuites({ affected, files, full }) {
-  const harnessChanged = files.some(file =>
-    /^(scripts\/(testing|ci|release)\/|docker\/|patches\/|\.github\/(workflows|actions)\/)/.test(file)
+  const harnessFiles = files.filter(file =>
+    /^(scripts\/(testing|ci|release)\/|docker\/|patches\/|\.github\/(workflows|actions)\/|\.dockerignore$)/.test(file)
   )
-  const all = full || harnessChanged
+  const all = full || harnessFiles.length > 0
   const has = project => all || affected.includes(project)
+  // Release-only changes still run the full quality/container matrix. Device
+  // binaries are unaffected by these files; the selector itself is verified by
+  // the always-on CI contract tests. Unknown/shared harness changes stay full.
+  const nativeHarnessChanged = harnessFiles.some(
+    file =>
+      !/^(scripts\/release\/|docker\/|\.dockerignore$|\.github\/workflows\/deploy\.yml$)/.test(file) &&
+      !['scripts/ci/select-test-suites.mjs', 'scripts/ci/select-test-suites.test.mjs'].includes(file)
+  )
+  const nativeAll = full || nativeHarnessChanged
   const nativeChanged = files.some(file =>
     /^(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|apps\/mobile\/(package\.json|app\.config\.|eas\.json|metro\.config\.|plugins\/))/.test(
       file
     )
   )
+  const mobileAndroid = nativeAll || nativeChanged || affected.includes('mobile')
   return {
     full: all,
     backend: ['engine', 'pulse', 'worker'].filter(has),
@@ -21,8 +31,8 @@ export function selectTestSuites({ affected, files, full }) {
     desktop: has('desktop'),
     web: has('web') || has('web-e2e'),
     generator: has('ray-plugin') || files.includes('ray.resources.json'),
-    mobileAndroid: has('mobile'),
-    mobileIos: has('mobile') && (all || nativeChanged)
+    mobileAndroid,
+    mobileIos: mobileAndroid && (nativeAll || nativeChanged)
   }
 }
 
