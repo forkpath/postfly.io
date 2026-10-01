@@ -332,7 +332,7 @@ overrides:
   path-to-regexp@>=0.1.0 <0.1.13: 0.1.13
   picomatch@>=2.0.0 <2.3.2: 2.3.2
   picomatch@>=4.0.0 <4.0.4: 4.0.4
-  piscina@>=4.0.0 <4.9.3: 4.9.3
+  piscina@>=4.0.0 <4.9.4: 4.9.4
   postcss@>=8.0.0 <8.5.18: 8.5.18
   protobufjs@>=7.0.0 <7.6.1: 7.6.1
   rollup@>=4.0.0 <4.59.0: 4.59.0
@@ -18722,9 +18722,9 @@ packages:
       { integrity: sha512-TfySrs/5nm8fQJDcBDuUng3VOUKsd7S+zqvbOTiGXHfxX4wK31ard+hoNuvkicM/2YFzlpDgABOevKSsB4G/FA== }
     engines: { node: '>= 6' }
 
-  piscina@4.9.3:
+  piscina@4.9.4:
     resolution:
-      { integrity: sha512-3e3ka9QCE8RJ5I9uszdAADZnkcYi21cqmF3gxox3u884N72qpFHCsIVhHt8cEQ9t3Auq/NqoiCEuhxlxxQuDWA== }
+      { integrity: sha512-RyBDr2VheQ8ZfH3N8SzQZHztqVyOtadTwLnUYof6gdj5161/eu2wNhCbGl5GHnNKDpnkicJYpKtL2J+y/gk6XA== }
 
   pkg-dir@4.2.0:
     resolution:
@@ -31263,7 +31263,7 @@ snapshots:
       '@xhmikosr/bin-wrapper': 14.4.0
       commander: 8.3.0
       minimatch: 9.0.7
-      piscina: 4.9.3
+      piscina: 4.9.4
       semver: 7.7.3
       slash: 3.0.0
       source-map: 0.7.6
@@ -41348,7 +41348,7 @@ snapshots:
 
   pirates@4.0.7: {}
 
-  piscina@4.9.3:
+  piscina@4.9.4:
     optionalDependencies:
       '@napi-rs/nice': 1.1.1
 
