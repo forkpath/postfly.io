@@ -43,13 +43,11 @@ test('Mobile JS PRs run Android; native configuration changes run both platforms
   assert.equal(selectTestSuites({ ...input, files: ['apps/mobile/app.config.ts'] }).mobileIos, true)
 })
 
-test('harness and workflow changes cannot escape the full framework matrix', () => {
+test('shared harness and workflow changes cannot escape the full framework matrix', () => {
   for (const file of [
     'scripts/testing/run-backend.mjs',
     'scripts/ci/required-checks.mjs',
     'scripts/testing/backend-containers.mjs',
-    'docker/engine.Dockerfile',
-    'scripts/release/publish-verified-images.mjs',
     'patches/react-native-ios-utilities@5.2.0.patch',
     '.github/workflows/ci.yml'
   ]) {
@@ -60,6 +58,53 @@ test('harness and workflow changes cannot escape the full framework matrix', () 
     assert.equal(result.desktop, true)
     assert.equal(result.full, true)
   }
+})
+
+test('release changes retain the quality and image gates without rebuilding unaffected device binaries', () => {
+  for (const file of [
+    '.github/workflows/deploy.yml',
+    'docker/engine.Dockerfile',
+    '.dockerignore',
+    'scripts/release/publish-verified-images.mjs',
+    'scripts/ci/select-test-suites.mjs',
+    'scripts/ci/select-test-suites.test.mjs'
+  ]) {
+    const result = selectTestSuites({ affected: [], files: [file], full: false })
+    assert.equal(result.full, true)
+    assert.deepEqual(result.backend, ['engine', 'pulse', 'worker'])
+    assert.equal(result.web && result.extension && result.desktop && result.generator, true)
+    assert.equal(result.mobileAndroid || result.mobileIos, false)
+  }
+})
+
+test('release changes cannot suppress affected mobile code, native inputs, shared harnesses or explicit full runs', () => {
+  const releaseFiles = ['.github/workflows/deploy.yml', 'scripts/ci/select-test-suites.mjs']
+  const js = selectTestSuites({
+    affected: ['mobile'],
+    files: [...releaseFiles, 'libs/common/src/index.ts'],
+    full: false
+  })
+  assert.equal(js.mobileAndroid, true)
+  assert.equal(js.mobileIos, false)
+  for (const file of [
+    'apps/mobile/app.config.ts',
+    'apps/mobile/plugins/with-example.ts',
+    'pnpm-lock.yaml',
+    'pnpm-workspace.yaml',
+    'package.json',
+    'scripts/testing/mobile-tools.json',
+    'scripts/testing/run-mobile.mjs',
+    'scripts/testing/process-tree.mjs',
+    'scripts/ci/required-checks.mjs',
+    '.github/workflows/ci.yml',
+    '.github/actions/new-helper/action.yml',
+    'patches/react-native-ios-utilities@5.2.0.patch'
+  ]) {
+    const result = selectTestSuites({ affected: [], files: [...releaseFiles, file], full: false })
+    assert.equal(result.mobileAndroid && result.mobileIos, true, file)
+  }
+  const forced = selectTestSuites({ affected: [], files: releaseFiles, full: true })
+  assert.equal(forced.mobileAndroid && forced.mobileIos, true)
 })
 
 test('scheduled/full validation selects every runtime without an affected set', () => {

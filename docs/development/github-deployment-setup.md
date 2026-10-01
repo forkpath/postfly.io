@@ -217,6 +217,7 @@ HTTPS 探针都通过后，才算部署验收完成。`Required checks` 是测�
 | 现象                                 | 检查与处理                                                                      |
 | ------------------------------------ | ------------------------------------------------------------------------------- |
 | Runner 未启动，提示账单/预算         | 处理 GitHub Actions 费用和预算，再重跑受影响的 job                              |
+| 构建镜像时 `No space left on device` | 发布 runner 会先清理闲置预装工具链；检查该步骤和磁盘余量，不删除服务器数据卷    |
 | `Configure the SSH host fingerprint` | 只保留 `SHA256:哈希`；完整的 `ssh-keygen -lf` 输出不能直接粘贴                  |
 | SSH host key 不匹配                  | 从服务器可信控制台重新核实 host key，不能跳过校验                               |
 | SSH 认证失败                         | 核对用户、完整私钥、无口令要求，以及该用户的 `authorized_keys`                  |
@@ -227,6 +228,9 @@ HTTPS 探针都通过后，才算部署验收完成。`Required checks` 是测�
 | 找不到可推广记录                     | 确认同一 SHA 的 dev CI 整次成功，记录未过期且对应最新 attempt                   |
 
 CI 按 affected 选择测试，复用 pnpm、Gradle、CocoaPods/原生编译及 BuildKit 缓存。
+发布工作流、Docker 和发布脚本变更保留全仓质量与真实镜像检查，但不会单独触发设备构建。
+移动端受影响代码仍运行 Android；原生配置、共享依赖、共享测试工具或主 CI 工作流变更
+继续运行两套设备测试，定时和显式 full 运行也保留完整矩阵。
 账单恢复或部署配置修正后，优先重跑必要失败 job，不重复启动已通过的 Android/iOS 完整矩阵。
 重跑 dev CI 会产生新的 attempt，需要与该 attempt 对应的 staging 成功记录。
 数据库迁移先于替换应用执行；应用回退不自动撤销迁移，已有数据的环境应先审查迁移兼容性。
