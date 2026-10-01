@@ -2,6 +2,9 @@
 
 所有命令默认从仓库根运行。.env.example 是配置示例，不是可直接部署的生产值。真实凭据放未跟踪文件或 secret manager，不写入文档/日志。
 
+staging/production 的 GitHub Variables、Secrets、SSH 指纹与服务器 `.env` 配置，见
+[GitHub 部署配置清单](github-deployment-setup.md)。
+
 ## 加载链
 
 | 场景                                 | 实际来源                                                                                                                   |

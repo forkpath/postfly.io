@@ -49,6 +49,7 @@ pnpm run doctor --running
 - [测试](docs/development/testing.md)
 - [依赖维护与安全检查](docs/development/dependency-governance.md)
 - [Kong 与容器部署](docs/architecture/deployment.md)
+- [GitHub 部署配置清单](docs/development/github-deployment-setup.md)
 - [使用开发 Agent](docs/development/agents.md)
 
 ## 常用命令
