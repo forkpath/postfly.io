@@ -120,3 +120,15 @@ mock Keychain；未验证签名安装、真实钥匙串迁移或 Windows 更新�
 [deepmerge-ts 告警](https://github.com/advisories/GHSA-ggr8-5vv4-36mx)、
 [Vite Oxc 配置](https://vite.dev/config/shared-options#oxc)、
 [Electron 测试钥匙串隔离](https://releases.electronjs.org/pr/53790)。
+
+## 2026-10-01 扫描增量
+
+恢复远端 CI 后，官方源报告 Nx 23.2.1 固定的 Axios 1.18.1 命中 7 条 high 告警，
+包括 [data URI 解析拒绝服务](https://github.com/advisories/GHSA-c29m-xwm3-cm6r)。
+应用的 Axios catalog 已使用修复版 1.20.0，本次只覆盖 `nx@23.2.1>axios` 为 1.20.0。
+升级 Nx 时应重新核对其依赖并移除不再需要的精确版本 override。
+
+锁文件仅替换这条依赖路径，其他包的版本和 peer 解析保持原样。冻结离线安装通过，
+官方源复扫退出 0，high/critical 均为 0，另有 low 12、moderate 59。
+实际 Nx HTTP client 的本地 GET、重定向、JSON POST 与 503 拒绝行为通过；
+最终远端检查以修复提交的 CI 为准，没有增加忽略规则或降低扫描门槛。

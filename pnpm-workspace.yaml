@@ -159,6 +159,8 @@ overrides:
   '@xhmikosr/decompress@>=11.0.0 <11.1.4': 11.1.4
   '@xmldom/xmldom@>=0.8.0 <0.8.15': 0.8.15
   'adm-zip@>=0.5.0 <0.6.1': 0.6.1
+  # Nx pins an older Axios; application imports already use the patched catalog.
+  'nx@23.2.1>axios': 1.20.0
   'brace-expansion@>=1.0.0 <1.1.20': 1.1.20
   'brace-expansion@>=2.0.0 <2.1.6': 2.1.6
   'brace-expansion@>=5.0.0 <5.0.11': 5.0.11
