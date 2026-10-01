@@ -147,6 +147,9 @@ host key 后也要重新确认。不能关闭指纹检查、自动接受网络�
 
 GitHub Secret 只提供发布连接和拉取凭据。工作流**不会上传服务器 `.env`**，必须事先
 在每台服务器的 `DEPLOY_PATH/.env` 创建。目录拼写需与 GitHub Variable 完全一致。
+即使 GitHub 上的全部配置已填完，缺少这个文件仍会报 `Missing environment file`，
+并在登录镜像仓库、拉取镜像和执行迁移之前停止。已有配置在其他目录时，应核对
+`DEPLOY_PATH`，不要覆盖原文件或重新生成已有数据库的密码。
 
 以下以 staging 为例，由已创建的部署用户执行；若 `/opt` 目录没有写权限，由管理员
 先创建目录并赋予该部署用户所有权。`touch` 不会清空已有文件：
@@ -206,6 +209,15 @@ digest 由部署工作流提供，不需要手动写进 `.env`。
 [环境配置说明](environment.md) 和对应库 README 配置提供商凭据、回调地址及已验证域名。
 服务器上线不自动创建本地开发演示账号，也不要在生产环境执行开发用 seed。
 
+完成后，以实际部署用户核对文件存在、非空且可读；不输出文件内容：
+
+```sh
+test -s /opt/ray-staging/.env && test -r /opt/ray-staging/.env && printf 'READY\n'
+```
+
+production 在自己的部署目录执行同样检查。该检查只确认文件已准备好，配置值是否
+正确仍由实际镜像拉取、数据库迁移、容器健康与公开探针验证。
+
 ## 5. 核查配置和首次发布
 
 以下命令可核对 Variables 的值和 Secret **名称**；GitHub 不允许读回 Secret 明文：
@@ -262,6 +274,16 @@ CI 按 affected 选择测试，复用 pnpm、Gradle、CocoaPods/原生编译及 
 任务时，选择器比较完整 YAML 结构，确认其他配置和任务不变后，再用剩余变更计算移动端
 影响范围；全仓质量与真实镜像检查不受此例外影响。定时和显式 full 运行保留完整矩阵。
 账单恢复或部署配置修正后，优先重跑必要失败 job，不重复启动已通过的 Android/iOS 完整矩阵。
+例如 SSH 或服务器 `.env` 修正后，先找到失败部署 job 的 `databaseId`，再只重跑它及
+依赖它的汇总检查；保留成功的镜像构建和测试结果：
+
+```sh
+gh run view RUN_ID --repo owner/repo --json jobs \
+  --jq '.jobs[] | select(.conclusion == "failure") | {name, databaseId}'
+gh run rerun RUN_ID --repo owner/repo --job JOB_DATABASE_ID
+```
+
+替换示例中的 run/job ID；优先选择 `Deploy staging / deploy`，不要误选整个构建流程。
 重跑 dev CI 会产生新的 attempt，需要与该 attempt 对应的 staging 成功记录。
 数据库迁移先于替换应用执行；应用回退不自动撤销迁移，已有数据的环境应先审查迁移兼容性。
 
