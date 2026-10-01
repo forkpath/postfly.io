@@ -91,29 +91,57 @@ gh variable set PUBLIC_ORIGIN --env staging --repo owner/repo --body 'https://st
 production 使用相同名称，把 `--env` 改为 `production`，填入正式环境自己的值。
 不要把私钥、token 或服务器 `.env` 提交到仓库、贴进聊天或打印到 Actions 日志。
 
-### SSH 主机指纹：只取第二列
+### SSH 主机指纹：匹配实际协商的主机密钥，只取第二列
 
 在服务器的**可信控制台**执行，读取服务器 host key，不是部署用户的登录公钥：
 
 ```sh
-ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256
+for RAY_HOST_KEY in /etc/ssh/ssh_host_*_key.pub; do
+  test -f "$RAY_HOST_KEY" || continue
+  printf '%s\n' "$RAY_HOST_KEY"
+  ssh-keygen -lf "$RAY_HOST_KEY" -E sha256
+done
+sudo sshd -T | awk '$1 == "hostkey" { print }'
 ```
 
-输出形式如下（这里省略真实哈希）：
+第一组命令列出各类型公钥的指纹；第二个命令检查默认 sshd 配置启用的主机密钥。
+如果监听部署端口的 sshd 使用了自定义配置，应检查该实例实际加载的配置。
+
+当前固定的 SCP/SSH action 使用 Go SSH 客户端，其默认协商顺序将普通 ECDSA 主机密钥
+放在 ED25519 前面。因此，**只取 ED25519 指纹并不总是正确**：服务器同时提供 ECDSA
+时，实际握手可能选中 ECDSA，随后与 ED25519 指纹比较就会失败。上传文件和远程执行
+都必须匹配实际协商的服务器主机密钥。部署用户的登录私钥仍可使用 ED25519，两者用途不同。
+依据见 [SCP 客户端算法顺序](https://github.com/golang/crypto/blob/v0.37.0/ssh/common.go)、
+[SSH 客户端默认算法顺序](https://github.com/golang/crypto/blob/v0.45.0/ssh/common.go) 和
+[指纹比较实现](https://github.com/appleboy/easyssh-proxy/blob/v1.5.0/easyssh.go)。
+
+确认当前服务提供默认 ECDSA 主机密钥时，单独提取它：
+
+```sh
+ssh-keygen -lf /etc/ssh/ssh_host_ecdsa_key.pub -E sha256
+```
+
+单个公钥的输出形式如下（这里省略真实哈希；类型也可能是 RSA 或 ED25519）：
 
 ```text
-256 SHA256:<服务器的43位Base64哈希> root@server (ED25519)
+256 SHA256:<服务器的43位Base64哈希> root@server (ECDSA)
 ```
 
 `DEPLOY_HOST_FINGERPRINT` **只填写 `SHA256:` 加哈希这一列**。不要包括 `256`、空格、
-`root@server` 或 `(ED25519)`。可以直接提取正确的值：
+`root@server` 或 `(ECDSA)`。以上 ECDSA 情况可以直接取第二列：
 
 ```sh
-ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256 | awk '{print $2}'
+ssh-keygen -lf /etc/ssh/ssh_host_ecdsa_key.pub -E sha256 | awk '{print $2}'
 ```
 
 将结果作为 `gh variable set DEPLOY_HOST_FINGERPRINT --env staging --repo owner/repo --body '提取的完整指纹'`
-的值。服务器重装或更换 host key 后，通过可信控制台重新确认；不要为通过验证而关闭指纹检查。
+的值，production 也要在自己的服务器上独立确认。若不提供 ECDSA，必须根据实际协商类型
+选择对应指纹，不能机械替换文件名。
+
+遇到 `host key fingerprint mismatch` 时，先确认 `DEPLOY_HOST`、`DEPLOY_PORT` 和
+可信控制台对应同一台 SSH 服务器，再核对启用的密钥类型与指纹。服务器重装或更换
+host key 后也要重新确认。不能关闭指纹检查、自动接受网络扫描得到的新指纹，或为了
+通过 CI 就修改服务器主机密钥。格式校验成功只证明字符串合法，不证明主机身份已匹配。
 
 ## 4. 服务器 `.env`：应用运行时使用
 
@@ -219,7 +247,7 @@ HTTPS 探针都通过后，才算部署验收完成。`Required checks` 是测�
 | Runner 未启动，提示账单/预算         | 处理 GitHub Actions 费用和预算，再重跑受影响的 job                              |
 | 构建镜像时 `No space left on device` | 发布 runner 会先清理闲置预装工具链；检查该步骤和磁盘余量，不删除服务器数据卷    |
 | `Configure the SSH host fingerprint` | 只保留 `SHA256:哈希`；完整的 `ssh-keygen -lf` 输出不能直接粘贴                  |
-| SSH host key 不匹配                  | 从服务器可信控制台重新核实 host key，不能跳过校验                               |
+| SSH host key 不匹配                  | 核对主机/端口及实际协商的密钥类型；默认 ECDSA 与 ED25519 指纹不同，不能跳过校验 |
 | SSH 认证失败                         | 核对用户、完整私钥、无口令要求，以及该用户的 `authorized_keys`                  |
 | `Missing environment file`           | 在与 `DEPLOY_PATH` 完全一致的目录创建 `.env`，检查权限和目录拼写                |
 | GHCR `unauthorized`/`denied`         | 检查 PAT classic 的有效期、`read:packages`、package 读取权限和拉取账号          |
