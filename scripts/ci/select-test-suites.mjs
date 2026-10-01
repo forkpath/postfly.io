@@ -2,8 +2,32 @@ import { execFileSync } from 'node:child_process'
 import { appendFileSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
+import { isDeepStrictEqual } from 'node:util'
 
-export function selectTestSuites({ affected, files, full }) {
+import { parse } from 'yaml'
+
+export function onlyDeploymentJobsChanged(before, after) {
+  const record = value => value !== null && typeof value === 'object' && !Array.isArray(value)
+  const withoutDeployment = source => {
+    const workflow = parse(source, { merge: true })
+    if (!record(workflow) || !record(workflow.jobs)) throw new Error('Invalid workflow')
+    const jobs = { ...workflow.jobs }
+    for (const name of ['mobile', 'deploy-staging', 'staging-deployment']) {
+      if (!record(jobs[name])) throw new Error(`Missing job: ${name}`)
+    }
+    delete jobs['deploy-staging']
+    delete jobs['staging-deployment']
+    return { ...workflow, jobs }
+  }
+  try {
+    return isDeepStrictEqual(withoutDeployment(before), withoutDeployment(after))
+  } catch {
+    // Unknown or malformed workflows keep the conservative native matrix.
+    return false
+  }
+}
+
+export function selectTestSuites({ affected, nativeAffected = affected, files, full, ciDeploymentOnly = false }) {
   const harnessFiles = files.filter(file =>
     /^(scripts\/(testing|ci|release)\/|docker\/|patches\/|\.github\/(workflows|actions)\/|\.dockerignore$)/.test(file)
   )
@@ -15,7 +39,12 @@ export function selectTestSuites({ affected, files, full }) {
   const nativeHarnessChanged = harnessFiles.some(
     file =>
       !/^(scripts\/release\/|docker\/|\.dockerignore$|\.github\/workflows\/deploy\.yml$)/.test(file) &&
-      !['scripts/ci/select-test-suites.mjs', 'scripts/ci/select-test-suites.test.mjs'].includes(file)
+      ![
+        'scripts/ci/select-test-suites.mjs',
+        'scripts/ci/select-test-suites.test.mjs',
+        'scripts/ci/promotion.test.mjs'
+      ].includes(file) &&
+      !(ciDeploymentOnly && file === '.github/workflows/ci.yml')
   )
   const nativeAll = full || nativeHarnessChanged
   const nativeChanged = files.some(file =>
@@ -23,7 +52,7 @@ export function selectTestSuites({ affected, files, full }) {
       file
     )
   )
-  const mobileAndroid = nativeAll || nativeChanged || affected.includes('mobile')
+  const mobileAndroid = nativeAll || nativeChanged || nativeAffected.includes('mobile')
   return {
     full: all,
     backend: ['engine', 'pulse', 'worker'].filter(has),
@@ -58,7 +87,21 @@ function main() {
     base
   })
   let affected = []
+  let nativeAffected = []
+  let ciDeploymentOnly = false
   let files = []
+  const affectedProjects = flags =>
+    JSON.parse(
+      execFileSync(
+        process.execPath,
+        [require.resolve('nx/bin/nx'), 'show', 'projects', '--affected', ...flags, '--json'],
+        {
+          encoding: 'utf8',
+          env: { ...process.env, NX_DAEMON: 'false' },
+          maxBuffer: 16 * 1024 * 1024
+        }
+      )
+    )
   if (!full) {
     try {
       execFileSync('git', ['cat-file', '-e', `${base}^{commit}`], { stdio: 'pipe' })
@@ -71,19 +114,27 @@ function main() {
       .split('\0')
       .filter(Boolean)
     // Graph/config failures fail the selection job rather than omitting suites.
-    affected = JSON.parse(
-      execFileSync(
-        process.execPath,
-        [require.resolve('nx/bin/nx'), 'show', 'projects', '--affected', `--base=${base}`, `--head=${head}`, '--json'],
-        {
-          encoding: 'utf8',
-          env: { ...process.env, NX_DAEMON: 'false' },
-          maxBuffer: 16 * 1024 * 1024
-        }
-      )
-    )
+    affected = affectedProjects([`--base=${base}`, `--head=${head}`])
+    nativeAffected = affected
+    const ciPath = '.github/workflows/ci.yml'
+    if (files.includes(ciPath)) {
+      try {
+        ciDeploymentOnly = onlyDeploymentJobsChanged(
+          execFileSync('git', ['show', `${base}:${ciPath}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }),
+          execFileSync('git', ['show', `${head}:${ciPath}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+        )
+      } catch {
+        ciDeploymentOnly = false
+      }
+      if (ciDeploymentOnly) {
+        // ci.yml is an Nx sharedGlobal. Remove it only from native selection
+        // after proving every shared setting and non-deployment job unchanged.
+        const nativeFiles = files.filter(file => file !== ciPath)
+        nativeAffected = nativeFiles.length ? affectedProjects([`--files=${nativeFiles.join(',')}`]) : []
+      }
+    }
   }
-  const suites = selectTestSuites({ affected, files, full })
+  const suites = selectTestSuites({ affected, nativeAffected, files, full, ciDeploymentOnly })
   const output = {
     full: suites.full,
     base: suites.full ? '' : base,
@@ -104,7 +155,7 @@ function main() {
     })
   }
   for (const [key, value] of Object.entries(output)) appendFileSync(process.env.GITHUB_OUTPUT, `${key}=${value}\n`)
-  console.log(JSON.stringify({ ...output, affected }, null, 2))
+  console.log(JSON.stringify({ ...output, affected, nativeAffected, ciDeploymentOnly }, null, 2))
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) main()

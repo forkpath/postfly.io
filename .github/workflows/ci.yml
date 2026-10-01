@@ -448,7 +448,12 @@ jobs:
   deploy-staging:
     name: Deploy staging
     needs: required-checks
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev' && inputs.ref == ''
+    # Optional suites can be skipped while the aggregate succeeds. Override the
+    # implicit success() for skipped ancestors, but never deploy after failure
+    # or cancellation.
+    if: >-
+      always() && !cancelled() && needs.required-checks.result == 'success' &&
+      github.event_name == 'push' && github.ref == 'refs/heads/dev' && inputs.ref == ''
     permissions:
       actions: read
       contents: read

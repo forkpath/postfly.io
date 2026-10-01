@@ -1,7 +1,86 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 
-import { requiresFullRun, selectTestSuites } from './select-test-suites.mjs'
+import { parse, stringify } from 'yaml'
+
+import { onlyDeploymentJobsChanged, requiresFullRun, selectTestSuites } from './select-test-suites.mjs'
+
+test('the CI native exemption requires unchanged shared configuration and all non-deployment jobs', () => {
+  const before = readFileSync('.github/workflows/ci.yml', 'utf8')
+  const deploymentChange = parse(before)
+  deploymentChange.jobs['deploy-staging'].if = "always() && needs.required-checks.result == 'success'"
+  deploymentChange.jobs['staging-deployment']['timeout-minutes'] = 6
+  assert.equal(onlyDeploymentJobsChanged(before, stringify(deploymentChange)), true)
+
+  for (const change of [
+    workflow => {
+      workflow.jobs.mobile.if = 'false'
+    },
+    workflow => {
+      workflow.jobs.select.steps = []
+    },
+    workflow => {
+      workflow.jobs.main.steps = []
+    },
+    workflow => {
+      workflow.jobs['required-checks'].needs = []
+    },
+    workflow => {
+      workflow.env = { CHANGED: 'true' }
+    },
+    workflow => {
+      workflow.on.push.branches = ['main']
+    },
+    workflow => {
+      workflow.permissions = { contents: 'write' }
+    },
+    workflow => {
+      delete workflow.jobs.mobile
+    },
+    workflow => {
+      delete workflow.jobs['deploy-staging']
+    }
+  ]) {
+    const after = structuredClone(deploymentChange)
+    change(after)
+    assert.equal(onlyDeploymentJobsChanged(before, stringify(after)), false)
+  }
+  for (const invalid of ['', 'jobs: [', 'jobs: []', 'null', 'jobs: {mobile: true}']) {
+    assert.equal(onlyDeploymentJobsChanged(before, invalid), false)
+    assert.equal(onlyDeploymentJobsChanged(invalid, before), false)
+  }
+})
+
+test('deployment-only CI edits retain full quality gates and use the remaining changed files for native selection', () => {
+  const input = {
+    affected: ['mobile', 'engine', 'pulse', 'worker'],
+    nativeAffected: [],
+    files: ['.github/workflows/ci.yml', 'scripts/ci/select-test-suites.mjs', 'scripts/ci/promotion.test.mjs'],
+    ciDeploymentOnly: true,
+    full: false
+  }
+  const result = selectTestSuites(input)
+  assert.equal(result.full, true)
+  assert.deepEqual(result.backend, ['engine', 'pulse', 'worker'])
+  assert.equal(result.web && result.desktop && result.extension && result.generator, true)
+  assert.equal(result.mobileAndroid || result.mobileIos, false)
+  const js = selectTestSuites({
+    ...input,
+    nativeAffected: ['mobile'],
+    files: [...input.files, 'apps/mobile/src/app/index.tsx']
+  })
+  assert.equal(js.mobileAndroid, true)
+  assert.equal(js.mobileIos, false)
+  for (const file of ['pnpm-lock.yaml', 'apps/mobile/app.config.ts', 'scripts/testing/run-mobile.mjs']) {
+    const changed = selectTestSuites({ ...input, files: [...input.files, file] })
+    assert.equal(changed.mobileAndroid && changed.mobileIos, true)
+  }
+  for (const change of [{ ciDeploymentOnly: false }, { full: true }]) {
+    const changed = selectTestSuites({ ...input, ...change })
+    assert.equal(changed.mobileAndroid && changed.mobileIos, true)
+  }
+})
 
 test('ordinary dev pushes use affected selection; initial, scheduled and explicit full runs retain the complete matrix', () => {
   const input = { eventName: 'push', ref: 'refs/heads/dev', base: 'a'.repeat(40), force: '' }

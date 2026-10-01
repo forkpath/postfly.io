@@ -266,6 +266,11 @@ test('the workflow gates staging behind all required tests and only issues recei
   assert.ok(ci.jobs['required-checks'].needs.includes('security'))
   assert.match(ci.jobs['deploy-staging'].if, /github.event_name == 'push'/)
   assert.match(ci.jobs['deploy-staging'].if, /refs\/heads\/dev/)
+  // A successful aggregate can have deliberately skipped ancestors. An explicit
+  // status function prevents GitHub's implicit success() from skipping deploy.
+  assert.match(ci.jobs['deploy-staging'].if, /always\(\)/)
+  assert.match(ci.jobs['deploy-staging'].if, /!cancelled\(\)/)
+  assert.match(ci.jobs['deploy-staging'].if, /needs.required-checks.result == 'success'/)
   assert.match(deploy.jobs['build-and-push'].if, /environment == 'staging'/)
   assert.equal(deploy.jobs.deploy.environment.name, '${{ needs.resolve.outputs.environment }}')
   const steps = deploy.jobs.deploy.steps
