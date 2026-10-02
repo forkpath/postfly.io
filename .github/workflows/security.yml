@@ -36,11 +36,13 @@ jobs:
       # lifecycle scripts. Registry failures remain failures, not clean audits.
       - name: Audit locked dependencies using the official registry
         shell: bash
-        run: pnpm audit --registry=https://registry.npmjs.org --audit-level=high --json > dependency-audit.json
+        run: node scripts/ci/audit-dependencies.mjs dependency-audit.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: dependency-audit
-          path: dependency-audit.json
+          path: |
+            dependency-audit.json
+            dependency-audit-evaluation.json
           retention-days: 7
           if-no-files-found: error

@@ -24,10 +24,14 @@ workspace importer，不另外维护应用锁文件。
 pnpm audit --registry=https://registry.npmjs.org --audit-level=high --json
 ```
 
-检查根锁文件，无需安装依赖，也不执行依赖的生命周期脚本。高危或严重告警返回非零，
-网络或 registry 错误也按失败处理。报告上传为 `dependency-audit`，保留 7 天。
+检查根锁文件，无需安装依赖，也不执行依赖的生命周期脚本。原始命令遇到高危或严重
+告警返回非零。CI 使用 `node scripts/ci/audit-dependencies.mjs` 保留原始报告，并独立
+核验下述有期限的本地补丁记录；没有匹配且有效的修复证据时，高危或严重告警阻止 CI。
+网络、registry、报告结构错误也按失败处理。原始报告及 `*-evaluation.json` 一并上传为
+`dependency-audit`，保留 7 天，不能把评估通过描述成原始扫描归零。
 其成功结果是 `Required checks` 的必需前置条件，dev/main 的合并保护要求该汇总检查。
-main 推广时另做一次相同扫描，拒绝在 staging 验收之后新披露的 high/critical 告警。
+main 推广时另做一次相同扫描和补丁核验，拒绝在 staging 验收之后新披露的 high/critical 告警。
+安全检查通过后才启动测试选择、依赖安装和设备矩阵，避免已知失败消耗原生构建额度。
 
 处理告警时先检查实际依赖路径、受影响版本和调用方式，优先升级直接依赖与对应工具链。
 传递依赖 override 必须限定版本范围并通过相关构建和测试。不要自动执行 audit fix、
@@ -150,3 +154,37 @@ Engine、Pulse、Worker 的 Nx 生产构建全部通过，未命中构建缓存�
 没有添加 audit 忽略规则，也未降低测试选择或安全门槛；远端完整检查以新提交为准。
 
 参考：[Piscina 4.9.4](https://github.com/piscinajs/piscina/releases/tag/v4.9.4)。
+
+### node-forge：有期限的本地安全补丁
+
+PR #6 的完整 CI（含 Android/iOS）通过后，dev 合并提交 `7efebd8` 的新扫描发现
+[GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv)。公告在
+2026-10-01 更新，涉及 `expo > @expo/cli > node-forge@1.4.0` 的 RSA PKCS#1 v1.5
+验签：嵌套 DigestAlgorithm 可带多余元素。核查时 npm 尚无修复版；
+[上游 PR #1152](https://github.com/digitalbazaar/forge/pull/1152) 尚未合并或发布。
+
+本仓通过 pnpm `patchedDependencies` 应用同样的嵌套元素数量检查，补丁位于
+`patches/node-forge@1.4.0.patch`。这是仓库维护的临时修复，不是上游正式安全版本。
+Expo CLI 直接调用点是本机 iOS 签名证书元数据解析；锁文件还含 Expo 更新签名工具与
+Android adbkit 的同版本引用，三条引用都应用该补丁。没有据此推断服务器已遭利用。
+
+- 对原始包运行同一组 9 项回归：3 项异常签名断言失败、6 项正常行为通过；补丁后全通过。
+  覆盖含/不含 NULL 参数的有效 SHA-256、3 种额外嵌套元素、错误消息、RSA-PSS、证书解析，
+  以及 Expo 实际适配器读取模拟证书。适配器测试不访问真实钥匙串，也不代表正式签名验收。
+  另补 Expo 更新签名工具的真实 API 测试，验证其解析到同一补丁实例、证书/CSR 验证和
+  签名往返；签名同时由 Node 标准库独立校验，共 10 项本地测试通过。
+- 冻结安装通过，锁文件只增加补丁标识与对应引用；保留包名、版本和 registry 完整性记录。
+- 原始扫描仍为 low 12、moderate 59、**high 1、critical 0**；独立评估为本地缓解 1、
+  未缓解 0。不得使用 `--ignore-unfixable`、修改包版本伪装成修复版或隐去原始报告。
+- `.github/security-mitigations.json` 精确绑定 GHSA、包/版本、全部依赖路径、严重性、
+  公告更新时间和受影响/已修复范围，以及补丁、冻结锁文件、workspace 配置和回归测试的
+  SHA-256。缺文件、哈希变化、新增路径、新告警、公告更新或报告不一致均失败。
+- 本次记录有效期为 2026-10-02 至 **2026-10-16 00:00 UTC**（北京时间 08:00），
+  不自动续期。修改依赖也会要求重新审查该记录，不能仅为恢复绿色自动重算哈希。
+- 上游发布修复版后，升级、移除补丁与此记录、重新冻结安装，运行回归、原始扫描和完整
+  原生 CI；此前需要续期时，先重新检查公告、代码与复现，再经 PR 审核。
+
+评估器另有失败场景测试：未知 high/critical、失效或改动的补丁、改变的依赖/测试输入、
+异常扫描退出码、无效 JSON、缺失 findings 和过期记录均拒绝放行。两环境使用同一评估器；
+`Required checks` 仍要求安装后的回归和全部选中测试通过，production 仍只接收同 SHA 的
+成功 staging 记录与五个不可变镜像摘要。本地通过不代替远端原生与部署验收。

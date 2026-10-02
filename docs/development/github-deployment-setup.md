@@ -281,6 +281,9 @@ HTTPS 探针都通过后，才算部署验收完成。`Required checks` 是测�
 | 找不到可推广记录                     | 确认同一 SHA 的 dev CI 整次成功，记录未过期且对应最新 attempt                   |
 
 CI 按 affected 选择测试，复用 pnpm、Gradle、CocoaPods/原生编译及 BuildKit 缓存。
+安全扫描与本地补丁核验先于测试选择和设备矩阵；发现未修复告警时不启动昂贵任务。
+少数尚无上游发布版的修复遵循[限期本地补丁规则](dependency-governance.md#node-forge有期限的本地安全补丁)，
+原始扫描与独立评估报告同时保留，production 推广前重新检查。
 发布工作流、Docker 和发布脚本变更保留全仓质量与真实镜像检查，但不会单独触发设备构建。
 移动端受影响代码仍运行 Android；原生配置、共享依赖、共享测试工具或主 CI 的共享配置、
 测试任务变更继续运行两套设备测试。仅修改主 CI 的 `deploy-staging` / `staging-deployment`
