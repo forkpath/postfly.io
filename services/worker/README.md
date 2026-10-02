@@ -2,19 +2,19 @@
 
 ## 用途
 
-Nest 后台 RabbitMQ 消费应用（并非 Next.js）：版本化 handler registry、PG Inbox claim/幂等、重试/DLQ 与健康端点，现阶段只注册 platform.smoke。
+Nest 后台 RabbitMQ 消费应用，提供版本化 handler registry、PG Inbox 幂等、重试/DLQ 与健康端点。`platform.smoke` 是用于演示和验证消息链路的处理器；新增业务在 registry 中显式注册。
 
 ## Tags、使用者与场景
 
-`type:app` · `runtime:node` · `domain:composition`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:app` · `runtime:node` · `domain:composition`。
 
-由 Engine/平台发布者经 RabbitMQ 提交信封；不直接承载 UI，也不虚构产品事件。
+由 Engine/平台发布者经 RabbitMQ 提交信封；业务请求通过 Engine 或 Pulse 进入，Worker 不提供公网业务 API。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
-dev:worker 从根 .env 注入；app.module 组装 mongo/rabbitmq；main 读 WORKER_PORT（默认 3002）。WORKER_PROCESSORS/WORKER_QUEUES 虽在 .env.example，但当前源码没有读取，不可当成动态路由开关。平台队列/handler 由代码契约决定。
+dev:worker 从根 .env 注入；app.module 组装 mongo/rabbitmq；main 读 WORKER_PORT（默认 3002）。平台队列与 handler 由代码契约决定，修改时同步生产者与消费者。
 
 | 变量                                                                                  | 含义                                        | 何时配置/默认                            | 值从哪里来                                                  |
 | ------------------------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------- | ----------------------------------------------------------- |
@@ -51,10 +51,17 @@ pnpm nx run worker:test --run
 
 现有用例示例：[src/app/platform-event.consumer.spec.ts](src/app/platform-event.consumer.spec.ts)、[src/app/platform-handler.registry.spec.ts](src/app/platform-handler.registry.spec.ts)。
 
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。
 
-## E2E：运行与编写
+## 集成与 E2E：运行与编写
 
-无完整 broker/DB E2E target。后续在隔离 RabbitMQ/PG 发 envelope，验证 Inbox 完成、重复无二次效果、重试队列和 DLQ，模拟 handler 失败/重启；readiness 返回成功不是消费链路验收。
+```sh
+pnpm nx run worker:test-integration
+pnpm nx run worker:e2e
+```
 
-所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#其他应用服务-e2e)。
+真实 RabbitMQ/PG 套件验证 Inbox 完成、重复投递、长租约不阻塞短 TTL 重试、最后一次失败与 DLQ、活动租约重投，以及杀进程后重启恢复；集成套件覆盖并发认领、租约恢复与旧处理者的写入限制。外部业务副作用仍需幂等键和自己的业务用例。
+
+需要可运行 Linux 容器的 Docker / Compose v2。入口自动创建本机隔离环境、迁移和测试数据，完成后保存日志并清理；不会读取开发 `.env` 或连接外部数据库。用例放在 `tests/*.integration.spec.ts` / `tests/*.e2e.spec.ts`，不能直接运行内部 runner 指向开发库。
+
+报告位于 `dist/test-results/worker/<suite>/<run-id>/`。fixture、失败清理和新增用例说明见 [后端测试指南](../../docs/development/testing-backend.md)，实际结果见 [验收记录](../../docs/development/testing-framework-validation.md)。

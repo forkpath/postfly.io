@@ -1,12 +1,26 @@
 import { z } from 'zod'
 
 import { offsetPaginationSchema } from '../shared/pagination.schema'
-import { multiValueQuerySchema, rangeQuerySchema, sortQuerySchema } from '../shared/query-utils'
+import { createSortQuerySchema, multiValueQuerySchema, rangeQuerySchema } from '../shared/query-utils'
 
 // ==================== Customers List ====================
 
 export const getCustomersReqSchema = offsetPaginationSchema.extend({
-  sort: sortQuerySchema.optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  perPage: z.coerce.number().int().min(1).max(100).default(10),
+  sort: createSortQuerySchema(
+    z.enum([
+      'id',
+      'referenceId',
+      'externalId',
+      'provider',
+      'createdAt',
+      'updatedAt',
+      'user.name',
+      'subscriptions',
+      'orders'
+    ])
+  ).optional(),
   q: z.string().optional(),
   provider: multiValueQuerySchema(z.string()).optional(),
   subscriptions: rangeQuerySchema.optional(),

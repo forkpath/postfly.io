@@ -1,11 +1,20 @@
+import * as z from 'zod'
+
 import { generateName, MemberRole, UserRole } from '@libs/auth-contract'
 import { prisma } from '@libs/pg-dao'
 
 import { auth } from '../lib/auth-server'
-import { env } from '../lib/env'
+
+// Demo credentials are required only for this explicit development command.
+const seed = z
+  .object({
+    SEED_EMAIL: z.email(),
+    SEED_PASSWORD: z.string().min(12)
+  })
+  .parse(process.env)
 
 const getEmail = (suffix: string | string[]) => {
-  const [name, domain] = env.SEED_EMAIL.split('@')
+  const [name, domain] = seed.SEED_EMAIL.split('@')
   return `${name}+${Array.isArray(suffix) ? suffix.join('-') : suffix}@${domain}`
 }
 
@@ -14,10 +23,6 @@ const getImage = (name: string) => `https://avatar.vercel.sh/${name}`
 interface SeedContext {
   context: Awaited<typeof auth.$context>
   passwordHash: string
-}
-
-interface SeededMember {
-  userId: string
 }
 
 const seedUser = async (
@@ -177,15 +182,15 @@ const seedOrganization = async (seedCtx: SeedContext) => {
   )
 
   const invitationRoles = memberRoles.filter(role => role !== MemberRole.OWNER)
+  const inviterId = members[memberRoles.indexOf(MemberRole.OWNER)]?.userId
+  if (!inviterId) throw new Error('Seed organization owner was not created')
   await Promise.all(
-    members.flatMap((member: SeededMember | null) =>
-      invitationRoles.map(role =>
-        seedOrganizationInvitation(seedCtx, {
-          organizationId: organization.id,
-          role,
-          inviterId: member?.userId ?? ''
-        })
-      )
+    invitationRoles.map(role =>
+      seedOrganizationInvitation(seedCtx, {
+        organizationId: organization.id,
+        role,
+        inviterId
+      })
     )
   )
 
@@ -199,7 +204,7 @@ async function main() {
   console.log('Seeding auth data...')
 
   const context = await auth.$context
-  const passwordHash = await context.password.hash(env.SEED_PASSWORD)
+  const passwordHash = await context.password.hash(seed.SEED_PASSWORD)
   const seedCtx: SeedContext = { context, passwordHash }
 
   await seedUsers(seedCtx)
@@ -214,7 +219,7 @@ async function main() {
 main()
   .catch(error => {
     console.error('Seed failed:', error)
-    process.exit(1)
+    process.exitCode = 1
   })
   .finally(async () => {
     await prisma.$disconnect()

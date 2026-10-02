@@ -1,9 +1,10 @@
+import type { IOrganizationRepository } from '#/domain/repositories/organization.repository.interface'
+
 import { Test } from '@nestjs/testing'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ORGANIZATION_REPOSITORY } from '#/domain/repositories/organization.repository.interface'
-
+import { ListOrganizationsUseCase } from '../../../use-cases/organization/list-organizations.usecase'
 import { ListOrganizationsHandler, ListOrganizationsQuery } from '../list-organizations.query'
 
 describe('ListOrganizationsHandler', () => {
@@ -12,7 +13,13 @@ describe('ListOrganizationsHandler', () => {
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      providers: [ListOrganizationsHandler, { provide: ORGANIZATION_REPOSITORY, useValue: mockRepo }]
+      providers: [
+        ListOrganizationsHandler,
+        {
+          provide: ListOrganizationsUseCase,
+          useValue: new ListOrganizationsUseCase(mockRepo as unknown as IOrganizationRepository)
+        }
+      ]
     }).compile()
 
     handler = module.get(ListOrganizationsHandler)

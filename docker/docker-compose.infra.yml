@@ -1,14 +1,12 @@
-name: ray-infra
+name: ${COMPOSE_PROJECT_NAME:-ray}
 
 networks:
   ray-net:
-    name: ray-net
     driver: bridge
 
 services:
   redis:
-    image: redis:7.4
-    container_name: ray-redis
+    image: docker.io/library/redis:7.4@sha256:33d7c9a245edd95e6703a0addbeaa48fe40c3b3b4783627a72085155462ebfdb
     networks: [ray-net]
     command: ['redis-server', '--requirepass', '${REDIS_PASSWORD}', '--appendonly', 'yes']
     volumes: [redis:/data]
@@ -20,8 +18,7 @@ services:
       retries: 5
 
   postgres:
-    image: postgres:17
-    container_name: ray-postgres
+    image: docker.io/library/postgres:17@sha256:2203e6282d9e7de7c24d7da234e2a744fb325df366a3fd8ed940e8abbee39527
     networks: [ray-net]
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -36,8 +33,7 @@ services:
       retries: 5
 
   mongo:
-    image: mongo:8.0
-    container_name: ray-mongo
+    image: docker.io/library/mongo:8.0@sha256:45b422ba19c0f028a917ea43746ab8e8cdbdaaeb50d2e6e634a17c59666e0dbb
     networks: [ray-net]
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
@@ -48,45 +44,59 @@ services:
       - ./mongo/init-db.js:/docker-entrypoint-initdb.d/init-db.js:ro
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping')"]
       interval: 10s
-      timeout: 3s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
   rabbitmq:
-    image: rabbitmq:4.0.1-management
-    container_name: ray-rabbitmq
+    image: docker.io/library/rabbitmq:4.0.1-management@sha256:9b471f8528a5beee7a6913d49bc450ffd92b3d0d9732f8febc448d291f5d150b
     networks: [ray-net]
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASSWORD}
+      # Keep readiness probes small without limiting broker schedulers.
+      RABBITMQ_CTL_ERL_ARGS: '+S 1:1 +A 1'
     volumes: [rabbitmq:/var/lib/rabbitmq]
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      # A root probe can create an unreadable cookie before the broker starts.
+      test: ['CMD', 'gosu', 'rabbitmq', 'rabbitmq-diagnostics', '-q', 'check_running']
       interval: 15s
-      timeout: 5s
-      retries: 5
+      timeout: 15s
+      retries: 10
+      start_period: 30s
 
   kong:
-    image: kong:3.9
-    container_name: ray-kong
+    image: docker.io/library/kong:3.9@sha256:12972ce1ab6396083e56e7d46fce084836c98cc819344bef44a1f583ec3ab191
     networks: [ray-net]
-    ports: ['80:8000', '443:8443', '127.0.0.1:8001:8001']
+    ports: ['${GATEWAY_HTTP_PORT:-80}:8000', '${GATEWAY_HTTPS_PORT:-443}:8443']
     entrypoint: ['/entrypoint.sh']
     environment:
       KONG_DATABASE: 'off'
+      # Compose names have A records; SRV lookups can fall through to public DNS.
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_NGINX_WORKER_PROCESSES: ${KONG_WORKERS:-2}
       KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
-      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_ADMIN_LISTEN: 'off'
       KONG_PROXY_LISTEN: 0.0.0.0:8000, 0.0.0.0:8443 ssl
+      # ACME's cross-signed chain can exceed Kong's default depth of one.
+      # Keep system CA verification enabled while allowing up to three intermediates.
+      KONG_LUA_SSL_VERIFY_DEPTH: '3'
       DOMAIN: ${DOMAIN:-localhost}
       ACME_EMAIL: ${ACME_EMAIL:-}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-      ENGINE_UPSTREAM: ${ENGINE_UPSTREAM:-engine-blue:8000}
-      WEB_UPSTREAM: ${WEB_UPSTREAM:-web-blue:3000}
+      ENGINE_UPSTREAM: engine:8000
+      PULSE_UPSTREAM: pulse:3001
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost}
+      REDIS_HOST: redis
+      KONG_AUTO_TLS: ${KONG_AUTO_TLS:-false}
+      WEB_UPSTREAM: web:3000
     volumes:
       - ./kong/kong.yml:/etc/kong/kong.yml.template:ro
       - ./kong/entrypoint.sh:/entrypoint.sh:ro
+      - ./kong/tls-plugins.yml:/etc/kong/tls-plugins.yml.template:ro
     restart: unless-stopped
     healthcheck:
       test: ['CMD', 'kong', 'health']
@@ -96,10 +106,6 @@ services:
 
 volumes:
   redis:
-    name: ray-redis
   postgres:
-    name: ray-postgres
   mongo:
-    name: ray-mongo
   rabbitmq:
-    name: ray-rabbitmq

@@ -1,6 +1,6 @@
 # 三种边界检查：为什么加，禁止了什么
 
-先纠正措辞：不是“禁止导入检查、禁止打包检查、禁止环境变量检查”，而是**增加检查，让不合法的依赖或配置写法尽早失败**。正常 import、浏览器构建、Expo 使用公开配置仍然允许。
+这些检查让不合法的依赖或配置写法尽早失败，保护通用库和客户端的运行环境。
 
 ## 1. 实际 ESLint 禁止导入检查
 
@@ -58,7 +58,7 @@ const endpoint = process.env.EXPO_PUBLIC_API_BASE_URL
 ## 如何运行、如何扩展
 
 ```sh
-pnpm ci:metrics:test
+pnpm ci:checks
 ```
 
 该根脚本运行 scripts/ci/\*.test.mjs，包含实际 ESLint/esbuild/AST 探针和其他治理测试。新 adapter 增加时同时补合法与非法导入、兼容 alias、runtime graph、bundle 与环境变量例子。检查失败先确认规则与架构是否一致，不以删测试或关闭 ESLint 的方式“修好 CI”。

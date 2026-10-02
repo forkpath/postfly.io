@@ -6,11 +6,11 @@ Web React/Radix UI 基础组件（表单、表格、弹层、导航等），复�
 
 ## Tags、使用者与场景
 
-`type:ui` · `runtime:web` · `domain:shared`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:ui` · `runtime:web` · `domain:shared`。
 
 Studio、Web、Desktop renderer、Extension；不用于 Native。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
@@ -36,4 +36,12 @@ pnpm nx run ui-web:typecheck
 
 接入 jsdom + Testing Library 后测键盘/焦点/禁用态/可访问名称、输入事件、受控状态；视觉/布局需 browser E2E。
 
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。
+
+## Component tests
+
+Run `pnpm nx run ui-web:test` and `pnpm nx run ui-web:typecheck-tests`.
+Use `RAY_TEST_COVERAGE=true pnpm nx run ui-web:test` to enforce the CI coverage baseline.
+The Button, Checkbox and Dialog specs exercise real component behavior with React Testing Library
+and jsdom, including disabled actions, accessible state, focus restoration and Escape handling.
+See the [coverage guide](../../docs/development/testing-coverage.md) for reporting and new tests.

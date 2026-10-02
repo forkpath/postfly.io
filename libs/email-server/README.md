@@ -6,11 +6,11 @@ Node 邮件模板渲染及投递，实现 sendEmail 和 sendRawEmail。默认选
 
 ## Tags、使用者与场景
 
-`type:platform` · `runtime:node` · `domain:shared`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:platform` · `runtime:node` · `domain:shared`。
 
 auth-server 及 Node 业务逻辑；Nest 注入场景用 server-email。浏览器只能引用 email 契约。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
@@ -42,7 +42,7 @@ pnpm nx run email-server:typecheck
 
 ### 可选厂商实现的验证边界
 
-SES/阿里云模块保留，但不是本次已验证的生产 provider。当前 SES 源码仍存在单引号包裹带 `${env.AWS_SES_REGION}` 的 URL 字面量，切换前必须修复/验证真实 endpoint 与签名，不能只设置凭据就上线。ALIYUN_DM_REPLY_TO_ADDRESS 实际为字符串布尔开关（精确 true，缺省 true），不是回复邮箱；ALIYUN_DM_ADDRESS_TYPE 转为数字，缺省1。
+SES/阿里云模块可按需接入。当前 SES 源码仍存在单引号包裹带 `${env.AWS_SES_REGION}` 的 URL 字面量，切换前必须修复/验证真实 endpoint 与签名，不能只设置凭据就上线。ALIYUN_DM_REPLY_TO_ADDRESS 实际为字符串布尔开关（精确 true，缺省 true），不是回复邮箱；ALIYUN_DM_ADDRESS_TYPE 转为数字，缺省1。
 
 ## 单元测试：运行与编写
 
@@ -54,4 +54,4 @@ mock 投递 provider，验证模板渲染、html/text/subject、原始正文发�
 
 现有用例示例：[src/runtime.spec.ts](src/runtime.spec.ts)。
 
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。

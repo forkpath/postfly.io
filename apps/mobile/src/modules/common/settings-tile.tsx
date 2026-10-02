@@ -31,6 +31,7 @@ export const SettingsTile = ({
   )
   return (
     <Pressable
+      role="button"
       hitSlop={4}
       className={cn(
         'bg-background active:bg-accent dark:active:bg-accent/50 flex-row items-center justify-between gap-4 px-6 py-3.5 transition-colors',

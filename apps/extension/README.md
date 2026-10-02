@@ -6,11 +6,11 @@ WXT 浏览器扩展，包含 popup/content/background 交互，使用 Web 认证
 
 ## Tags、使用者与场景
 
-`type:app` · `runtime:web` · `domain:composition`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:app` · `runtime:web` · `domain:composition`。
 
 Chrome/Firefox 用户；通过浏览器加载扩展产物，不能由其他库导入此 app。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
@@ -47,14 +47,20 @@ pnpm nx run extension:typecheck
 
 ## 单元测试：运行与编写
 
-当前没有标准 `extension:test` target，不能执行不存在的命令或用 lint/build 成功冒充单测。接入步骤见[测试开发指南](../../docs/development/testing.md#没有-test-target-怎么办)。
+```sh
+pnpm nx run extension:test
+pnpm nx run extension:typecheck-tests
+```
 
-无 test target；需配置 Vitest/jsdom，mock chrome/browser/storage/message API，测试会话和跨页面通信；此 mock 不证明浏览器权限配置正确。
-
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+使用 Vitest、jsdom 与 WXT 官方 fake browser。用例放在 `tests/**/*.spec.ts` / `*.spec.tsx`，覆盖消息、存储竞争和错误边界，不读取开发者 `.env`。报告在 `dist/test-results/extension/unit`；browser API mock 不证明真实扩展权限与进程通信。
 
 ## E2E：运行与编写
 
-暂无扩展 E2E target。后续启动加载真实 build 目录的浏览器实例，测试 popup/content/background、跨域权限、storage、登录/注销；Firefox 单独适配。Web E2E 不会自动加载扩展。
+```sh
+pnpm exec playwright install chromium
+pnpm nx run extension:e2e
+```
 
-所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#其他应用服务-e2e)。
+自动构建独立测试产物并加载到真实 Chromium，验证五个页面、background messaging、content script、storage 和重载。新用例放在 `e2e/`，复用 `fixtures.ts` 的独立 profile 与失败诊断。外部认证 HTTP 使用受控响应，扩展进程通信和存储保持真实。
+
+`extension:smoke` 保留生产配置构建验证；`extension:e2e-artifact` 验证已解压的发布 ZIP，详见 [测试指南](../../docs/development/testing.md#extension-真实浏览器测试)。Firefox 当前只有构建验证，未计作真实扩展运行通过。

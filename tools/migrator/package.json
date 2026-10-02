@@ -2,7 +2,7 @@
   "name": "@ray/migrator",
   "version": "0.0.0",
   "private": true,
-  "packageManager": "pnpm@10.25.0",
+  "packageManager": "pnpm@10.34.5",
   "nx": {
     "tags": [
       "type:platform",

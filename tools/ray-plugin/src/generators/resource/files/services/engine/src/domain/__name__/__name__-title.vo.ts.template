@@ -1,0 +1,11 @@
+import { <%= className %>Error } from './<%= name %>.error'
+
+export class <%= className %>Title {
+  private constructor(readonly value: string) {}
+
+  static create(value: string): <%= className %>Title {
+    const title = value.trim()
+    if (title.length < 1 || title.length > 120) throw new <%= className %>Error('invalid')
+    return new <%= className %>Title(title)
+  }
+}

@@ -1,11 +1,12 @@
 import { builtinModules } from 'node:module'
 import path from 'node:path'
 
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 
 const external = [
   'electron',
-  'electron-squirrel-startup',
+  'electron-updater',
+  '@sentry/electron/main',
   ...builtinModules,
   ...builtinModules.map(module => `node:${module}`)
 ]
@@ -13,28 +14,27 @@ const external = [
 export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
-      '@main': path.resolve(__dirname, 'src/main')
+      '@main': path.resolve(import.meta.dirname, 'src/main')
     }
   },
   build: {
     lib: {
-      entry: path.resolve(__dirname, 'src/main/main.ts'),
+      entry: path.resolve(import.meta.dirname, 'src/main/main.ts'),
       formats: ['cjs'],
       fileName: () => 'main.cjs'
     },
-    outDir: path.resolve(__dirname, '.vite/main'),
+    outDir: path.resolve(import.meta.dirname, '.vite/main'),
     emptyOutDir: true,
     rolldownOptions: {
       external
     }
   },
-  define:
-    mode === 'bundle'
-      ? {
-          MAIN_WINDOW_VITE_DEV_SERVER_URL: 'undefined',
-          MAIN_WINDOW_VITE_NAME: JSON.stringify('.')
-        }
-      : undefined,
+  define: Object.fromEntries(
+    ['VITE_SENTRY_DESKTOP_DSN', 'VITE_SENTRY_ENVIRONMENT'].map(key => [
+      `process.env.${key}`,
+      JSON.stringify(process.env[key] ?? loadEnv(mode, path.resolve(import.meta.dirname, '../..'), 'VITE_')[key] ?? '')
+    ])
+  ),
   // do not remove logs when HMR
   clearScreen: false
 }))

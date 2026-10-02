@@ -1,0 +1,26 @@
+appId: com.ray.mobile.e2e
+name: Signed-out startup and navigation
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: welcome-login
+    timeout: 30000
+- takeScreenshot: welcome
+- tapOn:
+    id: welcome-login
+- assertVisible:
+    id: login-email
+- tapOn:
+    id: login-forgot-password
+- assertVisible:
+    id: forgot-password-email
+- tapOn:
+    id: navigation-back
+- assertVisible:
+    id: login-email
+- tapOn:
+    id: navigation-back
+- assertVisible:
+    id: welcome-login

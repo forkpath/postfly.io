@@ -1,4 +1,4 @@
-import type { Route } from 'expo-router'
+import type { RoutePath } from 'expo-router'
 
 import { memo } from 'react'
 import { useMutation } from '@tanstack/react-query'
@@ -15,7 +15,7 @@ import { Button, Field, FieldError, FieldLabel, Icons, Input, Spin, Text } from 
 import { auth } from '../../lib/api'
 
 interface MagicLinkLoginFormProps {
-  readonly redirectTo?: Route
+  readonly redirectTo?: RoutePath
   readonly email?: string
 }
 

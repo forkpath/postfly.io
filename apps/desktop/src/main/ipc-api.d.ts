@@ -1,4 +1,7 @@
+import type { UpdateAPI } from '../shared/updates'
+
 export interface ElectronWindowAPI {
+  updates: UpdateAPI
   minimize: () => void
   maximize: () => void
   unmaximize: () => void
@@ -9,7 +12,6 @@ export interface ElectronWindowAPI {
 }
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface Window {
     electronAPI: ElectronWindowAPI
   }

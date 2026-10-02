@@ -1,5 +1,5 @@
 import type { LoginOption } from './constants'
-import type { Route } from 'expo-router'
+import type { RoutePath } from 'expo-router'
 
 import { Suspense, useState } from 'react'
 
@@ -37,7 +37,7 @@ const LOGIN_OPTIONS_DETAILS = {
 
 interface LoginFormProps {
   readonly options: LoginOption[]
-  readonly redirectTo?: Route
+  readonly redirectTo?: RoutePath
   readonly email?: string
   readonly onTwoFactorRedirect?: () => void
 }

@@ -1,32 +1,24 @@
 const path = require('node:path')
 const { getDefaultConfig } = require('expo/metro-config')
+const { mergeConfig } = require('@expo/metro/metro-config')
 const { withUniwindConfig } = require('uniwind/metro')
 
 const projectRoot = __dirname
-const workspaceRoot = path.resolve(projectRoot, '../..')
+const defaultConfig = getDefaultConfig(projectRoot)
+const { assetExts, sourceExts } = defaultConfig.resolver
 
-const config = withUniwindConfig(getDefaultConfig(projectRoot), {
+const customConfig = {
+  // Expo handles workspace packages; include the root-owned Nx source libs.
+  watchFolders: [path.resolve(projectRoot, '../../libs')],
+  transformer: {
+    babelTransformerPath: require.resolve('react-native-svg-transformer/expo')
+  },
+  resolver: {
+    assetExts: assetExts.filter(ext => ext !== 'svg'),
+    sourceExts: [...sourceExts, 'svg']
+  }
+}
+
+module.exports = withUniwindConfig(mergeConfig(defaultConfig, customConfig), {
   cssEntryFile: './src/assets/styles/globals.css'
 })
-
-config.watchFolders = [workspaceRoot]
-
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, 'node_modules'),
-  path.resolve(workspaceRoot, 'node_modules')
-]
-
-const { transformer, resolver } = config
-
-config.transformer = {
-  ...transformer,
-  babelTransformerPath: require.resolve('react-native-svg-transformer/expo')
-}
-
-config.resolver = {
-  ...resolver,
-  assetExts: resolver.assetExts.filter(ext => ext !== 'svg'),
-  sourceExts: [...resolver.sourceExts, 'svg']
-}
-
-module.exports = config

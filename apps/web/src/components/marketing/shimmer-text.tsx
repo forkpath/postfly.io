@@ -1,5 +1,3 @@
-import type { JSX } from 'react'
-
 import React, { useMemo } from 'react'
 
 import { motion } from 'motion/react'
@@ -16,7 +14,7 @@ export type TextShimmerProps = {
 
 /* 文字闪烁动画效果 */
 function TextShimmerCore({ children, as: Component = 'p', className, duration = 2, spread = 2 }: TextShimmerProps) {
-  const MotionComponent = motion.create(Component as keyof JSX.IntrinsicElements)
+  const MotionComponent = motion.create(Component as keyof React.JSX.IntrinsicElements)
 
   const dynamicSpread = useMemo(() => {
     return children.length * spread

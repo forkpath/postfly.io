@@ -9,214 +9,78 @@ import {
   upsertBillingCustomer
 } from './persistence'
 
-const { customerFindMany, customerUpsert, queryRaw, rolloutEnv, updateWebhookEvent } = vi.hoisted(() => ({
+const { customerFindMany, customerUpsert, queryRaw, updateWebhookEvent } = vi.hoisted(() => ({
   customerFindMany: vi.fn(),
   customerUpsert: vi.fn(),
   queryRaw: vi.fn(),
-  rolloutEnv: {
-    BILLING_OWNER_V2_DUAL_WRITE: false,
-    BILLING_OWNER_V2_SHADOW_READ: false,
-    BILLING_OWNER_V2_READ: false,
-    ORGANIZATION_BILLING_ENABLED: false
-  },
   updateWebhookEvent: vi.fn()
 }))
-
 vi.mock('@libs/pg-dao', () => ({
-  Prisma: {
-    sql: (strings: TemplateStringsArray, ...values: unknown[]) => ({
-      text: strings.join('?'),
-      values
-    })
-  },
+  Prisma: { sql: (strings: TemplateStringsArray, ...values: unknown[]) => ({ text: strings.join('?'), values }) },
   prisma: {
     $queryRaw: queryRaw,
-    customer: {
-      findMany: customerFindMany,
-      upsert: customerUpsert
-    },
+    customer: { findMany: customerFindMany, upsert: customerUpsert },
     webhookEvent: { update: updateWebhookEvent }
   }
 }))
-
-vi.mock('./env', () => ({ serverEnv: rolloutEnv }))
-
-const createdAt = new Date('2026-01-01T00:00:00.000Z')
-const updatedAt = new Date('2026-01-02T00:00:00.000Z')
-
-function customerRow(
-  overrides: Partial<{
-    id: string
-    referenceId: string
-    userId: string | null
-    organizationId: string | null
-    provider: string
-    externalId: string
-  }> = {}
-) {
-  return {
-    id: 'customer-legacy',
-    referenceId: 'user-1',
-    userId: null,
-    organizationId: null,
-    provider: 'stripe',
-    externalId: 'cus_legacy',
-    createdAt,
-    updatedAt,
-    ...overrides
-  }
+const row = {
+  id: 'customer-1',
+  userId: 'user-1',
+  organizationId: null,
+  provider: 'stripe',
+  externalId: 'cus_1',
+  createdAt: new Date(),
+  updatedAt: new Date()
 }
-
-describe('Billing owner rollout matrix', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    rolloutEnv.BILLING_OWNER_V2_DUAL_WRITE = false
-    rolloutEnv.BILLING_OWNER_V2_SHADOW_READ = false
-    rolloutEnv.BILLING_OWNER_V2_READ = false
-    rolloutEnv.ORGANIZATION_BILLING_ENABLED = false
-  })
-
-  it('uses legacy reads and writes when every V2 flag is off', async () => {
-    customerFindMany.mockResolvedValue([customerRow()])
-    customerUpsert.mockResolvedValue(customerRow())
-
-    await expect(getBillingCustomers({ kind: 'user', userId: 'user-1' })).resolves.toEqual([
-      expect.objectContaining({
-        referenceId: 'user-1',
-        owner: { kind: 'user', userId: 'user-1' }
-      })
-    ])
-    expect(customerFindMany).toHaveBeenCalledWith({
-      where: { referenceId: 'user-1' },
-      orderBy: { createdAt: 'desc' }
-    })
-
-    await upsertBillingCustomer({
-      owner: { kind: 'user', userId: 'user-1' },
-      provider: 'stripe',
-      externalId: 'cus_legacy'
-    })
-    const upsert = customerUpsert.mock.calls[0]?.[0]
-    expect(upsert.create).toEqual({
-      referenceId: 'user-1',
-      provider: 'stripe',
-      externalId: 'cus_legacy'
-    })
-    expect(upsert.update).toEqual({ referenceId: 'user-1' })
-  })
-
-  it('dual-writes an explicit user owner while retaining referenceId', async () => {
-    rolloutEnv.BILLING_OWNER_V2_DUAL_WRITE = true
-    customerUpsert.mockResolvedValue(customerRow({ userId: 'user-1', id: 'customer-v2' }))
-
-    await upsertBillingCustomer({
-      owner: { kind: 'user', userId: 'user-1' },
-      provider: 'stripe',
-      externalId: 'cus_v2'
-    })
-
-    expect(customerUpsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        create: expect.objectContaining({
-          referenceId: 'user-1',
-          userId: 'user-1',
-          organizationId: null
-        }),
-        update: {
-          referenceId: 'user-1',
-          userId: 'user-1',
-          organizationId: null
-        }
-      })
-    )
-  })
-
-  it('always writes an explicit organization owner', async () => {
-    customerUpsert.mockResolvedValue(
-      customerRow({
-        id: 'customer-organization',
-        referenceId: 'organization-1',
-        organizationId: 'organization-1'
-      })
-    )
-
-    await upsertBillingCustomer({
-      owner: { kind: 'organization', organizationId: 'organization-1' },
-      provider: 'stripe',
-      externalId: 'cus_organization'
-    })
-
-    expect(customerUpsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        create: expect.objectContaining({
-          referenceId: 'organization-1',
-          userId: null,
-          organizationId: 'organization-1'
-        })
-      })
-    )
-  })
-
-  it('shadow-compares both paths but returns legacy rows before V2 read', async () => {
-    rolloutEnv.BILLING_OWNER_V2_DUAL_WRITE = true
-    rolloutEnv.BILLING_OWNER_V2_SHADOW_READ = true
-    const legacy = customerRow()
-    const v2 = customerRow({ id: 'customer-v2', userId: 'user-1' })
-    customerFindMany.mockImplementation(({ where }) =>
-      'referenceId' in where ? Promise.resolve([legacy]) : Promise.resolve([v2])
-    )
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
-
-    await expect(getBillingCustomers({ kind: 'user', userId: 'user-1' })).resolves.toEqual([
-      expect.objectContaining({
-        id: 'customer-legacy',
-        owner: { kind: 'user', userId: 'user-1' }
-      })
-    ])
-    expect(customerFindMany).toHaveBeenCalledTimes(2)
-    expect(consoleError).toHaveBeenCalledWith(
-      'billing owner shadow-read mismatch',
-      expect.objectContaining({
-        legacyCustomerIds: 'customer-legacy',
-        ownerCustomerIds: 'customer-v2'
-      })
-    )
-    consoleError.mockRestore()
-  })
-
-  it('returns explicit-owner rows after V2 read is enabled', async () => {
-    rolloutEnv.BILLING_OWNER_V2_DUAL_WRITE = true
-    rolloutEnv.BILLING_OWNER_V2_SHADOW_READ = true
-    rolloutEnv.BILLING_OWNER_V2_READ = true
-    const row = customerRow({ id: 'customer-v2', userId: 'user-1' })
+describe('billing ownership', () => {
+  beforeEach(() => vi.clearAllMocks())
+  it('queries by explicit user ownership and derives the public reference', async () => {
     customerFindMany.mockResolvedValue([row])
-
-    await expect(getBillingCustomers({ kind: 'user', userId: 'user-1' })).resolves.toEqual([
-      expect.objectContaining({
-        id: 'customer-v2',
-        owner: { kind: 'user', userId: 'user-1' }
-      })
+    await expect(getBillingCustomers({ kind: 'user', userId: 'user-1' }, 'stripe')).resolves.toEqual([
+      expect.objectContaining({ referenceId: 'user-1', owner: { kind: 'user', userId: 'user-1' } })
     ])
     expect(customerFindMany).toHaveBeenCalledWith({
-      where: { userId: 'user-1' },
+      where: { userId: 'user-1', provider: 'stripe' },
+      orderBy: { createdAt: 'desc' }
+    })
+    expect(customerFindMany).toHaveBeenCalledTimes(1)
+  })
+  it('queries organizations separately, even when a user has the same ID', async () => {
+    customerFindMany.mockResolvedValue([{ ...row, userId: null, organizationId: 'user-1' }])
+    await expect(getBillingCustomers({ kind: 'organization', organizationId: 'user-1' })).resolves.toEqual([
+      expect.objectContaining({ owner: { kind: 'organization', organizationId: 'user-1' } })
+    ])
+    expect(customerFindMany).toHaveBeenCalledWith({
+      where: { organizationId: 'user-1' },
       orderBy: { createdAt: 'desc' }
     })
   })
-
-  it('preserves the server-derived owner after loading summary relations', async () => {
-    customerFindMany.mockResolvedValue([
-      {
-        ...customerRow(),
-        subscriptions: [],
-        orders: []
-      }
-    ])
-
+  it.each([
+    { owner: { kind: 'user' as const, userId: 'user-1' }, columns: { userId: 'user-1', organizationId: null } },
+    {
+      owner: { kind: 'organization' as const, organizationId: 'org-1' },
+      columns: { userId: null, organizationId: 'org-1' }
+    }
+  ])('always writes exactly one owner', async ({ owner, columns }) => {
+    customerUpsert.mockResolvedValue({ ...row, ...columns })
+    await upsertBillingCustomer({ owner, provider: 'stripe', externalId: 'cus_1' })
+    expect(customerUpsert).toHaveBeenCalledWith({
+      where: { externalId_provider: { externalId: 'cus_1', provider: 'stripe' } },
+      create: { provider: 'stripe', externalId: 'cus_1', ...columns },
+      update: columns
+    })
+  })
+  it.each([
+    { userId: null, organizationId: null },
+    { userId: 'user-1', organizationId: 'org-1' }
+  ])('rejects invalid ownership instead of guessing', async columns => {
+    customerFindMany.mockResolvedValue([{ ...row, ...columns }])
+    await expect(getBillingCustomers({ kind: 'user', userId: 'user-1' })).rejects.toThrow('exactly one owner')
+  })
+  it('preserves explicit ownership when loading summary relations', async () => {
+    customerFindMany.mockResolvedValue([{ ...row, subscriptions: [], orders: [] }])
     await expect(getBillingSummary({ kind: 'user', userId: 'user-1' })).resolves.toEqual([
-      expect.objectContaining({
-        referenceId: 'user-1',
-        owner: { kind: 'user', userId: 'user-1' }
-      })
+      expect.objectContaining({ owner: { kind: 'user', userId: 'user-1' }, subscriptions: [], orders: [] })
     ])
   })
 })

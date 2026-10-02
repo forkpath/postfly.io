@@ -171,29 +171,24 @@ export const SecondaryNavRenderer = memo<SecondaryNavRendererProps>(({ config, s
   // 判断路径是否激活（精确匹配路由）
   const isActive = useCallback((href: string) => location.pathname === href, [location.pathname])
 
-  const hasStats = config.stats && config.stats.length > 0
-  const hasProgress = !!config.progress
+  const { stats, progress } = config
   const hasQuickAccess = config.quickAccess && config.quickAccess.length > 0
   const hasGroups = config.groups.length > 0
 
   return (
     <div className="flex flex-col gap-6 p-4">
       {/* 统计卡片区域 */}
-      {hasStats && (
+      {stats && stats.length > 0 && (
         <div className="grid grid-cols-2 gap-3">
-          {config.stats!.map((stat, index) => (
+          {stats.map((stat, index) => (
             <StatCard key={index} label={stat.label} value={stat.value} />
           ))}
         </div>
       )}
 
       {/* 进度指示器 */}
-      {hasProgress && (
-        <ProgressIndicator
-          label={config.progress!.label}
-          value={config.progress!.value}
-          description={config.progress!.description}
-        />
+      {progress && (
+        <ProgressIndicator label={progress.label} value={progress.value} description={progress.description} />
       )}
 
       {/* 快捷入口 */}

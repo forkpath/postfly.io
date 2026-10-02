@@ -114,12 +114,12 @@ eas --version
 
 ### 2.1 Apple Developer（iOS 必需）
 
-| 场景 | 是否需要付费账号 ($99/年) |
-|------|--------------------------|
-| iOS **模拟器**开发调试 | 不需要 |
-| iOS **真机**开发调试 | 需要免费 Apple ID（Xcode 自动签名） |
-| TestFlight 内测分发 | **需要**付费账号 |
-| App Store 上架发布 | **需要**付费账号 |
+| 场景                   | 是否需要付费账号 ($99/年)           |
+| ---------------------- | ----------------------------------- |
+| iOS **模拟器**开发调试 | 不需要                              |
+| iOS **真机**开发调试   | 需要免费 Apple ID（Xcode 自动签名） |
+| TestFlight 内测分发    | **需要**付费账号                    |
+| App Store 上架发布     | **需要**付费账号                    |
 
 **免费 Apple ID 真机调试**：Xcode → Settings → Accounts → 添加你的 Apple ID → 在项目签名中选择 Personal Team。限制：每 7 天需重新签名，最多 3 个设备。
 
@@ -201,7 +201,7 @@ pnpm dev                 # = expo start --clear
 pnpm dev:mobile
 
 # 方式 2：直接启动并打开 iOS 模拟器
-pnpm mobile:ios          # = nx run mobile:run-ios
+pnpm dev:mobile:ios      # = nx run mobile:run-ios
 
 # 方式 3：Expo CLI
 cd apps/mobile && npx expo start --ios
@@ -218,7 +218,7 @@ cd apps/mobile && npx expo start --ios
 pnpm dev:mobile
 
 # 方式 2：直接启动
-pnpm mobile:android      # = nx run mobile:run-android
+pnpm dev:mobile:android  # = nx run mobile:run-android
 ```
 
 ### 4.4 真机开发
@@ -296,11 +296,11 @@ pnpm verify:mobile       # = nx run mobile:typecheck && nx run mobile:export
 
 项目通过 `eas.json` 定义了三个构建配置：
 
-| Profile | 用途 | 分发方式 |
-|---------|------|----------|
-| `development` | 开发调试（含 DevTools） | 内部（Ad Hoc / APK） |
-| `preview` | 内测 / QA 测试 | 内部（Ad Hoc / APK） |
-| `production` | 正式发布 | App Store / Google Play |
+| Profile       | 用途                    | 分发方式                |
+| ------------- | ----------------------- | ----------------------- |
+| `development` | 开发调试（含 DevTools） | 内部（Ad Hoc / APK）    |
+| `preview`     | 内测 / QA 测试          | 内部（Ad Hoc / APK）    |
+| `production`  | 正式发布                | App Store / Google Play |
 
 ### 6.1 开发构建（Development Build）
 
@@ -334,10 +334,12 @@ eas build --profile preview --platform android
 用于提交到应用商店的最终构建。
 
 ```bash
-# iOS — 生成 .ipa（App Store 格式）
-eas build --profile production --platform ios
+# 从仓库根目录触发 EAS production 构建
+pnpm release:mobile:ios
+pnpm release:mobile:android
 
-# Android — 生成 .aab（Google Play 格式）
+# 等价的 EAS CLI 命令
+eas build --profile production --platform ios
 eas build --profile production --platform android
 ```
 
@@ -346,23 +348,22 @@ eas build --profile production --platform android
 不依赖 EAS 云端，在本机执行构建（需要完整的原生开发环境）：
 
 ```bash
-# 生成原生项目
+# 从仓库根目录执行本地 Release 构建
+pnpm build:mobile:ios
+pnpm build:mobile:android
+
+# 等价的 Expo CLI 命令（在 apps/mobile 目录执行）
 cd apps/mobile
-npx expo prebuild --clean
-
-# iOS 本地构建
 npx expo run:ios --configuration Release
-
-# Android 本地构建
 npx expo run:android --variant release
 ```
 
 也可通过 Nx：
 
 ```bash
-nx run mobile:prebuild
-nx run mobile:run-ios
-nx run mobile:run-android
+pnpm nx run mobile:prebuild
+pnpm nx run mobile:run-ios:release
+pnpm nx run mobile:run-android:release
 ```
 
 ---
@@ -400,6 +401,7 @@ nx run mobile:submit
 ```
 
 首次提交前需要：
+
 - **iOS**：在 App Store Connect 创建 App 记录（bundleId: `com.ray.mobile`）
 - **Android**：在 Google Play Console 创建应用
 
@@ -409,21 +411,24 @@ nx run mobile:submit
 
 所有命令从 **项目根目录** 执行：
 
-| 操作 | 命令 |
-|------|------|
-| 启动 dev server | `pnpm dev:mobile` |
-| iOS 模拟器运行 | `pnpm mobile:ios` |
-| Android 模拟器运行 | `pnpm mobile:android` |
-| 类型检查 | `nx run mobile:typecheck` |
-| 导出验证 | `nx run mobile:export` |
-| 完整验证 | `pnpm verify:mobile` |
-| 生成原生项目 | `nx run mobile:prebuild` |
-| EAS 开发构建 | `eas build --profile development --platform all` |
-| EAS 生产构建 | `eas build --profile production --platform all` |
-| OTA 更新 | `eas update --branch production --message "描述"` |
-| 提交商店 | `nx run mobile:submit` |
-| 安装依赖 | `pnpm add <pkg> --filter mobile` |
-| 查看项目 targets | `nx show project mobile` |
+| 操作                        | 命令                                              |
+| --------------------------- | ------------------------------------------------- |
+| 启动 dev server             | `pnpm dev:mobile`                                 |
+| iOS 本机开发运行            | `pnpm dev:mobile:ios`                             |
+| Android 本机开发运行        | `pnpm dev:mobile:android`                         |
+| iOS 本机 Release 构建       | `pnpm build:mobile:ios`                           |
+| Android 本机 Release 构建   | `pnpm build:mobile:android`                       |
+| iOS EAS production 构建     | `pnpm release:mobile:ios`                         |
+| Android EAS production 构建 | `pnpm release:mobile:android`                     |
+| 类型检查                    | `pnpm nx run mobile:typecheck`                    |
+| 导出验证                    | `pnpm nx run mobile:export`                       |
+| 完整验证                    | `pnpm verify:mobile`                              |
+| 生成原生项目                | `pnpm nx run mobile:prebuild`                     |
+| EAS 开发构建                | `eas build --profile development --platform all`  |
+| OTA 更新                    | `eas update --branch production --message "描述"` |
+| 提交商店                    | `pnpm nx run mobile:submit`                       |
+| 安装依赖                    | `pnpm add <pkg> --filter mobile`                  |
+| 查看项目 targets            | `pnpm nx show project mobile`                     |
 
 ---
 

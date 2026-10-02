@@ -14,6 +14,8 @@
     "sharedGlobals": [
       "{workspaceRoot}/package.json",
       "{workspaceRoot}/pnpm-lock.yaml",
+      "{workspaceRoot}/pnpm-workspace.yaml",
+      "{workspaceRoot}/patches/**/*.patch",
       "{workspaceRoot}/tsconfig.base.json",
       "{workspaceRoot}/nx.json",
       "{workspaceRoot}/eslint.config.mjs",
@@ -26,6 +28,12 @@
       }
     ],
     "viteBuildEnvironment": [
+      {
+        "env": "VITE_REACT_SCAN_ENABLED"
+      },
+      {
+        "env": "RAY_EXTENSION_E2E"
+      },
       {
         "env": "NODE_ENV"
       },
@@ -106,6 +114,9 @@
       }
     ],
     "expoBuildEnvironment": [
+      {
+        "env": "RAY_MOBILE_E2E"
+      },
       {
         "env": "NODE_ENV"
       },
@@ -190,11 +201,21 @@
       {
         "env": "EXPO_PUBLIC_THEME_MODE"
       }
+    ],
+    "unitTestGlobals": [
+      "{workspaceRoot}/scripts/testing/unit-coverage.mts",
+      "{workspaceRoot}/scripts/testing/unit-coverage-thresholds.json",
+      {
+        "env": "RAY_TEST_COVERAGE"
+      }
     ]
   },
   "targetDefaults": {
     "lint": {
       "cache": true,
+      "options": {
+        "args": ["--max-warnings=0"]
+      },
       "inputs": ["default", "^default"]
     },
     "typecheck": {
@@ -209,7 +230,8 @@
         "^production",
         {
           "env": "CI"
-        }
+        },
+        "unitTestGlobals"
       ],
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     },
@@ -292,7 +314,7 @@
       "options": {
         "testTargetName": "test",
         "ciTargetName": "test-ci",
-        "testMode": "watch"
+        "testMode": "run"
       }
     },
     {

@@ -17,6 +17,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@libs/testing-server": ["libs/testing-server/src/index.ts"],
       "@libs/mongo-dao": ["libs/mongo-dao/src/index.ts"],
       "@libs/pg-dao": ["libs/pg-dao/src/index.ts"],
       "@libs/payload": ["libs/payload/src/index.ts"],
@@ -79,7 +80,11 @@
       "@libs/monitoring-web/env": ["libs/monitoring-web/src/env.ts"],
       "@libs/monitoring-native/env": ["libs/monitoring-native/src/env.ts"],
       "@libs/monitoring-server/env": ["libs/monitoring-server/src/env.ts"]
-    }
+    },
+    "noUncheckedSideEffectImports": false,
+    "types": ["*"],
+    "esModuleInterop": false,
+    "ignoreDeprecations": "6.0"
   },
   "exclude": ["node_modules", "tmp", "build", "dist", ".expo", ".wxt"]
 }

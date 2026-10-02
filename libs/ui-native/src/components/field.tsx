@@ -160,7 +160,7 @@ function FieldError({
       <View className="gap-1">
         {uniqueErrors.map((error, index) => (
           <Text key={index} className="text-destructive text-sm font-normal">
-            {'\u2022 ' + error!.message}
+            {'\u2022 ' + error?.message}
           </Text>
         ))}
       </View>

@@ -6,11 +6,11 @@
 
 ## Tags、使用者与场景
 
-`type:platform` · `runtime:universal` · `domain:platform`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:platform` · `runtime:universal` · `domain:platform`。
 
 跨端调用方需要公共接口时使用；实际 provider 从匹配 runtime 的 -web/-native/-server 选择。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ### 注册顺序
 
@@ -44,4 +44,4 @@ mock adapter，验证 provider 注册、调用转发、缺 provider/重复初始
 
 现有用例示例：[src/lib/provider.spec.tsx](src/lib/provider.spec.tsx)。
 
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。

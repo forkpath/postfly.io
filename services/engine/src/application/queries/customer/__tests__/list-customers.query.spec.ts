@@ -3,6 +3,7 @@ import type { ICustomerRepository } from '../../../../domain/repositories/custom
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { BillingCustomer } from '../../../../domain/entities/customer.entity'
+import { ListCustomersUseCase } from '../../../use-cases/customer/list-customers.usecase'
 import { ListCustomersHandler, ListCustomersQuery } from '../list-customers.query'
 
 vi.mock('#/domain/repositories/customer.repository.interface', () => ({
@@ -14,7 +15,7 @@ describe('ListCustomersHandler', () => {
   const mockRepo = { findAll: vi.fn(), count: vi.fn() }
 
   beforeEach(() => {
-    handler = new ListCustomersHandler(mockRepo as unknown as ICustomerRepository)
+    handler = new ListCustomersHandler(new ListCustomersUseCase(mockRepo as unknown as ICustomerRepository))
     vi.clearAllMocks()
   })
 

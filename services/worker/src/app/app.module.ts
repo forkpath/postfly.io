@@ -29,6 +29,7 @@ const workerConfig = () => ({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      ignoreEnvFile: process.env.NODE_ENV === 'test',
       load: [workerConfig]
     }),
     PgDaoModule.register(),

@@ -6,28 +6,28 @@ Nest WebSocket 服务：Session/token 握手、组织成员校验、Redis 广播
 
 ## Tags、使用者与场景
 
-`type:app` · `runtime:node` · `domain:composition`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:app` · `runtime:node` · `domain:composition`。
 
 受认证 WebSocket 客户端；同组织 room 访问仍须服务端 Member 校验，不能相信任意 organizationId。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
 dev:pulse 用根 .env。app.module 映射 REDIS_HOST/PORT/PASSWORD（Redis 实例，默认 localhost/6379/空）；main 读 PULSE_PORT → PORT → 3001。PLATFORM_SMOKE_ENABLED 仅精确 true 启用测试事件，应由测试负责人设定，生产默认 false。
 
-| 变量                                                                                     | 含义                                              | 何时配置/默认                          | 值从哪里来                                                  |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------- |
-| `POSTGRES_DATABASE_URL`                                                                  | Prisma/pg 连接串（含主机、库名与认证）            | 连接 PG 时必填                         | 管理员提供或由本地 POSTGRES_HOST/PORT/USER/PASSWORD/DB 组合 |
-| `POSGTRES_DATABASE_URL`                                                                  | 旧拼写，只有新变量未设时回退                      | 仅兼容；不要新增依赖                   | 旧部署配置；非生产会告警                                    |
-| `NODE_ENV`                                                                               | 运行模式 development/test/production              | 默认 development                       | 运行命令/部署环境                                           |
-| `BETTER_AUTH_SECRET`                                                                     | 认证签名/加密密钥                                 | 必填，生产使用足够长的随机秘密         | secret manager 生成，不能放客户端                           |
-| `BETTER_AUTH_URL`                                                                        | 认证对外基础 URL                                  | 实际启动应显式填写合法 URL             | 部署域名及认证路由配置                                      |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                                              | Google OAuth 应用 ID/密钥                         | 启用 Google 登录时配置                 | Google Cloud OAuth 应用后台                                 |
-| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`                                              | GitHub OAuth 应用 ID/密钥                         | 启用 GitHub 登录时配置                 | GitHub OAuth App 后台                                       |
-| `AUTH_APPLE_CLIENT_ID` / `AUTH_APPLE_CLIENT_SECRET` / `AUTH_APPLE_APP_BUNDLE_IDENTIFIER` | Apple 服务/应用 ID、签名 client secret、Bundle ID | 启用 Apple 登录时配置                  | Apple Developer；secret 按 Apple 要求生成                   |
-| `SEED_EMAIL` / `SEED_PASSWORD`                                                           | 初始化管理账户                                    | 仅 seed 时配置，禁止用源码默认密码投产 | 受控种子账户，不是普通登录用户输入                          |
-| `NODE_ENV`                                                                               | 影响认证环境行为                                  | 默认 development                       | 进程启动环境                                                |
+| 变量                                                                                     | 含义                                              | 何时配置/默认                    | 值从哪里来                                                  |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------- | -------------------------------- | ----------------------------------------------------------- |
+| `POSTGRES_DATABASE_URL`                                                                  | Prisma/pg 连接串（含主机、库名与认证）            | 连接 PG 时必填                   | 管理员提供或由本地 POSTGRES_HOST/PORT/USER/PASSWORD/DB 组合 |
+| `POSGTRES_DATABASE_URL`                                                                  | 旧拼写，只有新变量未设时回退                      | 仅兼容；不要新增依赖             | 旧部署配置；非生产会告警                                    |
+| `NODE_ENV`                                                                               | 运行模式 development/test/production              | 默认 development                 | 运行命令/部署环境                                           |
+| `BETTER_AUTH_SECRET`                                                                     | 认证签名/加密密钥                                 | 必填，生产使用足够长的随机秘密   | secret manager 生成，不能放客户端                           |
+| `BETTER_AUTH_URL`                                                                        | 认证对外基础 URL                                  | 实际启动应显式填写合法 URL       | 部署域名及认证路由配置                                      |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                                              | Google OAuth 应用 ID/密钥                         | 启用 Google 登录时配置           | Google Cloud OAuth 应用后台                                 |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`                                              | GitHub OAuth 应用 ID/密钥                         | 启用 GitHub 登录时配置           | GitHub OAuth App 后台                                       |
+| `AUTH_APPLE_CLIENT_ID` / `AUTH_APPLE_CLIENT_SECRET` / `AUTH_APPLE_APP_BUNDLE_IDENTIFIER` | Apple 服务/应用 ID、签名 client secret、Bundle ID | 启用 Apple 登录时配置            | Apple Developer；secret 按 Apple 要求生成                   |
+| `SEED_EMAIL` / `SEED_PASSWORD`                                                           | 初始化管理账户                                    | 仅 seed 时必填，密码至少 12 字符 | 受控种子账户，不是普通登录用户输入                          |
+| `NODE_ENV`                                                                               | 影响认证环境行为                                  | 默认 development                 | 进程启动环境                                                |
 
 依赖配置：[email-server](../../libs/email-server/README.md)。只在实际启用对应路径时提供厂商配置，不把服务端密钥放到客户端。
 
@@ -59,10 +59,17 @@ pnpm nx run pulse:test --run
 
 现有用例示例：[src/app/pulse.gateway.spec.ts](src/app/pulse.gateway.spec.ts)。
 
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。
 
-## E2E：运行与编写
+## 集成与 E2E：运行与编写
 
-现有 `node scripts/release/pulse-smoke-test.mjs` 需要 ENGINE_SMOKE_BASE_URL、SMOKE_EMAIL/SMOKE_PASSWORD、可选 SMOKE_ORGANIZATION_ID。脚本 WebSocket 地址固定 ws://127.0.0.1:3001/ws，须在对应网络命名空间运行，不能靠 Engine URL 改 WS 地址。完整拒绝/过期/跨组织/多实例场景尚待新增；见测试指南。
+```sh
+pnpm nx run pulse:test-integration
+pnpm nx run pulse:e2e
+```
 
-所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#其他应用服务-e2e)。
+真实 WebSocket 套件验证握手身份、协议拒绝、组织权限、双实例 Redis 分发、drain、成员移除与会话撤销；集成套件验证真实 Redis 数据与过期。无需生产账户，不能用单进程 mock 代替这些跨网络断言。
+
+需要可运行 Linux 容器的 Docker / Compose v2。入口自动创建本机隔离环境、迁移和测试数据，完成后保存日志并清理；不会读取开发 `.env` 或连接外部数据库。用例放在 `tests/*.integration.spec.ts` / `tests/*.e2e.spec.ts`，不能直接运行内部 runner 指向开发库。
+
+报告位于 `dist/test-results/pulse/<suite>/<run-id>/`。fixture、失败清理和新增用例说明见 [后端测试指南](../../docs/development/testing-backend.md)，实际结果见 [验收记录](../../docs/development/testing-framework-validation.md)。

@@ -4,6 +4,9 @@ import { PLATFORM_EVENT_DLX, PLATFORM_SMOKE_EVENT } from '@libs/platform-contrac
 
 import { PlatformEventConsumer } from './platform-event.consumer'
 
+// Decorator metadata retains the DI token; unit tests supply an in-memory inbox.
+vi.mock('@libs/pg-dao', () => ({ PrismaService: class {} }))
+
 const envelope = {
   id: 'message-1',
   type: PLATFORM_SMOKE_EVENT,
@@ -19,22 +22,24 @@ describe('PlatformEventConsumer delivery semantics', () => {
   const publish = vi.fn().mockResolvedValue(true)
   const amqp = { managedChannel: { sendToQueue }, publish }
   const inbox = {
-    claim: vi.fn().mockResolvedValue(true),
-    complete: vi.fn().mockResolvedValue(undefined),
-    fail: vi.fn().mockResolvedValue(undefined)
+    claim: vi.fn().mockResolvedValue(1),
+    retryAfter: vi.fn().mockResolvedValue(undefined),
+    complete: vi.fn().mockResolvedValue(true),
+    fail: vi.fn().mockResolvedValue(true)
   }
   const handler = vi.fn().mockResolvedValue(undefined)
   const registry = { resolve: vi.fn().mockReturnValue(handler) }
 
   beforeEach(() => {
     vi.clearAllMocks()
-    inbox.claim.mockResolvedValue(true)
+    inbox.claim.mockResolvedValue(1)
+    inbox.retryAfter.mockResolvedValue(undefined)
     handler.mockResolvedValue(undefined)
     registry.resolve.mockReturnValue(handler)
   })
 
   it('acks a duplicate without executing side effects', async () => {
-    inbox.claim.mockResolvedValue(false)
+    inbox.claim.mockResolvedValue(undefined)
     const consumer = new PlatformEventConsumer(amqp as never, inbox as never, registry as never)
 
     await consumer.consume(envelope, {})
@@ -43,13 +48,22 @@ describe('PlatformEventConsumer delivery semantics', () => {
     expect(inbox.complete).not.toHaveBeenCalled()
   })
 
+  it('propagates a failed delayed handoff so RabbitMQ can requeue the active lease delivery', async () => {
+    inbox.claim.mockResolvedValue(undefined)
+    inbox.retryAfter.mockResolvedValue(2000)
+    sendToQueue.mockRejectedValueOnce(new Error('broker unavailable'))
+    const consumer = new PlatformEventConsumer(amqp as never, inbox as never, registry as never)
+    await expect(consumer.consume(envelope, {})).rejects.toThrow('broker unavailable')
+    expect(handler).not.toHaveBeenCalled()
+  })
+
   it('completes the inbox record only after handler success', async () => {
     const consumer = new PlatformEventConsumer(amqp as never, inbox as never, registry as never)
 
     await consumer.consume(envelope, {})
 
     expect(handler).toHaveBeenCalledWith(envelope)
-    expect(inbox.complete).toHaveBeenCalledWith('worker.platform.v1', envelope.id)
+    expect(inbox.complete).toHaveBeenCalledWith('worker.platform.v1', envelope.id, 1)
   })
 
   it('schedules a persistent retry after a handler failure', async () => {
@@ -58,12 +72,13 @@ describe('PlatformEventConsumer delivery semantics', () => {
 
     await consumer.consume(envelope, { properties: { headers: { 'x-attempt': 1 } } })
 
-    expect(inbox.fail).toHaveBeenCalledWith('worker.platform.v1', envelope.id, 'temporary', true)
+    expect(inbox.fail).toHaveBeenCalledWith('worker.platform.v1', envelope.id, 'temporary', true, 1)
     expect(sendToQueue).toHaveBeenCalledWith(
-      'platform.smoke.retry',
+      expect.stringMatching(/^platform\.smoke\.retry\.(5000|10000)$/),
       expect.any(Buffer),
       expect.objectContaining({ persistent: true, headers: expect.objectContaining({ 'x-attempt': 2 }) })
     )
+    expect(sendToQueue.mock.calls[0][2]).not.toHaveProperty('expiration')
   })
 
   it('moves an exhausted message to the DLQ', async () => {
@@ -72,7 +87,7 @@ describe('PlatformEventConsumer delivery semantics', () => {
 
     await consumer.consume(envelope, { properties: { headers: { 'x-attempt': 5 } } })
 
-    expect(inbox.fail).toHaveBeenCalledWith('worker.platform.v1', envelope.id, 'permanent', false)
+    expect(inbox.fail).toHaveBeenCalledWith('worker.platform.v1', envelope.id, 'permanent', false, 1)
     expect(publish).toHaveBeenCalledWith(
       PLATFORM_EVENT_DLX,
       PLATFORM_SMOKE_EVENT,

@@ -182,7 +182,7 @@ export function SecondaryNavProvider({ children, config, value, quickAccessTitle
     }
   }, [resolvedValue, setSecondaryNav, clearSecondaryNav])
 
-  return <>{children}</>
+  return children
 }
 
 // ============================================================================

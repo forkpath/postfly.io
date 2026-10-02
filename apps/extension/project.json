@@ -28,7 +28,14 @@
     "build-chrome": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": ["production", "^production", "viteBuildEnvironment", { "externalDependencies": ["wxt"] }],
+      "inputs": [
+        "production",
+        "^production",
+        "viteBuildEnvironment",
+        {
+          "externalDependencies": ["wxt"]
+        }
+      ],
       "outputs": ["{projectRoot}/build", "{projectRoot}/.output"],
       "options": {
         "command": "wxt zip",
@@ -39,7 +46,14 @@
     "build-firefox": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": ["production", "^production", "viteBuildEnvironment", { "externalDependencies": ["wxt"] }],
+      "inputs": [
+        "production",
+        "^production",
+        "viteBuildEnvironment",
+        {
+          "externalDependencies": ["wxt"]
+        }
+      ],
       "outputs": ["{projectRoot}/build", "{projectRoot}/.output"],
       "options": {
         "command": "wxt zip -b firefox",
@@ -51,6 +65,60 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "tsc --noEmit",
+        "cwd": "apps/extension"
+      }
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["build-chrome"],
+      "options": {
+        "command": "node scripts/smoke.mjs",
+        "cwd": "apps/extension"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/test-results/extension/unit", "{workspaceRoot}/coverage/apps/extension"],
+      "options": {
+        "command": "vitest run --config vitest.config.mts",
+        "cwd": "apps/extension"
+      }
+    },
+    "typecheck-tests": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.spec.json",
+        "cwd": "apps/extension"
+      }
+    },
+    "build-e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node scripts/build-e2e.mjs",
+        "cwd": "apps/extension"
+      }
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["build-e2e"],
+      "outputs": ["{workspaceRoot}/dist/test-results/extension/e2e"],
+      "options": {
+        "command": "playwright test --config playwright.config.mts",
+        "cwd": "apps/extension"
+      }
+    },
+    "e2e-artifact": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": ["{workspaceRoot}/dist/test-results/extension/e2e"],
+      "options": {
+        "command": "node scripts/test-artifact.mjs",
         "cwd": "apps/extension"
       }
     }

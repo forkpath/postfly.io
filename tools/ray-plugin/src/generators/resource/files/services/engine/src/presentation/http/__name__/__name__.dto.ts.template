@@ -1,0 +1,9 @@
+import { createZodDto } from 'nestjs-zod'
+import { <%= propertyName %>CreateSchema, <%= propertyName %>UpdateSchema, <%= propertyName %>ListSchema,
+  <%= propertyName %>ParamsSchema, <%= propertyName %>OwnerSchema } from '@libs/payload'
+
+export class Create<%= className %>Dto extends createZodDto(<%= propertyName %>CreateSchema) {}
+export class Update<%= className %>Dto extends createZodDto(<%= propertyName %>UpdateSchema) {}
+export class List<%= className %>Dto extends createZodDto(<%= propertyName %>ListSchema) {}
+export class <%= className %>ParamsDto extends createZodDto(<%= propertyName %>ParamsSchema) {}
+export class <%= className %>OwnerDto extends createZodDto(<%= propertyName %>OwnerSchema) {}

@@ -1,0 +1,60 @@
+import { describe, expect, it, vi } from 'vitest'
+import type { <%= className %>Repository } from '../../../domain/<%= name %>/<%= name %>.repository'
+import { <%= className %>UseCases } from './<%= name %>.use-cases'
+
+function fixture() {
+  const repository: <%= className %>Repository = {
+    create: vi.fn(async () => undefined), find: vi.fn(async () => null),
+    list: vi.fn(async () => ({ items: [], total: 0 })), update: vi.fn(async () => false), remove: vi.fn(async () => false)
+  }
+  const access = { authorize: vi.fn(async () => undefined) }
+  const now = new Date('2026-01-01T00:00:00Z')
+  const useCases = new <%= className %>UseCases(repository, access, () => 'resource-id', () => now)
+  const scope = { userId: 'actor', ownerId: 'owner' }
+  return { repository, access, now, useCases, scope }
+}
+
+describe('<%= className %> use cases', () => {
+  it('persists normalized state with server-selected ownership and injected time/id', async () => {
+    const { repository, access, now, useCases, scope } = fixture()
+    const result = await useCases.create(scope, { title: ' First ' })
+    expect(access.authorize).toHaveBeenCalledWith(scope, 'write')
+    expect(repository.create).toHaveBeenCalledWith({ id: 'resource-id', ownerId: 'owner', title: 'First', description: null, createdAt: now, updatedAt: now })
+    expect(result.title).toBe('First')
+  })
+  it('checks access before every read/write and performs no persistence on denial', async () => {
+    const { repository, access, useCases, scope } = fixture()
+    access.authorize.mockRejectedValue(new Error('denied'))
+    for (const operation of [() => useCases.create(scope, { title: 'x' }), () => useCases.get(scope, 'id'),
+      () => useCases.list(scope, 1, 20), () => useCases.update(scope, 'id', { title: 'x' }), () => useCases.remove(scope, 'id')]) {
+      await expect(operation()).rejects.toThrow('denied')
+    }
+    for (const method of Object.values(repository)) expect(method).not.toHaveBeenCalled()
+  })
+  it('bounds pagination and treats missing scoped records as not found', async () => {
+    const { repository, useCases, scope } = fixture()
+    await expect(useCases.list(scope, 0, 20)).rejects.toMatchObject({ code: 'invalid' })
+    await expect(useCases.list(scope, 1, 101)).rejects.toMatchObject({ code: 'invalid' })
+    expect(repository.list).not.toHaveBeenCalled()
+    await expect(useCases.get(scope, 'other-owner-record')).rejects.toMatchObject({ code: 'not_found' })
+    expect(repository.find).toHaveBeenCalledWith('owner', 'other-owner-record')
+    await expect(useCases.update(scope, 'missing', { title: 'x' })).rejects.toMatchObject({ code: 'not_found' })
+    expect(repository.update).not.toHaveBeenCalled()
+    await expect(useCases.remove(scope, 'missing')).rejects.toMatchObject({ code: 'not_found' })
+  })
+  it('preserves ownership and creation time, and rejects a record deleted during an edit', async () => {
+    const { repository, useCases, scope, now } = fixture()
+    const record = { id: 'record', ownerId: scope.ownerId, title: 'Old', description: 'Keep',
+      createdAt: new Date('2025-01-01T00:00:00Z'), updatedAt: new Date('2025-01-01T00:00:00Z') }
+    vi.mocked(repository.find).mockResolvedValue(record)
+    vi.mocked(repository.update).mockResolvedValueOnce(true)
+    expect(await useCases.update(scope, record.id, { title: ' New ' })).toEqual({ ...record, title: 'New', updatedAt: now })
+    expect(repository.update).toHaveBeenCalledWith(scope.ownerId, { ...record, title: 'New', updatedAt: now })
+    await expect(useCases.update(scope, record.id, { description: null })).rejects.toMatchObject({ code: 'not_found' })
+  })
+  it('does not report success when persistence fails', async () => {
+    const { repository, useCases, scope } = fixture()
+    vi.mocked(repository.create).mockRejectedValue(new Error('database unavailable'))
+    await expect(useCases.create(scope, { title: 'Valid' })).rejects.toThrow('database unavailable')
+  })
+})

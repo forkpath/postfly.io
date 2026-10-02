@@ -1,4 +1,4 @@
-import type { Route } from 'expo-router'
+import type { RoutePath } from 'expo-router'
 
 import { memo } from 'react'
 import { useMutation } from '@tanstack/react-query'
@@ -17,7 +17,7 @@ import { Button, Checkbox, Field, FieldError, FieldLabel, Icons, Input, Spin, Te
 import { auth } from '../../lib/api'
 
 interface PasswordLoginFormProps {
-  readonly redirectTo?: Route
+  readonly redirectTo?: RoutePath
   readonly email?: string
   readonly onTwoFactorRedirect?: () => void
 }
@@ -58,6 +58,7 @@ export const PasswordLoginForm = memo<PasswordLoginFormProps>(
                 {...field}
                 onChangeText={field.onChange}
                 autoCapitalize="none"
+                testID="login-email"
                 autoComplete="email"
                 inputMode="email"
                 keyboardType="email-address"
@@ -78,6 +79,7 @@ export const PasswordLoginForm = memo<PasswordLoginFormProps>(
               <View className="flex-row items-center justify-between">
                 <FieldLabel>{t('password')}</FieldLabel>
                 <Link
+                  testID="login-forgot-password"
                   href={pathsConfig.setup.auth.forgotPassword}
                   className="text-muted-foreground self-end font-sans text-sm underline underline-offset-4"
                 >

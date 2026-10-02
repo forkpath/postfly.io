@@ -1,7 +1,7 @@
 import { createClient } from '@libs/auth-client-web'
 import { ExecutionSide, Platform } from '@libs/common'
 
-// 在开发和预览环境中，如果需要直接连接到后端服务，可以设置 VITE_API_BASE_URL
+// 在开发和预览环境中，如果需要直接连接到后端服务，可以设置 VITE_API_ENDPOINT
 const baseURL = import.meta.env?.VITE_API_ENDPOINT as string | undefined
 
 /**

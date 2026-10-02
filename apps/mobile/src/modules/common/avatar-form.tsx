@@ -112,8 +112,7 @@ const useAvatarFormContext = () => {
 
 const AvatarForm = ({ id, image, update, children }: AvatarFormProps & { children: React.ReactNode }) => {
   const [previewUrl, setPreviewUrl] = useState(image ?? null)
-  const _avatarSchema = useAvatarFormSchema()
-  const form = useForm<z.infer<typeof _avatarSchema>>()
+  const form = useForm<z.infer<ReturnType<typeof useAvatarFormSchema>>>()
 
   const value = useMemo(
     () => ({ id, image, update, previewUrl, setPreviewUrl }),
@@ -212,8 +211,7 @@ const AvatarFormPreview = ({
   ...props
 }: React.ComponentProps<typeof Avatar> & { fallback?: React.ReactNode }) => {
   const { previewUrl } = useAvatarFormContext()
-  const _avatarSchema = useAvatarFormSchema()
-  const { formState } = useFormContext<z.infer<typeof _avatarSchema>>()
+  const { formState } = useFormContext<z.infer<ReturnType<typeof useAvatarFormSchema>>>()
 
   const mutationStatuses = useMutationState({
     filters: {
@@ -296,8 +294,7 @@ const AvatarFormRemoveButton = ({
 }
 
 const AvatarFormErrorMessage = ({ className, ...props }: React.ComponentProps<typeof Text>) => {
-  const _avatarSchema = useAvatarFormSchema()
-  const { formState } = useFormContext<z.infer<typeof _avatarSchema>>()
+  const { formState } = useFormContext<z.infer<ReturnType<typeof useAvatarFormSchema>>>()
 
   if (!formState.errors.avatar) {
     return null

@@ -1,4 +1,4 @@
-import type { Route } from 'expo-router'
+import type { RoutePath } from 'expo-router'
 
 import { SecondFactor } from '@libs/auth-contract'
 
@@ -6,7 +6,7 @@ import { BackupCodeCta, BackupCodeForm } from './backup-code'
 import { TotpCta, TotpForm } from './totp'
 
 export interface FormProps {
-  readonly redirectTo?: Route
+  readonly redirectTo?: RoutePath
 }
 
 export interface CtaProps {

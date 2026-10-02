@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -28,6 +28,7 @@ function walkCodeFiles(directory, files = []) {
   for (const entry of readdirSync(directory)) {
     if (
       [
+        '.cache',
         '.expo',
         '.git',
         '.nx',
@@ -36,6 +37,7 @@ function walkCodeFiles(directory, files = []) {
         '.wxt',
         'artifacts',
         'build',
+        'build-e2e',
         'coverage',
         'dist',
         'generated',
@@ -63,6 +65,7 @@ function walkTsConfigFiles(directory, files = []) {
   for (const entry of readdirSync(directory)) {
     if (
       [
+        '.cache',
         '.expo',
         '.git',
         '.nx',
@@ -71,6 +74,7 @@ function walkTsConfigFiles(directory, files = []) {
         '.wxt',
         'artifacts',
         'build',
+        'build-e2e',
         'coverage',
         'dist',
         'generated',
@@ -172,6 +176,23 @@ function verifyProjectGraph(graph) {
     const targets = node.data.targets ?? {}
     if (!targets.lint) fail(`${node.name} has source code but no lint target`)
     if (!targets.typecheck) fail(`${node.name} has source code but no typecheck target`)
+
+    const unitConfigPath = join(workspaceRoot, node.data.root, 'vitest.config.mts')
+    if (existsSync(unitConfigPath)) {
+      if (!targets.test?.inputs?.includes('unitTestGlobals')) {
+        fail(`${node.name}:test must hash unitTestGlobals (coverage policy and mode)`)
+      }
+      const config = readFileSync(unitConfigPath, 'utf8')
+      if (!config.includes(`unitCoverage('${node.data.root}')`)) {
+        fail(`${node.name} must apply the shared unit coverage policy`)
+      }
+      const threshold = readJson('scripts/testing/unit-coverage-thresholds.json')[node.data.root]
+      for (const metric of ['statements', 'branches', 'functions', 'lines']) {
+        if (!Number.isFinite(threshold?.[metric]) || threshold[metric] <= 0 || threshold[metric] > 100) {
+          fail(`${node.name} needs a positive ${metric} coverage threshold`)
+        }
+      }
+    }
 
     const tags = node.data.tags ?? []
     for (const dimension of ['domain:', 'runtime:', 'type:']) {
@@ -304,16 +325,26 @@ verifyNoWildcardLibraryPaths()
 const workflowActionReferences = verifyWorkflowActionPins()
 const sharedRuntime = runtimeCommands(nx.namedInputs?.sharedGlobals ?? [])
 
+const unitTestGlobals = nx.namedInputs?.unitTestGlobals ?? []
+for (const file of ['unit-coverage.mts', 'unit-coverage-thresholds.json']) {
+  if (!unitTestGlobals.includes(`{workspaceRoot}/scripts/testing/${file}`))
+    fail(`Coverage policy ${file} is not hashed`)
+}
+if (!envNames(unitTestGlobals).has('RAY_TEST_COVERAGE')) fail('Coverage mode is not hashed')
+const ciWorkflow = readFileSync(join(workspaceRoot, '.github/workflows/ci.yml'), 'utf8')
+if (!/^      RAY_TEST_COVERAGE: 'true'$/m.test(ciWorkflow)) fail('CI must enable unit coverage')
+
 for (const command of ['node --version', `node -p "process.platform + '-' + process.arch"`]) {
   if (!sharedRuntime.has(command)) fail(`sharedGlobals does not hash runtime input: ${command}`)
 }
 
 const viteEnvironment = requireNamedInput(nx, 'viteBuildEnvironment', publicEnvironment.vite)
 const expoEnvironment = requireNamedInput(nx, 'expoBuildEnvironment', publicEnvironment.expo)
-for (const variable of ['MODE', 'NODE_ENV']) {
+for (const variable of ['MODE', 'NODE_ENV', 'RAY_EXTENSION_E2E']) {
   if (!viteEnvironment.has(variable)) fail(`viteBuildEnvironment does not hash ${variable}`)
 }
 if (!expoEnvironment.has('NODE_ENV')) fail('expoBuildEnvironment does not hash NODE_ENV')
+if (!expoEnvironment.has('RAY_MOBILE_E2E')) fail('expoBuildEnvironment does not hash RAY_MOBILE_E2E')
 
 const web = readJson('apps/web/project.json')
 const desktop = readJson('apps/desktop/project.json')
@@ -329,19 +360,7 @@ requireTargetInput(extension, 'build-chrome', 'viteBuildEnvironment')
 requireTargetInput(extension, 'build-firefox', 'viteBuildEnvironment')
 requireTargetInput(mobile, 'export', 'expoBuildEnvironment')
 
-for (const target of [
-  'backfill-billing-owner',
-  'deploy',
-  'format',
-  'historical-migration-test',
-  'migrate',
-  'migration-test',
-  'prisma',
-  'push',
-  'reset',
-  'seed',
-  'studio'
-]) {
+for (const target of ['deploy', 'format', 'migrate', 'prisma', 'push', 'reset', 'seed', 'studio']) {
   requireCacheDisabled(nx, pgDao, target)
 }
 for (const target of ['package', 'release']) requireCacheDisabled(nx, desktop, target)

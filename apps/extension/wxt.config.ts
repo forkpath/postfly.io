@@ -13,6 +13,9 @@ import { APP_NAME } from '../../libs/common/src/constants/brand'
 
 const workspaceRoot = fileURLToPath(new URL('../../', import.meta.url))
 const srcRoot = fileURLToPath(new URL('./src', import.meta.url))
+const isE2E = process.env.RAY_EXTENSION_E2E === '1'
+// WXT calls prepare a build internally, but generating types needs no endpoints.
+const isPrepare = process.argv.slice(2).includes('prepare')
 
 const getWxtMode = () => {
   const explicitMode = process.env.MODE ?? process.env.NODE_ENV
@@ -29,7 +32,20 @@ const getWxtMode = () => {
  *
  * extension 自身目录不放 .env —— 仅根目录一处，便于维护。
  */
-const loadRootEnv = (mode: string) => loadEnv(mode, workspaceRoot, '')
+const loadRootEnv = (mode: string) =>
+  isPrepare
+    ? {}
+    : isE2E
+      ? {
+          VITE_URL: 'http://127.0.0.1:4178',
+          VITE_API_BASE_URL: 'http://127.0.0.1:4178',
+          VITE_DEFAULT_LOCALE: 'en',
+          VITE_ANALYTICS_PROVIDER: 'posthog',
+          VITE_MONITORING_PROVIDER: 'sentry',
+          VITE_THEME_MODE: 'system',
+          VITE_THEME_COLOR: 'orange'
+        }
+      : loadEnv(mode, workspaceRoot, '')
 
 Object.assign(process.env, loadRootEnv(getWxtMode()))
 
@@ -48,11 +64,19 @@ export default defineConfig({
       url: env.VITE_URL
     }
 
+    if (!isPrepare && !isDev && (!appConfig.apiBaseUrl || !appConfig.url)) {
+      throw new Error(
+        'Extension build requires VITE_API_BASE_URL and VITE_URL. Use extension:e2e for an isolated test build.'
+      )
+    }
+
     // 开发环境使用 <all_urls> 方便调试；
     // 生产构建从 env 中的 API / 站点地址派生最小权限，降低商店审核风险
-    const hostPermissions: string[] = isDev
-      ? ['<all_urls>']
-      : [`${new URL(appConfig.apiBaseUrl).origin}/*`, `${new URL(appConfig.url).origin}/*`]
+    const hostPermissions: string[] = isPrepare
+      ? []
+      : isDev
+        ? ['<all_urls>']
+        : [`${new URL(appConfig.apiBaseUrl).origin}/*`, `${new URL(appConfig.url).origin}/*`]
 
     return {
       name: appConfig.name,
@@ -76,12 +100,18 @@ export default defineConfig({
   // WXT 入口点目录，包含 background/popup/content 等
   entrypointsDir: 'app',
   // 扩展构建输出目录
-  outDir: 'build',
+  outDir: isE2E ? 'build-e2e' : 'build',
   // 启用 React 支持和自动图标生成
   modules: ['@wxt-dev/module-react', '@wxt-dev/auto-icons'],
   // 关闭 WXT 自动导入，避免和 monorepo 里的显式导入习惯冲突
   imports: false,
   vite: () => ({
+    envDir: isE2E ? false : undefined,
+    // Chromium rejects raw Unicode noncharacters (e.g. transliteration's
+    // U+10FFFF sentinel) in content scripts. Vite 8's pinned Oxc emits it raw;
+    // esbuild's ASCII output preserves the value as an accepted JS escape.
+    build: { minify: 'esbuild' },
+    esbuild: { charset: 'ascii' },
     // 复用 monorepo 的路径别名、Tailwind 和 SVG React 组件能力
     plugins: [
       tailwindcss(),

@@ -1,3 +1,5 @@
+import type { IOrganizationRepository } from '#/domain/repositories/organization.repository.interface'
+
 import { Module } from '@nestjs/common'
 import { CqrsModule } from '@nestjs/cqrs'
 
@@ -15,6 +17,7 @@ import { ListOrganizationsHandler } from '#/application/queries/organization/lis
 import { ListUserOrganizationInvitationsHandler } from '#/application/queries/organization/list-user-organization-invitations.query'
 import { ListUserOrganizationMembersHandler } from '#/application/queries/organization/list-user-organization-members.query'
 import { UserOrganizationAccessService } from '#/application/services/user-organization-access.service'
+import { ListOrganizationsUseCase } from '#/application/use-cases/organization/list-organizations.usecase'
 import { ORGANIZATION_REPOSITORY } from '#/domain/repositories/organization.repository.interface'
 import { OrganizationRepository } from '#/infrastructure/repositories/organization.repository'
 
@@ -44,6 +47,11 @@ const CommandHandlers = [
   imports: [CqrsModule],
   controllers: [OrganizationController, UserOrganizationController],
   providers: [
+    {
+      provide: ListOrganizationsUseCase,
+      useFactory: (repository: IOrganizationRepository) => new ListOrganizationsUseCase(repository),
+      inject: [ORGANIZATION_REPOSITORY]
+    },
     {
       provide: ORGANIZATION_REPOSITORY,
       useClass: OrganizationRepository

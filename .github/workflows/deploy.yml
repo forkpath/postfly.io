@@ -1,43 +1,105 @@
-name: Immutable Production Release
+name: Deploy Ray
 
 on:
   push:
-    tags: ['v*']
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+      commit:
+        type: string
+        required: true
+
+permissions:
+  actions: read
+  contents: read
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  NX_DAEMON: 'false'
+  NX_NO_CLOUD: 'true'
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ghcr.io/${{ github.repository }}
-
-permissions:
-  contents: read
-  packages: write
+  RELEASE_ENVIRONMENT: ${{ inputs.environment || 'production' }}
+  RELEASE_COMMIT: ${{ inputs.commit || github.sha }}
 
 concurrency:
-  group: production-release
+  group: deployment-${{ inputs.environment || 'production' }}
   cancel-in-progress: false
 
 jobs:
-  verify-branch:
-    runs-on: ubuntu-latest
+  resolve:
+    if: >-
+      (inputs.environment == 'staging' && github.event_name == 'push' && github.ref == 'refs/heads/dev' && github.workflow == 'CI') ||
+      (inputs.environment == '' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      environment: ${{ steps.target.outputs.environment }}
+      commit: ${{ steps.target.outputs.commit }}
+      prefix: ${{ steps.target.outputs.prefix }}
+      engine: ${{ steps.receipt.outputs.engine }}
+      web: ${{ steps.receipt.outputs.web }}
+      pulse: ${{ steps.receipt.outputs.pulse }}
+      worker: ${{ steps.receipt.outputs.worker }}
+      migrator: ${{ steps.receipt.outputs.migrator }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          fetch-depth: 0
-      - name: Ensure production tag belongs to main
-        shell: bash
-        run: |
-          set -euo pipefail
-          git fetch origin main --depth=1
-          tag_commit="$(git rev-list -n 1 "$GITHUB_REF")"
-          git merge-base --is-ancestor "$tag_commit" FETCH_HEAD
+          ref: ${{ inputs.commit || github.sha }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.1
+      - name: Verify branch and locate the exact successful staging run
+        id: target
+        run: node scripts/release/promotion.mjs resolve
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        if: steps.target.outputs.environment == 'production'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.target.outputs.source_run }}
+          artifact-ids: ${{ steps.target.outputs.artifact_id }}
+          merge-multiple: true
+          path: dist/release
+      - name: Verify immutable image references and receipt identity
+        if: steps.target.outputs.environment == 'production'
+        id: receipt
+        run: node scripts/release/promotion.mjs validate
+        env:
+          SOURCE_RUN_ID: ${{ steps.target.outputs.source_run }}
+          SOURCE_RUN_ATTEMPT: ${{ steps.target.outputs.source_attempt }}
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+        if: steps.target.outputs.environment == 'production'
+        with:
+          run_install: false
+      - name: Check for newly disclosed dependency issues before promotion
+        if: steps.target.outputs.environment == 'production'
+        run: node scripts/ci/audit-dependencies.mjs production-dependency-audit.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && steps.target.outputs.environment == 'production'
+        with:
+          name: production-dependency-audit
+          path: |
+            production-dependency-audit.json
+            production-dependency-audit-evaluation.json
+          retention-days: 7
+          if-no-files-found: warn
 
   build-and-push:
-    needs: verify-branch
-    runs-on: ubuntu-latest
+    needs: resolve
+    if: needs.resolve.outputs.environment == 'staging'
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-24.04
     services:
       postgres:
-        image: postgres:17@sha256:7958605b474b3d264a969cb3a123d6aa00ad1e1fe9da8a69984dabb704d93317
+        image: docker.io/library/postgres:17@sha256:2203e6282d9e7de7c24d7da234e2a744fb325df366a3fd8ed940e8abbee39527
         env:
           POSTGRES_USER: ray_release
           POSTGRES_PASSWORD: ray_release_password
@@ -50,49 +112,51 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
+      IMAGE_PREFIX: ${{ needs.resolve.outputs.prefix }}
       POSTGRES_DATABASE_URL: postgresql://ray_release:ray_release_password@127.0.0.1:5432/ray_release
+      VITE_URL: ${{ vars.BUILD_PUBLIC_ORIGIN }}
+      VITE_API_BASE_URL: ${{ vars.BUILD_PUBLIC_ORIGIN }}
+      CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
     outputs:
-      engine: ${{ steps.engine.outputs.digest }}
-      web: ${{ steps.web.outputs.digest }}
-      pulse: ${{ steps.pulse.outputs.digest }}
-      worker: ${{ steps.worker.outputs.digest }}
-      migrator: ${{ steps.migrator.outputs.digest }}
+      engine: ${{ needs.resolve.outputs.prefix }}/engine@${{ steps.publish.outputs.engine }}
+      web: ${{ needs.resolve.outputs.prefix }}/web@${{ steps.publish.outputs.web }}
+      pulse: ${{ needs.resolve.outputs.prefix }}/pulse@${{ steps.publish.outputs.pulse }}
+      worker: ${{ needs.resolve.outputs.prefix }}/worker@${{ steps.publish.outputs.worker }}
+      migrator: ${{ needs.resolve.outputs.prefix }}/migrator@${{ steps.publish.outputs.migrator }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+      - name: Reserve disk space for the five verified release images
+        if: runner.environment == 'github-hosted' && runner.os == 'Linux'
+        run: |
+          df -h /
+          # This disposable Linux release runner only needs Node and Docker.
+          # Keep Docker images/volumes, pnpm caches, and the checked-out files.
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/lib/android /opt/hostedtoolcache/CodeQL
+          df -h /
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
-          version: 10.25.0
+          run_install: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24.14.1
           cache: pnpm
+      - name: Check public build configuration
+        run: |
+          test -n "$VITE_URL" || { echo 'Set the BUILD_PUBLIC_ORIGIN repository variable'; exit 1; }
+          test -n "$CONTACT_EMAIL" || { echo 'Set the CONTACT_EMAIL repository variable'; exit 1; }
       - run: pnpm install --frozen-lockfile
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install --yes postgresql-client
-      - name: Verify migrations from an empty PostgreSQL 17 database
-        run: pnpm nx run pg-dao:migration-test --skipNxCache
-      - name: Create disposable historical-upgrade database
-        env:
-          PGPASSWORD: ray_release_password
-        run: createdb --host 127.0.0.1 --username ray_release ray_release_history
-      - name: Verify historical schema upgrade and resumable backfill
-        env:
-          POSTGRES_DATABASE_URL: postgresql://ray_release:ray_release_password@127.0.0.1:5432/ray_release_history
-        run: pnpm nx run pg-dao:historical-migration-test --skipNxCache
-      - name: Full release verification
-        run: pnpm nx run-many -t lint,typecheck,test,build --all
+      - name: Initialize a fresh database
+        run: pnpm nx run pg-dao:deploy
+      - name: Build using the release configuration
+        run: pnpm nx run-many -t build -p web,engine,pulse,worker --nxBail
       - name: Validate database and auth contracts
         run: pnpm nx run-many -t validate,schema-check -p pg-dao,auth-server --nxBail
       - name: Prove Prisma generation does not mutate the auth contract
         run: |
           pnpm nx run pg-dao:generate
           git diff --exit-code -- libs/pg-dao/src/models/auth.prisma
-      - name: Validate immutable release migration intent
-        run: |
-          node --test scripts/release/migration-policy.test.mjs
-          node scripts/release/check-migration-policy.mjs --mode=static
       - name: Prepare server runtime artifacts
         run: pnpm nx run-many -t package -p engine,pulse,worker
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
@@ -106,76 +170,155 @@ jobs:
         with:
           context: .
           file: docker/engine.Dockerfile
-          push: true
+          load: true
           tags: ${{ env.IMAGE_PREFIX }}/engine:${{ github.sha }}
+          cache-from: type=gha,scope=ray-engine
+          cache-to: type=gha,mode=max,scope=ray-engine
       - id: web
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           file: docker/web.Dockerfile
-          push: true
+          load: true
           tags: ${{ env.IMAGE_PREFIX }}/web:${{ github.sha }}
+          cache-from: type=gha,scope=ray-web
+          cache-to: type=gha,mode=max,scope=ray-web
       - id: pulse
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           file: docker/pulse.Dockerfile
-          push: true
+          load: true
           tags: ${{ env.IMAGE_PREFIX }}/pulse:${{ github.sha }}
+          cache-from: type=gha,scope=ray-pulse
+          cache-to: type=gha,mode=max,scope=ray-pulse
       - id: worker
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           file: docker/worker.Dockerfile
-          push: true
+          load: true
           tags: ${{ env.IMAGE_PREFIX }}/worker:${{ github.sha }}
+          cache-from: type=gha,scope=ray-worker
+          cache-to: type=gha,mode=max,scope=ray-worker
       - id: migrator
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           file: docker/migrator.Dockerfile
-          push: true
+          load: true
           tags: ${{ env.IMAGE_PREFIX }}/migrator:${{ github.sha }}
+          cache-from: type=gha,scope=ray-migrator
+          cache-to: type=gha,mode=max,scope=ray-migrator
+
+      - name: Report release image disk usage
+        if: always()
+        run: |
+          df -h /
+          docker system df
+
+      - name: Run the exact release images with isolated infrastructure
+        id: verify-images
+        run: node scripts/testing/run-backend.mjs release artifact
+        env:
+          RAY_RELEASE_IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          RAY_RELEASE_IMAGE_TAG: ${{ github.sha }}
+      - name: Publish only the tested images
+        id: publish
+        run: node scripts/release/publish-verified-images.mjs
+        env:
+          VERIFIED_IMAGE_REPORT: ${{ steps.verify-images.outputs.report }}
+          RAY_RELEASE_IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          RAY_RELEASE_IMAGE_TAG: ${{ github.sha }}
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: release-image-verification
+          path: dist/test-results/release
+          if-no-files-found: warn
 
   deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    environment: production
+    needs: [resolve, build-and-push]
+    if: >-
+      always() && needs.resolve.result == 'success' &&
+      (needs.build-and-push.result == 'success' ||
+      (needs.resolve.outputs.environment == 'production' && needs.build-and-push.result == 'skipped'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    environment:
+      name: ${{ needs.resolve.outputs.environment }}
+      url: ${{ vars.PUBLIC_ORIGIN }}
+    env:
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/opt/ray' }}
+      DEPLOY_PORT: ${{ vars.DEPLOY_PORT || 22 }}
+      DEPLOY_HOST_FINGERPRINT: ${{ vars.DEPLOY_HOST_FINGERPRINT }}
+      PUBLIC_ORIGIN: ${{ vars.PUBLIC_ORIGIN }}
+      ENGINE_IMAGE: ${{ needs.build-and-push.outputs.engine || needs.resolve.outputs.engine }}
+      WEB_IMAGE: ${{ needs.build-and-push.outputs.web || needs.resolve.outputs.web }}
+      PULSE_IMAGE: ${{ needs.build-and-push.outputs.pulse || needs.resolve.outputs.pulse }}
+      WORKER_IMAGE: ${{ needs.build-and-push.outputs.worker || needs.resolve.outputs.worker }}
+      MIGRATOR_IMAGE: ${{ needs.build-and-push.outputs.migrator || needs.resolve.outputs.migrator }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ needs.resolve.outputs.commit }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.1
+      - name: Validate selected environment and SSH host identity
+        run: node scripts/release/promotion.mjs config
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          GHCR_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+      - name: Refuse an obsolete queued deployment
+        run: node scripts/release/promotion.mjs head
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload versioned deployment control files
-        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: ${{ vars.DEPLOY_PORT || 22 }}
-          source: .release/migration-class,docker/docker-compose.app.yml,docker/kong/kong.yml,scripts/release/deploy-blue-green.sh,scripts/release/smoke-test.mjs,scripts/release/pulse-smoke-test.mjs
-          target: ${{ vars.DEPLOY_PATH || '/opt/ray' }}
-      - name: Run migrator, probes, and blue-green switch
-        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1
+          fingerprint: ${{ vars.DEPLOY_HOST_FINGERPRINT }}
+          port: ${{ env.DEPLOY_PORT }}
+          source: docker/docker-compose.infra.yml,docker/docker-compose.app.yml,docker/kong/kong.yml,docker/kong/entrypoint.sh,docker/kong/tls-plugins.yml,docker/mongo/init-db.js,scripts/release/deploy.sh
+          target: ${{ env.DEPLOY_PATH }}
+      - name: Apply schema and start the tested images behind Kong
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2
         env:
-          DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/opt/ray' }}
-          RELEASE_SHA: ${{ github.sha }}
-          RELEASE_OPERATOR: ${{ github.actor }}
-          ENGINE_IMAGE: ${{ env.IMAGE_PREFIX }}/engine@${{ needs.build-and-push.outputs.engine }}
-          WEB_IMAGE: ${{ env.IMAGE_PREFIX }}/web@${{ needs.build-and-push.outputs.web }}
-          PULSE_IMAGE: ${{ env.IMAGE_PREFIX }}/pulse@${{ needs.build-and-push.outputs.pulse }}
-          WORKER_IMAGE: ${{ env.IMAGE_PREFIX }}/worker@${{ needs.build-and-push.outputs.worker }}
-          MIGRATOR_IMAGE: ${{ env.IMAGE_PREFIX }}/migrator@${{ needs.build-and-push.outputs.migrator }}
           GHCR_USER: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
-          SMOKE_EMAIL: ${{ secrets.PRODUCTION_SMOKE_EMAIL }}
-          SMOKE_PASSWORD: ${{ secrets.PRODUCTION_SMOKE_PASSWORD }}
-          SMOKE_ORGANIZATION_ID: ${{ vars.PRODUCTION_SMOKE_ORGANIZATION_ID }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: ${{ vars.DEPLOY_PORT || 22 }}
+          fingerprint: ${{ vars.DEPLOY_HOST_FINGERPRINT }}
+          port: ${{ env.DEPLOY_PORT }}
           command_timeout: 30m
-          envs: DEPLOY_PATH,RELEASE_SHA,RELEASE_OPERATOR,ENGINE_IMAGE,WEB_IMAGE,PULSE_IMAGE,WORKER_IMAGE,MIGRATOR_IMAGE,GHCR_USER,GHCR_TOKEN,SMOKE_EMAIL,SMOKE_PASSWORD,SMOKE_ORGANIZATION_ID
+          envs: DEPLOY_PATH,ENGINE_IMAGE,WEB_IMAGE,PULSE_IMAGE,WORKER_IMAGE,MIGRATOR_IMAGE,GHCR_USER,GHCR_TOKEN
           script: |
             set -euo pipefail
-            chmod +x "$DEPLOY_PATH/scripts/release/deploy-blue-green.sh"
-            "$DEPLOY_PATH/scripts/release/deploy-blue-green.sh" deploy
+            chmod +x "$DEPLOY_PATH/scripts/release/deploy.sh"
+            "$DEPLOY_PATH/scripts/release/deploy.sh"
+      - name: Verify the deployed framework through its public gateway
+        run: node scripts/release/framework-smoke.mjs
+        env:
+          SMOKE_BASE_URL: ${{ vars.PUBLIC_ORIGIN }}
+      - name: Record the successful staging deployment
+        if: needs.resolve.outputs.environment == 'staging'
+        run: node scripts/release/promotion.mjs receipt
+        env:
+          RELEASE_IMAGES: >-
+            {"engine":"${{ env.ENGINE_IMAGE }}","web":"${{ env.WEB_IMAGE }}","pulse":"${{ env.PULSE_IMAGE }}","worker":"${{ env.WORKER_IMAGE }}","migrator":"${{ env.MIGRATOR_IMAGE }}"}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: needs.resolve.outputs.environment == 'staging'
+        with:
+          name: staging-release-${{ needs.resolve.outputs.commit }}
+          path: dist/release/release.json
+          retention-days: 30
+          overwrite: true
+          if-no-files-found: error

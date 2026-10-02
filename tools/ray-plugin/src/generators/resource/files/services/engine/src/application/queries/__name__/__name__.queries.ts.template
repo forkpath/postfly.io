@@ -1,0 +1,23 @@
+import { Inject } from '@nestjs/common'
+import { Query, QueryHandler, IQueryHandler } from '@nestjs/cqrs'
+import type { <%= className %>Snapshot } from '../../../domain/<%= name %>/<%= name %>.entity'
+import type { <%= className %>Page } from '../../../domain/<%= name %>/<%= name %>.repository'
+import type { <%= className %>Scope } from '../../use-cases/<%= name %>/<%= name %>.use-cases'
+import { <%= className %>UseCases } from '../../use-cases/<%= name %>/<%= name %>.use-cases'
+
+export class Get<%= className %>Query extends Query<<%= className %>Snapshot> {
+  constructor(readonly scope: <%= className %>Scope, readonly id: string) { super() }
+}
+export class List<%= className %>Query extends Query<<%= className %>Page> {
+  constructor(readonly scope: <%= className %>Scope, readonly page: number, readonly perPage: number) { super() }
+}
+@QueryHandler(Get<%= className %>Query)
+export class Get<%= className %>Handler implements IQueryHandler<Get<%= className %>Query> {
+  constructor(@Inject(<%= className %>UseCases) private readonly useCases: <%= className %>UseCases) {}
+  execute(query: Get<%= className %>Query) { return this.useCases.get(query.scope, query.id) }
+}
+@QueryHandler(List<%= className %>Query)
+export class List<%= className %>Handler implements IQueryHandler<List<%= className %>Query> {
+  constructor(@Inject(<%= className %>UseCases) private readonly useCases: <%= className %>UseCases) {}
+  execute(query: List<%= className %>Query) { return this.useCases.list(query.scope, query.page, query.perPage) }
+}

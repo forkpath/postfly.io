@@ -2,12 +2,14 @@ import { z } from 'zod'
 
 import { InvitationStatus, MemberRole } from '../shared/constants'
 import { offsetPaginationSchema } from '../shared/pagination.schema'
-import { multiValueQuerySchema, rangeQuerySchema, sortQuerySchema } from '../shared/query-utils'
+import { createSortQuerySchema, multiValueQuerySchema, rangeQuerySchema, sortQuerySchema } from '../shared/query-utils'
 
 // ==================== Organizations List ====================
 
 export const getOrganizationsReqSchema = offsetPaginationSchema.extend({
-  sort: sortQuerySchema.optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  perPage: z.coerce.number().int().min(1).max(100).default(10),
+  sort: createSortQuerySchema(z.enum(['id', 'name', 'slug', 'logo', 'createdAt', 'members'])).optional(),
   q: z.string().optional(),
   createdAt: rangeQuerySchema.optional(),
   members: rangeQuerySchema.optional()

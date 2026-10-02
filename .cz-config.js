@@ -1,3 +1,4 @@
+// 如果需要变更这里的types和scopes，记得同样去变更@commitlint.config.cjs中的types和scopes
 module.exports = {
   types: [
     { value: 'feat', name: 'feat:     ✨  新功能' },
@@ -27,7 +28,7 @@ module.exports = {
     { name: 'ai' },
     { name: 'none' }
   ],
-  allowCustomScopes: true,
+  allowCustomScopes: false,
   allowBreakingChanges: ['feat', 'fix'],
   subjectLimit: 100,
   skipQuestions: ['body', 'footer'] // 可以跳过某些问题

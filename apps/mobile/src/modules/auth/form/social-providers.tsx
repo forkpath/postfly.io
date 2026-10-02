@@ -1,5 +1,5 @@
 import type { Icon } from '@libs/ui-native'
-import type { Route } from 'expo-router'
+import type { RoutePath } from 'expo-router'
 
 import { memo } from 'react'
 import { useMutation } from '@tanstack/react-query'
@@ -22,7 +22,7 @@ import { auth } from '../lib/api'
 
 interface SocialProvidersProps {
   readonly providers: SocialProviderType[]
-  readonly redirectTo?: Route
+  readonly redirectTo?: RoutePath
 }
 
 export const SocialIcons: Record<SocialProviderType, Icon> = {

@@ -15,7 +15,6 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-  Button,
   buttonVariants,
   DropdownMenu,
   DropdownMenuContent,

@@ -43,6 +43,7 @@ export const ForgotPasswordForm = () => {
               {...field}
               onChangeText={field.onChange}
               autoCapitalize="none"
+              testID="forgot-password-email"
               autoComplete="email"
               inputMode="email"
               keyboardType="email-address"

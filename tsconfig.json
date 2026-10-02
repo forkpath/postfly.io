@@ -102,5 +102,8 @@
     {
       "path": "./libs/monitoring-server"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0"
+  }
 }

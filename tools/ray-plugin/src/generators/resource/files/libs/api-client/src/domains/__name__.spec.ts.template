@@ -1,0 +1,62 @@
+import { MutationObserver, QueryClient } from '@tanstack/react-query'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createClient } from '../lib/client'
+import { <%= propertyName %>Keys, <%= propertyName %>Queries, <%= propertyName %>Mutations, clear<%= className %>Scope } from './<%= name %>'
+
+describe('<%= className %> client contract', () => {
+  const cache = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
+  const scope = { userId: 'actor'<% if (org) { %>, organizationId: 'organization-a'<% } %> }
+  const other = { userId: 'another-actor'<% if (org) { %>, organizationId: 'organization-b'<% } %> }
+  const record = { id: 'b658906c-35a6-40b8-b270-67fef6ae9513', title: 'Example', description: null,
+    createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' }
+  afterEach(() => cache.clear())
+
+  it('parses requests before HTTP, parses responses, and invalidates only the affected owner', async () => {
+    const requested: Array<{ url?: string; data: unknown }> = []
+    const api = createClient({ baseURL: 'http://localhost/api/v1', runtime: 'ssr', adapter: async config => {
+      requested.push({ url: config.url, data: config.data })
+      return { config, status: 200, statusText: 'OK', headers: {}, data: { code: 0, msg: 'ok', data: record } }
+    } })
+    const ownList = <%= propertyName %>Queries.list(api, { scope }).queryKey
+    const otherList = <%= propertyName %>Queries.list(api, { scope: other }).queryKey
+    cache.setQueryData(ownList, { items: [], total: 0 })
+    cache.setQueryData(otherList, { items: [], total: 0 })
+    const mutation = new MutationObserver(cache, <%= propertyName %>Mutations.create(api, cache, scope))
+    await expect(mutation.mutate({ title: '   ' })).rejects.toThrow()
+    expect(requested).toEqual([])
+    await expect(mutation.mutate({ title: ' Valid ' })).resolves.toEqual(record)
+    expect(requested).toEqual([{ url: <%- org ? "'/organizations/organization-a/" + plural + "'" : "'/" + plural + "'" %>, data: JSON.stringify({ title: 'Valid' }) }])
+    expect(cache.getQueryState(ownList)?.isInvalidated).toBe(true)
+    expect(cache.getQueryState(otherList)?.isInvalidated).toBe(false)
+    const malformed = createClient({ runtime: 'ssr', adapter: async config => ({ config, status: 200,
+      statusText: 'OK', headers: {}, data: { code: 0, msg: 'ok', data: { unexpected: true } } }) })
+    await expect(cache.fetchQuery(<%= propertyName %>Queries.get(malformed, { scope, id: record.id }))).rejects.toThrow()
+  })
+
+  it('isolates users, owners and pages in keys', () => {
+    const api = createClient({ runtime: 'ssr' })
+    expect(<%= propertyName %>Keys.scope(scope)).not.toEqual(<%= propertyName %>Keys.scope(other))
+<% if (org) { %>    expect(<%= propertyName %>Keys.scope(scope)).not.toEqual(<%= propertyName %>Keys.scope({ ...scope, organizationId: 'another-org' }))<% } %>
+    expect(<%= propertyName %>Queries.list(api, { scope, page: 1 }).queryKey).not.toEqual(<%= propertyName %>Queries.list(api, { scope, page: 2 }).queryKey)
+    expect(() => <%= propertyName %>Queries.list(api, { scope, perPage: 101 })).toThrow()
+    expect(() => <%= propertyName %>Keys.detail(scope, '../escape')).toThrow()
+  })
+
+  it('cancels an in-flight old-scope request and removes its cached data on logout/switch', async () => {
+    let signal: { aborted: boolean } | undefined
+    let finish: (() => void) | undefined
+    const api = createClient({ runtime: 'ssr', adapter: config => new Promise(resolve => {
+      signal = config.signal
+      finish = () => resolve({ config, status: 200, statusText: 'OK', headers: {}, data: { code: 0, msg: 'ok', data: record } })
+    }) })
+    cache.setQueryData(<%= propertyName %>Keys.detail(other, record.id), record)
+    const request = cache.fetchQuery(<%= propertyName %>Queries.get(api, { scope, id: record.id })).catch(() => undefined)
+    await vi.waitFor(() => expect(finish).toBeDefined())
+    await clear<%= className %>Scope(cache, scope)
+    expect(signal?.aborted).toBe(true)
+    finish?.()
+    await request
+    expect(cache.getQueryData(<%= propertyName %>Keys.detail(scope, record.id))).toBeUndefined()
+    expect(cache.getQueryData(<%= propertyName %>Keys.detail(other, record.id))).toEqual(record)
+  })
+})

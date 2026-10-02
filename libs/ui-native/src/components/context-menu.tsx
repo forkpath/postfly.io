@@ -1,16 +1,18 @@
 import { View } from 'react-native'
 import * as ContextMenuPrimitive from 'zeego/context-menu'
 
-export const ContextMenu = ContextMenuPrimitive.Root
+export const ContextMenu: React.ComponentType<React.ComponentProps<typeof ContextMenuPrimitive.Root>> =
+  ContextMenuPrimitive.Root
 
-export const ContextMenuTrigger = ContextMenuPrimitive.create(
-  (props: React.ComponentProps<typeof ContextMenuPrimitive.Trigger>) => (
-    <ContextMenuPrimitive.Trigger {...props} asChild>
-      <View>{props.children}</View>
-    </ContextMenuPrimitive.Trigger>
-  ),
-  'Trigger'
-)
+export const ContextMenuTrigger: React.ComponentType<React.ComponentProps<typeof ContextMenuPrimitive.Trigger>> =
+  ContextMenuPrimitive.create(
+    (props: React.ComponentProps<typeof ContextMenuPrimitive.Trigger>) => (
+      <ContextMenuPrimitive.Trigger {...props} asChild>
+        <View>{props.children}</View>
+      </ContextMenuPrimitive.Trigger>
+    ),
+    'Trigger'
+  )
 
 export const ContextMenuContent = ContextMenuPrimitive.create(
   (props: React.ComponentProps<typeof ContextMenuPrimitive.Content>) => <ContextMenuPrimitive.Content {...props} />,
@@ -52,15 +54,19 @@ export const ContextMenuLabel = ContextMenuPrimitive.create(
   'Label'
 )
 
-export const ContextMenuSeparator = ContextMenuPrimitive.create(
-  (props: React.ComponentProps<typeof ContextMenuPrimitive.Separator>) => <ContextMenuPrimitive.Separator {...props} />,
-  'Separator'
-)
+export const ContextMenuSeparator: React.ComponentType<React.ComponentProps<typeof ContextMenuPrimitive.Separator>> =
+  ContextMenuPrimitive.create(
+    (props: React.ComponentProps<typeof ContextMenuPrimitive.Separator>) => (
+      <ContextMenuPrimitive.Separator {...props} />
+    ),
+    'Separator'
+  )
 
-export const ContextMenuGroup = ContextMenuPrimitive.create(
-  (props: React.ComponentProps<typeof ContextMenuPrimitive.Group>) => <ContextMenuPrimitive.Group {...props} />,
-  'Group'
-)
+export const ContextMenuGroup: React.ComponentType<React.ComponentProps<typeof ContextMenuPrimitive.Group>> =
+  ContextMenuPrimitive.create(
+    (props: React.ComponentProps<typeof ContextMenuPrimitive.Group>) => <ContextMenuPrimitive.Group {...props} />,
+    'Group'
+  )
 
 export const ContextMenuSubTrigger = ContextMenuPrimitive.create(
   (props: React.ComponentProps<typeof ContextMenuPrimitive.SubTrigger>) => (
@@ -81,7 +87,9 @@ export const ContextMenuSub = ContextMenuPrimitive.create(
   'Sub'
 )
 
-export const ContextMenuItemIndicator = ContextMenuPrimitive.create(
+export const ContextMenuItemIndicator: React.ComponentType<
+  React.ComponentProps<typeof ContextMenuPrimitive.ItemIndicator>
+> = ContextMenuPrimitive.create(
   (props: React.ComponentProps<typeof ContextMenuPrimitive.ItemIndicator>) => (
     <ContextMenuPrimitive.ItemIndicator {...props} />
   ),
@@ -94,7 +102,8 @@ export const ContextMenuPreview: React.ComponentType<React.ComponentProps<typeof
     'Preview'
   )
 
-export const ContextMenuArrow = ContextMenuPrimitive.create(
-  (props: React.ComponentProps<typeof ContextMenuPrimitive.Arrow>) => <ContextMenuPrimitive.Arrow {...props} />,
-  'Arrow'
-)
+export const ContextMenuArrow: React.ComponentType<React.ComponentProps<typeof ContextMenuPrimitive.Arrow>> =
+  ContextMenuPrimitive.create(
+    (props: React.ComponentProps<typeof ContextMenuPrimitive.Arrow>) => <ContextMenuPrimitive.Arrow {...props} />,
+    'Arrow'
+  )

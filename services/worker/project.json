@@ -18,45 +18,20 @@
         }
       }
     },
-    "prune-lockfile": {
-      "dependsOn": ["build"],
-      "cache": true,
-      "executor": "@nx/js:prune-lockfile",
-      "outputs": [
-        "{workspaceRoot}/dist/services/worker/package.json",
-        "{workspaceRoot}/dist/services/worker/pnpm-lock.yaml"
-      ],
-      "options": {
-        "buildTarget": "build",
-        "outputPath": "dist/services/worker"
-      }
-    },
-    "copy-workspace-modules": {
-      "dependsOn": ["build"],
-      "cache": true,
-      "outputs": ["{workspaceRoot}/dist/services/worker/workspace_modules"],
-      "executor": "@nx/js:copy-workspace-modules",
-      "options": {
-        "buildTarget": "build",
-        "outputPath": "dist/services/worker"
-      }
-    },
-    "prune": {
-      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
-      "executor": "nx:noop"
-    },
     "package": {
-      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
-      "executor": "nx:noop"
+      "dependsOn": ["build"],
+      "executor": "nx:noop",
+      "cache": false
     },
     "serve": {
       "continuous": true,
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
-      "dependsOn": ["build"],
+      "dependsOn": [],
       "options": {
         "buildTarget": "worker:build",
-        "runBuildTargetDependencies": false
+        "runBuildTargetDependencies": false,
+        "inspect": false
       },
       "configurations": {
         "development": {
@@ -75,7 +50,6 @@
         "^default",
         "{workspaceRoot}/eslint.config.mjs",
         "{workspaceRoot}/services/worker/eslint.config.mjs",
-        "{workspaceRoot}/tools/eslint-rules/**/*",
         {
           "externalDependencies": ["eslint"]
         }
@@ -97,9 +71,10 @@
         },
         {
           "env": "CI"
-        }
+        },
+        "unitTestGlobals"
       ],
-      "outputs": ["{workspaceRoot}/coverage/services/worker"],
+      "outputs": ["{workspaceRoot}/dist/test-results/worker/unit", "{workspaceRoot}/coverage/services/worker"],
       "options": {
         "cwd": "services/worker",
         "command": "vitest"
@@ -118,6 +93,54 @@
       "options": {
         "cwd": "services/worker",
         "command": "tsc --noEmit -p tsconfig.app.json"
+      }
+    },
+    "test-integration": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": ["{workspaceRoot}/dist/test-results/worker/integration"],
+      "options": {
+        "command": "node scripts/testing/run-backend.mjs worker integration"
+      }
+    },
+    "integration-run": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "vitest run --config vitest.integration.config.mts",
+        "cwd": "services/worker"
+      }
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": ["{workspaceRoot}/dist/test-results/worker/e2e"],
+      "options": {
+        "command": "node scripts/testing/run-backend.mjs worker e2e"
+      }
+    },
+    "e2e-run": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "vitest run --config vitest.e2e.config.mts",
+        "cwd": "services/worker"
+      },
+      "dependsOn": ["e2e-process-build"]
+    },
+    "typecheck-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.spec.json",
+        "cwd": "services/worker"
+      }
+    },
+    "e2e-process-build": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "webpack-cli build --config webpack.e2e.config.js --config-node-env test",
+        "cwd": "services/worker"
       }
     }
   }

@@ -19,11 +19,18 @@ const baseURL = externalBaseURL || `http://localhost:${e2ePort}`
  */
 export default defineConfig({
   ...nxE2EPreset(__filename, { testDir: './src' }),
+  outputDir: '../../dist/test-results/web-e2e/artifacts',
+  reporter: [
+    ['list'],
+    ['junit', { outputFile: '../../dist/test-results/web-e2e/junit.xml' }],
+    ['html', { outputFolder: '../../dist/test-results/web-e2e/html', open: 'never' }]
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry'
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure'
   },
   /* Run your local dev server before starting the tests */
   webServer: externalBaseURL

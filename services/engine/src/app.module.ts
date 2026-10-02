@@ -33,6 +33,7 @@ import { UserModule } from './presentation/http/user/user.module'
     // Config，需要保证全局可用，且需要优先于其他模块加载
     ConfigModule.forRoot({
       isGlobal: true,
+      ignoreEnvFile: process.env.NODE_ENV === 'test',
       load: [AppConfig]
     }),
 
@@ -107,8 +108,8 @@ import { UserModule } from './presentation/http/user/user.module'
     // 配置全局管道，使用nestjs-zod进行数据校验，而不是采用class-validator，这样可以服用libs中的schema定义，保证前后端有统一的校验约束
     {
       provide: APP_PIPE,
-      useFactory: (i18n: I18nService) =>
-        createZodValidationPipe({
+      useFactory: (i18n: I18nService) => {
+        const ValidationPipe = createZodValidationPipe({
           // 将ZodError -> Nest异常 + i18n的翻译
           createValidationException: (error: unknown) => {
             const zodError = error as ZodError
@@ -127,7 +128,9 @@ import { UserModule } from './presentation/http/user/user.module'
               errors: translatedIssues
             })
           }
-        }),
+        })
+        return new ValidationPipe()
+      },
       inject: [I18nService]
     },
 

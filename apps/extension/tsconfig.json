@@ -52,7 +52,8 @@
       "@libs/monitoring-web/env": ["libs/monitoring-web/src/env.ts"],
       "@libs/monitoring-native/env": ["libs/monitoring-native/src/env.ts"],
       "@libs/monitoring-server/env": ["libs/monitoring-server/src/env.ts"]
-    }
+    },
+    "ignoreDeprecations": "6.0"
   },
   "include": ["../../libs/ui-core/src/typings/*.d.ts", ".wxt/wxt.d.ts", "src/**/*", "*.ts", "*.js"],
   "exclude": ["node_modules"]

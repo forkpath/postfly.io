@@ -1,0 +1,9 @@
+{
+  "generators": {
+    "resource": {
+      "factory": "./src/generators/resource/generator.cjs",
+      "schema": "./src/generators/resource/schema.json",
+      "description": "Generate an owned Engine CRUD resource, Prisma migration, shared contract, client and executable tests."
+    }
+  }
+}

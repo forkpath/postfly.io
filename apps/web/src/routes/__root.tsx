@@ -106,7 +106,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
         <ThemeScript />
-        {import.meta.env.DEV && <script crossOrigin="anonymous" src="//unpkg.com/react-scan/dist/auto.global.js" />}
+        {import.meta.env.DEV && import.meta.env.VITE_REACT_SCAN_ENABLED === 'true' && (
+          <script crossOrigin="anonymous" src="https://unpkg.com/react-scan/dist/auto.global.js" />
+        )}
       </head>
       <body
         suppressHydrationWarning

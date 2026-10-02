@@ -6,6 +6,7 @@ import { MessageHandlerErrorBehavior, RabbitMQConfig, RabbitMQModule } from '@go
 import { PLATFORM_EVENT_DLX, PLATFORM_EVENT_EXCHANGE } from '@libs/platform-contract'
 
 import { MsgPubService } from './msg-pub.service'
+import { PLATFORM_RETRY_QUEUES } from './platform-retry'
 import { RabbitmqConfig } from './rabbitmq.config'
 
 function parsePrefetchCount(value: string | undefined): number {
@@ -49,14 +50,15 @@ export class RabbitmqModule {
                     }
                   ],
                   queues: [
-                    {
-                      name: 'platform.smoke.retry',
+                    ...PLATFORM_RETRY_QUEUES.map(({ name, delayMs }) => ({
+                      name,
                       options: {
                         durable: true,
+                        messageTtl: delayMs,
                         deadLetterExchange: PLATFORM_EVENT_EXCHANGE,
                         deadLetterRoutingKey: 'platform.smoke'
                       }
-                    },
+                    })),
                     {
                       name: 'platform.smoke.dlq',
                       exchange: PLATFORM_EVENT_DLX,

@@ -6,11 +6,11 @@ TanStack React Start 的营销站与 SaaS Web 应用，组合 Studio/UI、客户
 
 ## Tags、使用者与场景
 
-`type:app` · `runtime:web` · `domain:composition`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:app` · `runtime:web` · `domain:composition`。
 
 最终用户通过浏览器访问；它是组合入口，不允许其他项目导入 app 源码。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
@@ -23,7 +23,7 @@ TanStack React Start 的营销站与 SaaS Web 应用，组合 Studio/UI、客户
 
 | 变量                                                                                                                                                   | 含义                              | 何时配置/默认                                                          | 值从哪里来                                      |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------- |
-| `VITE_URL`                                                                                                                                             | 站点对外 URL                      | env.ts 要求合法 URL；appConfig 另有 localhost:3000 fallback            | 站点部署域名                                    |
+| `VITE_URL`                                                                                                                                             | 站点对外 URL                      | Web 使用当前 origin；SSR/file 使用 VITE_URL，缺省 localhost:3000       | 站点部署域名                                    |
 | `VITE_API_ENDPOINT`                                                                                                                                    | Studio Better Auth 客户端 baseURL | 可选；同源时可留空                                                     | Engine 对外认证地址                             |
 | `VITE_DEFAULT_LOCALE` / `VITE_THEME_MODE` / `VITE_THEME_COLOR`                                                                                         | 初始语言、主题模式、主题色        | 默认 en/system/orange（具体可用值见 ui-core）                          | 产品设计配置                                    |
 | `VITE_AUTH_PASSWORD` / `VITE_AUTH_MAGIC_LINK` / `VITE_AUTH_PASSKEY` / `VITE_AUTH_ANONYMOUS`                                                            | 认证 UI 功能开关                  | 默认 true/false/true/true                                              | 应与服务端能力一致；不是安全权限开关            |
@@ -58,14 +58,15 @@ pnpm nx run web:typecheck
 
 ## 单元测试：运行与编写
 
-当前没有标准 `web:test` target，不能执行不存在的命令或用 lint/build 成功冒充单测。接入步骤见[测试开发指南](../../docs/development/testing.md#没有-test-target-怎么办)。
+```sh
+pnpm nx run web:test
+pnpm nx run web:typecheck-tests
+```
 
-目前无 test target；为路由纯逻辑和组件补 Vitest/jsdom/Testing Library 配置与非零用例，API mock；复用库有测试不等于 Web app 已单测。
-
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+使用独立 Vitest/jsdom 配置，验证会话身份同步、定时器生命周期，以及正式路由的登录跳转、平台管理员权限和会话服务失败。路由测试位于 `src/__tests__`，不放进文件路由目录。新增用例放在 `src/**/*.spec.ts` / `*.spec.tsx`；测试不加载生产构建插件或开发 `.env`。报告在 `dist/test-results/web/unit`，新增用例要求见 [测试指南](../../docs/development/testing.md)。
 
 ## E2E：运行与编写
 
-已有 `pnpm nx run web-e2e:e2e`，本地需先 `pnpm nx run web:build`；测试 runner 启动 .output，Engine 需另启动。变量、skip 条件和新增用例步骤见 [web-e2e](../web-e2e/README.md)。
+`pnpm nx run web-e2e:e2e` 依赖 Web 构建，Playwright 启动正式产物。默认框架 CI 验证公开页面在 Chromium、Firefox、WebKit 中的行为。需要真实 Engine、预置账户或厂商服务的历史业务场景另行启用，不能把跳过计作通过。
 
-所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#其他应用服务-e2e)。
+变量、隔离数据要求、skip 条件和新增用例步骤见 [web-e2e](../web-e2e/README.md)；真实 Engine/Pulse/Worker 协议测试由各服务的独立套件负责。

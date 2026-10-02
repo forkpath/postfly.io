@@ -1,0 +1,29 @@
+import { z } from 'zod'
+
+export const <%= propertyName %>CreateSchema = z.strictObject({
+  title: z.string().trim().min(1).max(120),
+  description: z.string().max(2000).nullable().optional()
+})
+export const <%= propertyName %>UpdateSchema = <%= propertyName %>CreateSchema.partial().refine(
+  value => value.title !== undefined || value.description !== undefined,
+  { message: 'Provide at least one changed field' }
+)
+export const <%= propertyName %>ListSchema = z.strictObject({
+  page: z.coerce.number().int().min(1).max(10000).default(1),
+  perPage: z.coerce.number().int().min(1).max(100).default(20)
+})
+export const <%= propertyName %>OwnerSchema = z.strictObject({
+<% if (org) { %>  organizationId: z.string().min(1).max(128)<% } %>
+})
+export const <%= propertyName %>ParamsSchema = <%= propertyName %>OwnerSchema.extend({ id: z.uuid() })
+export const <%= propertyName %>Schema = z.strictObject({
+  id: z.uuid(), title: z.string().min(1).max(120), description: z.string().max(2000).nullable(),
+  createdAt: z.iso.datetime(), updatedAt: z.iso.datetime()
+})
+export const <%= propertyName %>PageSchema = z.strictObject({
+  items: z.array(<%= propertyName %>Schema), total: z.number().int().nonnegative()
+})
+export const <%= propertyName %>DeletedSchema = z.strictObject({ id: z.uuid() })
+export type <%= className %>Create = z.infer<typeof <%= propertyName %>CreateSchema>
+export type <%= className %>Update = z.infer<typeof <%= propertyName %>UpdateSchema>
+export type <%= className %>Response = z.infer<typeof <%= propertyName %>Schema>

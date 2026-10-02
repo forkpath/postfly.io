@@ -19,11 +19,12 @@ export class I18nModule {
           inject: [ConfigService],
           useFactory: (configService: ConfigService) => {
             const { fallbackLng, localePath } = configService.get<I18nConfig>('i18n') as I18nConfig
-            const resolvedPath = path.join(process.cwd(), localePath)
+            const resolvedPath = path.resolve(process.cwd(), localePath)
             const typesPath = path.join(process.cwd(), 'libs/server-nest/src/i18n/i18n.types.ts')
+            const development = process.env['NODE_ENV'] === 'development'
 
             this.logger.log(`Loading translations from: ${resolvedPath}`)
-            this.logger.log(`Types will be generated to: ${typesPath}`)
+            if (development) this.logger.log(`Types will be generated to: ${typesPath}`)
 
             return {
               fallbackLanguage: fallbackLng,
@@ -33,12 +34,12 @@ export class I18nModule {
                 // 使用项目根目录作为基础路径，支持前后端共用翻译文件
                 path: resolvedPath,
                 // 启用文件监听，文件变化时自动重新加载
-                watch: true,
+                watch: development,
                 // 包含子文件夹（如 en/, zh/ 等）
                 includeSubfolders: true
               },
               // 类型输出路径 - 应用启动时自动生成
-              typesOutputPath: typesPath,
+              typesOutputPath: development ? typesPath : undefined,
               // 开启日志便于调试
               logging: true
             }

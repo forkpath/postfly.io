@@ -6,11 +6,11 @@ React Native + Expo Router 移动应用，组合 Native 认证/UI、RevenueCat �
 
 ## Tags、使用者与场景
 
-`type:app` · `runtime:native` · `domain:composition`。这是当前 Nx resolved configuration，不是根据目录猜测的分类。
+`type:app` · `runtime:native` · `domain:composition`。
 
 iOS/Android 用户；Native feature 与通用契约供本 app 使用，禁止引入 Node/DOM 库。
 
-依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../README.md#当前实际依赖规则)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
+依赖同时受 type/runtime/domain 限制，详见[根目录规则](../../docs/architecture/ray-framework-nx-guide.md#公共入口与运行时)。仅通过已声明 public API 使用，不跨项目相对路径导入源码。
 
 ## 环境变量与配置来源
 
@@ -44,23 +44,41 @@ iOS/Android 用户；Native feature 与通用契约供本 app 使用，禁止引
 ```sh
 pnpm nx show project mobile --json
 pnpm dev:mobile
+pnpm dev:mobile:ios
+pnpm dev:mobile:android
+pnpm build:mobile:ios
+pnpm build:mobile:android
+pnpm release:mobile:ios
+pnpm release:mobile:android
 pnpm nx run mobile:build
 pnpm nx run mobile:lint
 pnpm nx run mobile:typecheck
 ```
 
-本机原生运行用 `pnpm mobile:ios` / `pnpm mobile:android`，需 Xcode/Android SDK。`pnpm nx run mobile:build` 聚合 export；`pnpm nx run mobile:release` 为 EAS 构建，`pnpm nx run mobile:submit` 为商店提交，均有外部副作用。
+`pnpm dev:mobile:ios` / `pnpm dev:mobile:android` 用于本机开发运行；
+`pnpm build:mobile:ios` / `pnpm build:mobile:android` 用于本机 Release
+构建，均需 Xcode/Android SDK。`pnpm release:mobile:ios` /
+`pnpm release:mobile:android` 触发 EAS production 云端构建；
+`pnpm nx run mobile:submit` 用于商店提交，二者都有外部副作用。
+`pnpm nx run mobile:build` 只聚合 Expo export，不生成可发布的原生安装包。
 
 ## 单元测试：运行与编写
 
-当前没有标准 `mobile:test` target，不能执行不存在的命令或用 lint/build 成功冒充单测。接入步骤见[测试开发指南](../../docs/development/testing.md#没有-test-target-怎么办)。
+```sh
+pnpm nx run mobile:test
+pnpm nx run mobile:typecheck-tests
+```
 
-无 test target；需接入 Expo/RN 兼容测试环境与 Native SDK mock，再写 auth/provider/购买状态/离线错误等测试；不能直接套浏览器 jsdom 当真机证明。
-
-新增用例放项目 `src` 内，按配置 include 使用 `*.spec.ts`/`*.spec.tsx`；先看 [测试指南](../../docs/development/testing.md) 的环境、mock 与非零用例要求。测试说明不代表本次已经执行全部测试。
+使用 Jest、jest-expo 与 React Native Testing Library。用例放在 `tests/**/*.spec.ts` / `*.spec.tsx`，覆盖原生组件交互、剪贴板结果和路由；测试不放入 Expo Router 的 `src/app`。报告在 `dist/test-results/mobile/unit`。原生模块 mock 不代表设备验收。
 
 ## E2E：运行与编写
 
-暂无设备 E2E target。后续建立固定版本 Maestro/Detox 等方案、模拟器/开发构建、隔离账户，写登录深链、组织切换、权限弹窗、sandbox 购买/恢复场景；export 只验证打包。
+```sh
+node scripts/testing/install-maestro.mjs
+pnpm nx run mobile:e2e:android
+pnpm nx run mobile:e2e:ios
+```
 
-所有有写入的流程使用隔离数据/测试账户，缺用例需要额外开发；mock 单测、构建和 readiness 不等于 E2E 完成。[跨端测试方法](../../docs/development/testing.md#其他应用服务-e2e)。
+入口自动构建内嵌 JS 的独立 Release 测试包，创建专用模拟器、安装、执行 Maestro 页面往返与深链接流程，并保存报告和清理。无需生产账户或 EAS 订阅；需要固定版本的 SDK、Java / Xcode。新流程放在 `.maestro/`。
+
+工具要求、隔离边界和报告见 [设备测试指南](../../docs/development/testing-mobile.md)；实际通过情况见 [验收记录](../../docs/development/testing-framework-validation.md)。登录、支付、推送及真机硬件由使用这些能力的项目另做专项验收，Expo export 只验证打包。

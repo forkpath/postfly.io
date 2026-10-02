@@ -1,0 +1,19 @@
+import type { <%= className %>Access, <%= className %>Scope } from '../../../application/use-cases/<%= name %>/<%= name %>.use-cases'
+import { Injectable } from '@nestjs/common'
+<% if (org) { %>import { prisma } from '@libs/pg-dao'<% } %>
+import { <%= className %>Error } from '../../../domain/<%= name %>/<%= name %>.error'
+
+@Injectable()
+export class <%= className %>AccessPolicy implements <%= className %>Access {
+  async authorize(scope: <%= className %>Scope, mode: 'read' | 'write') {
+    if (!scope.userId || !scope.ownerId) throw new <%= className %>Error('forbidden')
+<% if (org) { %>
+    const member = await prisma.member.findFirst({ where: { userId: scope.userId, organizationId: scope.ownerId } })
+    if (!member || (mode === 'write' && !member.role.split(',').some(role => ['owner', 'admin'].includes(role.trim())))) {
+      throw new <%= className %>Error('forbidden')
+    }
+<% } else { %>
+    if (!['read', 'write'].includes(mode) || scope.userId !== scope.ownerId) throw new <%= className %>Error('forbidden')
+<% } %>
+  }
+}

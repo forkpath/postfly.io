@@ -84,8 +84,8 @@ describe('auth server', () => {
   })
 
   it('does not disable Better Auth CSRF or origin checks', () => {
-    expect(auth.options.advanced?.disableCSRFCheck).not.toBe(true)
-    expect(auth.options.advanced?.disableOriginCheck).not.toBe(true)
+    expect(auth.options.advanced).not.toHaveProperty('disableCSRFCheck', true)
+    expect(auth.options.advanced).not.toHaveProperty('disableOriginCheck', true)
     expect(auth.options.trustedOrigins).toEqual(expect.arrayContaining(['chrome-extension://', 'ray://']))
   })
 })

@@ -41,7 +41,6 @@ export const useTheme = () => {
   const resolvedTheme = useMemo(() => (isDark ? ThemeMode.DARK : ThemeMode.LIGHT), [isDark])
 
   const updateTheme = useCallback(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!config) {
       return
     }

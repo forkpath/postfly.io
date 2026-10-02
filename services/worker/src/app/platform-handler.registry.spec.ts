@@ -1,9 +1,12 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { PLATFORM_SMOKE_EVENT } from '@libs/platform-contract'
 
 import { retryDelayMs } from './platform-event.consumer'
 import { PlatformHandlerRegistry } from './platform-handler.registry'
+
+// Importing the consumer for retryDelayMs must not initialize a database client.
+vi.mock('@libs/pg-dao', () => ({ PrismaService: class {} }))
 
 describe('Worker platform contracts', () => {
   it('registers only the explicit smoke envelope version', () => {

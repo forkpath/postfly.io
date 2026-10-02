@@ -91,9 +91,8 @@ function transform(pattern: string | string[], separator: string | boolean = tru
   const segments = separator ? pattern.split(separatorSplitter) : [pattern]
   let result = ''
 
-  for (let s = 0; s < segments.length; s++) {
-    const segment = segments[s]!
-    const nextSegment = segments[s + 1]!
+  for (const [s, segment] of segments.entries()) {
+    const nextSegment = segments[s + 1]
     let currentSeparator = ''
 
     if (!segment && s > 0) {
@@ -119,11 +118,11 @@ function transform(pattern: string | string[], separator: string | boolean = tru
     }
 
     for (let c = 0; c < segment.length; c++) {
-      const char = segment[c]!
+      const char = segment.charAt(c)
 
       if (char === '\\') {
         if (c < segment.length - 1) {
-          result += escapeRegExpChar(segment[c + 1]!)
+          result += escapeRegExpChar(segment.charAt(c + 1))
           c++
         }
       } else if (char === '?') {

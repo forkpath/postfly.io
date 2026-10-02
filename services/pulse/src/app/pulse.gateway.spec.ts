@@ -31,7 +31,7 @@ function request(): IncomingMessage {
 function session() {
   return {
     user: { id: 'user-1' },
-    session: { expiresAt: new Date(Date.now() + 60_000) }
+    session: { id: 'session-1', expiresAt: new Date(Date.now() + 60_000) }
   }
 }
 
@@ -43,20 +43,18 @@ describe('PulseGateway authorization', () => {
       publish: vi.fn().mockResolvedValue(1)
     }
   }
-  const prisma = {
-    member: { findUnique: vi.fn() }
-  }
+  const authorize = { execute: vi.fn() }
 
   beforeEach(() => {
     vi.clearAllMocks()
     redis.client.incr.mockResolvedValue(1)
-    prisma.member.findUnique.mockResolvedValue(null)
+    authorize.execute.mockResolvedValue('forbidden')
   })
 
   it('rejects an unauthenticated connection', async () => {
     getSession.mockResolvedValue(null)
     const socket = new FakeSocket()
-    const gateway = new PulseGateway(prisma as never, redis as never)
+    const gateway = new PulseGateway(authorize as never, redis as never)
 
     await gateway.handleConnection(socket as unknown as WebSocket, request())
 
@@ -65,7 +63,7 @@ describe('PulseGateway authorization', () => {
 
   it('rejects new sockets while draining and resumes for rollback', async () => {
     getSession.mockResolvedValue(session())
-    const gateway = new PulseGateway(prisma as never, redis as never)
+    const gateway = new PulseGateway(authorize as never, redis as never)
     const drainingSocket = new FakeSocket()
 
     gateway.beginDrain()
@@ -82,7 +80,7 @@ describe('PulseGateway authorization', () => {
   it('rejects a cross-organization subscription', async () => {
     getSession.mockResolvedValue(session())
     const socket = new FakeSocket()
-    const gateway = new PulseGateway(prisma as never, redis as never)
+    const gateway = new PulseGateway(authorize as never, redis as never)
     await gateway.handleConnection(socket as unknown as WebSocket, request())
 
     socket.emit('message', Buffer.from(JSON.stringify({ type: 'subscribe', organizationId: 'org-2' })))
@@ -94,9 +92,9 @@ describe('PulseGateway authorization', () => {
 
   it('allows an authenticated member to subscribe', async () => {
     getSession.mockResolvedValue(session())
-    prisma.member.findUnique.mockResolvedValue({ id: 'member-1' })
+    authorize.execute.mockResolvedValue('allowed')
     const socket = new FakeSocket()
-    const gateway = new PulseGateway(prisma as never, redis as never)
+    const gateway = new PulseGateway(authorize as never, redis as never)
     await gateway.handleConnection(socket as unknown as WebSocket, request())
 
     socket.emit('message', Buffer.from(JSON.stringify({ type: 'subscribe', organizationId: 'org-1' })))

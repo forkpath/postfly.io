@@ -1,4 +1,4 @@
-import type { Route } from 'expo-router'
+import type { RoutePath } from 'expo-router'
 
 import { useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
@@ -53,9 +53,9 @@ const VerificationController = ({
 }: {
   token: string
   type: VerificationType
-  callbackURL?: Route
-  redirectTo?: Route
-  errorCallbackURL?: Route
+  callbackURL?: RoutePath
+  redirectTo?: RoutePath
+  errorCallbackURL?: RoutePath
 }) => {
   const resetParams = () => {
     router.setParams({
@@ -109,9 +109,9 @@ export const Verification = () => {
   } = useGlobalSearchParams<{
     token?: string
     type?: VerificationType
-    callbackURL?: Route
-    redirectTo?: Route
-    errorCallbackURL?: Route
+    callbackURL?: RoutePath
+    redirectTo?: RoutePath
+    errorCallbackURL?: RoutePath
   }>()
 
   if (!token || !type) {

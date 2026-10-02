@@ -23,7 +23,14 @@ function getViteEnv<T>(key: string, fallback: T): T {
 
 export const appConfig = {
   name: APP_NAME,
-  url: getViteEnv('VITE_URL', defaults.url),
+  // Web artifacts are promoted unchanged between staging and production.
+  // Native/file hosts and SSR retain the explicit canonical build URL.
+  get url() {
+    if (typeof window !== 'undefined' && ['http:', 'https:'].includes(window.location.protocol)) {
+      return window.location.origin
+    }
+    return getViteEnv('VITE_URL', defaults.url)
+  },
   locale: getViteEnv('VITE_DEFAULT_LOCALE', defaults.locale),
   theme: {
     mode: getViteEnv('VITE_THEME_MODE', defaults.theme.mode) as ThemeMode,

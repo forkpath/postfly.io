@@ -1,5 +1,7 @@
 import type { GetCustomersReq, GetCustomersRes } from '@libs/payload'
 
+import { getCustomersReqSchema } from '@libs/payload'
+
 import { createQueryOptionsWithParams } from '../../lib/queries/factory'
 
 function serializeSort(sort?: { id: string; desc?: boolean }[]) {
@@ -37,7 +39,11 @@ export const adminCustomerQueries = {
   list: createQueryOptionsWithParams<GetCustomersRes, Error, GetCustomersRes, GetCustomersReq | undefined>(
     (api, params) => ({
       queryKey: adminCustomerKeys.list(params ? ({ ...params } as Record<string, unknown>) : undefined),
-      queryFn: () => api.get('/admin/customers', { params: serializeQueryParams(params) })
+      queryFn: async () => {
+        const serialized = serializeQueryParams(params)
+        getCustomersReqSchema.parse(serialized ?? {})
+        return api.get('/admin/customers', { params: serialized })
+      }
     })
   )
 }

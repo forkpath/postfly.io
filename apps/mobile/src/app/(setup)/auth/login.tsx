@@ -1,11 +1,11 @@
-import type { Route } from 'expo-router'
+import type { RoutePath } from 'expo-router'
 
 import { LoginFlow } from '~/modules/auth/login'
 import { useGlobalSearchParams } from 'expo-router'
 
 const LoginPage = () => {
   const { redirectTo, invitationId, email } = useGlobalSearchParams<{
-    redirectTo?: Route
+    redirectTo?: RoutePath
     invitationId?: string
     email?: string
   }>()

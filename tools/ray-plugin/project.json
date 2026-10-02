@@ -1,0 +1,23 @@
+{
+  "name": "ray-plugin",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "implicitDependencies": ["engine", "payload", "api-client", "pg-dao"],
+  "tags": ["type:platform", "runtime:node", "domain:platform"],
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "inputs": ["default", "^default", "{workspaceRoot}/ray.resources.json"],
+      "options": { "command": "node --test tools/ray-plugin/tests/*.test.cjs" },
+      "outputs": []
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": { "command": "node tools/ray-plugin/tests/acceptance.mjs" },
+      "configurations": {
+        "guards": { "command": "node tools/ray-plugin/tests/acceptance.mjs --prove-guards" }
+      }
+    }
+  }
+}

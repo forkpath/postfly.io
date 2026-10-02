@@ -9,8 +9,12 @@ export const PageHeader = ({ className, ...props }: React.ComponentProps<'header
   )
 }
 
-export const PageHeaderTitle = ({ className, ...props }: React.ComponentProps<'h1'>) => {
-  return <h1 className={cn('text-3xl font-bold tracking-tighter', className)} {...props} />
+export const PageHeaderTitle = ({ className, children, ...props }: React.ComponentProps<'h1'>) => {
+  return (
+    <h1 className={cn('text-3xl font-bold tracking-tighter', className)} {...props}>
+      {children}
+    </h1>
+  )
 }
 
 export const PageHeaderDescription = ({ className, ...props }: React.ComponentProps<'p'>) => {

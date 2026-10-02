@@ -1,0 +1,6 @@
+export class <%= className %>Error extends Error {
+  constructor(readonly code: 'invalid' | 'not_found' | 'forbidden') {
+    super('<%= className %>: ' + code)
+    this.name = '<%= className %>Error'
+  }
+}

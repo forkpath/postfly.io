@@ -1,12 +1,11 @@
-# Tools · 可复用维护工具与隔离执行包
+# 独立执行工具
 
-本目录不是业务应用层。分类以每个子目录 README 为准；没有独立 Nx 项目的目录只标注语义角色，不伪造 tags。
+这里保留开发与交付工具。它们不参与业务请求；业务模块生成器由开发者按需调用。
 
-| 工具                                         | 用途/使用者                        | 分类                              | 运行与风险                                    |
-| -------------------------------------------- | ---------------------------------- | --------------------------------- | --------------------------------------------- |
-| [auth-schema](auth-schema/README.md)         | 认证维护者隔离固定 CLI             | platform/node/auth                | 经 auth-server:schema-check；临时候选，不覆盖 schema |
-| [migrator](migrator/README.md)               | 发布维护者提供固定 Prisma 运行环境 | platform/node/platform            | 镜像入口；真实数据库写入                      |
-| [migration-tests](migration-tests/README.md) | CI/迁移维护者验证应用与 DB 兼容    | app/node/composition              | Nx 集成测试；仅可丢弃 DB                      |
-| [ai-migrations](ai-migrations/README.md)     | 工具链升级者阅读版本迁移指引       | 文档，语义 platform/node/platform | 不可执行，不是生产依赖                        |
+| 目录                                 | 用途                                           | 调用入口                                  | 保留原因                                             |
+| ------------------------------------ | ---------------------------------------------- | ----------------------------------------- | ---------------------------------------------------- |
+| [auth-schema](auth-schema/README.md) | 固定 Better Auth CLI，生成候选认证模型用于比较 | `pnpm nx run auth-server:schema-check`    | 升级认证依赖或调整插件后需要，避免生成器依赖污染应用 |
+| [migrator](migrator/README.md)       | 固定 Prisma CLI 的容器运行依赖                 | Migrator 镜像执行 `prisma migrate deploy` | 新环境初始化和下游业务的后续 schema 变更都使用       |
+| [ray-plugin](ray-plugin/README.md)   | 确定性生成完整业务资源与可执行测试             | `pnpm nx g @ray/plugin:resource`          | 复用 Clean Architecture、权限与数据流约定            |
 
-所有命令从仓库根运行。普通应用不能导入 tools。工具包不是都带 build/test；查看子目录列出的真实入口。README 不代表已执行迁移或已部署生产。
+技能链接同步由 `scripts/sync-skills.mjs` 完成，不需要独立 Nx 项目、Agent 评测环境或自动 PR 发布器。

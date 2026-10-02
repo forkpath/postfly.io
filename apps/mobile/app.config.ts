@@ -1,9 +1,7 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config'
 
-/** Expo 55+ 支持；`@expo/config-types` 的 `Android` 类型可能尚未收录 */
-type AndroidConfig = NonNullable<ExpoConfig['android']> & {
-  edgeToEdgeEnabled?: boolean
-}
+// A separate installed app keeps device tests away from real accounts and OTA.
+const isE2E = process.env.RAY_MOBILE_E2E === 'true'
 
 const SPLASH = {
   imageWidth: 150,
@@ -16,9 +14,9 @@ const SPLASH = {
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: 'Ray',
+  name: isE2E ? 'Ray E2E' : 'Ray',
   slug: 'ray',
-  scheme: 'ray',
+  scheme: isE2E ? 'ray-e2e' : 'ray',
   version: '0.1.0',
   orientation: 'portrait',
   icon: './public/images/icon/ios.png',
@@ -26,25 +24,26 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   assetBundlePatterns: ['**/*'],
   platforms: ['ios', 'android'],
   updates: {
+    enabled: !isE2E,
     url: process.env.EXPO_PUBLIC_EAS_UPDATES_URL ?? 'https://u.expo.dev/placeholder'
   },
   ios: {
-    bundleIdentifier: 'com.ray.mobile',
+    bundleIdentifier: isE2E ? 'com.ray.mobile.e2e' : 'com.ray.mobile',
     supportsTablet: true,
     usesAppleSignIn: true,
     infoPlist: {
-      ITSAppUsesNonExemptEncryption: false
+      ITSAppUsesNonExemptEncryption: false,
+      ...(isE2E && { NSAppTransportSecurity: { NSAllowsLocalNetworking: true } })
     }
   },
-  android: ((): AndroidConfig => ({
-    package: 'com.ray.mobile',
-    edgeToEdgeEnabled: true,
+  android: {
+    package: isE2E ? 'com.ray.mobile.e2e' : 'com.ray.mobile',
     adaptiveIcon: {
       monochromeImage: './public/images/icon/android/monochrome.png',
       foregroundImage: './public/images/icon/android/adaptive.png',
       backgroundColor: '#0D121C'
     }
-  }))(),
+  },
   extra: {
     eas: {
       projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID ?? ''
@@ -59,7 +58,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     'expo-router',
+    '@sentry/react-native',
     'expo-font',
+    'expo-image',
     'expo-secure-store',
     'expo-image-picker',
     'expo-web-browser',
@@ -69,8 +70,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-build-properties',
       {
+        ios: {
+          // Google Sign-In's Swift AppCheck dependency needs module maps when
+          // Expo's default static-library linkage is used.
+          extraPods: [
+            { name: 'GoogleUtilities', modular_headers: true },
+            { name: 'RecaptchaInterop', modular_headers: true }
+          ]
+        },
         android: {
           enableProguardInReleaseBuilds: true,
+          ...(isE2E && { usesCleartextTraffic: true }),
           extraProguardRules: '-keep public class com.horcrux.svg.** {*;}',
           allowBackup: false
         }

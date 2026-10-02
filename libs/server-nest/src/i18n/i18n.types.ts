@@ -3,7 +3,6 @@
 /* eslint-disable */
 /* prettier-ignore */
 import type { Path } from "nestjs-i18n";
-
 /* prettier-ignore */
 export type I18nTranslations = {
     "admin": {
@@ -862,6 +861,28 @@ export type I18nTranslations = {
             "forbidden": string;
         };
         "goBackHome": string;
+        "desktopUpdates": {
+            "title": string;
+            "current": string;
+            "availableVersion": string;
+            "progress": string;
+            "later": string;
+            "check": string;
+            "download": string;
+            "restart": string;
+            "restartHint": string;
+            "bridgeError": string;
+            "states": {
+                "unconfigured": string;
+                "idle": string;
+                "checking": string;
+                "not-available": string;
+                "available": string;
+                "downloading": string;
+                "downloaded": string;
+                "error": string;
+            };
+        };
     };
     "dashboard": {
         "user": {

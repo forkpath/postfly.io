@@ -51,11 +51,10 @@ model WebhookEvent {
 
 model Customer {
   id            String         @id @default(cuid())
-  referenceId   String         @map("reference_id")
   userId        String?        @map("user_id")
-  user          User?          @relation("UserBillingCustomers", fields: [userId], references: [id])
+  user          User?          @relation("UserBillingCustomers", fields: [userId], references: [id], onDelete: Restrict)
   organizationId String?       @map("organization_id")
-  organization  Organization?  @relation("OrganizationBillingCustomers", fields: [organizationId], references: [id])
+  organization  Organization?  @relation("OrganizationBillingCustomers", fields: [organizationId], references: [id], onDelete: Restrict)
   externalId    String         @map("external_id")
   provider      String
   createdAt     DateTime       @default(now()) @map("created_at")
@@ -63,7 +62,8 @@ model Customer {
   subscriptions Subscription[]
   orders        Order[]
 
-  @@unique([referenceId, provider])
+  @@unique([userId, provider], map: "customer_user_provider_unique")
+  @@unique([organizationId, provider], map: "customer_organization_provider_unique")
   @@unique([externalId, provider])
   @@index([userId, provider], map: "customer_user_provider_idx")
   @@index([organizationId, provider], map: "customer_organization_provider_idx")

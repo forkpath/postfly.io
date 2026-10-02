@@ -247,7 +247,6 @@ export type WebhookEventScalarFieldEnum = (typeof WebhookEventScalarFieldEnum)[k
 
 export const CustomerScalarFieldEnum = {
   id: 'id',
-  referenceId: 'referenceId',
   userId: 'userId',
   organizationId: 'organizationId',
   externalId: 'externalId',

@@ -1,4 +1,5 @@
 import type { IncomingMessage } from 'node:http'
+import type { WebSocketServer } from 'ws'
 
 import { Logger, OnApplicationShutdown, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { WebSocketGateway, WebSocketServer as WebSocketServerDecorator } from '@nestjs/websockets'
@@ -7,21 +8,17 @@ import { fromNodeHeaders } from 'better-auth/node'
 import { WebSocket } from 'ws'
 
 import { auth } from '@libs/auth-server'
-import { PrismaService } from '@libs/pg-dao'
-import { EventEnvelopeV1, PLATFORM_SMOKE_EVENT, PlatformSmokePayload } from '@libs/platform-contract'
+import { EventEnvelopeV1, isEventEnvelopeV1, PLATFORM_SMOKE_EVENT, PlatformSmokePayload } from '@libs/platform-contract'
 import { RedisService } from '@libs/server-redis'
 
-interface PulseMessage {
-  type: 'subscribe' | 'unsubscribe' | typeof PLATFORM_SMOKE_EVENT
-  organizationId?: string
-  payload?: PlatformSmokePayload
-}
+import { AuthorizePulseUseCase } from '../application/authorize-pulse.usecase'
+import { PulseIdentity } from '../domain/pulse-access.repository'
+import { pulseMessageSchema } from './pulse-message.schema'
 
-interface ConnectionContext {
-  userId: string
-  expiresAt: number
+interface ConnectionContext extends PulseIdentity {
   organizations: Set<string>
   alive: boolean
+  pending: Promise<void>
 }
 
 const CHANNEL = 'pulse:organization-events:v1'
@@ -34,21 +31,25 @@ export class PulseGateway implements OnApplicationShutdown, OnModuleDestroy, OnM
   private readonly contexts = new Map<WebSocket, ConnectionContext>()
   private heartbeat?: NodeJS.Timeout
   private draining = false
+  private readonly onRedisMessage = (channel: string, raw: string) => {
+    if (channel === CHANNEL)
+      void this.deliver(raw).catch(error => {
+        this.logger.error(`Event delivery failed: ${this.errorMessage(error)}`)
+      })
+  }
 
   @WebSocketServerDecorator()
-  private server?: import('ws').WebSocketServer
+  private server?: WebSocketServer
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly authorize: AuthorizePulseUseCase,
     private readonly redis: RedisService
   ) {}
 
   async onModuleInit() {
     const subscriber = this.redis.subClient
     await subscriber.subscribe(CHANNEL)
-    subscriber.on('message', (channel, raw) => {
-      if (channel === CHANNEL) this.deliver(raw)
-    })
+    subscriber.on('message', this.onRedisMessage)
 
     this.heartbeat = setInterval(() => this.runHeartbeat(), 30_000)
     this.heartbeat.unref()
@@ -71,7 +72,8 @@ export class PulseGateway implements OnApplicationShutdown, OnModuleDestroy, OnM
       }
 
       const session = await auth.api.getSession({
-        headers: fromNodeHeaders(request.headers)
+        headers: fromNodeHeaders(request.headers),
+        query: { disableCookieCache: true }
       })
       if (!session) {
         client.close(4401, 'authentication required')
@@ -84,17 +86,33 @@ export class PulseGateway implements OnApplicationShutdown, OnModuleDestroy, OnM
         return
       }
 
+      if (client.readyState !== WebSocket.OPEN) return
+      if (this.draining) {
+        client.close(1012, 'service draining')
+        return
+      }
       this.contexts.set(client, {
+        sessionId: session.session.id,
         userId: session.user.id,
         expiresAt,
         organizations: new Set(),
-        alive: true
+        alive: true,
+        pending: Promise.resolve()
       })
       client.on('pong', () => {
         const context = this.contexts.get(client)
         if (context) context.alive = true
       })
-      client.on('message', raw => void this.handleMessage(client, raw.toString()))
+      client.on('message', raw => {
+        const context = this.contexts.get(client)
+        if (!context) return
+        context.pending = context.pending
+          .then(() => this.handleMessage(client, raw.toString()))
+          .catch(error => {
+            this.logger.warn(`Message handling failed: ${this.errorMessage(error)}`)
+            client.close(1011, 'message handling failed')
+          })
+      })
       client.on('close', () => this.contexts.delete(client))
       this.send(client, { type: 'connected', envelopeVersions: [1] })
     } catch (error) {
@@ -110,19 +128,22 @@ export class PulseGateway implements OnApplicationShutdown, OnModuleDestroy, OnM
       return
     }
 
-    let message: PulseMessage
+    let value: unknown
     try {
-      message = JSON.parse(raw) as PulseMessage
+      value = JSON.parse(raw)
     } catch {
       client.close(4400, 'invalid message')
       return
     }
 
-    const organizationId = message.organizationId
-    if (!organizationId || !(await this.isMember(organizationId, context.userId))) {
-      client.close(4403, 'organization access denied')
+    const parsed = pulseMessageSchema.safeParse(value)
+    if (!parsed.success) {
+      client.close(4400, 'invalid message')
       return
     }
+    const message = parsed.data
+    const organizationId = message.organizationId
+    if (!(await this.checkAccess(client, context, organizationId))) return
 
     if (message.type === 'subscribe') {
       context.organizations.add(organizationId)
@@ -153,26 +174,28 @@ export class PulseGateway implements OnApplicationShutdown, OnModuleDestroy, OnM
     client.close(4400, 'unsupported message type')
   }
 
-  private async isMember(organizationId: string, userId: string): Promise<boolean> {
-    const member = await this.prisma.member.findUnique({
-      where: { organizationId_userId: { organizationId, userId } },
-      select: { id: true }
-    })
-    return !!member
+  private async checkAccess(client: WebSocket, context: ConnectionContext, organizationId?: string): Promise<boolean> {
+    const result = await this.authorize.execute(context, organizationId)
+    if (result === 'session-expired') client.close(4401, 'session expired')
+    if (result === 'forbidden') client.close(4403, 'organization access denied')
+    return result === 'allowed' && client.readyState === WebSocket.OPEN && !this.draining
   }
 
-  private deliver(raw: string) {
-    let envelope: EventEnvelopeV1<unknown>
+  private async deliver(raw: string) {
+    let envelope: unknown
     try {
-      envelope = JSON.parse(raw) as EventEnvelopeV1<unknown>
+      envelope = JSON.parse(raw)
     } catch {
       return
     }
+    if (!isEventEnvelopeV1(envelope)) return
     const organizationId = envelope.actor.organizationId
-    if (!organizationId || envelope.version !== 1) return
+    if (typeof organizationId !== 'string' || !organizationId) return
 
     for (const [client, context] of this.contexts) {
-      if (context.organizations.has(organizationId)) this.send(client, envelope)
+      if (context.organizations.has(organizationId) && (await this.checkAccess(client, context, organizationId))) {
+        this.send(client, envelope)
+      }
     }
   }
 
@@ -195,6 +218,7 @@ export class PulseGateway implements OnApplicationShutdown, OnModuleDestroy, OnM
       } else {
         context.alive = false
         client.ping()
+        void this.checkAccess(client, context).catch(() => client.close(1011, 'authorization unavailable'))
       }
     }
   }
@@ -215,7 +239,11 @@ export class PulseGateway implements OnApplicationShutdown, OnModuleDestroy, OnM
 
   async onModuleDestroy() {
     if (this.heartbeat) clearInterval(this.heartbeat)
-    await this.redis.subClient.unsubscribe(CHANNEL)
+    this.beginDrain()
+    const subscriber = this.redis.subClient
+    subscriber.removeListener('message', this.onRedisMessage)
+    if (subscriber.status === 'ready') await subscriber.unsubscribe(CHANNEL)
+    await Promise.all([...this.contexts.values()].map(context => context.pending))
   }
 
   private errorMessage(error: unknown): string {

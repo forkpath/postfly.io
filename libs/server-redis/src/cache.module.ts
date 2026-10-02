@@ -2,7 +2,7 @@ import { CacheModule as NestCacheModule } from '@nestjs/cache-manager'
 import { DynamicModule, Global, Module } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 
-import { createKeyv } from '@keyv/redis'
+import KeyvRedis from '@keyv/redis'
 
 import { CacheConfig } from './cache.config'
 
@@ -19,7 +19,9 @@ export class CacheModule {
             const { host, port, ttl, password, db } = configService.get<CacheConfig>('cache') as CacheConfig
             return {
               ttl, // milliseconds
-              stores: [createKeyv(`redis://:${encodeURIComponent(password)}@${host}:${port}/${db}`)]
+              // Nest owns the Keyv wrapper. Passing an ESM Keyv instance to its
+              // CJS factory can wrap it twice and break adapter initialization.
+              stores: [new KeyvRedis(`redis://:${encodeURIComponent(password)}@${host}:${port}/${db}`)]
             }
           }
         })

@@ -93,13 +93,10 @@ export abstract class AbstractDao<TDocument extends AbstractDoc> {
     return this.model.aggregate<T>(pipeline).exec()
   }
 
-  private convertToObjectId(id: string | Types.ObjectId): Types.ObjectId {
-    return typeof id === 'string' ? new Types.ObjectId(id) : id
-  }
-
   private handleIdInQuery(query: ModelFilter<TDocument>): ModelFilter<TDocument> {
-    if (query && (query as any)._id) {
-      ;(query as any)._id = this.convertToObjectId((query as any)._id)
+    const id = query._id
+    if (typeof id === 'string') {
+      return { ...query, _id: new Types.ObjectId(id) }
     }
     return query
   }

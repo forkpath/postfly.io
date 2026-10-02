@@ -10,11 +10,8 @@ import type {
 import { getBillingOwnerId } from '@libs/billing-contract'
 import { Prisma, prisma } from '@libs/pg-dao'
 
-import { serverEnv } from './env'
-
-type CustomerRow = {
+interface CustomerRow {
   id: string
-  referenceId: string
   userId: string | null
   organizationId: string | null
   provider: string
@@ -33,16 +30,19 @@ function ownerWhere(owner: BillingOwner) {
   return owner.kind === 'user' ? { userId: owner.userId } : { organizationId: owner.organizationId }
 }
 
-function mapCustomer(input: CustomerRow): BillingCustomerRecord {
-  const owner: BillingOwner | undefined = input.userId
-    ? { kind: 'user', userId: input.userId }
-    : input.organizationId
-      ? { kind: 'organization', organizationId: input.organizationId }
-      : undefined
+function mapCustomer(input: CustomerRow): BillingCustomerRecord & { owner: BillingOwner } {
+  let owner: BillingOwner
+  if (input.userId !== null && input.organizationId === null) {
+    owner = { kind: 'user', userId: input.userId }
+  } else if (input.organizationId !== null && input.userId === null) {
+    owner = { kind: 'organization', organizationId: input.organizationId }
+  } else {
+    throw new Error('Billing customer must have exactly one owner')
+  }
 
   return {
     id: input.id,
-    referenceId: input.referenceId,
+    referenceId: getBillingOwnerId(owner),
     userId: input.userId,
     organizationId: input.organizationId,
     provider: input.provider,
@@ -50,19 +50,6 @@ function mapCustomer(input: CustomerRow): BillingCustomerRecord {
     createdAt: input.createdAt,
     updatedAt: input.updatedAt,
     owner
-  }
-}
-
-function mapCustomerForOwner(
-  input: CustomerRow,
-  requestedOwner: BillingOwner
-): BillingCustomerRecord & { owner: BillingOwner } {
-  const customer = mapCustomer(input)
-  return {
-    ...customer,
-    // Expand 兼容窗口内旧行还没有显式 owner 列。响应仍须返回由服务端
-    // 查询上下文推导的 owner，不能要求客户端回退到 referenceId 猜归属。
-    owner: customer.owner ?? requestedOwner
   }
 }
 
@@ -102,40 +89,12 @@ function mapOrder(input: {
   }
 }
 
-function customerIds(value: { id: string }[]): string {
-  return value
-    .map(item => item.id)
-    .sort()
-    .join(',')
-}
-
 export async function getBillingCustomers(owner: BillingOwner, provider?: string) {
-  const providerWhere = provider ? { provider } : {}
-  const legacyCustomers = async () =>
-    prisma.customer.findMany({
-      where: { referenceId: getBillingOwnerId(owner), ...providerWhere },
-      orderBy: { createdAt: 'desc' }
-    })
-  const ownerCustomers = async () =>
-    prisma.customer.findMany({
-      where: { ...ownerWhere(owner), ...providerWhere },
-      orderBy: { createdAt: 'desc' }
-    })
-
-  if (serverEnv.BILLING_OWNER_V2_SHADOW_READ) {
-    const [legacy, v2] = await Promise.all([legacyCustomers(), ownerCustomers()])
-    if (customerIds(legacy) !== customerIds(v2)) {
-      console.error('billing owner shadow-read mismatch', {
-        owner,
-        legacyCustomerIds: customerIds(legacy),
-        ownerCustomerIds: customerIds(v2)
-      })
-    }
-    return (serverEnv.BILLING_OWNER_V2_READ ? v2 : legacy).map(customer => mapCustomerForOwner(customer, owner))
-  }
-
-  const customers = serverEnv.BILLING_OWNER_V2_READ ? await ownerCustomers() : await legacyCustomers()
-  return customers.map(customer => mapCustomerForOwner(customer, owner))
+  const customers = await prisma.customer.findMany({
+    where: { ...ownerWhere(owner), ...(provider ? { provider } : {}) },
+    orderBy: { createdAt: 'desc' }
+  })
+  return customers.map(mapCustomer)
 }
 
 export async function getBillingCustomersByReferenceId(referenceId: string, provider?: string) {
@@ -150,9 +109,7 @@ export async function getBillingCustomerByExternalId(externalId: string, provide
 }
 
 export async function upsertBillingCustomer(input: { owner: BillingOwner; provider: string; externalId: string }) {
-  const referenceId = getBillingOwnerId(input.owner)
-  const writeOwner = serverEnv.BILLING_OWNER_V2_DUAL_WRITE || input.owner.kind === 'organization'
-  const explicitOwner = writeOwner ? ownerData(input.owner) : {}
+  const explicitOwner = ownerData(input.owner)
   const customer = await prisma.customer.upsert({
     where: {
       externalId_provider: {
@@ -161,17 +118,15 @@ export async function upsertBillingCustomer(input: { owner: BillingOwner; provid
       }
     },
     create: {
-      referenceId,
       provider: input.provider,
       externalId: input.externalId,
       ...explicitOwner
     },
     update: {
-      referenceId,
       ...explicitOwner
     }
   })
-  return mapCustomerForOwner(customer, input.owner)
+  return mapCustomer(customer)
 }
 
 export async function upsertBillingSubscription(input: {
@@ -280,7 +235,7 @@ export async function getBillingSummary(owner: BillingOwner) {
   })
 
   return customers.map(customer => ({
-    ...mapCustomerForOwner(customer, owner),
+    ...mapCustomer(customer),
     subscriptions: customer.subscriptions.map(mapSubscription),
     orders: customer.orders.map(mapOrder)
   }))

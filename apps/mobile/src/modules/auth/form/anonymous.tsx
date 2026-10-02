@@ -1,6 +1,6 @@
 'use client'
 
-import type { Route } from 'expo-router'
+import type { RoutePath } from 'expo-router'
 
 import { useMutation } from '@tanstack/react-query'
 
@@ -13,7 +13,7 @@ import { Button, Icons, Spin, Text } from '@libs/ui-native'
 import { auth } from '../lib/api'
 
 interface AnonymousLoginProps {
-  readonly redirectTo?: Route
+  readonly redirectTo?: RoutePath
 }
 
 export const AnonymousLogin = ({ redirectTo = pathsConfig.index }: AnonymousLoginProps) => {
