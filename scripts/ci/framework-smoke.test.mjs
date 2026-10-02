@@ -143,13 +143,13 @@ test('an untrusted TLS certificate never passes readiness', async t => {
     server.closeAllConnections()
     await new Promise(resolve => server.close(resolve))
   })
-  await assert.rejects(
-    waitForGateway(`https://127.0.0.1:${server.address().port}`, { ...quickReadiness, timeoutMs: 150 }),
-    error => {
-      assert.match(error.message, /did not become ready/)
-      assert.equal(error.cause?.cause?.code, 'DEPTH_ZERO_SELF_SIGNED_CERT')
-      return true
-    }
-  )
+  const origin = `https://127.0.0.1:${server.address().port}`
+  // Establish the fixture's TLS failure independently: the readiness deadline
+  // may abort its final handshake before OpenSSL reports that same error.
+  await assert.rejects(fetch(origin, { signal: AbortSignal.timeout(10_000) }), error => {
+    assert.equal(error.cause?.code, 'DEPTH_ZERO_SELF_SIGNED_CERT')
+    return true
+  })
+  await assert.rejects(waitForGateway(origin, { ...quickReadiness, timeoutMs: 150 }), /did not become ready/)
   assert.equal(requests, 0)
 })
