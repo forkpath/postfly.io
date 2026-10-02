@@ -145,6 +145,8 @@ test('release changes retain the quality and image gates without rebuilding unaf
     'docker/engine.Dockerfile',
     '.dockerignore',
     'scripts/release/publish-verified-images.mjs',
+    'scripts/release/framework-smoke.mjs',
+    'scripts/ci/framework-smoke.test.mjs',
     'scripts/ci/select-test-suites.mjs',
     'scripts/ci/select-test-suites.test.mjs'
   ]) {
@@ -157,7 +159,11 @@ test('release changes retain the quality and image gates without rebuilding unaf
 })
 
 test('release changes cannot suppress affected mobile code, native inputs, shared harnesses or explicit full runs', () => {
-  const releaseFiles = ['.github/workflows/deploy.yml', 'scripts/ci/select-test-suites.mjs']
+  const releaseFiles = [
+    '.github/workflows/deploy.yml',
+    'scripts/ci/select-test-suites.mjs',
+    'scripts/ci/framework-smoke.test.mjs'
+  ]
   const js = selectTestSuites({
     affected: ['mobile'],
     files: [...releaseFiles, 'libs/common/src/index.ts'],

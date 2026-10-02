@@ -93,7 +93,9 @@ try {
     path.join(reports, 'result.json'),
     JSON.stringify({ ...report, fuses, fileCount: files.length, dependencyPackages: packageFiles.size }, null, 2)
   )
-  console.log('Production-fuse, detached packaged application smoke passed')
 } finally {
-  await rm(root, { recursive: true, force: true })
+  // Windows may briefly retain executable handles after the process exits.
+  // Only retry removal of this test's temporary copy; persistent locks fail.
+  await rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 })
 }
+console.log('Production-fuse, detached packaged application smoke and cleanup passed')
