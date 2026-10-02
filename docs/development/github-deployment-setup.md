@@ -208,6 +208,14 @@ Kong 首次收到域名的 TLS 请求时会异步申请证书，在签发完成�
 始终未就绪都会使部署失败。健康就绪后的页面、会话和权限断言仍只执行一次，不靠重试
 掩盖认证错误。签发过程参见 [Kong ACME](https://developer.konghq.com/plugins/acme/)。
 
+部署 Compose 已设置 `KONG_LUA_SSL_VERIFY_DEPTH=3`，继续使用镜像的系统 CA 信任库。
+锁定的 Kong 镜像默认深度为 1，无法验证当前 Let’s Encrypt ACME 服务的交叉签名链；
+其日志会报 `acme directory request failed: 20: unable to get local issuer certificate`。
+这是 Kong 连接签发服务时的出站 TLS 验证失败，尚未进入域名挑战验证；随后出现的
+`please try again in ... seconds` 是插件的失败退避，并不表示已被 Let’s Encrypt 限流。
+此配置不需要再填入 GitHub 或服务器 `.env`，部署时会自动应用。若更新后仍报同样错误，
+检查运行容器的配置和出站证书链，不能通过关闭证书校验或导入来历不明的 CA 绕过。
+
 首次部署前，在目标 Linux 服务器检查 80/443 是否已被现有 Web 服务或容器占用：
 
 ```sh
@@ -273,19 +281,21 @@ HTTPS 探针都通过后，才算部署验收完成。`Required checks` 是测�
 
 ## 常见失败与恢复
 
-| 现象                                 | 检查与处理                                                                      |
-| ------------------------------------ | ------------------------------------------------------------------------------- |
-| Runner 未启动，提示账单/预算         | 处理 GitHub Actions 费用和预算，再重跑受影响的 job                              |
-| 构建镜像时 `No space left on device` | 发布 runner 会先清理闲置预装工具链；检查该步骤和磁盘余量，不删除服务器数据卷    |
-| `Configure the SSH host fingerprint` | 只保留 `SHA256:哈希`；完整的 `ssh-keygen -lf` 输出不能直接粘贴                  |
-| SSH host key 不匹配                  | 核对主机/端口及实际协商的密钥类型；默认 ECDSA 与 ED25519 指纹不同，不能跳过校验 |
-| SSH 认证失败                         | 核对用户、完整私钥、无口令要求，以及该用户的 `authorized_keys`                  |
-| `Missing environment file`           | 在与 `DEPLOY_PATH` 完全一致的目录创建 `.env`，检查权限和目录拼写                |
-| GHCR `unauthorized`/`denied`         | 检查 PAT classic 的有效期、`read:packages`、package 读取权限和拉取账号          |
-| 数据库或容器启动失败                 | 查看失败服务日志，核对本环境密码；不要删除持久卷来绕过问题                      |
-| Kong 报 `address already in use`     | 用 `ss` 和 `docker ps` 确认端口归属，再接入现有代理或释放端口；不要误停其他站点 |
-| HTTPS/公开探针失败                   | 检查 DNS、证书、80/443、反向代理和 `PUBLIC_ORIGIN`；容器 healthy 不代表公网可达 |
-| 找不到可推广记录                     | 确认同一 SHA 的 dev CI 整次成功，记录未过期且对应最新 attempt                   |
+| 现象                                 | 检查与处理                                                                                        |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| Runner 未启动，提示账单/预算         | 处理 GitHub Actions 费用和预算，再重跑受影响的 job                                                |
+| 构建镜像时 `No space left on device` | 发布 runner 会先清理闲置预装工具链；检查该步骤和磁盘余量，不删除服务器数据卷                      |
+| `Configure the SSH host fingerprint` | 只保留 `SHA256:哈希`；完整的 `ssh-keygen -lf` 输出不能直接粘贴                                    |
+| SSH host key 不匹配                  | 核对主机/端口及实际协商的密钥类型；默认 ECDSA 与 ED25519 指纹不同，不能跳过校验                   |
+| SSH 认证失败                         | 核对用户、完整私钥、无口令要求，以及该用户的 `authorized_keys`                                    |
+| `Missing environment file`           | 在与 `DEPLOY_PATH` 完全一致的目录创建 `.env`，检查权限和目录拼写                                  |
+| GHCR `unauthorized`/`denied`         | 检查 PAT classic 的有效期、`read:packages`、package 读取权限和拉取账号                            |
+| 数据库或容器启动失败                 | 查看失败服务日志，核对本环境密码；不要删除持久卷来绕过问题                                        |
+| Kong 报 `address already in use`     | 用 `ss` 和 `docker ps` 确认端口归属，再接入现有代理或释放端口；不要误停其他站点                   |
+| 已释放端口，但 Kong 没有实际端口映射 | 比较 `docker port` 与 inspect 的实际 `NetworkSettings.Ports`；仅重建本环境 Kong，保留其他服务与卷 |
+| ACME directory 报 issuer 验证失败    | 确认已部署 `KONG_LUA_SSL_VERIFY_DEPTH=3`，检查系统 CA 与出站证书链；失败退避期间不要反复重跑部署  |
+| HTTPS/公开探针失败                   | 检查 DNS、证书、80/443、反向代理和 `PUBLIC_ORIGIN`；容器 healthy 不代表公网可达                   |
+| 找不到可推广记录                     | 确认同一 SHA 的 dev CI 整次成功，记录未过期且对应最新 attempt                                     |
 
 CI 按 affected 选择测试，复用 pnpm、Gradle、CocoaPods/原生编译及 BuildKit 缓存。
 安全扫描与本地补丁核验先于测试选择和设备矩阵；发现未修复告警时不启动昂贵任务。

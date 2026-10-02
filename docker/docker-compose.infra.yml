@@ -81,6 +81,9 @@ services:
       KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
       KONG_ADMIN_LISTEN: 'off'
       KONG_PROXY_LISTEN: 0.0.0.0:8000, 0.0.0.0:8443 ssl
+      # ACME's cross-signed chain can exceed Kong's default depth of one.
+      # Keep system CA verification enabled while allowing up to three intermediates.
+      KONG_LUA_SSL_VERIFY_DEPTH: '3'
       DOMAIN: ${DOMAIN:-localhost}
       ACME_EMAIL: ${ACME_EMAIL:-}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
