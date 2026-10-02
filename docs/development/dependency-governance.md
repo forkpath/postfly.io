@@ -132,3 +132,21 @@ mock Keychain；未验证签名安装、真实钥匙串迁移或 Windows 更新�
 官方源复扫退出 0，high/critical 均为 0，另有 low 12、moderate 59。
 实际 Nx HTTP client 的本地 GET、重定向、JSON POST 与 503 拒绝行为通过；
 最终远端检查以修复提交的 CI 为准，没有增加忽略规则或降低扫描门槛。
+
+## 2026-10-02 扫描增量
+
+文档 PR 的新扫描发现 `@swc/cli@0.8.1 > piscina@4.9.3` 命中 Critical
+[GHSA-67c8-pqhq-4rmx](https://github.com/advisories/GHSA-67c8-pqhq-4rmx)。公告于
+2026-10-01 纳入 GitHub Advisory Database，修复版本包括 4.9.4；旧的成功扫描不能
+代替推广时的安全复扫。这是构建依赖告警，不是已发现服务器遭利用的证据。
+
+将现有 Piscina 4.x 安全下限从 4.9.3 提升到 4.9.4，仍满足 SWC CLI 的 `^4.3.1`。
+锁文件只变更该包的版本、完整性校验、SWC 引用及 override，保留其他依赖和 peer 解析。
+冻结安装通过；官方源复扫退出 0，high/critical 均为 0，另有 low 12、moderate 59。
+
+隔离 Worker 探针复现旧版接受原型继承的环境选项；同一断言在新版通过，同时验证显式
+环境配置与正常并行任务。真实 SWC CLI 使用两个 Worker 编译 TypeScript，生成结果可执行；
+Engine、Pulse、Worker 的 Nx 生产构建全部通过，未命中构建缓存。
+没有添加 audit 忽略规则，也未降低测试选择或安全门槛；远端完整检查以新提交为准。
+
+参考：[Piscina 4.9.4](https://github.com/piscinajs/piscina/releases/tag/v4.9.4)。

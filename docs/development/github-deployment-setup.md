@@ -91,34 +91,65 @@ gh variable set PUBLIC_ORIGIN --env staging --repo owner/repo --body 'https://st
 production 使用相同名称，把 `--env` 改为 `production`，填入正式环境自己的值。
 不要把私钥、token 或服务器 `.env` 提交到仓库、贴进聊天或打印到 Actions 日志。
 
-### SSH 主机指纹：只取第二列
+### SSH 主机指纹：匹配实际协商的主机密钥，只取第二列
 
 在服务器的**可信控制台**执行，读取服务器 host key，不是部署用户的登录公钥：
 
 ```sh
-ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256
+for RAY_HOST_KEY in /etc/ssh/ssh_host_*_key.pub; do
+  test -f "$RAY_HOST_KEY" || continue
+  printf '%s\n' "$RAY_HOST_KEY"
+  ssh-keygen -lf "$RAY_HOST_KEY" -E sha256
+done
+sudo sshd -T | awk '$1 == "hostkey" { print }'
 ```
 
-输出形式如下（这里省略真实哈希）：
+第一组命令列出各类型公钥的指纹；第二个命令检查默认 sshd 配置启用的主机密钥。
+如果监听部署端口的 sshd 使用了自定义配置，应检查该实例实际加载的配置。
+
+当前固定的 SCP/SSH action 使用 Go SSH 客户端，其默认协商顺序将普通 ECDSA 主机密钥
+放在 ED25519 前面。因此，**只取 ED25519 指纹并不总是正确**：服务器同时提供 ECDSA
+时，实际握手可能选中 ECDSA，随后与 ED25519 指纹比较就会失败。上传文件和远程执行
+都必须匹配实际协商的服务器主机密钥。部署用户的登录私钥仍可使用 ED25519，两者用途不同。
+依据见 [SCP 客户端算法顺序](https://github.com/golang/crypto/blob/v0.37.0/ssh/common.go)、
+[SSH 客户端默认算法顺序](https://github.com/golang/crypto/blob/v0.45.0/ssh/common.go) 和
+[指纹比较实现](https://github.com/appleboy/easyssh-proxy/blob/v1.5.0/easyssh.go)。
+
+确认当前服务提供默认 ECDSA 主机密钥时，单独提取它：
+
+```sh
+ssh-keygen -lf /etc/ssh/ssh_host_ecdsa_key.pub -E sha256
+```
+
+单个公钥的输出形式如下（这里省略真实哈希；类型也可能是 RSA 或 ED25519）：
 
 ```text
-256 SHA256:<服务器的43位Base64哈希> root@server (ED25519)
+256 SHA256:<服务器的43位Base64哈希> root@server (ECDSA)
 ```
 
 `DEPLOY_HOST_FINGERPRINT` **只填写 `SHA256:` 加哈希这一列**。不要包括 `256`、空格、
-`root@server` 或 `(ED25519)`。可以直接提取正确的值：
+`root@server` 或 `(ECDSA)`。以上 ECDSA 情况可以直接取第二列：
 
 ```sh
-ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256 | awk '{print $2}'
+ssh-keygen -lf /etc/ssh/ssh_host_ecdsa_key.pub -E sha256 | awk '{print $2}'
 ```
 
 将结果作为 `gh variable set DEPLOY_HOST_FINGERPRINT --env staging --repo owner/repo --body '提取的完整指纹'`
-的值。服务器重装或更换 host key 后，通过可信控制台重新确认；不要为通过验证而关闭指纹检查。
+的值，production 也要在自己的服务器上独立确认。若不提供 ECDSA，必须根据实际协商类型
+选择对应指纹，不能机械替换文件名。
+
+遇到 `host key fingerprint mismatch` 时，先确认 `DEPLOY_HOST`、`DEPLOY_PORT` 和
+可信控制台对应同一台 SSH 服务器，再核对启用的密钥类型与指纹。服务器重装或更换
+host key 后也要重新确认。不能关闭指纹检查、自动接受网络扫描得到的新指纹，或为了
+通过 CI 就修改服务器主机密钥。格式校验成功只证明字符串合法，不证明主机身份已匹配。
 
 ## 4. 服务器 `.env`：应用运行时使用
 
 GitHub Secret 只提供发布连接和拉取凭据。工作流**不会上传服务器 `.env`**，必须事先
 在每台服务器的 `DEPLOY_PATH/.env` 创建。目录拼写需与 GitHub Variable 完全一致。
+即使 GitHub 上的全部配置已填完，缺少这个文件仍会报 `Missing environment file`，
+并在登录镜像仓库、拉取镜像和执行迁移之前停止。已有配置在其他目录时，应核对
+`DEPLOY_PATH`，不要覆盖原文件或重新生成已有数据库的密码。
 
 以下以 staging 为例，由已创建的部署用户执行；若 `/opt` 目录没有写权限，由管理员
 先创建目录并赋予该部署用户所有权。`touch` 不会清空已有文件：
@@ -170,6 +201,18 @@ Kong 的 HTTP 监听端口，并正确转发 WebSocket 和原始协议信息；�
 入口。同机多套环境或已有代理占用 80/443 时，分配不同的网关宿主机端口。
 生产环境还需替换项目名、域名、邮箱和全部密码；两个环境的持久卷不得共用。
 
+首次部署前，在目标 Linux 服务器检查 80/443 是否已被现有 Web 服务或容器占用：
+
+```sh
+sudo ss -ltnp '( sport = :80 or sport = :443 )'
+sudo docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Ports}}'
+```
+
+若已有 Nginx、Caddy 或其他网关，需要先明确入口归属。保留现有代理时，为 Kong 设置
+未占用的 `GATEWAY_HTTP_PORT` / `GATEWAY_HTTPS_PORT`，按前述方式配置 HTTPS 终止和
+反向代理；由 Kong 独占公网入口时，先确认旧服务可以退役，再释放对应端口。不要直接
+停止未知服务、删除容器或清理数据卷。仅修改端口而没有相应代理转发，仍无法通过公网验收。
+
 Compose 自动注入容器之间的数据库/Redis/Mongo/RabbitMQ 地址和应用端口，不要把本地开发的
 `localhost` 连接串复制进去。`NODE_ENV=production` 由 Compose 注入，五个 `*_IMAGE`
 digest 由部署工作流提供，不需要手动写进 `.env`。
@@ -177,6 +220,15 @@ digest 由部署工作流提供，不需要手动写进 `.env`。
 基础部署不要求启用所有外部集成。实际使用邮件、OAuth、支付、存储等功能时，再按
 [环境配置说明](environment.md) 和对应库 README 配置提供商凭据、回调地址及已验证域名。
 服务器上线不自动创建本地开发演示账号，也不要在生产环境执行开发用 seed。
+
+完成后，以实际部署用户核对文件存在、非空且可读；不输出文件内容：
+
+```sh
+test -s /opt/ray-staging/.env && test -r /opt/ray-staging/.env && printf 'READY\n'
+```
+
+production 在自己的部署目录执行同样检查。该检查只确认文件已准备好，配置值是否
+正确仍由实际镜像拉取、数据库迁移、容器健康与公开探针验证。
 
 ## 5. 核查配置和首次发布
 
@@ -219,11 +271,12 @@ HTTPS 探针都通过后，才算部署验收完成。`Required checks` 是测�
 | Runner 未启动，提示账单/预算         | 处理 GitHub Actions 费用和预算，再重跑受影响的 job                              |
 | 构建镜像时 `No space left on device` | 发布 runner 会先清理闲置预装工具链；检查该步骤和磁盘余量，不删除服务器数据卷    |
 | `Configure the SSH host fingerprint` | 只保留 `SHA256:哈希`；完整的 `ssh-keygen -lf` 输出不能直接粘贴                  |
-| SSH host key 不匹配                  | 从服务器可信控制台重新核实 host key，不能跳过校验                               |
+| SSH host key 不匹配                  | 核对主机/端口及实际协商的密钥类型；默认 ECDSA 与 ED25519 指纹不同，不能跳过校验 |
 | SSH 认证失败                         | 核对用户、完整私钥、无口令要求，以及该用户的 `authorized_keys`                  |
 | `Missing environment file`           | 在与 `DEPLOY_PATH` 完全一致的目录创建 `.env`，检查权限和目录拼写                |
 | GHCR `unauthorized`/`denied`         | 检查 PAT classic 的有效期、`read:packages`、package 读取权限和拉取账号          |
 | 数据库或容器启动失败                 | 查看失败服务日志，核对本环境密码；不要删除持久卷来绕过问题                      |
+| Kong 报 `address already in use`     | 用 `ss` 和 `docker ps` 确认端口归属，再接入现有代理或释放端口；不要误停其他站点 |
 | HTTPS/公开探针失败                   | 检查 DNS、证书、80/443、反向代理和 `PUBLIC_ORIGIN`；容器 healthy 不代表公网可达 |
 | 找不到可推广记录                     | 确认同一 SHA 的 dev CI 整次成功，记录未过期且对应最新 attempt                   |
 
@@ -234,6 +287,16 @@ CI 按 affected 选择测试，复用 pnpm、Gradle、CocoaPods/原生编译及 
 任务时，选择器比较完整 YAML 结构，确认其他配置和任务不变后，再用剩余变更计算移动端
 影响范围；全仓质量与真实镜像检查不受此例外影响。定时和显式 full 运行保留完整矩阵。
 账单恢复或部署配置修正后，优先重跑必要失败 job，不重复启动已通过的 Android/iOS 完整矩阵。
+例如 SSH 或服务器 `.env` 修正后，先找到失败部署 job 的 `databaseId`，再只重跑它及
+依赖它的汇总检查；保留成功的镜像构建和测试结果：
+
+```sh
+gh run view RUN_ID --repo owner/repo --json jobs \
+  --jq '.jobs[] | select(.conclusion == "failure") | {name, databaseId}'
+gh run rerun RUN_ID --repo owner/repo --job JOB_DATABASE_ID
+```
+
+替换示例中的 run/job ID；优先选择 `Deploy staging / deploy`，不要误选整个构建流程。
 重跑 dev CI 会产生新的 attempt，需要与该 attempt 对应的 staging 成功记录。
 数据库迁移先于替换应用执行；应用回退不自动撤销迁移，已有数据的环境应先审查迁移兼容性。
 
