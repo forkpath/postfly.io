@@ -42,7 +42,8 @@ export function selectTestSuites({ affected, nativeAffected = affected, files, f
       ![
         'scripts/ci/select-test-suites.mjs',
         'scripts/ci/select-test-suites.test.mjs',
-        'scripts/ci/promotion.test.mjs'
+        'scripts/ci/promotion.test.mjs',
+        'scripts/ci/framework-smoke.test.mjs'
       ].includes(file) &&
       !(ciDeploymentOnly && file === '.github/workflows/ci.yml')
   )
