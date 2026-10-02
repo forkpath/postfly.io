@@ -78,12 +78,14 @@ jobs:
           run_install: false
       - name: Check for newly disclosed dependency issues before promotion
         if: steps.target.outputs.environment == 'production'
-        run: pnpm audit --registry=https://registry.npmjs.org --audit-level=high --json > production-dependency-audit.json
+        run: node scripts/ci/audit-dependencies.mjs production-dependency-audit.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always() && steps.target.outputs.environment == 'production'
         with:
           name: production-dependency-audit
-          path: production-dependency-audit.json
+          path: |
+            production-dependency-audit.json
+            production-dependency-audit-evaluation.json
           retention-days: 7
           if-no-files-found: warn
 

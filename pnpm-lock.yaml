@@ -350,6 +350,9 @@ overrides:
 packageExtensionsChecksum: sha256-36OBmPos+0962TW7Jhbyr40SF+t72xun9andX8vYMcY=
 
 patchedDependencies:
+  node-forge@1.4.0:
+    hash: 266a573c1d45837e959f85fbe574e371c5f667a622504161b388838532ccf439
+    path: patches/node-forge@1.4.0.patch
   react-native-ios-utilities@5.2.0:
     hash: 89e0dc24d57e1f7da2bef75eb88f0619ffed01cf71f7caec0f999052b3bd15ea
     path: patches/react-native-ios-utilities@5.2.0.patch
@@ -25348,7 +25351,7 @@ snapshots:
       bluebird: 3.7.2
       commander: 9.5.0
       debug: 4.3.7
-      node-forge: 1.4.0
+      node-forge: 1.4.0(patch_hash=266a573c1d45837e959f85fbe574e371c5f667a622504161b388838532ccf439)
       split: 1.0.1
     transitivePeerDependencies:
       - supports-color
@@ -25693,7 +25696,7 @@ snapshots:
       glob: 13.0.0
       lan-network: 0.2.1
       multitars: 1.0.2
-      node-forge: 1.4.0
+      node-forge: 1.4.0(patch_hash=266a573c1d45837e959f85fbe574e371c5f667a622504161b388838532ccf439)
       npm-package-arg: 11.0.3
       ora: 3.4.0
       picomatch: 4.0.7
@@ -25730,7 +25733,7 @@ snapshots:
 
   '@expo/code-signing-certificates@0.0.6':
     dependencies:
-      node-forge: 1.4.0
+      node-forge: 1.4.0(patch_hash=266a573c1d45837e959f85fbe574e371c5f667a622504161b388838532ccf439)
 
   '@expo/config-plugins@57.0.9(typescript@6.0.3)':
     dependencies:
@@ -40589,7 +40592,7 @@ snapshots:
     dependencies:
       whatwg-url: 5.0.0
 
-  node-forge@1.4.0: {}
+  node-forge@1.4.0(patch_hash=266a573c1d45837e959f85fbe574e371c5f667a622504161b388838532ccf439): {}
 
   node-gyp@12.4.0:
     dependencies:
