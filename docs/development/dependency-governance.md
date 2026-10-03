@@ -16,6 +16,21 @@ SDK 配套版本；分组本身不能证明版本兼容。
 实际远端切换记录见优化计划。pnpm 的根锁文件覆盖 Mobile、Extension 和 tools 的
 workspace importer，不另外维护应用锁文件。
 
+公共 npm 依赖使用 Dependabot 默认的 npmjs.org 源，不在 `registries` 中声明无认证的
+`npm-registry`。该字段用于配置额外 registry 的访问凭据；把公共源仅填写为 `type`、
+`url` 和 `replaces-base` 会被 GitHub 的配置校验拒绝。以后接入私有源时，再按
+[官方认证配置](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference#type-and-authentication-details)
+添加对应的 Dependabot secret。
+
+npm/pnpm 的版本检查安排在每周一北京时间 03:00，GitHub Actions 每周一检查；
+分别最多保留 5 个和 2 个版本更新 PR。安全更新需在仓库设置中启用，且上游必须已有
+可用的修复版本。Dependabot 创建升级 PR 后仍须通过本仓 CI 和人工审核，不自动合并，
+也不能保证尚未发布修复的漏洞立即消失。
+
+修改配置后，应检查 GitHub 原生 `.github/dependabot.yml` 校验结果。普通 YAML 解析、
+Actions 工作流检查和 `Dependency security` 扫描都不能替代这个校验：后者检查现有
+锁文件中的漏洞，不验证 Dependabot 是否能够解析配置或生成升级 PR。
+
 ## 官方源扫描
 
 `Dependency security` 可复用工作流由每次 PR/dev CI 调用，也可每周定时及手动运行：
