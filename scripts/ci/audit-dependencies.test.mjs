@@ -146,6 +146,67 @@ test('additional high or critical findings cannot inherit the local mitigation',
   }
 })
 
+for (const [id, name, version, testFile] of [
+  ['GHSA-ch52-4w7c-c8xp', 'http-cache-semantics', '4.2.0', 'http-cache-semantics-patch'],
+  ['GHSA-vfj7-8cjw-p6xm', 'braces', '3.0.3', 'braces-patch']
+]) {
+  test(`${name} requires its own reviewed patch and regression tests`, () => {
+    const { report, advisory, policy } = fixture()
+    Object.assign(advisory, { github_advisory_id: id, module_name: name })
+    advisory.findings[0].version = version
+    const entry = policy.mitigations[0]
+    Object.assign(entry, { advisory: id, package: name, version })
+    assert.equal(
+      evaluateAudit(report, policy, options).passed,
+      false,
+      'node-forge files cannot authorize another patch'
+    )
+    const required = [
+      'pnpm-lock.yaml',
+      'pnpm-workspace.yaml',
+      `patches/${name}@${version}.patch`,
+      `scripts/ci/${testFile}.test.mjs`
+    ]
+    entry.files = Object.fromEntries(required.map(file => [file, hash]))
+    assert.equal(evaluateAudit(report, policy, options).passed, true)
+    for (const file of required) {
+      assert.equal(
+        evaluateAudit(report, policy, { ...options, read: path => (path === file ? 'changed' : contents) }).passed,
+        false
+      )
+      delete entry.files[file]
+      assert.equal(evaluateAudit(report, policy, options).passed, false)
+      entry.files[file] = hash
+    }
+  })
+}
+
+test('even matching policy records cannot reuse a known patch for unreviewed findings', () => {
+  for (const change of [
+    { advisory: 'GHSA-unreviewed' },
+    { package: 'unreviewed' },
+    { version: '1.4.1' },
+    { severity: 'critical' }
+  ]) {
+    const { report, advisory, policy } = fixture()
+    Object.assign(policy.mitigations[0], change)
+    const entry = policy.mitigations[0]
+    Object.assign(advisory, {
+      github_advisory_id: entry.advisory,
+      module_name: entry.package,
+      severity: entry.severity
+    })
+    advisory.findings[0].version = entry.version
+    if (change.severity) {
+      report.metadata.vulnerabilities.high = 0
+      report.metadata.vulnerabilities.critical = 1
+    }
+    const result = evaluateAudit(report, policy, options)
+    assert.equal(result.passed, false)
+    assert.match(result.unresolved[0].reason, /No reviewed patch implementation/)
+  }
+})
+
 test('missing findings, muted reports, scanner errors and inconsistent counts are failures', () => {
   for (const mutate of [
     report => {

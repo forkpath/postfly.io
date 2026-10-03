@@ -203,3 +203,50 @@ Android adbkit 的同版本引用，三条引用都应用该补丁。没有据�
 异常扫描退出码、无效 JSON、缺失 findings 和过期记录均拒绝放行。两环境使用同一评估器；
 `Required checks` 仍要求安装后的回归和全部选中测试通过，production 仍只接收同 SHA 的
 成功 staging 记录与五个不可变镜像摘要。本地通过不代替远端原生与部署验收。
+
+## 2026-10-03：HTTP 缓存与模式解析补丁
+
+PR #12 初次运行仍被两项新披露的 High 告警阻断；修正 Dependabot 公共 registry
+配置只解决配置校验，不会修复已锁定依赖中的漏洞。核查 npm 时，
+`http-cache-semantics@4.2.0`、`braces@3.0.3` 和 `node-forge@1.4.0` 均无正式修复版本。
+前两项因此采用有期限的 pnpm 本地补丁，不伪造包版本或降低安全门槛。
+
+| 包                         | 告警与锁文件调用路径                                                                                                                   | 本地修复                                                                                             |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| http-cache-semantics 4.2.0 | [GHSA-ch52-4w7c-c8xp](https://github.com/advisories/GHSA-ch52-4w7c-c8xp)；SWC CLI → bin-wrapper → downloader → got → cacheable-request | 在处理 `max-stale` 或异步重新验证前检查响应复用限制，防止共享 Cookie、private、no-cache 等限制被绕过 |
+| braces 3.0.3               | [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)；Nx ESLint/Jest → Jest transform → micromatch                 | 解析器与 compile/expand/stringify 的 AST 遍历均限制嵌套深度为 100；调用者可降低，不能提高安全上限    |
+
+运行时代码取自已审查的上游修复提案：
+[http-cache-semantics PR #58](https://github.com/kornelski/http-cache-semantics/pull/58)，
+提交 `14a8c2ad51740dc39bf3e8f1a11c845a5003f217`；
+[braces PR #72](https://github.com/micromatch/braces/pull/72)，
+提交 `d0d575e55e74a4e0218e5248fafb79efc3e54ebb`。核查时均未合并、未发布；
+这是仓库维护的临时修复，不等于上游正式安全版本。锁文件中的两个 cacheable-request
+版本及 micromatch/chokidar 的引用均应用补丁，原始 registry 完整性记录保留。
+
+验证命令：
+
+```sh
+pnpm install --frozen-lockfile
+pnpm ci:checks
+node scripts/ci/audit-dependencies.mjs dependency-audit.json
+pnpm nx run-many -t test -p mobile,ray-plugin --nxBail
+pnpm nx run-many -t build -p engine,pulse,worker --nxBail
+```
+
+- 同一组 23 项新回归在原始依赖上为 6 通过、17 失败；补丁后 23 项全部通过。
+  覆盖序列化缓存、共享 Cookie、认证请求、请求/响应缓存指令、正常过期复用、304 验证，
+  以及通过实际 SWC downloader 的 got 客户端访问本机 HTTP 服务的两个用户隔离测试。
+- braces 测试覆盖低于原有字符数上限的深层输入、调用者直接传入的 AST、100 层边界、
+  禁止提高上限、正常范围/备选/转义模式及 Jest 实际 micromatch 调用方。
+  超过新上限会抛出明确的深度错误；外部应用若接受不可信模式，仍需处理输入错误。
+- 原有 node-forge 公告与上游补丁重新核查，10 项真实签名与 Expo 适配器回归通过。
+  它的实现不变，因 workspace/锁文件变化重新绑定审查哈希，原有到期时间不延长。
+- 三条审查记录均在 **2026-10-16 00:00 UTC** 到期。评估器分别绑定每个 GHSA、
+  包/版本及其对应补丁和回归测试，其他包或其他告警不能借用这些文件放行。
+  原始扫描仍为 **high 3、critical 0**；补丁核验通过时为缓解 3、未缓解 0。
+  新告警、范围/路径变化、缺失或改动文件和到期均继续阻断。
+
+补丁和记录必须一起维护。上游发布修复版后，应在单独 PR 升级并移除相应补丁及记录，
+保留回归用例验证正式版本，再执行冻结安装、官方源复扫和完整 CI。不得自动续期，
+也不能只重算哈希来消除失败。远端验收以 PR 最新提交的 `Required checks` 为准。

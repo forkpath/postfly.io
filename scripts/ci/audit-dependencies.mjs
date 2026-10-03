@@ -7,6 +7,14 @@ import { pathToFileURL } from 'node:url'
 const severities = ['info', 'low', 'moderate', 'high', 'critical']
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value)
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex')
+const reviewedPatches = new Map([
+  ['GHSA-86w9-cpqp-85rv:node-forge@1.4.0', ['patches/node-forge@1.4.0.patch', 'scripts/ci/node-forge-patch.test.mjs']],
+  [
+    'GHSA-ch52-4w7c-c8xp:http-cache-semantics@4.2.0',
+    ['patches/http-cache-semantics@4.2.0.patch', 'scripts/ci/http-cache-semantics-patch.test.mjs']
+  ],
+  ['GHSA-vfj7-8cjw-p6xm:braces@3.0.3', ['patches/braces@3.0.3.patch', 'scripts/ci/braces-patch.test.mjs']]
+])
 
 // A local patch never changes the registry's finding. Keep the raw report and
 // independently verify the narrowly reviewed mitigation against this checkout.
@@ -68,6 +76,7 @@ export function evaluateAudit(report, policy, { now = new Date(), read = readFil
         const entry = matches[0]
         const reviewed = Date.parse(entry.reviewedAt)
         const expiry = Date.parse(entry.expiresAt)
+        const patchFiles = reviewedPatches.get(`${result.advisory}:${result.package}@${result.version}`)
         if (
           !Number.isFinite(reviewed) ||
           !Number.isFinite(expiry) ||
@@ -76,14 +85,13 @@ export function evaluateAudit(report, policy, { now = new Date(), read = readFil
           expiry - reviewed > 14 * 86400000
         ) {
           reason = 'Mitigation expired or has an invalid review period'
+        } else if (!patchFiles || result.severity !== 'high') {
+          reason = 'No reviewed patch implementation for this advisory and package version'
         } else if (
           !isObject(entry.files) ||
-          ![
-            'pnpm-lock.yaml',
-            'pnpm-workspace.yaml',
-            'patches/node-forge@1.4.0.patch',
-            'scripts/ci/node-forge-patch.test.mjs'
-          ].every(file => /^[a-f0-9]{64}$/.test(entry.files[file] ?? ''))
+          !['pnpm-lock.yaml', 'pnpm-workspace.yaml', ...patchFiles].every(file =>
+            /^[a-f0-9]{64}$/.test(entry.files[file] ?? '')
+          )
         ) {
           reason = 'Missing patch, frozen dependency inputs, or regression-test binding'
         } else {
@@ -103,7 +111,7 @@ export function evaluateAudit(report, policy, { now = new Date(), read = readFil
     }
   }
   // A report that omits or aggregates additional vulnerable packages cannot
-  // inherit this one-package mitigation. Schema/registry drift fails closed.
+  // inherit a reviewed patch's mitigation. Schema/registry drift fails closed.
   for (const level of ['high', 'critical']) {
     if (counts[level] !== represented[level].size)
       throw new Error(`Unaccounted ${level} vulnerabilities in registry report`)
