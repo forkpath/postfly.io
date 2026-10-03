@@ -207,5 +207,7 @@ packageExtensions:
     peerDependencies:
       '@react-native-menu/menu': 2.0.0
 patchedDependencies:
+  braces@3.0.3: patches/braces@3.0.3.patch
+  http-cache-semantics@4.2.0: patches/http-cache-semantics@4.2.0.patch
   node-forge@1.4.0: patches/node-forge@1.4.0.patch
   react-native-ios-utilities@5.2.0: patches/react-native-ios-utilities@5.2.0.patch

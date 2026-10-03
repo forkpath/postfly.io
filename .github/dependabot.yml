@@ -1,16 +1,10 @@
 version: 2
 
-registries:
-  npm-public:
-    type: npm-registry
-    url: https://registry.npmjs.org
-    replaces-base: true
-
 updates:
   # pnpm's root lockfile covers every workspace importer and the catalogs.
+  # Public npm uses the default registry; custom registries require credentials.
   - package-ecosystem: npm
     directory: /
-    registries: [npm-public]
     schedule:
       interval: weekly
       day: monday
