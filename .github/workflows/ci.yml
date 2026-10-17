@@ -1,10 +1,18 @@
 name: CI
 
+# Branch policy (docs/development/branch-workflow.md):
+# - pull requests into dev and arch are tested; labels may skip device suites;
+# - pushes to dev (merged pull requests) run the full matrix, then deploy staging;
+# - arch pushes run nothing; main is fast-forwarded to a staging-verified dev commit
+#   and deployed by deploy.yml without re-running tests.
 on:
   push:
     branches:
       - dev
   pull_request:
+    branches:
+      - dev
+      - arch
   schedule:
     - cron: '23 18 * * 0'
   workflow_dispatch:
@@ -20,6 +28,8 @@ on:
 permissions:
   actions: read
   contents: read
+  # The selector reads the current pull request labels (ci:skip-*, ci:full).
+  pull-requests: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -45,6 +55,7 @@ jobs:
       desktop: ${{ steps.suites.outputs.desktop }}
       web: ${{ steps.suites.outputs.web }}
       generator: ${{ steps.suites.outputs.generator }}
+      bootstrap: ${{ steps.suites.outputs.bootstrap }}
       mobile: ${{ steps.suites.outputs.mobile }}
       mobileAndroid: ${{ steps.suites.outputs.mobileAndroid }}
     env:
@@ -64,6 +75,13 @@ jobs:
         run: node scripts/ci/select-test-suites.mjs
         env:
           CI_FULL: ${{ inputs.full }}
+          GITHUB_TOKEN: ${{ github.token }}
+          # Optional self-hosted runners; see docs/development/self-hosted-runners.md.
+          RAY_RUNNER_IOS: ${{ vars.RAY_RUNNER_IOS }}
+          RAY_RUNNER_DESKTOP_MAC_ARM64: ${{ vars.RAY_RUNNER_DESKTOP_MAC_ARM64 }}
+          RAY_RUNNER_DESKTOP_MAC_X64: ${{ vars.RAY_RUNNER_DESKTOP_MAC_X64 }}
+          RAY_RUNNER_DESKTOP_WIN: ${{ vars.RAY_RUNNER_DESKTOP_WIN }}
+          RAY_RUNNER_ANDROID: ${{ vars.RAY_RUNNER_ANDROID }}
 
   main:
     needs: select
@@ -257,6 +275,35 @@ jobs:
           path: dist/test-results/ray-plugin
           if-no-files-found: error
 
+  bootstrap:
+    needs: select
+    if: needs.select.outputs.bootstrap == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      NX_NO_CLOUD: 'true'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.1
+          cache: pnpm
+      # bootstrap performs the frozen install itself, exactly as a new developer would.
+      - name: Bootstrap a fresh Linux checkout and start the full stack
+        run: bash scripts/ci/bootstrap-acceptance.sh dist/test-results/bootstrap
+      - name: Stop development infrastructure
+        if: always()
+        run: test ! -f .env || pnpm docker:dev:down
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: bootstrap-acceptance
+          path: dist/test-results/bootstrap
+          if-no-files-found: error
+
   extension:
     needs: select
     if: needs.select.outputs.extension == 'true'
@@ -323,7 +370,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.select.outputs.mobile) }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 90
     env:
       NX_NO_CLOUD: 'true'
@@ -373,9 +420,10 @@ jobs:
           path: |
             ~/Library/Caches/CocoaPods
             .cache/mobile-native/ios
-          key: mobile-xcode-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/testing/mobile-tools.json') }}-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml', 'apps/mobile/package.json', 'apps/mobile/app.config.ts', 'apps/mobile/eas.json', 'patches/**') }}
+          # Hosted and self-hosted Macs run different macOS versions; keep their caches apart.
+          key: mobile-xcode-v1-${{ runner.environment }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/testing/mobile-tools.json') }}-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml', 'apps/mobile/package.json', 'apps/mobile/app.config.ts', 'apps/mobile/eas.json', 'patches/**') }}
           restore-keys: |
-            mobile-xcode-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/testing/mobile-tools.json') }}-
+            mobile-xcode-v1-${{ runner.environment }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/testing/mobile-tools.json') }}-
       - run: pnpm install --frozen-lockfile
       - run: node scripts/testing/install-maestro.mjs
       - name: Prepare Android device and native SDK
@@ -383,14 +431,17 @@ jobs:
         run: |
           test -e /dev/kvm
           sudo chmod a+rw /dev/kvm
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;36.0.0' 'ndk;27.1.12297006' 'system-images;android-35;google_apis;x86_64'
-      - name: Select pinned Xcode and hosted simulator runtime
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;36.0.0' 'ndk;27.1.12297006' 'system-images;android-36;google_apis;x86_64'
+      - name: Select pinned Xcode and simulator runtime
         if: matrix.platform == 'ios'
         run: |
           node --input-type=module <<'JS'
-          import { appendFileSync, readFileSync } from 'node:fs'
+          import { appendFileSync, existsSync, readFileSync } from 'node:fs'
           const tools = JSON.parse(readFileSync('scripts/testing/mobile-tools.json', 'utf8'))
-          appendFileSync(process.env.GITHUB_ENV, `DEVELOPER_DIR=/Applications/Xcode_${tools.xcodeVersion}.app/Contents/Developer\n`)
+          const developerDir = `/Applications/Xcode_${tools.xcodeVersion}.app/Contents/Developer`
+          // Self-hosted Macs must install the pinned Xcode at the same path as the hosted image.
+          if (!existsSync(developerDir)) throw new Error(`Pinned Xcode ${tools.xcodeVersion} not found at ${developerDir}`)
+          appendFileSync(process.env.GITHUB_ENV, `DEVELOPER_DIR=${developerDir}\n`)
           JS
       - run: pnpm nx run mobile:e2e:${{ matrix.platform }}
       # A later device/flow failure must not discard a completed native build's
@@ -432,7 +483,8 @@ jobs:
   required-checks:
     name: Required checks
     if: always()
-    needs: [select, security, main, database-contract, backend, generator, extension, web, mobile, desktop-checks]
+    needs:
+      [select, security, main, database-contract, backend, generator, bootstrap, extension, web, mobile, desktop-checks]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -471,7 +523,24 @@ jobs:
     if: always() && github.event_name == 'push' && github.ref == 'refs/heads/dev' && inputs.ref == ''
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    # The main-gate ruleset requires the "Staging verified" commit status before main can be
+    # fast-forwarded to this commit. A skipped job reports success for required checks, so the
+    # gate uses a status that only this dev-push job ever writes. The newest status wins, so a
+    # failed deployment followed by a successful re-run ends as success.
+    permissions:
+      statuses: write
     steps:
+      - name: Record whether staging verified this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOYMENT_RESULT: ${{ needs.deploy-staging.result }}
+          STATUS_URL: repos/${{ github.repository }}/statuses/${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          state=failure
+          if [ "$DEPLOYMENT_RESULT" = success ]; then state=success; fi
+          gh api -X POST "$STATUS_URL" -f state="$state" -f context='Staging verified' \
+            -f description="Staging deployment: $DEPLOYMENT_RESULT" -f target_url="$RUN_URL"
       - name: Require the real staging deployment to succeed
         env:
           DEPLOYMENT_RESULT: ${{ needs.deploy-staging.result }}

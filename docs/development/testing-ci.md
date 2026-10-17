@@ -11,7 +11,20 @@ CI 检查当前提交是否仍能安装、编译并满足框架行为契约；CD
 版本标签由 `Release Extension` 调用一次完整 CI，`ci.yml` 不再同时监听标签，
 避免同一个发布提交重复运行两套移动设备与桌面矩阵。
 
-| 套件                                      | PR / dev 推送选择条件            | 首次建分支、定时、手动、发布验证    |
+面向 dev 和 arch 的 PR 只运行受影响的套件，并可用标签跳过设备 E2E；合入 dev 后的推送运行全量矩阵，
+不读取标签。arch 的推送不运行 CI；main 不接受 PR，快进到已部署 staging 的 dev 提交后直接部署，不再运行 CI。
+
+| 标签                | 作用（仅 PR 生效）               |
+| ------------------- | -------------------------------- |
+| `ci:skip-mobile`    | 跳过 Mobile Android/iOS 设备 E2E |
+| `ci:skip-desktop`   | 跳过 Desktop 三平台检查          |
+| `ci:skip-extension` | 跳过 Chromium 扩展 E2E           |
+| `ci:full`           | 运行全量矩阵，优先于所有跳过标签 |
+
+标签只跳过设备/E2E 套件，所有受影响项目的 lint、类型检查、单测和构建仍会执行。
+修改标签后在该 PR 的运行上选择 **Re-run all jobs**（或推送新提交）生效。
+
+| 套件                                      | PR 选择条件                      | dev 推送、定时、手动、发布验证      |
 | ----------------------------------------- | -------------------------------- | ----------------------------------- |
 | lint/typecheck/typecheck-tests/test/build | Nx affected                      | 全部                                |
 | PG 迁移与 schema                          | 每次                             | 每次                                |
@@ -21,6 +34,10 @@ CI 检查当前提交是否仍能安装、编译并满足框架行为契约；CD
 | Desktop                                   | Desktop 受影响                   | macOS 两架构、Windows、存储发布契约 |
 | Mobile Android                            | Mobile 受影响                    | 执行                                |
 | Mobile iOS                                | Mobile 受影响且原生依赖/配置变化 | 执行                                |
+| Linux 全新检出启动验收                    | 启动相关脚本、依赖或迁移变化     | 执行                                |
+
+Mobile iOS 与 Desktop 三平台默认在 GitHub 托管 runner 上执行，可通过仓库变量改在自有机器上运行，
+机器人和 fork 发起的运行始终使用托管 runner，见 [自托管 Runner](self-hosted-runners.md)。
 
 测试编排、CI/发布脚本、Docker 配置、依赖补丁和 workflow 的变化选择完整 E2E 矩阵。
 普通文档变化可不启动设备/后端套件。无法解析影响图时检查失败；找不到基线
@@ -36,16 +53,16 @@ Web 的历史厂商/业务账户场景不在默认框架页面套件中，不计
 
 ## 仓库合并规则
 
-在仓库 Settings → Rules → Rulesets / Branches 为 dev 添加 `Required checks`，
-为 main 添加 `Required checks` 和 `Staging deployment`，并要求合并前更新检查。
-main 使用同一 SHA 的 fast-forward 推广，见部署指南。YAML 成功运行与 GitHub 实际阻止合并是两件事，不能
+dev、arch 的 ruleset 要求 `Required checks` 与 `PR policy`；main 要求 `Required checks` 与 `Staging verified` 状态（staging 部署成功后由 CI 写入），
+只能由发布部署密钥快进更新。具体配置、合并方式与发布流程见
+[分支维护](branch-workflow.md)。YAML 成功运行与 GitHub 实际阻止合并是两件事，不能
 仅凭 job 名称宣称已经启用保护。
 
 2026-09-29 历史验收已核实 `forkpath/postfly.io` 当时的默认分支 `arch` 和验收基线分支
 `codex/testing-baseline-20260928` 均要求 `Required checks`、严格同步基线，
 并对管理员生效。PR #1 临时转为 ready 后，失败检查使 GitHub 返回
 `mergeStateStatus=BLOCKED`；验证后恢复 draft，未执行合并。此记录不等于新 dev/main
-保护已生效；当前策略切换的实际读回与远端验证见 [优化计划](framework-hardening-plan.md)。
+保护已生效；当前策略切换的实际读回与远端验证见 [优化过程记录](archive/2026-09-hardening-log.md)。
 
 ## 发布前后
 
@@ -78,4 +95,4 @@ SMOKE_BASE_URL=https://your-deployed-origin node scripts/release/framework-smoke
 命令替身，证明失败报告不会触发 push；它不等同于真实 registry 或生产部署验收。
 
 Mobile 商店包、Desktop 签名/公证升级，以及真实厂商账户继续作为专项验收，
-不能用无签名测试包通过代替。当前通过与阻碍见 [验收记录](testing-framework-validation.md)。
+不能用无签名测试包通过代替。当前通过与限制见 [项目现状](status.md)。

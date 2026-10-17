@@ -6,6 +6,8 @@ import { isDeepStrictEqual } from 'node:util'
 
 import { parse } from 'yaml'
 
+import { readContext, readVariables, resolveRunners } from './runners.mjs'
+
 export function onlyDeploymentJobsChanged(before, after) {
   const record = value => value !== null && typeof value === 'object' && !Array.isArray(value)
   const withoutDeployment = source => {
@@ -61,32 +63,94 @@ export function selectTestSuites({ affected, nativeAffected = affected, files, f
     desktop: has('desktop'),
     web: has('web') || has('web-e2e'),
     generator: has('ray-plugin') || files.includes('ray.resources.json'),
+    // Fresh-checkout setup: only environment-level inputs, not ordinary app code.
+    bootstrap:
+      all ||
+      files.some(file =>
+        /^(scripts\/development\/|\.env\.example$|package\.json$|pnpm-lock\.yaml$|pnpm-workspace\.yaml$|nx\.json$|libs\/pg-dao\/(prisma\.config\.|src\/(migrations|seed)))/.test(
+          file
+        )
+      ),
     mobileAndroid,
     mobileIos: mobileAndroid && (nativeAll || nativeChanged)
   }
+}
+
+// Pull request labels skip device/E2E suites only; lint, typecheck, unit tests and
+// builds of every affected project (including mobile and desktop) still run.
+export const LABEL_SKIPS = {
+  'ci:skip-mobile': ['mobileAndroid', 'mobileIos'],
+  'ci:skip-desktop': ['desktop'],
+  'ci:skip-extension': ['extension']
+}
+export const FULL_LABEL = 'ci:full'
+
+export function applyPullRequestLabels(suites, labels) {
+  const names = new Set(labels.map(label => label.toLowerCase()))
+  // ci:full wins over any skip label: when in doubt, test more.
+  if (names.has(FULL_LABEL)) return { suites, skipped: [] }
+  const result = { ...suites }
+  const skipped = []
+  for (const [label, keys] of Object.entries(LABEL_SKIPS)) {
+    if (!names.has(label)) continue
+    for (const key of keys) {
+      if (result[key]) skipped.push({ label, suite: key })
+      result[key] = false
+    }
+  }
+  return { suites: result, skipped }
+}
+
+// Read labels at run time (not from the event payload) so that "Re-run all jobs"
+// after changing labels uses the current set.
+export async function fetchPullRequestLabels({ token, repository, number, apiUrl = 'https://api.github.com' }) {
+  const response = await fetch(`${apiUrl}/repos/${repository}/issues/${number}/labels?per_page=100`, {
+    headers: { authorization: `Bearer ${token}`, accept: 'application/vnd.github+json' },
+    signal: AbortSignal.timeout(30_000)
+  })
+  if (!response.ok) throw new Error(`GitHub ${response.status} reading pull request labels`)
+  return (await response.json()).map(label => label.name)
 }
 
 export function requiresFullRun({ force, eventName, ref, base }) {
   return (
     force === 'true' ||
     ['schedule', 'workflow_dispatch', 'workflow_call'].includes(eventName) ||
+    // Merged pull requests: dev always runs the full matrix before deploying staging.
+    (eventName === 'push' && ref === 'refs/heads/dev') ||
     Boolean(ref?.startsWith('refs/tags/')) ||
     !base ||
     /^0+$/.test(base)
   )
 }
 
-function main() {
+async function main() {
   const require = createRequire(import.meta.url)
   const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'))
   const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
   const base = event.pull_request?.base.sha ?? event.before
-  let full = requiresFullRun({
-    force: process.env.CI_FULL,
-    eventName: process.env.GITHUB_EVENT_NAME,
-    ref: process.env.GITHUB_REF,
-    base
-  })
+  let labels = []
+  if (process.env.GITHUB_EVENT_NAME === 'pull_request' && event.pull_request?.number) {
+    try {
+      labels = await fetchPullRequestLabels({
+        token: process.env.GITHUB_TOKEN,
+        repository: process.env.GITHUB_REPOSITORY,
+        number: event.pull_request.number,
+        apiUrl: process.env.GITHUB_API_URL
+      })
+    } catch (error) {
+      // Without labels nothing is skipped: an API failure can only add tests.
+      console.warn(`Pull request labels unavailable, running every selected suite: ${error.message}`)
+    }
+  }
+  let full =
+    labels.some(label => label.toLowerCase() === FULL_LABEL) ||
+    requiresFullRun({
+      force: process.env.CI_FULL,
+      eventName: process.env.GITHUB_EVENT_NAME,
+      ref: process.env.GITHUB_REF,
+      base
+    })
   let affected = []
   let nativeAffected = []
   let ciDeploymentOnly = false
@@ -135,7 +199,18 @@ function main() {
       }
     }
   }
-  const suites = selectTestSuites({ affected, nativeAffected, files, full, ciDeploymentOnly })
+  const { suites, skipped } = applyPullRequestLabels(
+    selectTestSuites({ affected, nativeAffected, files, full, ciDeploymentOnly }),
+    labels
+  )
+  if (skipped.length > 0 && process.env.GITHUB_STEP_SUMMARY) {
+    appendFileSync(
+      process.env.GITHUB_STEP_SUMMARY,
+      `## Suites skipped by pull request labels\n\n${skipped.map(item => `- ${item.suite} (${item.label})`).join('\n')}\n`
+    )
+  }
+  // Resolve before writing outputs so a malformed runner variable fails the selection job.
+  const { runners } = resolveRunners(readVariables(), readContext())
   const output = {
     full: suites.full,
     base: suites.full ? '' : base,
@@ -146,17 +221,18 @@ function main() {
     desktop: suites.desktop,
     web: suites.web,
     generator: suites.generator,
+    bootstrap: suites.bootstrap,
     mobileAndroid: suites.mobileAndroid,
     mobileIos: suites.mobileIos,
     mobile: JSON.stringify({
       include: [
-        ...(suites.mobileAndroid ? [{ platform: 'android', os: 'ubuntu-24.04' }] : []),
-        ...(suites.mobileIos ? [{ platform: 'ios', os: 'macos-26' }] : [])
+        ...(suites.mobileAndroid ? [{ platform: 'android', runner: 'ubuntu-24.04' }] : []),
+        ...(suites.mobileIos ? [{ platform: 'ios', runner: runners.ios }] : [])
       ]
     })
   }
   for (const [key, value] of Object.entries(output)) appendFileSync(process.env.GITHUB_OUTPUT, `${key}=${value}\n`)
-  console.log(JSON.stringify({ ...output, affected, nativeAffected, ciDeploymentOnly }, null, 2))
+  console.log(JSON.stringify({ ...output, labels, skipped, affected, nativeAffected, ciDeploymentOnly }, null, 2))
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) main()
+if (process.argv[1] === fileURLToPath(import.meta.url)) await main()
